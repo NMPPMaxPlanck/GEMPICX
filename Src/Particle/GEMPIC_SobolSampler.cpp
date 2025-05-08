@@ -240,7 +240,7 @@ void Gempic::Particle::sobol (int dimNum, long long int* seed, double quasi[])
 //    Output, double QUASI[DIM_NUM], the next quasirandom vector.
 //
 {
-#define DIM_MAX 10
+#define DIM_MAX 20
 #define LOG_MAX 62
     //
     //  Here, we have commented out the definition of ATMOST, because
@@ -264,7 +264,8 @@ void Gempic::Particle::sobol (int dimNum, long long int* seed, double quasi[])
     long long int m;
     static long long int maxcol;
     long long int newv;
-    static long long int poly[DIM_MAX] = {1, 3, 7, 11, 13, 19, 25, 37, 59, 47};
+    static long long int poly[DIM_MAX] = {1,  3,  7,  11, 13, 19, 25,  37,  59,  47,
+                                          61, 55, 41, 67, 97, 91, 109, 103, 115, 131};
     static double recipd;
     static long long int seedSave = -1;
     static long long int v[DIM_MAX][LOG_MAX];
@@ -292,6 +293,16 @@ void Gempic::Particle::sobol (int dimNum, long long int* seed, double quasi[])
         v[7][0] = 1;
         v[8][0] = 1;
         v[9][0] = 1;
+        v[10][0] = 1;
+        v[11][0] = 1;
+        v[12][0] = 1;
+        v[13][0] = 1;
+        v[14][0] = 1;
+        v[15][0] = 1;
+        v[16][0] = 1;
+        v[17][0] = 1;
+        v[18][0] = 1;
+        v[19][0] = 1;
 
         v[2][1] = 1;
         v[3][1] = 3;
@@ -301,6 +312,16 @@ void Gempic::Particle::sobol (int dimNum, long long int* seed, double quasi[])
         v[7][1] = 3;
         v[8][1] = 3;
         v[9][1] = 1;
+        v[10][1] = 3;
+        v[11][1] = 1;
+        v[12][1] = 3;
+        v[13][1] = 1;
+        v[14][1] = 3;
+        v[15][1] = 1;
+        v[16][1] = 1;
+        v[17][1] = 3;
+        v[18][1] = 1;
+        v[19][1] = 3;
 
         v[3][2] = 7;
         v[4][2] = 5;
@@ -309,16 +330,56 @@ void Gempic::Particle::sobol (int dimNum, long long int* seed, double quasi[])
         v[7][2] = 3;
         v[8][2] = 7;
         v[9][2] = 5;
+        v[10][2] = 5;
+        v[11][2] = 7;
+        v[12][2] = 7;
+        v[13][2] = 1;
+        v[14][2] = 3;
+        v[15][2] = 3;
+        v[16][2] = 7;
+        v[17][2] = 5;
+        v[18][2] = 1;
+        v[19][2] = 1;
 
         v[5][3] = 1;
         v[6][3] = 7;
         v[7][3] = 9;
         v[8][3] = 13;
         v[9][3] = 11;
+        v[10][3] = 1;
+        v[11][3] = 3;
+        v[12][3] = 7;
+        v[13][3] = 9;
+        v[14][3] = 5;
+        v[15][3] = 13;
+        v[16][3] = 13;
+        v[17][3] = 11;
+        v[18][3] = 3;
+        v[19][3] = 15;
 
         v[7][4] = 9;
         v[8][4] = 3;
         v[9][4] = 27;
+        v[10][4] = 15;
+        v[11][4] = 29;
+        v[12][4] = 21;
+        v[13][4] = 23;
+        v[14][4] = 19;
+        v[15][4] = 11;
+        v[16][4] = 25;
+        v[17][4] = 7;
+        v[18][4] = 13;
+        v[19][4] = 17;
+
+        v[13][5] = 37;
+        v[14][5] = 33;
+        v[15][5] = 7;
+        v[16][5] = 5;
+        v[17][5] = 11;
+        v[18][5] = 39;
+        v[19][5] = 63;
+
+        v[19][6] = 13;
         //
         //  Check parameters.
         //

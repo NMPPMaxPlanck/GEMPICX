@@ -1,18 +1,18 @@
 #include "GEMPIC_MaxwellInit.H"
 
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<amrex::Real, 3> initial_e (
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, const amrex::Real time)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, amrex::Real const time)
 {
-    static const amrex::Real omega{2 * M_PI};
-    static const amrex::Real kx{2 * M_PI};
+    static amrex::Real const omega{2 * M_PI};
+    static amrex::Real const kx{2 * M_PI};
     return {0.0, 0.0, cos(kx * r[0] - omega * time)};
 }
 
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<amrex::Real, 3> initial_b (
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, const amrex::Real time)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, amrex::Real const time)
 {
-    static const amrex::Real kx{2 * M_PI};
-    static const amrex::Real omega{2 * M_PI};
+    static amrex::Real const kx{2 * M_PI};
+    static amrex::Real const omega{2 * M_PI};
     return {0.0, kx / omega * cos(kx * r[0] - omega * time), 0.0};
 }
 
@@ -37,7 +37,7 @@ void maxwell_initial_condition (MaxwellDiscretization& disc)
         // LOOP OVER FACES:
         for (amrex::MFIter mfi(disc.m_myfields->m_e.m_data[idir]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.growntilebox();
+            amrex::Box const& bx = mfi.growntilebox();
             amrex::Real const edgeLoc{dr[idir]};
             amrex::Real const time{disc.m_time};
             amrex::Array4<amrex::Real> const& edir =
@@ -62,7 +62,7 @@ void maxwell_initial_condition (MaxwellDiscretization& disc)
         // LOOP OVER FACES:
         for (amrex::MFIter mfi(disc.m_myfields->m_b.m_data[idir]); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.growntilebox();
+            amrex::Box const& bx = mfi.growntilebox();
             amrex::Real const time{disc.m_time};
             amrex::Array4<amrex::Real> const& bdir =
                 (disc.m_myfields->m_b.m_data[idir])[mfi].array(); // define pointer to variable

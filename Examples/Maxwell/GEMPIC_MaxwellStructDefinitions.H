@@ -80,9 +80,9 @@ struct BaseFieldsHandlerStruct
 {
     virtual ~BaseFieldsHandlerStruct() = default; // Virtual destructor
     // Assing function using CRTP
-    void operator=(const BaseFieldsHandlerStruct& other)
+    void operator=(BaseFieldsHandlerStruct const& other)
     {
-        static_cast<Derived*>(this)->assign(static_cast<const Derived&>(
+        static_cast<Derived*>(this)->assign(static_cast<Derived const&>(
             other)); // define template base class, defining the = operator, calling the assign
                      // function to be implemented in the derived classes.
     }
@@ -92,9 +92,9 @@ struct BaseFieldsHandlerStruct
      *
      * @param Derived : using CRTP
      */
-    void mult_and_add (amrex::Real alpha, const std::shared_ptr<BaseFieldsHandlerStruct>& other)
+    void mult_and_add (amrex::Real alpha, std::shared_ptr<BaseFieldsHandlerStruct> const& other)
     {
-        static_cast<Derived*>(this)->mult_and_add(alpha, static_cast<const Derived&>(other));
+        static_cast<Derived*>(this)->mult_and_add(alpha, static_cast<Derived const&>(other));
     }
 
     /**
@@ -124,7 +124,7 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
      *
      * @param other : the source of the assign
      */
-    void assign (const MaxwellFieldsHandlerStruct& other) // now we can use the = operator of the
+    void assign (MaxwellFieldsHandlerStruct const& other) // now we can use the = operator of the
                                                           // base class to call the assign...
     {
         copy(m_b, other.m_b);
@@ -137,7 +137,7 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
      * @param alpha : real scaling parameter
      * @param other : the source of the assign
      */
-    void mult_and_add (amrex::Real alpha, const std::shared_ptr<MaxwellFieldsHandlerStruct>& other)
+    void mult_and_add (amrex::Real alpha, std::shared_ptr<MaxwellFieldsHandlerStruct> const& other)
     {
         //Q = Q + alpha * other.Q;
         //B = B + alpha * other.B;
@@ -166,7 +166,7 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
      *
      * @param other : source
      */
-    MaxwellFieldsHandlerStruct& operator=(const MaxwellFieldsHandlerStruct& other)
+    MaxwellFieldsHandlerStruct& operator=(MaxwellFieldsHandlerStruct const& other)
     {
         if (this != &other)
         {                  // Prevent self-assignment

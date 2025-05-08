@@ -30,7 +30,7 @@ Each group contains the properties
     \item \lstinline{vDim}: The number of velocity dimensions
     \item \lstinline{nData}: The number of additional real data members (typically just weight)
 \end{itemize}
-Individual particles then have further properties 
+Individual particles then have further properties
 \begin{itemize}
     \item \lstinline{id} and \lstinline{cpu}: Constant AMReX-generated identifiers, the combination of which is unique to each particle
     \item \lstinline{pos}: arrays of particle positions
@@ -46,7 +46,7 @@ creates accessors for particle data and distributes work across the different pr
 
 In GEMPICX, we currently have positions as arrays of structs and velocities and other extra data as struct of arrays.
 We do not currently provide the ability to have extra integer components.
- Since particle all data is stored on the GPU, the procedure is then first to obtain the pointers, launch a \lstinline{ParallelFor} loop, and access the data inside, \emph{e.g.}
+Since particle all data is stored on the GPU, the procedure is then first to obtain the pointers, launch a \lstinline{ParallelFor} loop, and access the data inside, \emph{e.g.}
 \begin{lstlisting}
 for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid(); ++pti)
 {
@@ -72,24 +72,69 @@ for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid
 
 
 \section{Particle Samplers}
-At the moment, particles can only be initiated with pseudo-random samplers outside of tests.
+At the moment, particles can be initiated with pseudo-random, quasi-random, and rejection samplers outside of tests.
 They are initialized using the \lstinline{Gempic::Particle::init_particles} function.
 The different options are selected in the input file (see \ref{sec:ParticleInput}), the details of which follow below.
 
-All methods use random values to
+All the direct methods use random values to
 \begin{itemize}
-    \item initialize positions according to the mandatory density function in the input file, shifted with a random displacement.
+    \item initialize positions from a uniform distribution on the sampling region.
     \item initialize velocities according to one or more Gaussian distributions given in the input file, each specified by mean velocity and the standard deviation of velocity either as a constant or a function in all directions. Initialized by random values through the Box-Muller method.
 \end{itemize}
-The seed of these random generators can be specified in the input file.
+The particle weight is proportional to the mandatory input function in the input file evaluated at the particle position. The particles are spatially uniform and the density profile is represented only in the weights.
 
-\subsection{Sampler: Cellwise}
-Generates uniformly distributed random values for position and velocity distributions for all particles in a cell, then uses the same random values for all other cells.
+The seed of the random generators can be specified in the input file.
+
+\begin{note}
+    All samplers can be used on CPU and GPU. \ref{sec:sampler_pseudorandomGPU} is currently the only one running natively and in parallel on device. All others sample on host to a buffer that gets flushed to the device memory. This approach is of coarse less efficient for GPU simulations but allows for easier sampler development that work out of the box on different architectures.
+\end{note}
+
 \subsection{Sampler: PseudoRandom}
-Generates uniformly distributed random values for position and velocity distributions for all particles in each cell, but uses differing random values for all cells.
+Generates uniformly distributed random values for position and velocity distributions for all particles cell by cell.
+
+\subsection{Sampler: PseudoRandomBox}
+Same as \verb|PseudoRandom| but draws unformly distributed position values on boxes instead of individual cells. There is no guarantee that \verb|nPartPerCell| particles end up in each cell.
+
+\subsection{Sampler: PseudoRandomGPU}
+\label{sec:sampler_pseudorandomGPU}
+Equivalent to \verb|PseudoRandom| but the sampling is done fully in parallel on device using \verb|amrex::ParallelForRNG|. Also runs in CPU but does not have any advantages in that scenario.
+
 \subsection{Sampler: Sobol}
-Positions and velocities are generated based on quasirandom numbers form the Sobol sequence.
-\subsection{Sampler: FullDomainGpu}
-Only applicable for GPU compiled codes. Uses \lstinline{ParallelForRNG} with \lstinline{amrex::RandomEngine} to generate random values for position and velocity distributions.
+Positions and velocities are generated based on quasirandom numbers from the Sobol sequence. The sampling is done on the box level and each box uses a random starting index in the sequence determined by the random seed.
+
+\subsection{Sampler: Rejection}
+Sampling arbitrary target distribution functions by accepting/rejecting samples of a proposal distribution depending on the ratio of (probability) densities. The proposal distribution is always a Maxwellian that can be configured in the input file and sampled directly. The target distribution is specified by a string \verb|Particle.species.rejectionDistribution| that in addition to the spatial variables \verb|x, y, z| can contain the velocity components \verb|vx, vy, vz|. An example is the standard univariate Maxwellian
+
+\begin{lstlisting}[language=pkgconfig]
+    rejectionDistribution = "1 / sqrt(2*3.14159265)^3 * exp(-(vx^2 + vy^2 + vz^2)/(2))"
+\end{lstlisting}
+
+but functions can be more involved like a spatial temperature profile at the gyrocenters of particles in a constant magnetic field
+
+\begin{lstlisting}[language=pkgconfig]
+    rejectionDistribution = "1 / sqrt(2*3.14159265*(1+0.5*cos(kvarx*(x-vy))))^3 * exp(-(vx^2 + vy^2 + vz^2)/(2*(1+0.5* cos(kvarx*(x-vy)))))"
+\end{lstlisting}
+
+To ensure that $target <= proposal$, the proposal is scaled by \verb|Particle.species.rejectionScaling|. To avoid infinite loops, the sampling aborts if \verb|Particle.species.nMaxRejections| samples get rejected in a row. After sampling, some diagnostic information is returned. In addition to the acceptance rate it contains the minimal scaling factor $s$ such that $target <= s \cdot proposal$:
+
+\begin{lstlisting}
+    Rejection sampling: Acceptance rate                = 0.03997958542
+    Rejection sampling: Samples with target > proposal = 0
+    Rejection sampling: Minimum scaling necessary      = 23.21383126
+\end{lstlisting}
+
+When using parallelization, each process samples globally followed by a particle redistribution.
+
+\begin{note}
+    The spatial density of the proposal distribution should be set to \verb|density = 1| to prevent unwanted effects and obtain the expected spatial density of the specified distribution function.
+
+    There are currently the following restrictions on the proposal distribution
+    \begin{itemize}
+        \item Only a single Gaussian
+    \end{itemize}
+\end{note}
+
+\subsection{Sampler: RejectionSobol}
+Same as \verb|Rejection| but using quasi-random values from the Sobol sequence.
 
 \end{document}

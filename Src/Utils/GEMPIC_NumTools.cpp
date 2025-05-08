@@ -5,14 +5,14 @@
  *
  * **/
 std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask (amrex::MultiFab& thisMF,
-                                                      const amrex::Periodicity& period)
+                                                      amrex::Periodicity const& period)
 {
-    const amrex::BoxArray& ba = thisMF.boxArray();
-    const amrex::DistributionMapping& dm = thisMF.DistributionMap();
+    amrex::BoxArray const& ba = thisMF.boxArray();
+    amrex::DistributionMapping const& dm = thisMF.DistributionMap();
 
     auto p = std::make_unique<amrex::MultiFab>(ba, dm, 1, 0, amrex::MFInfo(), thisMF.Factory());
 
-    const std::vector<amrex::IntVect>& pshifts = period.shiftIntVect();
+    std::vector<amrex::IntVect> const& pshifts = period.shiftIntVect();
 
     amrex::Vector<amrex::Array4BoxTag<amrex::Real>> tags;
 
@@ -26,15 +26,15 @@ std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask (amrex::MultiFab& thisMF,
 
         for (amrex::MFIter mfi(*p); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = (*p)[mfi].box();
+            amrex::Box const& bx = (*p)[mfi].box();
             amrex::Array4<amrex::Real> const& arr = p->array(mfi);
 
             AMREX_HOST_DEVICE_PARALLEL_FOR_3D(bx, i, j, k, { arr(i, j, k) = amrex::Real(0.0); });
 
-            for (const auto& iv : pshifts)
+            for (auto const& iv : pshifts)
             {
                 ba.intersections(bx + iv, isects);
-                for (const auto& is : isects)
+                for (auto const& is : isects)
                 {
                     amrex::Box const& b = is.second - iv;
 #ifdef AMREX_USE_GPU
@@ -69,7 +69,7 @@ std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask (amrex::MultiFab& thisMF,
 /***
  * modified from WeightedSync
  ***/
-void sum_boundary_sync (amrex::MultiFab& thisMF, const amrex::Periodicity& period)
+void sum_boundary_sync (amrex::MultiFab& thisMF, amrex::Periodicity const& period)
 {
     if (thisMF.ixType().cellCentered())
     {
@@ -78,7 +78,7 @@ void sum_boundary_sync (amrex::MultiFab& thisMF, const amrex::Periodicity& perio
 
     auto wgt = get_shared_bnd_mask(thisMF, period);
 
-    const int ncomp = thisMF.nComp();
+    int const ncomp = thisMF.nComp();
 
     amrex::MultiFab tmpmf(thisMF.boxArray(), thisMF.DistributionMap(), ncomp, 0, amrex::MFInfo(),
                           thisMF.Factory());
@@ -101,7 +101,7 @@ void mult_and_add (amrex::Real const dstVal,
                    int srccomp,
                    int dstcomp,
                    int numcomp,
-                   const amrex::IntVect& nghost)
+                   amrex::IntVect const& nghost)
 {
     //BL_PROFILE("amrex::Add()");
 
@@ -130,7 +130,7 @@ void mult_and_add (amrex::Real const dstVal,
 #endif
         for (amrex::MFIter mfi(dst, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.growntilebox(nghost);
+            amrex::Box const& bx = mfi.growntilebox(nghost);
             if (bx.ok())
             {
                 auto const srcFab = src.array(mfi);
@@ -152,7 +152,7 @@ void mult_and_add (amrex::MultiFab& dst,
                    int srccomp,
                    int dstcomp,
                    int numcomp,
-                   const amrex::IntVect& nghost)
+                   amrex::IntVect const& nghost)
 {
     //BL_PROFILE("amrex::Add()");
 #ifdef AMREX_USE_GPU
@@ -180,7 +180,7 @@ void mult_and_add (amrex::MultiFab& dst,
 #endif
         for (amrex::MFIter mfi(dst, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
-            const amrex::Box& bx = mfi.growntilebox(nghost);
+            amrex::Box const& bx = mfi.growntilebox(nghost);
             if (bx.ok())
             {
                 auto const srcFab = src.array(mfi);
@@ -285,10 +285,10 @@ typename FAB::value_type wgt_dot (amrex::FabArray<FAB> const& wgt,
 
 // from Real MultiFab::Dot( const MultiFab& x, int xcomp, const MultiFab& y, int ycomp, int numcomp,
 // int nghost, bool local)
-amrex::Real multi_fab_wgt_dot (const amrex::MultiFab& wgt,
-                               const amrex::MultiFab& x,
+amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
+                               amrex::MultiFab const& x,
                                int xcomp,
-                               const amrex::MultiFab& y,
+                               amrex::MultiFab const& y,
                                int ycomp,
                                int numcomp,
                                int nghost,
@@ -298,8 +298,8 @@ amrex::Real multi_fab_wgt_dot (const amrex::MultiFab& wgt,
 }
 
 // from Real MultiFab::Dot(const MultiFab& x, int xcomp, int numcomp, int nghost, bool local)
-amrex::Real multi_fab_wgt_dot (const amrex::MultiFab& wgt,
-                               const amrex::MultiFab& x,
+amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
+                               amrex::MultiFab const& x,
                                int xcomp,
                                int numcomp,
                                int nghost,

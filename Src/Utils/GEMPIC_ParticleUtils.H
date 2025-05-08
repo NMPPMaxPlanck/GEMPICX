@@ -22,8 +22,8 @@ namespace Gempic::Utils
  *
  * @return The value of the Maxwellian.
  */
-template <unsigned int vDim>
-AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (amrex::GpuArray<amrex::Real, vDim> const& vel,
+template <std::size_t vDim>
+AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (std::array<amrex::Real, vDim> const& vel,
                                                    amrex::Real density,
                                                    amrex::Real vThermal)
 {
@@ -53,12 +53,11 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (amrex::GpuArray<amrex::Real, 
  *
  * @return The value of the Maxwellian distribution.
  */
-template <unsigned int vDim>
-AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (
-    amrex::GpuArray<amrex::Real, vDim> const& vel,
-    amrex::Real density,
-    amrex::GpuArray<amrex::Real, vDim> const& vThermal,
-    amrex::GpuArray<amrex::Real, vDim> const& vMean)
+template <std::size_t vDim>
+AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (std::array<amrex::Real, vDim> const& vel,
+                                                   amrex::Real density,
+                                                   std::array<amrex::Real, vDim> const& vThermal,
+                                                   std::array<amrex::Real, vDim> const& vMean)
 {
     amrex::Real exponent = 0;
     amrex::Real coeff = 1;
@@ -85,9 +84,9 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (
  *
  * @return The square root of the Maxwellian distribution.
  */
-template <unsigned int vDim>
+template <std::size_t vDim>
 AMREX_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_sqrt_maxwellian (
-    amrex::GpuArray<amrex::Real, vDim> const& vel, amrex::Real density, amrex::Real vThermal)
+    std::array<amrex::Real, vDim> const& vel, amrex::Real density, amrex::Real vThermal)
 {
     return std::sqrt(eval_maxwellian(vel, density, vThermal));
 }

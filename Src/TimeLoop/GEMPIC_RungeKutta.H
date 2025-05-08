@@ -751,20 +751,20 @@ public:
     // Create an instance of the selected type
     RkButcherTableau<nRKstages> m_rkTableau;
 
-    void integrate_step(const amrex::Real time, const amrex::Real dt);
+    void integrate_step(amrex::Real const time, amrex::Real const dt);
 
     void one_step_solve_dqdt_explicit();
 
-    void finalize_rk(const amrex::Real dt,
+    void finalize_rk(amrex::Real const dt,
                      std::shared_ptr<FieldsHandler>& dst,
-                     const RKStagesArray& srcArray);
+                     RKStagesArray const& srcArray);
 
     ExplicitRK(std::shared_ptr<FieldsHandler>& solutionInOutSrc,
                std::shared_ptr<FieldsHandler>& solutionTmpExplicitSrc,
                std::shared_ptr<FieldsHandler>& mTimeDerivativeSrc,
                NumericalScheme& numSchemeSrc,
                std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
-               const selectedRK_Tableau& rKreference) :
+               selectedRK_Tableau const& rKreference) :
         m_solutionInOut(solutionInOutSrc),
         m_solutionTmpExplicit(solutionTmpExplicitSrc), // this is the one used in NumScheme to
                                                        // compute dQdt_ex (by reference!)
@@ -812,9 +812,9 @@ void ExplicitRK<FieldsHandler, myRKstages>::one_step_solve_dqdt_explicit ()
  * ExplicitRK: finalize RK stages
  */
 template <class FieldsHandler, int myRKstages>
-void ExplicitRK<FieldsHandler, myRKstages>::finalize_rk (const amrex::Real dt,
+void ExplicitRK<FieldsHandler, myRKstages>::finalize_rk (amrex::Real const dt,
                                                         std::shared_ptr<FieldsHandler>& dst,
-                                                        const RKStagesArray& srcArray)
+                                                        RKStagesArray const& srcArray)
 {
     for (int r = 0; r < myRKstages; r++)
     {
@@ -827,8 +827,8 @@ void ExplicitRK<FieldsHandler, myRKstages>::finalize_rk (const amrex::Real dt,
  * ExplicitRK: run RK stages
  */
 template <class FieldsHandler, int myRKstages>
-void ExplicitRK<FieldsHandler, myRKstages>::integrate_step (const amrex::Real time,
-                                                           const amrex::Real dt)
+void ExplicitRK<FieldsHandler, myRKstages>::integrate_step (amrex::Real const time,
+                                                           amrex::Real const dt)
 {
     amrex::Print() << "time = " << time << ",  dt = " << dt << std::endl;
     for (int s = 0; s < myRKstages; s++)
@@ -863,13 +863,13 @@ public:
     // Create an instance of the selected type
     ImexRkButcherTableau<nRKstages> m_rkTableau;
 
-    void integrate_step(const amrex::Real time, const amrex::Real dt);
+    void integrate_step(amrex::Real const time, amrex::Real const dt);
 
     void one_step_solve_dqdt_semiimplicit(amrex::Real dtLoc);
 
-    void finalize_rk(const amrex::Real dt,
+    void finalize_rk(amrex::Real const dt,
                      std::shared_ptr<FieldsHandler>& dst,
-                     const RKStagesArray& srcArray);
+                     RKStagesArray const& srcArray);
 
     ImexRk(std::shared_ptr<FieldsHandler>& solutionInOutSrc,
            std::shared_ptr<FieldsHandler>& solutionTmpExplicitSrc,
@@ -878,7 +878,7 @@ public:
            std::shared_ptr<FieldsHandler>& mTimeDerivativeSrc,
            NumericalScheme& numSchemeSrc,
            std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
-           const selectedRK_Tableau& rKreference) :
+           selectedRK_Tableau const& rKreference) :
         m_solutionInOut(solutionInOutSrc), // initial and final solution handler
         m_solutionTmpExplicit(
             solutionTmpExplicitSrc), // this is the solution handler used in m_numScheme (to
@@ -950,9 +950,9 @@ void ImexRk<FieldsHandler, myRKstages>::one_step_solve_dqdt_semiimplicit (amrex:
  * ImExRK: finalize ImEx RK stages
  */
 template <class FieldsHandler, int myRKstages>
-void ImexRk<FieldsHandler, myRKstages>::finalize_rk (const amrex::Real dt,
+void ImexRk<FieldsHandler, myRKstages>::finalize_rk (amrex::Real const dt,
                                                     std::shared_ptr<FieldsHandler>& dst,
-                                                    const RKStagesArray& srcArray)
+                                                    RKStagesArray const& srcArray)
 {
     for (int r = 0; r < myRKstages; r++)
     {
@@ -965,7 +965,7 @@ void ImexRk<FieldsHandler, myRKstages>::finalize_rk (const amrex::Real dt,
  * ImExRK: run ImEx RK stages
  */
 template <class FieldsHandler, int myRKstages>
-void ImexRk<FieldsHandler, myRKstages>::integrate_step (const amrex::Real time, const amrex::Real dt)
+void ImexRk<FieldsHandler, myRKstages>::integrate_step (amrex::Real const time, amrex::Real const dt)
 {
     // use  the multi components to cast the multi-stage vectors;
     if (Gempic::Utils::Verbosity::level() > 0)

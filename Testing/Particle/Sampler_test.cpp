@@ -81,45 +81,121 @@ amrex::Real compute_v_moment_2 (ParticleGroups<vDim> const* partGr)
 
 void add_particle_parameters (std::string const& sampler)
 {
-    Gempic::Io::Parameters parameters{};
-    parameters.set("Particle.speciesNames", sampler);
-    std::string const particleInputScope{"Particle." + sampler};
-    Gempic::Io::Parameters partparams{particleInputScope};
-    partparams.set("sampler", sampler);
-    int const nPartPerCell = 1000;
-    partparams.set("nPartPerCell", nPartPerCell);
-    amrex::Real const charge = 1.0;
-    partparams.set("charge", charge);
-    amrex::Real const mass = 1.0;
-    partparams.set("mass", mass);
-    std::string const density = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
-    partparams.set("density", density);
-    int const numGaussians = 2;
-    partparams.set("numGaussians", numGaussians);
-    amrex::Vector<amrex::Real> const g0vMean = {0.0, 0.0, 0.0};
-    partparams.set("G0.vMean", g0vMean);
-    amrex::GpuArray<std::string, 3> const g0vThermal = {"2.0 + 0.0 * sin(kvarx*x)", "2.0", "2.0"};
-    partparams.set("G0.vThermal.x", g0vThermal[xDir]);
-    partparams.set("G0.vThermal.y", g0vThermal[yDir]);
-    partparams.set("G0.vThermal.z", g0vThermal[zDir]);
-    amrex::Real const g0vWeight = 0.75;
-    partparams.set("G0.vWeight", g0vWeight);
-    amrex::Vector<amrex::Real> const g1vMean = {2.0, 2.0, 2.0};
-    partparams.set("G1.vMean", g1vMean);
-    amrex::Vector<amrex::Real> const g1vThermal = {1.0, 1.0, 1.0};
-    partparams.set("G1.vThermal", g1vThermal);
-    amrex::Real const g1vWeight = 0.25;
-    partparams.set("G1.vWeight", g1vWeight);
-}
+    if (sampler == "PseudoRandom" || sampler == "PseudoRandomBox" || sampler == "PseudoRandomGPU" ||
+        sampler == "Sobol")
+    {
+        Gempic::Io::Parameters parameters{};
+        std::string const speciesName = "species0";
+        parameters.set("Particle.speciesNames", speciesName);
+        std::string const particleInputScope{"Particle." + speciesName};
+        Gempic::Io::Parameters partparams{particleInputScope};
+        partparams.set("sampler", sampler);
+        int const nPartPerCell = 1000;
+        partparams.set("nPartPerCell", nPartPerCell);
+        amrex::Real const charge = 1.0;
+        partparams.set("charge", charge);
+        amrex::Real const mass = 1.0;
+        partparams.set("mass", mass);
+        std::string const density = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
+        partparams.set("density", density);
+        int const numGaussians = 2;
+        partparams.set("numGaussians", numGaussians);
+        amrex::Vector<amrex::Real> const g0vMean = {0.0, 0.0, 0.0};
+        partparams.set("G0.vMean", g0vMean);
+        amrex::GpuArray<std::string, 3> const g0vThermal = {"2.0 + 0.0 * sin(kvarx*x)", "2.0",
+                                                            "2.0"};
+        partparams.set("G0.vThermal.x", g0vThermal[xDir]);
+        partparams.set("G0.vThermal.y", g0vThermal[yDir]);
+        partparams.set("G0.vThermal.z", g0vThermal[zDir]);
+        amrex::Real const g0vWeight = 0.75;
+        partparams.set("G0.vWeight", g0vWeight);
+        amrex::Vector<amrex::Real> const g1vMean = {2.0, 2.0, 2.0};
+        partparams.set("G1.vMean", g1vMean);
+        amrex::Vector<amrex::Real> const g1vThermal = {1.0, 1.0, 1.0};
+        partparams.set("G1.vThermal", g1vThermal);
+        amrex::Real const g1vWeight = 0.25;
+        partparams.set("G1.vWeight", g1vWeight);
+    }
+    else if (sampler == "Rejection" || sampler == "RejectionSobol")
+    {
+        Gempic::Io::Parameters parameters{};
+        // dummy particle group to calculate the exact moments
+        std::vector<std::string> const speciesNames = {"dummy", "real"};
+        parameters.set("Particle.speciesNames", speciesNames);
+        std::string const particleInputScopeDummy{"Particle.dummy"};
+        Gempic::Io::Parameters partparamsDummy{particleInputScopeDummy};
+        std::string const dummySampler = "PseudoRandom";
+        partparamsDummy.set("sampler", dummySampler);
+        int const nPartPerCellDummy = 0;
+        partparamsDummy.set("nPartPerCell", nPartPerCellDummy);
+        amrex::Real const charge = 1.0;
+        partparamsDummy.set("charge", charge);
+        amrex::Real const mass = 1.0;
+        partparamsDummy.set("mass", mass);
+        std::string const densityDummy = "1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)";
+        partparamsDummy.set("density", densityDummy);
+        int const numGaussiansDummy = 2;
+        partparamsDummy.set("numGaussians", numGaussiansDummy);
+        amrex::Vector<amrex::Real> const g0vMeanDummy = {0.0, 0.0, 0.0};
+        partparamsDummy.set("G0.vMean", g0vMeanDummy);
+        amrex::GpuArray<std::string, 3> const g0vThermalDummy = {"2.0 + 0.0 * sin(kvarx*x)", "2.0",
+                                                                 "2.0"};
+        partparamsDummy.set("G0.vThermal.x", g0vThermalDummy[xDir]);
+        partparamsDummy.set("G0.vThermal.y", g0vThermalDummy[yDir]);
+        partparamsDummy.set("G0.vThermal.z", g0vThermalDummy[zDir]);
+        amrex::Real const g0vWeightDummy = 0.75;
+        partparamsDummy.set("G0.vWeight", g0vWeightDummy);
+        amrex::Vector<amrex::Real> const g1vMean = {2.0, 2.0, 2.0};
+        partparamsDummy.set("G1.vMean", g1vMean);
+        amrex::Vector<amrex::Real> const g1vThermal = {1.0, 1.0, 1.0};
+        partparamsDummy.set("G1.vThermal", g1vThermal);
+        amrex::Real const g1vWeight = 0.25;
+        partparamsDummy.set("G1.vWeight", g1vWeight);
 
-struct ParticleInputCellwise
-{
-    inline constexpr static std::string_view s_sampler{"Cellwise"};
-};
+        // Actual particle group for the rejection sampler
+        // Trying to replicate the same distribution by rejection sampling
+        std::string const particleInputScope{"Particle.real"};
+        Gempic::Io::Parameters partparams{particleInputScope};
+        partparams.set("sampler", sampler);
+        int const nPartPerCell = 1000;
+        partparams.set("nPartPerCell", nPartPerCell);
+        partparams.set("charge", charge);
+        partparams.set("mass", mass);
+        std::string const density = "1";
+        partparams.set("density", density);
+        int const numGaussians = 1;
+        partparams.set("numGaussians", numGaussians);
+        amrex::Vector<amrex::Real> const g0vMean = {0.0, 0.0, 0.0};
+        partparams.set("G0.vMean", g0vMean);
+        amrex::Vector<amrex::Real> const g0vThermal = {2.0, 2.0, 2.0};
+        partparams.set("G0.vThermal", g0vThermal);
+        amrex::Real const g0vWeight = 1.0;
+        partparams.set("G0.vWeight", g0vWeight);
+        int const nMaxRejections = 1000;
+        partparams.set("nMaxRejections", nMaxRejections);
+        amrex::Real const rejectionScaling = 25;
+        partparams.set("rejectionScaling", rejectionScaling);
+        std::string const rejectionDistribution =
+            "(1 + 0.5 * sin(kvarx*x + kvary*y + kvarz*z)) * (0.75 / (sqrt(2*3.14159265*4)^3) * "
+            "exp(-(vx^2 + vy^2 + vz^2)/(2*4)) + 0.25 / (sqrt(2*3.14159265)^3) * exp(-((vx-2)^2 + "
+            "(vy-2)^2 + (vz-2)^2)/(2)))";
+        partparams.set("rejectionDistribution", rejectionDistribution);
+    }
+}
 
 struct ParticleInputPseudorandom
 {
     inline constexpr static std::string_view s_sampler{"PseudoRandom"};
+};
+
+struct ParticleInputPseudorandomBox
+{
+    inline constexpr static std::string_view s_sampler{"PseudoRandomBox"};
+};
+
+struct ParticleInputPseudorandomGpu
+{
+    inline constexpr static std::string_view s_sampler{"PseudoRandomGPU"};
 };
 
 struct ParticleInputSobol
@@ -127,9 +203,14 @@ struct ParticleInputSobol
     inline constexpr static std::string_view s_sampler{"Sobol"};
 };
 
-struct ParticleInputGpu
+struct ParticleInputRejection
 {
-    inline constexpr static std::string_view s_sampler{"FullDomainGpu"};
+    inline constexpr static std::string_view s_sampler{"Rejection"};
+};
+
+struct ParticleInputRejectionSobol
+{
+    inline constexpr static std::string_view s_sampler{"RejectionSobol"};
 };
 
 template <typename ParticleInput>
@@ -151,11 +232,6 @@ protected:
         m_parameters.set("k", k);
         // Special case by case parameters
         add_particle_parameters(std::string(ParticleInput::s_sampler));
-        // This method is not as accurate
-        if (ParticleInput::s_sampler == "Cellwise")
-        {
-            m_tol = 3e-1;
-        }
     }
 };
 
@@ -168,13 +244,12 @@ struct NameGenerator
     }
 };
 
-#ifdef AMREX_USE_GPU
-using ParameterInputs = ::testing::
-    Types<ParticleInputCellwise, ParticleInputPseudorandom, ParticleInputSobol, ParticleInputGpu>;
-#else
-using ParameterInputs =
-    ::testing::Types<ParticleInputCellwise, ParticleInputPseudorandom, ParticleInputSobol>;
-#endif
+using ParameterInputs = ::testing::Types<ParticleInputPseudorandom,
+                                         ParticleInputPseudorandomBox,
+                                         ParticleInputPseudorandomGpu,
+                                         ParticleInputSobol,
+                                         ParticleInputRejection,
+                                         ParticleInputRejectionSobol>;
 
 TYPED_TEST_SUITE(SamplerTest, ParameterInputs, NameGenerator);
 
@@ -187,15 +262,17 @@ TYPED_TEST(SamplerTest, CompareMoments)
     std::vector<std::shared_ptr<ParticleGroups<vDim>>> partGr;
     init_particles(partGr, this->m_infra);
 
+    // in case of rejection sampling, use first particle group (dummy) to compute analytic moments
+    // of distribution function
     Io::Parameters params("Particle." + partGr[0]->get_name());
     VelocityInitializer<vDim> vInit(params);
 
-    amrex::GpuArray<amrex::Real, vDim> mom1;
+    std::array<amrex::Real, vDim> mom1;
     amrex::Real mom2 = 0;
 
     double volumeFactor = this->m_infra.geometry().ProbSize();
     // assuming constant vThermal functions (if they even exist);
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const location{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const location{AMREX_D_DECL(0.0, 0.0, 0.0)};
     amrex::Real vWeight;
     for (int i = 0; i < vDim; i++)
     {
@@ -215,16 +292,18 @@ TYPED_TEST(SamplerTest, CompareMoments)
 
     amrex::Real tol{this->m_tol * volumeFactor};
 
-    EXPECT_NEAR(compute_v_moment_0(partGr[0].get()), volumeFactor, tol)
+    // In case of rejection sampling, use second/last particle group (real) to compute actual
+    // moments of sampled particles
+    EXPECT_NEAR(compute_v_moment_0(partGr.back().get()), volumeFactor, tol)
         << "0th order velocity moment false!";
 
     amrex::GpuArray<amrex::Real, vDim> vMoments1;
-    compute_v_moments_1(partGr[0].get(), vMoments1);
+    compute_v_moments_1(partGr.back().get(), vMoments1);
     EXPECT_NEAR(vMoments1[xDir], mom1[xDir], tol) << "1st order velocity moment x-dir false!";
     EXPECT_NEAR(vMoments1[yDir], mom1[yDir], tol) << "1st order velocity moment y-dir false!";
     EXPECT_NEAR(vMoments1[zDir], mom1[zDir], tol) << "1st order velocity moment z-dir false!";
 
-    EXPECT_NEAR(compute_v_moment_2(partGr[0].get()), mom2, tol)
+    EXPECT_NEAR(compute_v_moment_2(partGr.back().get()), mom2, tol)
         << "2nd order velocity moment false!";
 }
 } // namespace

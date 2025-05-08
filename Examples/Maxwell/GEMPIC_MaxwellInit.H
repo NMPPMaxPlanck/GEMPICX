@@ -10,10 +10,10 @@
 #include "GEMPIC_MaxwellStructDefinitions.H"
 
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<amrex::Real, 3> initial_e(
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, const amrex::Real time);
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, amrex::Real const time);
 
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<amrex::Real, 3> initial_b(
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, const amrex::Real time);
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& r, amrex::Real const time);
 
 void maxwell_initial_condition(MaxwellDiscretization& disc);
 

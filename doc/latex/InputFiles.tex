@@ -259,7 +259,7 @@ Particle input variables are divided into species with subscopes given by user p
 # The name has to match that given to Reduced- and FullDiagnostics.
 Particle.speciesNames = any_names yOU WANT # String vector. No default.
 Particle.sampler = PseudoRandom # String. Default is PseudoRandom.
-                                # Can be Cellwise|PseudoRandom|Sobol|FullDomainGpu
+                                # Can be PseudoRandom|PseudoRandomBox|Sobol|Rejection|RejectionSobol
 Particle.seed = 1234 # Integer. Default is 925.
 # Number of particles per cell
 # Parameters for the first species
@@ -290,6 +290,14 @@ Particle.{speciesName}.G1.vThermal.z = "1.0" # String. No default.
 Particle.{speciesName}.G1.vWeight = 0.3 # Real. No default.
 \end{lstlisting}
 See \ref{sec:ParticleStructure} for details.
+
+For rejection sampling, the \verb|density| and \verb|G0...| configure the proposal distribution. The additional inputs are
+\begin{lstlisting}[language=pkgconfig]
+Particle.{speciesName}.sampler = Rejection
+Particle.{speciesName}.rejectionDistribution = "1 / sqrt(2*3.14159265)^3 * exp(-(vx^2 + vy^2 + vz^2)/2)" # String. No default.
+Particle.{speciesName}.rejectionScaling = 2.0 # Real. Default 1.0.
+Particle.{speciesName}.nMaxRejections = 100 # Integer. Default 100.
+\end{lstlisting}
 
 In case of a one-species simulation, it is sometimes necessary to add a background to rho to guarantee a neutral plasma. This can be achieved via the input parameter 
 
@@ -361,7 +369,7 @@ There are several choices built in:
 \begin{lstlisting}[language=pkgconfig]
 # PoissonSolver
 PoissonSolver.solver = ConjugateGradient # String. Default: See above.
-PoissonSolver.relTol = 1e-10 # Real. Default 1e-10.
+PoissonSolver.relTol = 1e-11 # Real. Default 1e-11.
 PoissonSolver.absTol = 1e-12 # Real. Default 1e-12.
 \end{lstlisting}
 
