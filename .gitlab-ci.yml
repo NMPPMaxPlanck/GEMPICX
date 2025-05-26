@@ -66,7 +66,7 @@ build-test_gcc_3D:
     - end_details build
     - start_details test "Test Step"
     - cd build
-    - ctest --output-on-failure --no-tests=error
+    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
     - end_details test
 
 build-test_gcc_2D:
@@ -81,7 +81,7 @@ build-test_gcc_2D:
     - end_details build
     - start_details test "Test Step"
     - cd build
-    - ctest --output-on-failure --no-tests=error
+    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
     - end_details test
   needs: ["build-test_gcc_3D"]
 
@@ -97,7 +97,7 @@ build-test_gcc_1D:
     - end_details build
     - start_details test "Test Step"
     - cd build
-    - ctest --output-on-failure --no-tests=error
+    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
     - end_details test
   needs: ["build-test_gcc_3D"]
 
@@ -203,7 +203,7 @@ build-test_clang_cpu_3D:
     - end_details build
     - start_details test "Test Step"
     - cd build
-    - ctest --output-on-failure --no-tests=error
+    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
     - end_details test
   needs: ["build-test_gcc_3D"]
 
@@ -219,7 +219,7 @@ build-test_clang_cpu_2D:
     - end_details build
     - start_details test "Test Step"
     - cd build
-    - ctest --output-on-failure --no-tests=error
+    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
     - end_details test
   needs: ["build-test_gcc_3D"]
 
@@ -235,7 +235,7 @@ build-test_clang_cpu_1D:
     - end_details build
     - start_details test "Test Step"
     - cd build
-    - ctest --output-on-failure --no-tests=error
+    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
     - end_details test
   needs: ["build-test_gcc_3D"]
 
@@ -251,7 +251,7 @@ build-test_mac_3D:
     - end_details build
     - start_details test "Test Step"
     - cd build
-    - ctest --output-on-failure --no-tests=error
+    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
     - end_details test
   tags: [macos]
   needs: ["build-test_gcc_3D"]
