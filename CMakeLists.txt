@@ -20,8 +20,9 @@ project("gempic")
 include(cmake/gempic_version.cmake)
 
 option(GEMPIC_USE_CUDA "Use CUDA Backend of AMReX" OFF)
+option(GEMPIC_USE_HIP "Use HIP Backend of AMReX" OFF)
 option(GEMPIC_USE_OMP "Use OpenMP Backend of AMReX (Not recommended due to reduced performance)" OFF)
-if(GEMPIC_USE_CUDA OR AMReX_SPACEDIM EQUAL 1)
+if(GEMPIC_USE_CUDA OR GEMPIC_USE_HIP OR AMReX_SPACEDIM EQUAL 1)
   option(GEMPIC_USE_HYPRE "Use Hypre solver for AMReX" OFF)
   if(GEMPIC_USE_HYPRE)
     message(FATAL_ERROR "The current HYPRE interface of GEMPIC is neither GPU nor 1D compatible. Set -D GEMPIC_USE_HYPRE=OFF in CMake.")
@@ -29,6 +30,7 @@ if(GEMPIC_USE_CUDA OR AMReX_SPACEDIM EQUAL 1)
 else()
   option(GEMPIC_USE_HYPRE "Use Hypre solver for AMReX" ON)
 endif()
+
 option(GEMPIC_USE_LTO "Use Link-Time Optimization. Turning it off reduces compile time, but may reduce performance" OFF)
 option(GEMPIC_BUILD_TESTS "Build the tests. Currently only toggles unit tests." ON)
 option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or none." ON)
@@ -43,6 +45,13 @@ enable_language(CXX)
 if(GEMPIC_USE_CUDA)
   enable_language(CUDA)
   set(CUDA_SEPARABLE_COMPILATION ON)
+endif()
+if(GEMPIC_USE_HIP)
+  enable_language(HIP)
+  # note. this line here because it is there for CUDA.
+  # Option is irrelevant as of 2025-05-20
+  # (see https://gitlab.kitware.com/cmake/cmake/-/issues/23210)
+  # set(HIP_SEPARABLE_COMPILATION ON)
 endif()
 
 # Set compiler flags
@@ -99,6 +108,7 @@ if(GEMPIC_BUILD_TESTS)
 endif()
 
 if(GEMPIC_USE_CUDA)
+  # function defined in AMReX tools. No equivalent for HIP
   setup_target_for_cuda_compilation(GEMPICX)
 endif()
 target_link_libraries(GEMPICX PUBLIC AMReX::amrex_${AMReX_SPACEDIM}d AMReX::Flags_CXX)
@@ -129,6 +139,10 @@ endif()
 if(GEMPIC_USE_CUDA)
   message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
   message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
+endif()
+if(GEMPIC_USE_HIP)
+  message(STATUS "   HIP compiler            = ${CMAKE_HIP_COMPILER}")
+  message(STATUS "   HIP flags               = ${CMAKE_HIP_FLAGS}")
 endif()
 
 endif() #CMAKE_BUILD_ONLY_DOCUMENTATION OFF

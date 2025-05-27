@@ -58,8 +58,8 @@ using `-D GEMPIC_OPTION Argument`
 |-----------------------------------|--------------------------------------------------------------------------------------------------|---------------|
 | `AMReX_SPACEDIM`                  | The dimension of the simulation (`1`, `2` or `3`)                                                | `3`           |
 | `GEMPIC_USE_CUDA`                 | Use CUDA Backend of AMReX                                                                        | `OFF`         |
+| `GEMPIC_USE_HIP`                  | Use HIP Backend of AMReX                                                                         | `OFF`         |
 | `GEMPIC_USE_OMP`                  | Use OpenMP Backend of AMReX <br>  (Not recommended due to reduced performance)                   | `OFF`         |
-| `GEMPIC_USE_CUDA`                 | Use CUDA Backend of AMReX                                                                        | `OFF`         |
 | `GEMPIC_USE_LTO`                  | Use Link-Time Optimization <br> (Turning it off reduces compile time, but may reduce performance)| `ON`          |
 | `GEMPIC_BUILD_TESTS`              | Build the tests. Currently only toggles unit tests.                                              | `ON`          |
 | `GEMPIC_BUILD_EXAMPLES`           | Build the examples. Currently only toggles all or none.                                          | `ON`          |

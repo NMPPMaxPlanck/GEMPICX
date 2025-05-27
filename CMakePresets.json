@@ -7,8 +7,17 @@
     },
     "configurePresets": [
         {
-            "name": "raven-env",
-            "displayName": "Raven environment settings",
+            "name": "amd-MI300A-env",
+            "displayName": "AMD MI300A environment settings",
+            "hidden": true,
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_HIP_ARCHITECTURES": "gfx942"
+            }
+        },
+        {
+            "name": "nvidia-A100-env",
+            "displayName": "NVIDIA A100 environment settings",
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
@@ -16,11 +25,12 @@
             }
         },
         {
-            "name": "gempic-gpu-cache-vars",
-            "displayName": "GEMPIC Cache Variables GPU",
+            "name": "gempic-cuda-cache-vars",
+            "displayName": "GEMPIC Cache Variables for CUDA",
             "hidden": true,
             "cacheVariables": {
-                "GEMPIC_USE_CUDA": "On"
+                "GEMPIC_USE_CUDA": "On",
+                "GEMPIC_USE_HIP": "Off"
             }
         },
         {
@@ -28,7 +38,17 @@
             "displayName": "GEMPIC Cache Variables CPU",
             "hidden": true,
             "cacheVariables": {
-                "GEMPIC_USE_CUDA": "Off"
+                "GEMPIC_USE_CUDA": "Off",
+                "GEMPIC_USE_HIP": "Off"
+            }
+        },
+        {
+            "name": "gempic-hip-cache-vars",
+            "displayName": "GEMPIC Cache Variables for HIP",
+            "hidden": true,
+            "cacheVariables": {
+                "GEMPIC_USE_CUDA": "Off",
+                "GEMPIC_USE_HIP": "On"
             }
         },
         {
@@ -52,13 +72,13 @@
             }
         },
         {
-            "name": "mpcdf-gpu-3D",
-            "displayName": "GPU settings for Raven 3D",
+            "name": "mpcdf-viper-3D",
+            "displayName": "GPU settings for Viper 3D",
             "binaryDir": "${sourceDir}/build/${presetName}",
-            "inherits": [
-                "raven-env",
+            "inherits" : [
+                "amd-MI300A-env",
                 "mpi-compiler",
-                "gempic-gpu-cache-vars"
+                "gempic-hip-cache-vars"
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
@@ -66,13 +86,13 @@
             }
         },
         {
-            "name": "mpcdf-gpu-2D",
-            "displayName": "GPU settings for Raven 2D",
+            "name": "mpcdf-viper-2D",
+            "displayName": "GPU settings for Viper 2D",
             "binaryDir": "${sourceDir}/build/${presetName}",
-            "inherits": [
-                "raven-env",
+            "inherits" : [
+                "amd-MI300A-env",
                 "mpi-compiler",
-                "gempic-gpu-cache-vars"
+                "gempic-hip-cache-vars"
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
@@ -80,13 +100,68 @@
             }
         },
         {
-            "name": "mpcdf-gpu-1D",
+            "name": "mpcdf-viper-1D",
+            "displayName": "GPU settings for Viper 1D",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits" : [
+                "amd-MI300A-env",
+                "mpi-compiler",
+                "gempic-hip-cache-vars"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "AMReX_SPACEDIM": "1"
+            }
+        },
+        {
+            "name": "mpcdf-cloud-cuda",
+            "displayName": "GPU settings for MPCDF gitlab cloud CUDA runner",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "nvidia-A100-env",
+                "mpi-compiler",
+                "gempic-cuda-cache-vars"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "mpcdf-raven-3D",
+            "displayName": "GPU settings for Raven 3D",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "nvidia-A100-env",
+                "mpi-compiler",
+                "gempic-cuda-cache-vars"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "AMReX_SPACEDIM": "3"
+            }
+        },
+        {
+            "name": "mpcdf-raven-2D",
+            "displayName": "GPU settings for Raven 2D",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": [
+                "nvidia-A100-env",
+                "mpi-compiler",
+                "gempic-cuda-cache-vars"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "AMReX_SPACEDIM": "2"
+            }
+        },
+        {
+            "name": "mpcdf-raven-1D",
             "displayName": "GPU settings for Raven 1D",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "inherits": [
-                "raven-env",
+                "nvidia-A100-env",
                 "mpi-compiler",
-                "gempic-gpu-cache-vars"
+                "gempic-cuda-cache-vars"
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
