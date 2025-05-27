@@ -546,7 +546,7 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample 
         amrex::Box const& bx = mfi.tilebox();
         int nPart = m_nPartPerCell * bx.numPts();
         std::mt19937 gen(GEMPIC_D_ADD(m_rSeed + bx.smallEnd(xDir), bx.smallEnd(yDir) * 10,
-                                      bx.smallEnd(yDir) * 100) +
+                                      bx.smallEnd(zDir) * 100) +
                          m_species * 1000);
         std::uniform_real_distribution<> unif(0.0, 1.0);
         long long int sobolSeed = gen();
