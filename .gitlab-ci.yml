@@ -101,12 +101,12 @@ build-test_gcc_1D:
     - end_details test
   needs: ["build-test_gcc_3D"]
 
-.mpcdf-gpu-env:
+.mpcdf-cuda-env:
   extends:
     - .remove-duplicate-pipelines
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-cuda:latest
   tags:
-    - cloud-gpu
+    - nvidia-cc80
   stage: test
   before_script:
     - !reference [default,before_script]
@@ -117,14 +117,14 @@ build-test_gcc_1D:
     - module load fftw-mpi
     - module list
 
-build-test_gpu_3D:
+build-test_cuda_3D:
   extends:
-    - .mpcdf-gpu-env
+    - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
     - start_details configure "CMake Configure Step"
-    - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-3D
+    - cmake -S . -B $BUILD_DIR -DAMReX_SPACEDIM=3 --preset mpcdf-cloud-cuda
     - end_details configure
     - start_details build "CMake Build Step"
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
@@ -136,14 +136,14 @@ build-test_gpu_3D:
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gcc_3D"]
 
-build-test_gpu_2D:
+build-test_cuda_2D:
   extends:
-    - .mpcdf-gpu-env
+    - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
     - start_details configure "CMake Configure Step"
-    - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-2D
+    - cmake -S . -B $BUILD_DIR -DAMReX_SPACEDIM=2 --preset mpcdf-cloud-cuda
     - end_details configure
     - start_details build "CMake Build Step"
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
@@ -153,16 +153,16 @@ build-test_gpu_2D:
     - ctest --output-on-failure --no-tests=error
     - end_details test
     - echo quit | nvidia-cuda-mps-control
-  needs: ["build-test_gpu_3D"]
+  needs: ["build-test_cuda_3D"]
 
-build-test_gpu_1D:
+build-test_cuda_1D:
   extends:
-    - .mpcdf-gpu-env
+    - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
     - export BUILD_DIR=$(pwd)/build
     - start_details configure "CMake Configure Step"
-    - cmake -S . -B $BUILD_DIR --preset mpcdf-gpu-1D
+    - cmake -S . -B $BUILD_DIR -DAMReX_SPACEDIM=1 --preset mpcdf-cloud-cuda
     - end_details configure
     - start_details build "CMake Build Step"
     - cmake --build $BUILD_DIR -j $(($(nproc)-2))
@@ -172,7 +172,7 @@ build-test_gpu_1D:
     - ctest --output-on-failure --no-tests=error
     - end_details test
     - echo quit | nvidia-cuda-mps-control
-  needs: ["build-test_gpu_2D"]
+  needs: ["build-test_cuda_2D"]
 
 .mpcdf-clang-env:
   extends:
