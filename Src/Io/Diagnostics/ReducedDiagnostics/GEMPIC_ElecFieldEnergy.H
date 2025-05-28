@@ -171,19 +171,18 @@ private:
             }
             else
             {
-                std::string str =
-                    "Either Ex, Ey and Ez or Dx, Dy and Dz are needed to compute electric field "
-                    "energy when computeMissingFields is set";
-                amrex::Assert("Neither E nor D was found", "ElecFieldEnergy.H", __LINE__,
-                              str.c_str());
+                GEMPIC_ERROR(
+                    "Neither E nor D was found: Either Ex, Ey and Ez or Dx, Dy and Dz are needed "
+                    "to compute electric field "
+                    "energy when computeMissingFields is set");
             }
         }
         else
         {
-            std::string str =
-                "Ex, Ey, Ez, Dx, Dy and Dz are all needed to compute electric field energy when "
-                "computeMissingFields is not set";
-            amrex::Assert("E or D not found", "ElecFieldEnergy.H", __LINE__, str.c_str());
+            GEMPIC_ERROR(
+                "E or D not found: Ex, Ey, Ez, Dx, Dy and Dz are all needed to compute electric "
+                "field energy when "
+                "computeMissingFields is not set");
         }
         return ComputeMethod::missingNone; // never reached
     }

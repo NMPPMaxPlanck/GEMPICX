@@ -149,7 +149,7 @@ private:
 
         ppDiagName.get_or_set("saveInterval", m_saveInterval);
 
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
             m_format == "plotfile" //|| m_format == "openpmd" ||
             // m_format == "checkpoint" || m_format == "ascent" ||
             // m_format == "sensei"
@@ -175,12 +175,12 @@ private:
 #ifdef WARPX_USE_OPENPMD
             m_flushFormat = std::make_unique<FlushFormatOpenPMD>(m_diagName);
 #else
-            amrex::Abort("To use openpmd output format, need to compile with USE_OPENPMD=TRUE");
+            GEMPIC_ERROR("To use openpmd output format, need to compile with USE_OPENPMD=TRUE");
 #endif
         }
         else
         {
-            amrex::Abort("unknown output format");
+            GEMPIC_ERROR("unknown output format");
         }
     }
 
@@ -320,15 +320,13 @@ private:
                 }
                 else
                 {
-                    amrex::Assert("Variable name neither particle nor field", "FullDiagnostics.H",
-                                  __LINE__, diagName.c_str());
+                    GEMPIC_ERROR("Variable name neither particle nor field: '" + diagName + "'");
                 }
             }
         }
         if (fieldType && particleType)
         {
-            amrex::Assert("Particles and fields in the same diagnostics group", "FullDiagnostics.H",
-                          __LINE__);
+            GEMPIC_ERROR("Particles and fields in the same diagnostics group");
             return DiagnosticType::noType;
         }
         else if (fieldType)
@@ -341,8 +339,7 @@ private:
         }
         else
         {
-            amrex::Assert("Empty diagnostics group ", "FullDiagnostics.H", __LINE__,
-                          m_diagName.c_str());
+            GEMPIC_ERROR("Empty diagnostics group '" + m_diagName + "'");
             return DiagnosticType::noType;
         }
     }
@@ -440,8 +437,7 @@ private:
             }
             else
             {
-                std::string msg{"Unknown outputProcessor: '" + m_diagOutputProcessor + "'."};
-                amrex::Assert(msg.c_str(), "FullDiagnostics.H", __LINE__);
+                GEMPIC_ERROR("Unknown outputProcessor: '" + m_diagOutputProcessor + "'.");
             }
         }
     }

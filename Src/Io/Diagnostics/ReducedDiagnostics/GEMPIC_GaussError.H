@@ -180,19 +180,18 @@ private:
             }
             else
             {
-                std::string str =
-                    "rho and either Dx, Dy and Dz or Ex, Ey and Ez or divD are needed to compute "
-                    "Gauss error when computeMissingFields is set";
-                amrex::Assert("rho and (D or E or divD) not found", "GaussError.H", __LINE__,
-                              str.c_str());
+                GEMPIC_ERROR(
+                    "rho and (D or E or divD) not found: rho and either Dx, Dy and Dz or Ex, Ey "
+                    "and Ez or divD are needed to compute "
+                    "Gauss error when computeMissingFields is set");
             }
         }
         else
         {
-            std::string str =
-                "rho and divD are both needed to compute Gauss error when computeMissingFields "
-                "is not set";
-            amrex::Assert("rho or divD not found", "GaussError.H", __LINE__, str.c_str());
+            GEMPIC_ERROR(
+                "rho or divD not found: rho and divD are both needed to compute Gauss error when "
+                "computeMissingFields "
+                "is not set");
         }
         return ComputeMethod::missingNone; // never reached
     }

@@ -84,22 +84,15 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real get_function_or_constant (
     VelocityInitScheme scheme,
     amrex::Real constant,
     amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
-    std::array<amrex::Real, AMREX_SPACEDIM> const& location,
-    char const* name)
+    std::array<amrex::Real, AMREX_SPACEDIM> const& location)
 {
     if (scheme == VelocityInitScheme::constant)
     {
         return constant;
     }
-    else if (scheme == VelocityInitScheme::function)
+    else // (scheme == VelocityInitScheme::function)
     {
         return func(AMREX_D_DECL(location[xDir], location[yDir], location[zDir]), 0.0);
-    }
-    else
-    {
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-            false, "Unknown " + name + " input format. Must be either constants or functions.");
-        return std::numeric_limits<amrex::Real>::signaling_NaN(); // won't be reached.
     }
 }
 
@@ -113,10 +106,10 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real get_gaussian_velocity (
 {
     amrex::Real vMean =
         get_function_or_constant(vIniter.m_vMeanSchemePtr[gaussId], vIniter.m_vMeanPtr[gaussId][cc],
-                                 vIniter.m_funcvMeanPtr[gaussId][cc], location, "vMean");
+                                 vIniter.m_funcvMeanPtr[gaussId][cc], location);
     amrex::Real vDev =
         get_function_or_constant(vIniter.m_vDevSchemePtr[gaussId], vIniter.m_vDevPtr[gaussId][cc],
-                                 vIniter.m_funcvDevPtr[gaussId][cc], location, "vThermal");
+                                 vIniter.m_funcvDevPtr[gaussId][cc], location);
     return vDev * z0 + vMean;
 }
 
@@ -197,13 +190,13 @@ inline void read_function_or_constant (
         std::tie(parser[xDir], func[xDir]) = Utils::parse_function(inputString + ".x", params);
         if constexpr (vDim > 1)
         {
-            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(params.exists(inputString + ".y"),
-                                             name + " must be given in all directions");
+            GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(params.exists(inputString + ".y"),
+                                              name + " must be given in all directions");
             std::tie(parser[yDir], func[yDir]) = Utils::parse_function(inputString + ".y", params);
             if constexpr (vDim > 2)
             {
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(params.exists(inputString + ".z"),
-                                                 name + " must be given in all directions");
+                GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(params.exists(inputString + ".z"),
+                                                  name + " must be given in all directions");
                 std::tie(parser[zDir], func[zDir]) =
                     Utils::parse_function(inputString + ".z", params);
             }
@@ -283,7 +276,7 @@ public:
             params.get(vwString, vw);
             vWeight[ng] = vw;
         }
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
             std::abs(1.0 - std::reduce(vWeight.begin(), vWeight.end())) < 1e-12,
             "Gaussian weights must sum to 1.0!");
         std::partial_sum(vWeight.begin(), vWeight.end(), m_velCum.begin());
@@ -509,7 +502,7 @@ ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::ParticleSamp
     if constexpr (type == SamplerType::rejection)
     {
         // check that the settings for the Maxwellian are valid for rejection sampling
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
             m_vInit.m_numGauss == 1,
             "Cannot apply rejection sampling with more than one Gaussian as proposal");
 
@@ -700,9 +693,9 @@ bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::rejecti
     for (int cc = 0; cc < vDim; cc++)
     {
         vMean[cc] = get_function_or_constant(m_vInit.m_vMeanSchemePtr[0], m_vInit.m_vMeanPtr[0][cc],
-                                             m_vInit.m_funcvMeanPtr[0][cc], m_position, "vMean");
+                                             m_vInit.m_funcvMeanPtr[0][cc], m_position);
         vDev[cc] = get_function_or_constant(m_vInit.m_vDevSchemePtr[0], m_vInit.m_vDevPtr[0][cc],
-                                            m_vInit.m_funcvDevPtr[0][cc], m_position, "vThermal");
+                                            m_vInit.m_funcvDevPtr[0][cc], m_position);
     }
     amrex::Real proposal = Utils::eval_maxwellian(m_velocity, m_weight, vDev, vMean);
     amrex::Real target;
@@ -949,7 +942,7 @@ void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr,
     }
     else
     {
-        amrex::Abort("Unknown particle initialization method: " + samplerName);
+        GEMPIC_ERROR("Unknown particle initialization method: " + samplerName);
     }
 }
 } //namespace Impl

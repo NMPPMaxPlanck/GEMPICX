@@ -405,8 +405,8 @@ TEST_F(EvaluateEFieldTest, Scaling)
     Io::Parameters parameters{};
 
     /* Initialize the infrastructure with cell sizes different from 1*/
-    amrex::IntVect const nCell{AMREX_D_DECL(8, 4, 2)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 4, 2)};
+    amrex::IntVect const nCell{AMREX_D_DECL(8, 4, 4)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 4, 4)};
     int const hodgeDegree{2};
 
     ComputationalDomain infra = get_compdom(nCell, maxGridSize);

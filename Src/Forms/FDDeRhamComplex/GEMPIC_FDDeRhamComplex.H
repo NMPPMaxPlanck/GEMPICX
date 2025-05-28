@@ -1131,11 +1131,10 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
                     }
                     else
                     {
-                        std::string str =
-                            "hodgeDegreeSelector must be called with field types that are deRham "
-                            "duals of each other.";
-                        amrex::Assert("Incompatible Hodge operator fields",
-                                      "GEMPIC_FDDeRhamComplex.H", __LINE__, str.c_str());
+                        GEMPIC_ERROR(
+                            "Incompatible Hodge operator fields: hodgeDegreeSelector must be "
+                            "called with field types that are deRham "
+                            "duals of each other.");
                     }
                 },
                 hodgeSrc, hodgeDst);
@@ -1147,10 +1146,8 @@ void FDDeRhamComplex::hodge_degree_selector (anyFieldConstRef hodgeSrc,
     }
     else
     {
-        std::string str =
-            "No such degree " + std::to_string(m_hodgeDegree) + " for selected Hodge scheme";
-        amrex::Assert("Incompatible Hodge degree and Hodge scheme", "GEMPIC_FDDeRhamComplex.H",
-                      __LINE__, str.c_str());
+        GEMPIC_ERROR("Incompatible Hodge degree and Hodge scheme: No such degree " +
+                     std::to_string(m_hodgeDegree) + " for selected Hodge scheme");
     }
 }
 
@@ -1201,9 +1198,8 @@ void FDDeRhamComplex::eval_form_degree_selector (
     }
     else
     {
-        std::string str = "No such degree " + std::to_string(m_hodgeDegree) + " for eval_form";
-        amrex::Assert("Incompatible Hodge degree and eval_form", "GEMPIC_FDDeRhamComplex.H",
-                      __LINE__, str.c_str());
+        GEMPIC_ERROR("Incompatible Hodge degree and eval_form: No such degree " +
+                     std::to_string(m_hodgeDegree) + " for eval_form");
     }
 }
 } // namespace Gempic::Forms

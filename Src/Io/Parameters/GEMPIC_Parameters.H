@@ -409,12 +409,10 @@ public:
                 }
                 catch (std::bad_variant_access& e)
                 {
-                    std::string msg = "Tried to get " + variableName + " of type " +
-                                      parm_parse_typename(search->second.get()->m_ref) + " " +
-                                      search->second.get()->m_setBy +
-                                      ".\nFailed to copy into type " + typeid(variable).name() +
-                                      " in " + m_className;
-                    amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+                    GEMPIC_ERROR("Tried to get " + variableName + " of type " +
+                                 parm_parse_typename(search->second.get()->m_ref) + " " +
+                                 search->second.get()->m_setBy + ".\nFailed to copy into type " +
+                                 typeid(variable).name() + " in " + m_className);
                 }
             }
             else if (query_shared(variableName, variable))
@@ -426,8 +424,7 @@ public:
             }
             else
             {
-                std::string msg{"Parameter " + variableName + " not in input file!"};
-                amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+                GEMPIC_ERROR("Parameter " + variableName + " not in input file!");
             }
             m_classOutput << variableName << " = " << convert_to_param(variable) << " # "
                           << search->second.get()->m_setBy << '\n';
@@ -439,8 +436,7 @@ public:
             std::string prefixDot{m_classPrefix.empty() ? m_classPrefix : m_classPrefix + "."};
             if (!query(variableName, variable))
             {
-                std::string msg{"Parameter " + prefixDot + variableName + " not in input file!"};
-                amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+                GEMPIC_ERROR("Parameter " + prefixDot + variableName + " not in input file!");
             }
             m_classOutput << prefixDot << variableName << " = " << convert_to_param(variable)
                           << "\n";
@@ -469,9 +465,8 @@ public:
             // variable is already set!
             if (search->second.get()->m_isSet)
             {
-                std::string msg{m_className + " attempted to set parameter " + variableName +
-                                " already " + search->second.get()->m_setBy};
-                amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+                GEMPIC_ERROR(m_className + " attempted to set parameter " + variableName +
+                             " already " + search->second.get()->m_setBy);
             }
             else
             {
@@ -486,9 +481,7 @@ public:
             if (is_in_input_file(variableName))
             {
                 std::string prefixDot{m_classPrefix.empty() ? m_classPrefix : m_classPrefix + "."};
-                std::string msg{"Parameter " + prefixDot + variableName +
-                                " already set previously!"};
-                amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+                GEMPIC_ERROR("Parameter " + prefixDot + variableName + " already set previously!");
             }
             set_local_param(variableName, variable);
             // Update output

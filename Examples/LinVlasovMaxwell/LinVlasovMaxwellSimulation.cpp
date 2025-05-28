@@ -113,7 +113,7 @@ int main (int argc, char* argv[])
 
                 int numGaussians = 1;
                 params.get("numGaussians", numGaussians);
-                AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+                GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
                     numGaussians == 1,
                     "Number of gaussians must be 1 for linearized Vlasov Model!");
                 // Multiple Maxwellians not possible since for the evaluation of s0 it cannot be

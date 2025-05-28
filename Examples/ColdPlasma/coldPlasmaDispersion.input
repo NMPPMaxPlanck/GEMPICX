@@ -2,9 +2,10 @@
 simName = "ColdPlasma"
 
 # Grid parameters
-ComputationalDomain.nCell = 512 1 1
-ComputationalDomain.maxGridSize = 256 1 1
+ComputationalDomain.nCell = 512 2 2
+ComputationalDomain.maxGridSize = 256 2 2
 ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
+nGhostExtra = 1 # no particles
 
 # wave vector
 k = 0.05 6.283185307179586 6.283185307179586

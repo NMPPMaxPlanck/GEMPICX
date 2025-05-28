@@ -20,7 +20,7 @@ CustomOutputProcessor::CustomOutputProcessor(amrex::MultiFab const& mfSrc,
 
 void CustomOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dcomp*/) const
 {
-    amrex::Assert("This operator should be overridden!", __FILE__, __LINE__);
+    GEMPIC_ERROR("This operator should be overridden!");
 }
 
 Impl::ConstructorType Impl::match_custom_id (std::string const& key)
@@ -43,8 +43,7 @@ Impl::ConstructorType Impl::match_custom_id (std::string const& key)
     }
     else
     {
-        std::string msg{"Unknown custom diagnostic Id: '" + key + "'."};
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+        GEMPIC_ERROR("Unknown custom diagnostic Id: '" + key + "'.");
         return Impl::dynamic_convert<CustomOutputProcessor>;
     }
 }
@@ -54,8 +53,7 @@ void add_output_processor (std::string const& key, Impl::CustomOperatorType cons
     if (CustomOperatorOutputProcessor::s_outputProcessorMap.find(key) !=
         CustomOperatorOutputProcessor::s_outputProcessorMap.end())
     {
-        std::string msg{"Already defined custom diagnostic Id: '" + key + "'."};
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+        GEMPIC_ERROR("Already defined custom diagnostic Id: '" + key + "'.");
     }
     else
     {
