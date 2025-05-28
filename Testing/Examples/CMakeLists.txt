@@ -8,8 +8,11 @@ function(add_executable_input_to_tests DIR)
     file(GLOB inputs RELATIVE ${target_folder} "${target_folder}/*.input")
     foreach(INPUT IN LISTS inputs)
       add_test(NAME RunTest.Example.${MODEL}.${INPUT}
-        COMMAND mpirun -np 2 --oversubscribe -wdir ${RUN_DIR} ${RUN_DIR}/${TGT} ${target_folder}/${INPUT} TimeLoop.nSteps=1
-        )
+        COMMAND mpirun -np 2 --oversubscribe -wdir ${RUN_DIR} ${RUN_DIR}/${TGT} ${target_folder}/${INPUT}
+        TimeLoop.nSteps=1
+        ReducedDiagnostics.saveFolder=ReducedDiagnostics/${INPUT} # ensure that parallel tests do not write to the same file
+        FullDiagnostics.saveFolder=FullDiagnostics/${INPUT}
+      )
     endforeach()
   endforeach()
 
