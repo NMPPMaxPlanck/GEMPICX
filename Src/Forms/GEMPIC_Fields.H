@@ -351,7 +351,7 @@ public:
     {
         BL_PROFILE("Gempic::Forms::DeRhamComplex:: DeRhamComplex()");
         Io::Parameters params("DeRhamComplex");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(infra.geometry().Ok(), "Uninitialized geometry");
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(infra.geometry().Ok(), "Uninitialized geometry");
 
         m_grid = infra.m_grid;
         m_distriMap = infra.m_distriMap;
@@ -382,10 +382,25 @@ public:
             amrex::IntVect{AMREX_D_DECL(nGhostRequired, nGhostRequired, nGhostRequired)};
         int nGhostExtra{3};
         params.get_or_set("nGhostExtra", nGhostExtra);
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(nGhostExtra >= 0,
-                                         "Number of extra ghost cells cannot be negative.");
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(nGhostExtra >= 0,
+                                          "Number of extra ghost cells cannot be negative.");
         int nGhost{nGhostRequired + nGhostExtra};
         std::vector<int> nGhostVector{AMREX_D_DECL(nGhost, nGhost, nGhost)};
+        // Check that at least nGhost valid cells exist in periodic directions. Otherwise, the
+        // communication routines amrex::FillBoundary and amrex::SumBoundary can behave
+        // unexpectedly.
+        for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+        {
+            if (infra.geometry().isPeriodic(dir))
+            {
+                GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+                    nGhost <= infra.m_nCell[dir],
+                    "Number of valid cells in a periodic direction cannot be smaller than the "
+                    "number of essential + extra ghost cells: " +
+                        std::to_string(infra.m_nCell[dir]) + " valid < " + std::to_string(nGhost) +
+                        " ghost cells");
+            }
+        }
         // Check that user isn't expecting "nGhost" to have an effect
         if (params.is_in_input_file("nGhost"))
         {
@@ -406,9 +421,8 @@ public:
                          || nGhostVector[yDir] < m_nGhostRequired[yDir],
                          || nGhostVector[zDir] < m_nGhostRequired[zDir]))
         {
-            std::string msg{"nGhost must be larger than " + std::to_string(nGhostRequired) +
-                            " to accomodate spline and/or Hodge operations"};
-            amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+            GEMPIC_ERROR("nGhost must be larger than " + std::to_string(nGhostRequired) +
+                         " to accomodate spline and/or Hodge operations");
         }
         m_nGhost = amrex::IntVect{
             AMREX_D_DECL(nGhostVector[xDir], nGhostVector[yDir], nGhostVector[zDir])};
@@ -890,8 +904,8 @@ public:
                           amrex::Real weight = 1.)
     {
         BL_PROFILE("Gempic::Forms::HodgeDK");
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(formOut.m_data[xDir].nComp() == 1,
-                                         "hodge_dk not implemented for multi-component fields");
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(formOut.m_data[xDir].nComp() == 1,
+                                          "hodge_dk not implemented for multi-component fields");
         // Start by applying the standard Hodge operator. Needs to be stored in temporary multifab
         DeRhamField<grid, space> tempFormOut(formOut.m_deRham);
         this->hodge(tempFormOut, formIn, weight); //get tempFormOut from formIn

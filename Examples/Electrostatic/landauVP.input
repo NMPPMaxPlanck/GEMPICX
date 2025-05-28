@@ -5,6 +5,7 @@ Sim.Type = "VlasovPoisson"
 ComputationalDomain.nCell = 128 4 4
 ComputationalDomain.maxGridSize = 16 4 4
 ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
+nGhostExtra = 2
 
 # Particle parameters
 Particle.speciesNames = electrons

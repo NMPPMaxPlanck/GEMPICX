@@ -190,22 +190,20 @@ private:
             }
             else
             {
-                std::string str =
-                    "Either JFieldx, JFieldy and JFieldz or JFieldTx, JFieldTy and JFieldTz are "
+                GEMPIC_ERROR(
+                    "Neither JField nor JFieldT was found: Either JFieldx, JFieldy and JFieldz or "
+                    "JFieldTx, JFieldTy and JFieldTz are "
                     "needed to compute electric field "
-                    "energy when computeMissingFields is set";
-                amrex::Assert("Neither G nor J was found", "CurrentFieldEnergy.H", __LINE__,
-                              str.c_str());
+                    "energy when computeMissingFields is set");
             }
         }
         else
         {
-            std::string str =
-                "JFieldx, JFieldy, JFieldz, JFieldTx, JFieldTy and JFieldTz are all needed to "
+            GEMPIC_ERROR(
+                "JField or JFieldT not found: JFieldx, JFieldy, JFieldz, JFieldTx, JFieldTy and "
+                "JFieldTz are all needed to "
                 "compute electric field energy when "
-                "computeMissingFields is not set";
-            amrex::Assert("JField or JFieldT not found", "CurrentFieldEnergy.H", __LINE__,
-                          str.c_str());
+                "computeMissingFields is not set");
         }
         return ComputeMethod::missingNone; // never reached
     }

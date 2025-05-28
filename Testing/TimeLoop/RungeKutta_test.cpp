@@ -23,8 +23,8 @@ ComputationalDomain get_compdom ()
 {
     std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
     std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10, 10, 10)};
-    amrex::IntVect const nCell{AMREX_D_DECL(2, 2, 100)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(2, 2, 50)};
+    amrex::IntVect const nCell{AMREX_D_DECL(4, 4, 24)};
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(4, 4, 12)};
     std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);

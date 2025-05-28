@@ -147,8 +147,7 @@ int main (int argc, char* argv[])
         }
         else
         {
-            amrex::AllPrint() << "Simulation type " << simType << " is not implemented\n";
-            amrex::Abort();
+            GEMPIC_ERROR("Simulation type " + simType + " is not implemented");
         }
 
         // initialize LSRKsolver

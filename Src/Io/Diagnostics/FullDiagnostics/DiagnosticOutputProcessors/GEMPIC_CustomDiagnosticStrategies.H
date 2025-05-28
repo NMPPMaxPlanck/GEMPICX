@@ -214,8 +214,7 @@ void add_output_processor (std::string const& key)
     if (CustomOutputProcessor::s_outputProcessorClassMap.find(key) !=
         CustomOutputProcessor::s_outputProcessorClassMap.end())
     {
-        std::string msg{"Already defined custom diagnostic Id: '" + key + "'."};
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+        GEMPIC_ERROR("Already defined custom diagnostic Id: '" + key + "'.");
     }
     CustomOutputProcessor::s_outputProcessorClassMap.emplace(key, Impl::dynamic_convert<T>);
 }

@@ -10,7 +10,7 @@ namespace Gempic::Utils
 {
 void Verbosity::set_level (int level)
 {
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
         s_settable, "Verbosity level cannot be set twice or after it's been used the first time!");
     if (level < 0)
     {

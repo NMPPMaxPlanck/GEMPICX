@@ -116,6 +116,15 @@
     }
 #endif
 
+/**
+ * The GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE and GEMPIC_ERROR macros allow for dynamic messages at run
+ * time
+ */
+#define GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(EX, MSG) \
+    (EX) ? ((void)0) : amrex::Assert(#EX, __FILE__, __LINE__, std::string(MSG).c_str())
+
+#define GEMPIC_ERROR(MSG) amrex::Assert(std::string(MSG).c_str(), __FILE__, __LINE__)
+
 enum Direction : unsigned int
 {
     xDir = 0,

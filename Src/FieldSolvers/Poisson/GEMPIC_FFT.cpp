@@ -16,13 +16,13 @@ FFTSolver::FFTSolver(ComputationalDomain const& compDom,
     BL_PROFILE("Gempic::FieldSolvers::FFTSolver::FFTSolver()");
     if (hodgeScheme != HodgeScheme::FDHodge)
     {
-        amrex::Abort("The FFT Poison solver only works with Finite Difference Hodge");
+        GEMPIC_ERROR("The FFT Poison solver only works with Finite Difference Hodge");
     }
 
     // Check for periodic boundaries, required for FFT solver
     if (!compDom.geometry().periodicity().isAllPeriodic())
     {
-        amrex::Abort("FFT Poisson solver requires periodic boundary conditions");
+        GEMPIC_ERROR("FFT Poisson solver requires periodic boundary conditions");
     }
 
     m_r2c = std::make_unique<amrex::FFT::R2C<amrex::Real>>(compDom.box());

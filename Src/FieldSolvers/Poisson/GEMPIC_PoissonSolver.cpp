@@ -81,12 +81,10 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
         }
         else
         {
-            amrex::Assert("Non-periodic boundary conditions not compatible with the FFT solver",
-                          __FILE__, __LINE__);
+            GEMPIC_ERROR("Non-periodic boundary conditions not compatible with the FFT solver");
         }
 #else
-        amrex::Assert("FFT was not compiled with GEMPICX and is thus not available as a solver",
-                      __FILE__, __LINE__);
+        GEMPIC_ERROR("FFT was not compiled with GEMPICX and is thus not available as a solver");
 #endif
     }
     else if (solver == "Amrex")
@@ -99,9 +97,8 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
         }
         else
         {
-            amrex::Assert(
-                "Non-periodic boundary conditions not compatible with the AMReX Poisson solver",
-                __FILE__, __LINE__);
+            GEMPIC_ERROR(
+                "Non-periodic boundary conditions not compatible with the AMReX Poisson solver");
         }
     }
     else if (solver == "ConjugateGradient")
@@ -152,21 +149,18 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
                                                               verbose);
             default:
             {
-                std::string msg = "Hodge degree " + std::to_string(deRham->get_hodge_degree()) +
-                                  " not implemented for Hypre solver";
-                amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+                GEMPIC_ERROR("Hodge degree " + std::to_string(deRham->get_hodge_degree()) +
+                             " not implemented for Hypre solver");
             }
             break;
         }
 #else
-        amrex::Assert("Hypre was not compiled with GEMPICX and is thus not available as a solver",
-                      __FILE__, __LINE__);
+        GEMPIC_ERROR("Hypre was not compiled with GEMPICX and is thus not available as a solver");
 #endif
     }
     else
     {
-        std::string msg{solver + " not a recognised PoissonSolver"};
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+        GEMPIC_ERROR(solver + " not a recognised PoissonSolver");
     }
     exit(1); // Calms the compiler even though we don't technically return anything
 }
@@ -186,7 +180,7 @@ AmrexSolver::AmrexSolver(ComputationalDomain const& compDom,
     // Check for periodic boundaries, required for this solver
     if (!compDom.geometry().periodicity().isAllPeriodic())
     {
-        amrex::Abort("Amrex Poisson solver requires periodic boundary conditions");
+        GEMPIC_ERROR("Amrex Poisson solver requires periodic boundary conditions");
     }
     amrex::LPInfo lpInfo;
     lpInfo.setMaxCoarseningLevel(maxCoarseningLevel);

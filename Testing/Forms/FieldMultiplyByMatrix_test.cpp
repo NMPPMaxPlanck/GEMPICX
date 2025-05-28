@@ -55,7 +55,12 @@ protected:
     ComputationalDomain m_infra;
     amrex::Real m_tol{1e-11};
 
-    FieldMultiplyByMatrixTest() : m_infra{get_compdom()} {}
+    FieldMultiplyByMatrixTest() : m_infra{get_compdom()}
+    {
+        // Not checking particles
+        int const nGhostExtra{1};
+        m_parameters.set("nGhostExtra", nGhostExtra);
+    }
 };
 //Test Eout = M*D
 //input D: constant field

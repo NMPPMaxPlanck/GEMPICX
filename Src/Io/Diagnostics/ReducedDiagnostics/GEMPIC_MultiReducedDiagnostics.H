@@ -280,7 +280,7 @@ private:
         }
         else
         {
-            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
                 false, diagType + " is not a valid type for reduced diagnostic in group " + name);
             // this is never reached
             return std::make_unique<ElecFieldEnergy<vdim, degx, degy, degz, ndata>>(

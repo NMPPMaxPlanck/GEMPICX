@@ -115,8 +115,8 @@ std::string parm_parse_typename (parmParseType const& val)
 void Parameters::set_print_output (bool printOrNot)
 {
     BL_PROFILE("Gempic::Io::set_print_output()");
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
-                                     "Parameters class already previously initialized!");
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
+                                      "Parameters class already previously initialized!");
     s_printOutput = printOrNot;
 }
 
@@ -125,8 +125,8 @@ Parameters::Parameters(std::string const& classPrefix, std::string printName) :
 {
     BL_PROFILE("Gempic::Io::Parameters(class)");
     using namespace Impl; // utility functions for this class
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances != 0,
-                                     "Parameters class not previously initialized!");
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances != 0,
+                                      "Parameters class not previously initialized!");
     if (printName == "None")
     {
         printName = "class " + classPrefix;
@@ -187,8 +187,8 @@ Parameters::~Parameters()
 void Parameters::reset ()
 {
     BL_PROFILE("Gempic::Io::reset()");
-    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
-                                     "Parameters class already exists!");
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
+                                      "Parameters class already exists!");
     amrex::ParmParse::Finalize();
     amrex::ParmParse::Initialize(0, nullptr, nullptr);
 }

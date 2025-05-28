@@ -48,14 +48,12 @@ inline std::vector<std::string> read_boundary_condition (int numNonPeriodic,
     // Either no or all non-periodic boundary conditions must be given
     else if (userConditions < 2 * numNonPeriodic)
     {
-        std::string msg = "Not enough boundary conditions given for " + diagName;
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+        GEMPIC_ERROR("Not enough boundary conditions given for " + diagName);
     }
     /* Not checked, so that we can use the same input file for all dimensions
     else
     {
-        std::string msg = "Too many boundary conditions given for " + diagName;
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
+        GEMPIC_ERROR("Too many boundary conditions given for " + diagName);
     }
     */
     return bc;
@@ -93,7 +91,7 @@ inline amrex::Vector<amrex::BCRec> load_boundary_condition (amrex::Geometry geom
                 }
                 else
                 {
-                    amrex::Abort("Boundary condition " + bc[bcIdx - 1] + " is not implemented.");
+                    GEMPIC_ERROR("Boundary condition " + bc[bcIdx - 1] + " is not implemented.");
                 }
                 it = bcTypeMap.find(bc[bcIdx++]);
                 if (it != bcTypeMap.end())
@@ -102,7 +100,7 @@ inline amrex::Vector<amrex::BCRec> load_boundary_condition (amrex::Geometry geom
                 }
                 else
                 {
-                    amrex::Abort("Boundary condition " + bc[bcIdx - 1] + " is not implemented.");
+                    GEMPIC_ERROR("Boundary condition " + bc[bcIdx - 1] + " is not implemented.");
                 }
             }
         }
@@ -162,7 +160,7 @@ struct BoundaryConditions
                 m_extrapStencil[2] = {56, -210, 336, -280, 120, -21};
                 break;
             default:
-                amrex::Abort("Extrapolation of degree " + std::to_string(m_extrapDegree) +
+                GEMPIC_ERROR("Extrapolation of degree " + std::to_string(m_extrapDegree) +
                              " not implemented.");
         }
     }

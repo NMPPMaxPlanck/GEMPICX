@@ -110,13 +110,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, node>)");
     size_t nComps{static_cast<size_t>(funcs.size())};
     int nCompField{field.m_data.nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data.nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     amrex::RealVect const dr = m_dr;
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
@@ -176,13 +173,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, cell>)");
     amrex::Long nComps{funcs.size()};
     int nCompField{field.m_data.nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data.nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     GaussQuadrature const integrate{gaussNodes};
 
@@ -256,13 +250,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, node>)");
     amrex::Long nComps{funcs.size()};
     int nCompField{field.m_data.nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data.nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
     {
@@ -325,13 +316,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, cell>)");
     amrex::Long nComps{funcs.size()};
     int nCompField{field.m_data.nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data.nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     GaussQuadrature integrate{gaussNodes};
 
@@ -408,13 +396,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, edge>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     int nCompField{field.m_data[xDir].nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data[xDir].nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> funcsGpu{
         nComps};
@@ -519,13 +504,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, face>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     int nCompField{field.m_data[xDir].nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data[xDir].nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> funcsGpu{
         nComps};
@@ -656,13 +638,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<primal, edge>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     int nCompField{field.m_data[xDir].nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data[xDir].nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> funcsGpu{
         nComps};
@@ -767,13 +746,10 @@ void FDDeRhamComplex::projection (
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::projection(<dual, face>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     int nCompField{field.m_data[xDir].nComp()};
-    std::string msg = "The number of functions (" + std::to_string(nComps) +
-                      ") doesn't correspond to the number of DeRhamField components (" +
-                      std::to_string(nCompField) + ").";
-    if (field.m_data[xDir].nComp() != funcs.size())
-    {
-        amrex::Assert(msg.c_str(), __FILE__, __LINE__);
-    }
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
+                                  ") doesn't correspond to the number of DeRhamField components (" +
+                                  std::to_string(nCompField) + ").");
 
     amrex::Gpu::DeviceVector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> funcsGpu{
         nComps};

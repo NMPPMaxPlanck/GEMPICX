@@ -169,19 +169,18 @@ private:
             }
             else
             {
-                std::string str =
-                    "Either Bx, By and Bz or Hx, Hy and Hz are needed to compute magnetic energy "
-                    "when computeMissingFields is set";
-                amrex::Assert("Neither B nor H was found", "MagFieldEnergy.H", __LINE__,
-                              str.c_str());
+                GEMPIC_ERROR(
+                    "Neither B nor H was found: Either Bx, By and Bz or Hx, Hy and Hz are needed "
+                    "to compute magnetic energy "
+                    "when computeMissingFields is set");
             }
         }
         else
         {
-            std::string str =
-                "Bx, By, Bz, Hx, Hy and Hz are all needed to compute magnetic energy when "
-                "computeMissingFields is not set";
-            amrex::Assert("B or H not found", "MagFieldEnergy.H", __LINE__, str.c_str());
+            GEMPIC_ERROR(
+                "B or H not found: Bx, By, Bz, Hx, Hy and Hz are all needed to compute magnetic "
+                "energy when "
+                "computeMissingFields is not set");
         }
         return ComputeMethod::missingNone; // never reached
     }
