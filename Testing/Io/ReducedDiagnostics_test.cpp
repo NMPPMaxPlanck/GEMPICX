@@ -277,6 +277,8 @@ protected:
 
 TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 {
+    std::string saveFolder{"RDMissingPrimalFields"};
+    m_parameters.set("ReducedDiagnostics.saveFolder", saveFolder);
     constexpr int hodgeDegree{2};
 
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
@@ -299,7 +301,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
     // check electric field diagnostics
     // Compare with the analytical values for the fields that we have defined above
-    std::ifstream inputElec("ReducedDiagnostics/FieldElecMissing.txt");
+    std::ifstream inputElec(saveFolder + "/FieldElecMissing.txt");
     std::string line;
     std::getline(inputElec, line); // first line not used
     std::getline(inputElec, line);
@@ -313,7 +315,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
     // check magnetic field diagnostics
     // Compare with the analytical values for the fields that we have defined above
-    std::ifstream inputMag("ReducedDiagnostics/FieldMagMissing.txt");
+    std::ifstream inputMag(saveFolder + "/FieldMagMissing.txt");
     std::getline(inputMag, line); // first line not used
     std::getline(inputMag, line);
     std::stringstream splitLineB(line);
@@ -325,7 +327,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
     // check current field diagnostics
     // Compare with the analytical values for the fields that we have defined above
-    std::ifstream inputCurrent("ReducedDiagnostics/FieldCurrentMissing.txt");
+    std::ifstream inputCurrent(saveFolder + "/FieldCurrentMissing.txt");
     std::getline(inputCurrent, line); // first line not used
     std::getline(inputCurrent, line);
     std::stringstream splitLineJ(line);
@@ -339,7 +341,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     // check particle diagnostics
     // formulas for computing the exact values of the moments that are needed
     // are given in the file test_sampler.cpp
-    std::ifstream inputPart("ReducedDiagnostics/PartDiagMissing.txt");
+    std::ifstream inputPart(saveFolder + "/PartDiagMissing.txt");
     std::getline(inputPart, line); // first line not used
     std::getline(inputPart, line);
     std::stringstream splitLinePart(line);
@@ -368,7 +370,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
-    std::ifstream inputGauss("ReducedDiagnostics/GaussErrorMissing.txt");
+    std::ifstream inputGauss(saveFolder + "/GaussErrorMissing.txt");
     std::getline(inputGauss, line); // first line not used
     std::getline(inputGauss, line);
     std::getline(inputGauss, line); // skip first time step
@@ -383,6 +385,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
 TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 {
+    std::string saveFolder{"RDMissingDualFields"};
+    m_parameters.set("ReducedDiagnostics.saveFolder", saveFolder);
     constexpr int hodgeDegree{2};
 
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
@@ -404,7 +408,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 
     // check electric field diagnostics
     // Compare with the analytical values for the fields that we have defined above
-    std::ifstream inputElec("ReducedDiagnostics/FieldElecMissing.txt");
+    std::ifstream inputElec(saveFolder + "/FieldElecMissing.txt");
     std::string line;
     std::getline(inputElec, line); // first line not used
     std::getline(inputElec, line);
@@ -418,7 +422,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 
     // check magnetic field diagnostics
     // Compare with the analytical values for the fields that we have defined above
-    std::ifstream inputMag("ReducedDiagnostics/FieldMagMissing.txt");
+    std::ifstream inputMag(saveFolder + "/FieldMagMissing.txt");
     std::getline(inputMag, line); // first line not used
     std::getline(inputMag, line);
     std::stringstream splitLineB(line);
@@ -430,7 +434,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 
     // check current field diagnostics
     // Compare with the analytical values for the fields that we have defined above
-    std::ifstream inputCurrent("ReducedDiagnostics/FieldCurrentMissing.txt");
+    std::ifstream inputCurrent(saveFolder + "/FieldCurrentMissing.txt");
     std::getline(inputCurrent, line); // first line not used
     std::getline(inputCurrent, line);
     std::stringstream splitLineJ(line);
@@ -444,7 +448,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     // check particle diagnostics
     // formulas for computing the exact values of the moments that are needed
     // are given in the file test_sampler.cpp
-    std::ifstream inputPart("ReducedDiagnostics/PartDiagMissing.txt");
+    std::ifstream inputPart(saveFolder + "/PartDiagMissing.txt");
     std::getline(inputPart, line); // first line not used
     std::getline(inputPart, line);
     std::stringstream splitLinePart(line);
@@ -471,7 +475,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
-    std::ifstream inputGauss("ReducedDiagnostics/GaussErrorMissing.txt");
+    std::ifstream inputGauss(saveFolder + "/GaussErrorMissing.txt");
     std::getline(inputGauss, line); // first line not used
     std::getline(inputGauss, line);
     std::getline(inputGauss, line); // skip first time step

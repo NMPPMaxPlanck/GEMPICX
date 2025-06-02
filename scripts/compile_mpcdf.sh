@@ -2,15 +2,15 @@
 #set -x
 
 USAGE="Example usage:
-  $0 -p mpcdf-gpu-1D # preset chosen by full name
+  $0 -p mpcdf-raven-1D # preset chosen by full name
   $0 -s gr1 # gpu release 1D
   $0 -s cd2 -D GEMPIC_USE_LTO=ON # cpu debug 2D, extra CMAKE flag supplied"
 
 # Default:
-PRESET="mpcdf-gpu-3D"
+PRESET="mpcdf-raven-3D"
 
 HELP="$0 [-h] [-p preset-name|-s preset-abbreviation] [-D CMAKE_SETTINGS]
-configures and builds specific preset, then creates an example jobscript in the build folder
+configures and builds specific preset
 
 where:
   -h show this help text
@@ -104,7 +104,11 @@ if [ $SHORT_PRESET ]; then
               fi
            ;;
          esac
-         PRESET="mpcdf-gpu"
+         if [ x"$CLUSTER" == x"RAVEN" ]; then
+          PRESET="mpcdf-raven"
+         elif [ x"$HOSTNAME" == x"viper12" ]; then
+          PRESET="mpcdf-viper"
+         fi
     ;;
     *) echo "No CPU/GPU option specified in abbreviated preset '$SHORT_PRESET'" >&2
     error_out
@@ -133,7 +137,7 @@ fi
 # https://docs.mpcdf.mpg.de/doc/computing/viper-user-guide.html#resource-limits
 # https://docs.mpcdf.mpg.de/doc/computing/raven-user-guide.html#resource-limits
 # We adapt the number of parallel build processes accordingly:
-N_PARALLEL=$(cat /sys/fs/cgroup/cpu,cpuacct/user.slice/user-${UID}.slice/cpu.cfs_{quota,period}_us | tr '\n' ' ' | awk '{ printf"%d\n", $1/$2 }')
+N_PARALLEL=$(cat /sys/fs/cgroup/user.slice/user-${UID}.slice/cpu.max | awk '{ printf"%d\n", $1/$2 }')
 echo "$N_PARALLEL processes"
 
 SOURCE_DIRECTORY=`dirname $0`/../
@@ -165,12 +169,6 @@ t0=`date +%s`
 
 cmake --preset $PRESET $ADDITIONAL_OPTIONS
 cmake --build $BUILD_DIR --parallel $N_PARALLEL
-
-
-# generate run script in BUILD_DIR
-rm -f $BUILD_DIR/run_mpcdf.sh
-cat $SOURCE_DIRECTORY/scripts/slurm_mpcdf.inc $SOURCE_DIRECTORY/scripts/mpcdf_modules.inc $SOURCE_DIRECTORY/scripts/srun.inc > $BUILD_DIR/run_mpcdf.sh
-
 
 t1=`date +%s`
 dt=$((t1-t0))

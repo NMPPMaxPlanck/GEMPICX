@@ -13,6 +13,7 @@ stages:
 
 .mpcdf-modules:
   before_script:
+    - export MPCDF_RUNNER=1
     - module purge
     - module load cmake
     - module load git
@@ -58,47 +59,20 @@ build-test_gcc_3D:
   extends:
     - .mpcdf-gcc-env
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake -S . -B ./build --preset cpu-release-3D
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
-    - end_details test
+    - configure_build_test cpu-release-3D 
 
 build-test_gcc_2D:
   extends:
     - .mpcdf-gcc-env
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake -S . -B ./build --preset cpu-release-2D
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
-    - end_details test
+    - configure_build_test cpu-release-2D
   needs: ["build-test_gcc_3D"]
 
 build-test_gcc_1D:
   extends:
     - .mpcdf-gcc-env
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake -S . -B ./build --preset cpu-release-1D
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
-    - end_details test
+    - configure_build_test cpu-release-1D
   needs: ["build-test_gcc_3D"]
 
 .mpcdf-cuda-env:
@@ -116,23 +90,14 @@ build-test_gcc_1D:
     - module load cuda
     - module load fftw-mpi
     - module list
+    - export NVIDIA_ARCHITECTURE=A100
 
 build-test_cuda_3D:
   extends:
     - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
-    - export BUILD_DIR=$(pwd)/build
-    - start_details configure "CMake Configure Step"
-    - cmake -S . -B $BUILD_DIR -DAMReX_SPACEDIM=3 --preset mpcdf-cloud-cuda
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build $BUILD_DIR -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error
-    - end_details test
+    - configure_build_test_gpu "mpcdf-cloud-cuda -DAMReX_SPACEDIM=3"
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gcc_3D"]
 
@@ -141,17 +106,7 @@ build-test_cuda_2D:
     - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
-    - export BUILD_DIR=$(pwd)/build
-    - start_details configure "CMake Configure Step"
-    - cmake -S . -B $BUILD_DIR -DAMReX_SPACEDIM=2 --preset mpcdf-cloud-cuda
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build $BUILD_DIR -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error
-    - end_details test
+    - configure_build_test_gpu "mpcdf-cloud-cuda -DAMReX_SPACEDIM=2"
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_cuda_3D"]
 
@@ -160,17 +115,7 @@ build-test_cuda_1D:
     - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
-    - export BUILD_DIR=$(pwd)/build
-    - start_details configure "CMake Configure Step"
-    - cmake -S . -B $BUILD_DIR -DAMReX_SPACEDIM=1 --preset mpcdf-cloud-cuda
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build $BUILD_DIR -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error
-    - end_details test
+    - configure_build_test_gpu "mpcdf-cloud-cuda -DAMReX_SPACEDIM=1"
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_cuda_2D"]
 
@@ -195,64 +140,28 @@ build-test_clang_cpu_3D:
   extends:
     - .mpcdf-clang-env
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
-    - end_details test
+    - configure_build_test "cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_2D:
   extends:
     - .mpcdf-clang-env
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake --preset cpu-release-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
-    - end_details test
+    - configure_build_test "cpu-release-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_1D:
   extends:
     - .mpcdf-clang-env
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake --preset cpu-release-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
-    - end_details test
+    - configure_build_test "cpu-release-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
   needs: ["build-test_gcc_3D"]
 
 build-test_mac_3D:
   extends:
     - .remove-duplicate-pipelines
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake -S . -B ./build --preset cpu-release-3D
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build -j $(($(nproc)-2))
-    - end_details build
-    - start_details test "Test Step"
-    - cd build
-    - ctest --output-on-failure --no-tests=error -j $(($(nproc)-2))
-    - end_details test
+    - configure_build_test cpu-release-3D
   tags: [macos]
   needs: ["build-test_gcc_3D"]
 
