@@ -61,7 +61,7 @@ include(cmake/gempic_CompilerConfig.cmake)
 # This section is specific for MPCDF-Cluster configurations
 if(   ($ENV{HOST} MATCHES "raven*")
    OR ($ENV{HOST} MATCHES "viper*")
-   OR (DEFINED ENV{GITLAB_CI})
+   OR (DEFINED ENV{MPCDF_RUNNER})
    )
   set(CMAKE_BUILD_RPATH $ENV{GCC_HOME}/lib64)
   set(CMAKE_INSTALL_RPATH $ENV{GCC_HOME}/lib64)

@@ -13,6 +13,21 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_HIP_ARCHITECTURES": "gfx942"
+            },
+            "condition": {
+                "type": "anyOf",
+                "conditions": [
+                    {
+                        "type": "matches",
+                        "string": "$env{HOSTNAME}",
+                        "regex": "^viper[0-9]+$"
+                    },
+                    {
+                        "type": "equals",
+                        "lhs": "$env{AMD_ARCHITECTURE}",
+                        "rhs": "MI300A"
+                    }
+                ]
             }
         },
         {
@@ -22,6 +37,21 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_CUDA_ARCHITECTURES": "80"
+            },
+            "condition": {
+                "type": "anyOf",
+                "conditions": [
+                    {
+                        "type": "matches",
+                        "string": "$env{HOSTNAME}",
+                        "regex": "^raven[0-9]+$"
+                    },
+                    {
+                        "type": "equals",
+                        "lhs": "$env{NVIDIA_ARCHITECTURE}",
+                        "rhs": "A100"
+                    }
+                ]
             }
         },
         {
@@ -122,6 +152,11 @@
                 "mpi-compiler",
                 "gempic-cuda-cache-vars"
             ],
+            "condition": {
+                "type": "equals",
+                "lhs": "$env{NVIDIA_ARCHITECTURE}",
+                "rhs": "A100"
+            },
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
