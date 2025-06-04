@@ -14,7 +14,7 @@ DiscreteField::DiscreteField (std::string const &label,
                               DiscreteGrid const &discreteGrid,
                               Grid const &grid,
                               int const &boundaryExtrapolationDegree) :
-    m_label{label}, m_discreteGrid{discreteGrid}
+    m_label{std::make_shared<std::string>(label)}, m_discreteGrid{discreteGrid}
 {
     amrex::Vector<int> maxGridSizeTmp;
     amrex::IntVect maxGridSize;
@@ -82,7 +82,7 @@ DiscreteVectorField::DiscreteVectorField (
     std::array<DiscreteGrid, AMREX_SPACEDIM> const &discreteGrid,
     Grid const &grid,
     int const &boundaryExtrapolationDegree) :
-    m_label{label}, m_discreteGrid{discreteGrid}
+    m_label{std::make_shared<std::string>(label)}, m_discreteGrid{discreteGrid}
 {
     amrex::Vector<int> maxGridSizeTmp;
     amrex::IntVect maxGridSize;
@@ -144,7 +144,6 @@ std::array<amrex::Box, 3> const DiscreteVectorField::select_box (amrex::MFIter c
 
 amrex::Box const &DiscreteVectorField::selected_box (Direction dir) const
 {
-    AMREX_ASSERT_WITH_MESSAGE(m_data == nullptr, Impl::copy_error_message<DiscreteField>(m_label));
     AMREX_ASSERT(dir <= AMREX_SPACEDIM);
     return m_data->operator[](dir)[m_selectedBoxIdx].box();
 }
@@ -188,7 +187,7 @@ void operator*=(DiscreteVectorField& field, amrex::Real const &scalar)
             field.select_box(mfi);
             amrex::ParallelFor(
                 mfi.validbox(), field.multiFab(dir).nComp(),
-                AMREX_GPU_HOST_DEVICE[=](int ix, int iy, int iz, int n) {
+                [=] AMREX_GPU_HOST_DEVICE (int ix, int iy, int iz, int n) {
                     field(ix, iy, iz, dir, n) *= scalar;
                 });
         }
@@ -205,7 +204,7 @@ void operator+=(DiscreteVectorField &a, DiscreteVectorField const &b)
             auto const &otherView{b.multiFab(dir).array(mfi)};
             amrex::ParallelFor(
                 mfi.validbox(), a.multiFab(dir).nComp(),
-                AMREX_GPU_HOST_DEVICE[=](int ix, int iy, int iz, int n) {
+                [=] AMREX_GPU_HOST_DEVICE (int ix, int iy, int iz, int n) {
                     a(ix, iy, iz, dir, n) += otherView(ix, iy, iz, n);
                 });
         }
@@ -222,7 +221,7 @@ amrex::Real L_inf_error (DiscreteField &a, DiscreteField &b)
         a.select_box(mfi);
         b.select_box(mfi);
         tmp.select_box(mfi);
-        amrex::ParallelFor(mfi.validbox(), [=] (int ix, int iy, int iz)
+        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE  (int ix, int iy, int iz)
                            { tmp(ix, iy, iz) = std::abs(a(ix, iy, iz) - b(ix, iy, iz)); });
     }
     return tmp.multiFab().norminf();
@@ -246,7 +245,7 @@ std::array<amrex::Real, 3> L_inf_error (DiscreteVectorField &a, DiscreteVectorFi
             b.select_box(mfi);
             tmp.select_box(mfi);
             amrex::ParallelFor(
-                mfi.validbox(), [=] (int ix, int iy, int iz)
+                mfi.validbox(),  [=] AMREX_GPU_HOST_DEVICE (int ix, int iy, int iz)
                 { tmp(ix, iy, iz, dir) = std::abs(a(ix, iy, iz, dir) - b(ix, iy, iz, dir)); });
         }
         maxError[dir] = tmp.multiFab(dir).norminf();

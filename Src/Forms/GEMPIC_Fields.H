@@ -76,7 +76,9 @@ public:
     void set_ghost_size(int width, Direction dir);
 
 private:
-    std::string m_label;
+    // std::string is not GPU capable.
+    // For now rap into a shared pointer to allow copying the data to GPU
+    std::shared_ptr<std::string> m_label;
 
     // The MultiFab is an owning datastructure which can not be copied.
     // We need to copy DiscreteField to GPU which is not possible for the MultiFab.
@@ -121,7 +123,9 @@ public:
     void set_ghost_size(int width, Direction dir);
 
 private:
-    std::string m_label{};
+    // std::string is not GPU capable.
+    // For now rap into a shared pointer to allow copying the data to GPU
+    std::shared_ptr<std::string> m_label{};
 
     // The MultiFab is an owning datastructure which can not be copied.
     // We need to copy DiscreteField to GPU which is not possible for the MultiFab.

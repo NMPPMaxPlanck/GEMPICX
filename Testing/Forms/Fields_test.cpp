@@ -26,12 +26,97 @@ public:
         pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
         pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
     }
-    const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
-    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    const amrex::Vector<int> nCell{AMREX_D_DECL(9, 8, 7)};
-    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(3, 4, 5)};
-    const amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::Vector<amrex::Real> const domainLo{AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
+    amrex::Vector<amrex::Real> const k{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::Vector<int> const nCell{AMREX_D_DECL(9, 8, 7)};
+    amrex::Vector<int> const maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    amrex::Vector<int> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
 };
+
+void fill_scalar_field_with_one (DiscreteField & sf)
+{
+    auto fillFunc = [=]AMREX_GPU_HOST_DEVICE(amrex::Real x, amrex::Real y, amrex::Real z, int n)
+    {
+        return 1.0;
+    };
+    Gempic::fill(sf,fillFunc);
+}
+void fill_scalar_field_with_sin (DiscreteField & sf)
+{
+    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(double x, double y, double z, int n)
+         { return std::sin(x) * std::sin(y) * std::sin(z); };
+    Gempic::fill(sf, fillFunc);
+}
+void fill_vector_field_with_one_two_three (DiscreteVectorField & vf){
+    auto fillFunc =
+        [=]AMREX_GPU_HOST_DEVICE(amrex::Real x, amrex::Real y, amrex::Real z, Direction dir, int n)
+    {
+        switch (dir)
+        {
+            case Direction::xDir:
+                return 1.0;
+            case Direction::yDir:
+                return 2.0;
+            case Direction::zDir:
+                return 3.0;
+            default:
+                return 0.0;
+        };
+    };
+    Gempic::fill(vf, fillFunc);
+}
+void fill_vector_field_with_sin (DiscreteVectorField & vf)
+{
+    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(double x, double y, double z, Direction dir, int n)
+         { return std::sin(x) * std::sin(y) * std::sin(z) * (dir + 1); };
+    Gempic::fill(vf, fillFunc);
+}
+
+TEST_F(DiscreteFieldsTest, fillScalarField)
+{
+    Gempic::Io::Parameters parameters;
+    DiscreteField df{
+        "df", parameters,
+        DiscreteGrid{parameters, {DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell}},
+        Grid::dual, 3};
+
+    df.multiFab().setVal(0.0);
+    fill_scalar_field_with_one(df);
+    EXPECT_EQ(df.multiFab().norm0(), 1.0);
+    EXPECT_EQ(df.multiFab().norm1(), df.discrete_grid().size(xDir) * df.discrete_grid().size(yDir) *
+                                         df.discrete_grid().size(zDir));
+}
+
+TEST_F(DiscreteFieldsTest, fillVectorField)
+{
+    Gempic::Io::Parameters parameters;
+
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        AMREX_D_DECL({DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell})};
+    std::array<DiscreteGrid, 3> grids{};
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        grids[dir] = DiscreteGrid{parameters, position};
+    }
+    DiscreteVectorField df{"df", parameters, grids, Grid::dual, 3};
+
+    df.multiFab(Direction::xDir).setVal(0.0);
+    df.multiFab(Direction::yDir).setVal(0.0);
+    df.multiFab(Direction::zDir).setVal(0.0);
+    fill_vector_field_with_one_two_three(df);
+    EXPECT_EQ(df.multiFab(Direction::xDir).norm0(), 1.0);
+    EXPECT_EQ(df.multiFab(xDir).norm1(), df.discrete_grid(xDir).size(xDir) *
+                                             df.discrete_grid(xDir).size(yDir) *
+                                             df.discrete_grid(xDir).size(zDir));
+    EXPECT_EQ(df.multiFab(Direction::yDir).norm0(), 2.0);
+    EXPECT_EQ(df.multiFab(yDir).norm1(), 2 * df.discrete_grid(yDir).size(xDir) *
+                                             df.discrete_grid(yDir).size(yDir) *
+                                             df.discrete_grid(yDir).size(zDir));
+    EXPECT_EQ(df.multiFab(Direction::zDir).norm0(), 3.0);
+    EXPECT_EQ(df.multiFab(zDir).norm1(), 3 * df.discrete_grid(zDir).size(xDir) *
+                                             df.discrete_grid(zDir).size(yDir) *
+                                             df.discrete_grid(zDir).size(zDir));
+}
 
 TEST_F(DiscreteFieldsTest, setGhostCellsScalarField)
 {
@@ -45,10 +130,8 @@ TEST_F(DiscreteFieldsTest, setGhostCellsScalarField)
         DiscreteGrid{parameters, {DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell}},
         Grid::dual, 3};
 
-    fill(df, [=] AMREX_GPU_HOST(double x, double y, double z, int n)
-         { return std::sin(x) * std::sin(y) * std::sin(z); });
-    fill(res, [=] AMREX_GPU_HOST(double x, double y, double z, int n)
-         { return std::sin(x) * std::sin(y) * std::sin(z); });
+    fill_scalar_field_with_sin(df);
+    fill_scalar_field_with_sin(res);
     for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         EXPECT_EQ(df.multiFab().nGrow(dir), 0);
@@ -71,10 +154,9 @@ TEST_F(DiscreteFieldsTest, setGhostCellsVectorField)
     }
     DiscreteVectorField df{"df", parameters, grids, Grid::dual, 3};
     DiscreteVectorField res{"df", parameters, grids, Grid::dual, 3};
-    fill(df, [=] AMREX_GPU_HOST(double x, double y, double z, Direction dir, int n)
-         { return std::sin(x) * std::sin(y) * std::sin(z) * (dir + 1); });
-    fill(res, [=] AMREX_GPU_HOST(double x, double y, double z, Direction dir, int n)
-         { return std::sin(x) * std::sin(y) * std::sin(z) * (dir + 1); });
+
+    fill_vector_field_with_sin(df);
+    fill_vector_field_with_sin(res);
     for (Direction dir1 : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         for (Direction dir2 : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
@@ -89,71 +171,6 @@ TEST_F(DiscreteFieldsTest, setGhostCellsVectorField)
     EXPECT_LT(LInfError[zDir], 1.0e-13);
 }
 
-TEST_F(DiscreteFieldsTest, fillScalarField)
-{
-    Gempic::Io::Parameters parameters;
-    DiscreteField df{
-        "df", parameters,
-        DiscreteGrid{parameters, {DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell}},
-        Grid::dual, 3};
-
-    df.multiFab().setVal(0.0);
-    auto fillFunc = AMREX_GPU_HOST_DEVICE[=](amrex::Real x, amrex::Real y, amrex::Real z, int n)
-    {
-        return 1.0;
-    };
-    fill(df, fillFunc);
-    EXPECT_EQ(df.multiFab().norm0(), 1.0);
-    EXPECT_EQ(df.multiFab().norm1(), df.discrete_grid().size(xDir) * df.discrete_grid().size(yDir) *
-                                         df.discrete_grid().size(zDir));
-}
-
-TEST_F(DiscreteFieldsTest, fillVectorField)
-{
-    Gempic::Io::Parameters parameters;
-
-    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
-        AMREX_D_DECL({DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell})};
-    std::array<DiscreteGrid, 3> grids{};
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        grids[dir] = DiscreteGrid{parameters, position};
-    }
-    DiscreteVectorField df{"df", parameters, grids, Grid::dual, 3};
-
-    df.multiFab(Direction::xDir).setVal(0.0);
-    df.multiFab(Direction::yDir).setVal(0.0);
-    df.multiFab(Direction::zDir).setVal(0.0);
-    auto fillFunc =
-        AMREX_GPU_HOST_DEVICE[=](amrex::Real x, amrex::Real y, amrex::Real z, Direction dir, int n)
-    {
-        switch (dir)
-        {
-            case Direction::xDir:
-                return 1.0;
-            case Direction::yDir:
-                return 2.0;
-            case Direction::zDir:
-                return 3.0;
-            default:
-                return 0.0;
-        };
-    };
-    fill(df, fillFunc);
-    EXPECT_EQ(df.multiFab(Direction::xDir).norm0(), 1.0);
-    EXPECT_EQ(df.multiFab(xDir).norm1(), df.discrete_grid(xDir).size(xDir) *
-                                             df.discrete_grid(xDir).size(yDir) *
-                                             df.discrete_grid(xDir).size(zDir));
-    EXPECT_EQ(df.multiFab(Direction::yDir).norm0(), 2.0);
-    EXPECT_EQ(df.multiFab(yDir).norm1(), 2 * df.discrete_grid(yDir).size(xDir) *
-                                             df.discrete_grid(yDir).size(yDir) *
-                                             df.discrete_grid(yDir).size(zDir));
-    EXPECT_EQ(df.multiFab(Direction::zDir).norm0(), 3.0);
-    EXPECT_EQ(df.multiFab(zDir).norm1(), 3 * df.discrete_grid(zDir).size(xDir) *
-                                             df.discrete_grid(zDir).size(yDir) *
-                                             df.discrete_grid(zDir).size(zDir));
-}
-
 class LinearAlgebraTest : public ::testing::Test
 {
 public:
@@ -166,11 +183,11 @@ public:
         pp.addarr("ComputationalDomain.maxGridSize", maxGridSize);
         pp.addarr("ComputationalDomain.isPeriodic", isPeriodic);
     }
-    const amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
-    const amrex::Vector<amrex::Real> k{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    const amrex::Vector<int> nCell{AMREX_D_DECL(9, 8, 7)};
-    const amrex::Vector<int> maxGridSize{AMREX_D_DECL(3, 4, 5)};
-    const amrex::Vector<int> isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    amrex::Vector<amrex::Real> const domainLo{AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
+    amrex::Vector<amrex::Real> const k{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    amrex::Vector<int> const nCell{AMREX_D_DECL(9, 8, 7)};
+    amrex::Vector<int> const maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    amrex::Vector<int> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
 };
 
 TEST_F(LinearAlgebraTest, AddAssignDiscreteVectorFieldVectorField)
@@ -195,9 +212,11 @@ TEST_F(LinearAlgebraTest, AddAssignDiscreteVectorFieldVectorField)
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
         EXPECT_EQ(res.multiFab(dir).norm0(), 1);
-        EXPECT_EQ(res.multiFab(dir).norm1(0, Gempic::Impl::to_amrex_periodicty(res.discrete_grid(dir))), res.discrete_grid(dir).size(Direction::xDir) *
-                                                 res.discrete_grid(dir).size(Direction::yDir) *
-                                                 res.discrete_grid(dir).size(Direction::zDir));
+        EXPECT_EQ(
+            res.multiFab(dir).norm1(0, Gempic::Impl::to_amrex_periodicty(res.discrete_grid(dir))),
+            res.discrete_grid(dir).size(Direction::xDir) *
+                res.discrete_grid(dir).size(Direction::yDir) *
+                res.discrete_grid(dir).size(Direction::zDir));
     }
 }
 
