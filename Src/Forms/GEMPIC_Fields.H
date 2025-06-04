@@ -28,6 +28,187 @@
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_Parameters.H"
 
+namespace Gempic
+{
+class DiscreteField;
+namespace Impl
+{
+enum class BoxStatus
+{
+    boxChanged,
+    boxSelected
+};
+
+template <typename T>
+std::string copy_error_message (std::string const& label)
+{
+    return "MultiFab of " + std::string{typeid(T).name()} + " with label " + label.data() +
+           " was accessed after copying.";
+}
+
+} //namespace Impl
+
+class DiscreteField
+{
+public:
+    DiscreteField(std::string const& label,
+                  Io::Parameters& params,
+                  DiscreteGrid const& discreteGrid,
+                  Grid const& grid,
+                  // extrapolation degree should be configurable from input file
+                  int const& boundaryExtrapolationDegree);
+
+    DiscreteField() = delete;
+
+    amrex::MultiFab const& multiFab() const;
+    amrex::MultiFab& multiFab();
+    DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
+
+    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1,
+                                                  int ix2,
+                                                  int ix3,
+                                                  int component = 0) const
+    {
+        return m_view(ix1, ix2, ix3, component);
+    }
+    amrex::Box const& select_box(amrex::MFIter const& mfi);
+    amrex::Box const& selected_box() const;
+    void set_ghost_size(int width, Direction dir);
+
+private:
+    std::string m_label;
+
+    // The MultiFab is an owning datastructure which can not be copied.
+    // We need to copy DiscreteField to GPU which is not possible for the MultiFab.
+    // Therefore the copy-constructor is implemented copying all datastructures except the MultiFab.
+    std::shared_ptr<amrex::MultiFab> m_data;
+    amrex::Array4<amrex::Real> m_view;
+    Impl::BoxStatus m_boxStatus{Impl::BoxStatus::boxChanged};
+    int m_selectedBoxIdx;
+    std::map<Direction, int> m_haloWidth{
+        {Direction::xDir, 0}, {Direction::yDir, 0}, {Direction::zDir, 0}};
+
+    // The indexType of the box in geometry does not coincides with the index type of the MultiFab
+    DiscreteGrid m_discreteGrid;
+
+    amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> m_boundaryCondition;
+};
+
+class DiscreteVectorField
+{
+public:
+    DiscreteVectorField(std::string const& label,
+                        Io::Parameters& params,
+                        std::array<DiscreteGrid, 3> const& discreteGrid,
+                        Grid const& grid,
+                        // extrapolation degree should be configurable from input file
+                        int const& boundaryExtrapolationDegree);
+
+    DiscreteVectorField() = delete;
+
+    DiscreteGrid const& discrete_grid (Direction dir) const;
+    amrex::MultiFab const& multiFab (Direction dir) const;
+    amrex::MultiFab& multiFab (Direction dir);
+
+    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
+        int ix1, int ix2, int ix3, Direction dir, int component = 0) const
+    {
+        AMREX_ASSERT(dir <= AMREX_SPACEDIM);
+        return m_view[dir](ix1, ix2, ix3, component);
+    }
+    std::array<amrex::Box, 3> const select_box(amrex::MFIter const& mfi);
+    amrex::Box const& selected_box(Direction dir) const;
+    void set_ghost_size(int width, Direction dir);
+
+private:
+    std::string m_label{};
+
+    // The MultiFab is an owning datastructure which can not be copied.
+    // We need to copy DiscreteField to GPU which is not possible for the MultiFab.
+    // Therefore the copy-constructor is implemented copying all datastructures except the MultiFab.
+    std::shared_ptr<std::array<amrex::MultiFab, 3>> m_data;
+    std::array<amrex::Array4<amrex::Real>, 3> m_view;
+    Impl::BoxStatus m_boxStatus{Impl::BoxStatus::boxChanged};
+    int m_selectedBoxIdx;
+    std::map<Direction, int> m_haloWidth{
+        {Direction::xDir, 0}, {Direction::yDir, 0}, {Direction::zDir, 0}};
+
+    // The indexType of the box in geometry does not coincides with the index type of the MultiFab
+    std::array<DiscreteGrid, 3> m_discreteGrid;
+
+    std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, AMREX_SPACEDIM>
+        m_boundaryCondition;
+};
+
+
+void operator*=(DiscreteVectorField &, amrex::Real const &);
+void operator+=(DiscreteVectorField &, DiscreteVectorField const &);
+
+amrex::Real L_inf_error(DiscreteField& a, DiscreteField& b);
+std::array<amrex::Real, 3> L_inf_error(DiscreteVectorField&, DiscreteVectorField&);
+
+namespace Impl
+{
+void fill_boundary(DiscreteField& field);
+void fill_boundary(DiscreteVectorField& field);
+} //namespace Impl
+
+template <typename AnalyticalExpression>
+void fill (DiscreteField& field, AnalyticalExpression const& f)
+{
+    static_assert(std::is_invocable_r_v<amrex::Real, AnalyticalExpression,
+                                        AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
+                  "'AnalyticalExpression const &f' has no callable interface matching "
+                  "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, int");
+    for (amrex::MFIter mfi{field.multiFab()}; mfi.isValid(); ++mfi)
+    {
+        field.select_box(mfi);
+        DiscreteGrid const& dg = field.discrete_grid();
+        ParallelFor(mfi.growntilebox(), field.multiFab().nComp(),
+                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
+                    {
+                        amrex::Real x = dg.location(xDir, ix);
+                        amrex::Real y = dg.location(yDir, iy);
+                        amrex::Real z = dg.location(zDir, iz);
+                        field(ix, iy, iz, n) = f(AMREX_D_DECL(x, y, z), n);
+                    });
+    }
+    // Honestly I have no idea why this is here.
+    // I just put it because I found it in the previous implementation.
+    Impl::fill_boundary(field);
+}
+
+template <typename AnalyticalExpression>
+void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
+{
+    static_assert(
+        std::is_invocable_r_v<amrex::Real, AnalyticalExpression,
+                              AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), Direction, int>,
+        "'AnalyticalExpression const &f' has no callable interface matching "
+        "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, Direction, int");
+    for (Direction dir : {xDir, yDir, zDir})
+    {
+        for (amrex::MFIter mfi{field.multiFab(dir)}; mfi.isValid(); ++mfi)
+        {
+            field.select_box(mfi);
+            DiscreteGrid const& dg = field.discrete_grid(dir);
+            ParallelFor(mfi.growntilebox(), field.multiFab(dir).nComp(),
+                        [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
+                        {
+                            amrex::Real x = dg.location(xDir, ix);
+                            amrex::Real y = dg.location(yDir, iy);
+                            amrex::Real z = dg.location(zDir, iz);
+                            field(ix, iy, iz, dir, n) = f(AMREX_D_DECL(x, y, z), dir, n);
+                        });
+        }
+    }
+    // Honestly I have no idea why this is here.
+    // I just put it because I found it in the previous implementation.
+    Impl::fill_boundary(field);
+}
+
+} //namespace Gempic
+
 namespace Gempic::Forms
 {
 
@@ -82,7 +263,7 @@ struct DeRhamField
      */
     amrex::Array<amrex::MultiFab, 3> m_data;
 
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1)
+    DeRhamField (std::shared_ptr<DeRhamComplex> drc, int nVar = 1)
     {
         static_assert(space != space, "This class should not be callable.");
     };
@@ -210,12 +391,9 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
 {
     std::shared_ptr<DeRhamComplex> m_deRham;
     amrex::Array<amrex::MultiFab, 3> m_data;
-    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>
-        m_bcFuncX;
-    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>
-        m_bcFuncY;
-    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>
-        m_bcFuncZ;
+    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>> m_bcFuncX;
+    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>> m_bcFuncY;
+    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>> m_bcFuncZ;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::array<int, 3> ncomponents);
@@ -259,8 +437,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
 {
     std::shared_ptr<DeRhamComplex> m_deRham;
     amrex::MultiFab m_data;
-    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>
-        m_bcFunc;
+    std::unique_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>> m_bcFunc;
 
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, std::string const& diagName, int nVar = 1);
@@ -438,7 +615,7 @@ public:
         m_primalCellIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)});
     }
 
-    virtual ~DeRhamComplex() {}
+    virtual ~DeRhamComplex () {}
 
     /// Getter for the number of ghost cells
     amrex::IntVect const& get_n_ghost () const { return m_nGhost; }
@@ -1121,20 +1298,17 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     {
         amrex::Vector<amrex::BCRec> bcRec =
             load_boundary_condition(m_deRham->get_geom(), "Default");
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bcX(BoundaryConditions<grid, space>{
-            m_data[xDir].ixType(), m_deRham->get_hodge_degree() - 1});
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bcY(BoundaryConditions<grid, space>{
-            m_data[yDir].ixType(), m_deRham->get_hodge_degree() - 1});
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bcZ(BoundaryConditions<grid, space>{
-            m_data[zDir].ixType(), m_deRham->get_hodge_degree() - 1});
-        m_bcFuncX = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        amrex::GpuBndryFuncFab<BoundaryCondition> bcX(
+            BoundaryCondition{m_data[xDir].ixType(), m_deRham->get_hodge_degree() - 1, grid});
+        amrex::GpuBndryFuncFab<BoundaryCondition> bcY(
+            BoundaryCondition{m_data[yDir].ixType(), m_deRham->get_hodge_degree() - 1, grid});
+        amrex::GpuBndryFuncFab<BoundaryCondition> bcZ(
+            BoundaryCondition{m_data[zDir].ixType(), m_deRham->get_hodge_degree() - 1, grid});
+        m_bcFuncX = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bcX);
-        m_bcFuncY = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        m_bcFuncY = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bcY);
-        m_bcFuncZ = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        m_bcFuncZ = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bcZ);
     }
 }
@@ -1151,10 +1325,9 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
     {
         amrex::Vector<amrex::BCRec> bcRec =
             load_boundary_condition(m_deRham->get_geom(), "Default");
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bc(
-            BoundaryConditions<grid, space>(m_data.ixType(), m_deRham->get_hodge_degree() - 1));
-        m_bcFunc = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        amrex::GpuBndryFuncFab<BoundaryCondition> bc{
+            BoundaryCondition(m_data.ixType(), m_deRham->get_hodge_degree() - 1, grid)};
+        m_bcFunc = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bc);
     }
 }
@@ -1193,20 +1366,17 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRh
     if (not m_deRham->get_geom().isAllPeriodic())
     {
         amrex::Vector<amrex::BCRec> bcRec = load_boundary_condition(m_deRham->get_geom(), diagName);
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bcX(BoundaryConditions<grid, space>{
-            m_data[xDir].ixType(), m_deRham->get_hodge_degree() - 1});
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bcY(BoundaryConditions<grid, space>{
-            m_data[yDir].ixType(), m_deRham->get_hodge_degree() - 1});
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bcZ(BoundaryConditions<grid, space>{
-            m_data[zDir].ixType(), m_deRham->get_hodge_degree() - 1});
-        m_bcFuncX = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        amrex::GpuBndryFuncFab<BoundaryCondition> bcX(
+            BoundaryCondition{m_data[xDir].ixType(), m_deRham->get_hodge_degree() - 1, grid});
+        amrex::GpuBndryFuncFab<BoundaryCondition> bcY(
+            BoundaryCondition{m_data[yDir].ixType(), m_deRham->get_hodge_degree() - 1, grid});
+        amrex::GpuBndryFuncFab<BoundaryCondition> bcZ(
+            BoundaryCondition{m_data[zDir].ixType(), m_deRham->get_hodge_degree() - 1, grid});
+        m_bcFuncX = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bcX);
-        m_bcFuncY = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        m_bcFuncY = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bcY);
-        m_bcFuncZ = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        m_bcFuncZ = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bcZ);
     }
 };
@@ -1235,10 +1405,9 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
     if (not m_deRham->get_geom().isAllPeriodic())
     {
         amrex::Vector<amrex::BCRec> bcRec = load_boundary_condition(m_deRham->get_geom(), diagName);
-        amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>> bc(
-            BoundaryConditions<grid, space>(m_data.ixType(), m_deRham->get_hodge_degree() - 1));
-        m_bcFunc = std::make_unique<
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryConditions<grid, space>>>>(
+        amrex::GpuBndryFuncFab<BoundaryCondition> bc(
+            BoundaryCondition(m_data.ixType(), m_deRham->get_hodge_degree() - 1, grid));
+        m_bcFunc = std::make_unique<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<BoundaryCondition>>>(
             m_deRham->get_geom(), bcRec, bc);
     }
 }
@@ -1351,7 +1520,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
 // Synchronization necessary after cpu and gpu particle loops
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::
-    post_particle_loop_sync()
+    post_particle_loop_sync ()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::post_particle_loop_sync()");
     for (int comp = 0; comp < 3; ++comp)
@@ -1370,7 +1539,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::
-    post_particle_loop_sync()
+    post_particle_loop_sync ()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
     m_data.SumBoundary(0, m_data.nComp(), m_deRham->get_n_ghost(), amrex::IntVect::Zero,
@@ -1383,7 +1552,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm
 // FillBoundary of DeRhamFields following the same logic as above
 template <Grid grid, Space space>
 inline void
-DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill_boundary()
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill_boundary ()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
@@ -1391,7 +1560,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill
 
 template <Grid grid, Space space>
 inline void
-DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::fill_boundary()
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::fill_boundary ()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
@@ -1433,7 +1602,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm
 
 // ApplyBC of DeRhamFields
 template <Grid grid, Space space>
-inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::apply_bc()
+inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::apply_bc ()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::apply_bc()");
     m_deRham->apply_bc(*this);
@@ -1441,7 +1610,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 
 template <Grid grid, Space space>
 inline void
-DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::apply_bc()
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::apply_bc ()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::apply_bc()");
     m_deRham->apply_bc(*this);
