@@ -180,7 +180,7 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
 
 void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
 {
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
         {
@@ -194,7 +194,7 @@ void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
 
 void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
 {
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         for (amrex::MFIter mfi{a.multi_fab(dir)}; mfi.isValid(); ++mfi)
         {

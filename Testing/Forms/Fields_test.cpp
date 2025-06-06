@@ -222,21 +222,21 @@ TEST_F(LinearAlgebraTest, AddAssignDiscreteVectorFieldVectorField)
     }
     DiscreteVectorField df{"df", parameters, grids, Grid::dual, 3};
     DiscreteVectorField res{"df", parameters, grids, Grid::dual, 3};
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         df.multi_fab(dir).setVal(1);
         res.multi_fab(dir).setVal(0);
     }
     res += df;
 
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         EXPECT_EQ(res.multi_fab(dir).norm0(), 1);
         EXPECT_EQ(
             res.multi_fab(dir).norm1(0, Gempic::Impl::to_amrex_periodicty(res.discrete_grid(dir))),
-            res.discrete_grid(dir).size(Direction::xDir) *
-                res.discrete_grid(dir).size(Direction::yDir) *
-                res.discrete_grid(dir).size(Direction::zDir));
+            GEMPIC_D_MULT(res.discrete_grid(dir).size(Direction::xDir),
+                          res.discrete_grid(dir).size(Direction::yDir),
+                          res.discrete_grid(dir).size(Direction::zDir)));
     }
 }
 
@@ -252,13 +252,13 @@ TEST_F(LinearAlgebraTest, MultiplyAssignScalarVectorField)
     }
     DiscreteVectorField df{"df", parameters, grids, Grid::dual, 3};
     DiscreteVectorField res{"df", parameters, grids, Grid::dual, 3};
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         res.multi_fab(dir).setVal(1);
     }
     res *= 2.0;
 
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         EXPECT_EQ(res.multi_fab(dir).norm0(), 2);
         EXPECT_EQ(
