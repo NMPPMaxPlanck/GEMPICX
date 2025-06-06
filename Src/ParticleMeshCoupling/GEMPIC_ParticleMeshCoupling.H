@@ -487,7 +487,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
@@ -555,7 +555,7 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::time_integrated_j()");
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::time_integrated_j()");
     using namespace Impl; // utility functions for this function
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
@@ -678,7 +678,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
     constexpr int degX = SplineType::s_splineDegrees[xDir];
     constexpr int degY = SplineType::s_splineDegrees[yDir];
@@ -853,7 +853,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
 
     constexpr int degPx = SplineType::s_splineDegrees[xDir];
@@ -925,7 +925,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const&
                                                SplineBase<degX, degY, degZ>& spline,
                                                amrex::Real chargeWeight)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_rho()");
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_rho()");
     GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -958,7 +958,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_j (
     amrex::GpuArray<amrex::Real, vDim> const& vel,
     amrex::Real coeff)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_j()")
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_j()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -1008,7 +1008,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_jcrossb (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& bA,
     amrex::Real coeff)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_jcrossb()");
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_jcrossb()");
 
     amrex::GpuArray<amrex::Real, vDim> bfield =
         spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
@@ -1098,7 +1098,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_deldot_s (
     amrex::GpuArray<amrex::Real, vDim> const& vel,
     amrex::Real massWeight)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_deldot_s()")
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_deldot_s()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))

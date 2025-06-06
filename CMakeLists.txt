@@ -36,6 +36,8 @@ option(GEMPIC_BUILD_TESTS "Build the tests. Currently only toggles unit tests." 
 option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or none." ON)
 option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build." OFF)
 
+option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions when executed on host." OFF)
+
 include(FetchContent)
 include(cmake/gempic_FetchContent_Declare.cmake)
 set(CMAKE_CXX_STANDARD 17)
@@ -71,6 +73,12 @@ include(cmake/gempic_AMReXConfig.cmake)
 
 add_library(GEMPICX STATIC)
 set_target_properties(GEMPICX PROPERTIES VERSION ${GEMPIC_VERSION})
+if(GEMPIC_PROFILE_KERNELS)
+  if(not AMReX_TINY_PROFILE)
+    message(WARNING "GEMPIC_PROFILE_KERNELS does nothing if AMReX_TINY_PROFILE is not turned on")
+  endif()
+  target_compile_definitions(GEMPICX PRIVATE GEMPIC_PROFILE_KERNELS)
+endif()
 
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src")
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src/FieldSolvers")
