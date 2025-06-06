@@ -6,11 +6,11 @@
 
 namespace Gempic
 {
-DiscreteGrid::DiscreteGrid (std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
-                            std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
-                            std::array<int, AMREX_SPACEDIM> nCells,
-                            std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
-                            std::array<bool, AMREX_SPACEDIM> periodicity) :
+DiscreteGrid::DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
+                           std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
+                           std::array<int, AMREX_SPACEDIM> nCells,
+                           std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
+                           std::array<bool, AMREX_SPACEDIM> periodicity) :
     m_domainLo{domainLo},
     m_domainHi{domainHi},
     m_idxPosition{idxPosition},
@@ -37,8 +37,8 @@ DiscreteGrid::DiscreteGrid (std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
     }
 }
 
-DiscreteGrid::DiscreteGrid (Io::Parameters& params,
-                            std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition)
+DiscreteGrid::DiscreteGrid(Io::Parameters& params,
+                           std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition)
 {
     // Initialize infrastructure:
     std::array<int, AMREX_SPACEDIM> nCells{};
@@ -155,7 +155,6 @@ amrex::Periodicity to_amrex_periodicty (DiscreteGrid const& discreteGrid)
     return to_amrex_geometry(discreteGrid).periodicity();
 }
 } // namespace Impl
-
 
 ComputationalDomain::ComputationalDomain(std::array<amrex::Real, AMREX_SPACEDIM> const& domainLo,
                                          std::array<amrex::Real, AMREX_SPACEDIM> const& domainHi,

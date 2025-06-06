@@ -64,8 +64,9 @@ public:
      * @param dir
      * @param idx idx\f$\in[0,\f$ @ref DiscreteGrid::size - 1\f$]\f$
      */
+    // If we omit AMREX_SPACEDIM=1,2 this could simply be named location
     AMREX_GPU_HOST_DEVICE
-    amrex::Real location_1D (Direction dir, int idx) const
+    amrex::Real location_1_d (Direction dir, int idx) const
     {
         return min(dir) + (m_offset[dir] + static_cast<amrex::Real>(idx)) * dx(dir);
     }
@@ -73,17 +74,17 @@ public:
     std::array<amrex::Real, AMREX_SPACEDIM> location (AMREX_D_DECL(int ix, int iy, int iz))
     {
         std::array<amrex::Real, AMREX_SPACEDIM> loc{};
-        loc[0] = location_1D(Direction::xDir, ix);
-        #if (AMREX_SPACEDIM > 1)
-        loc[1] = location_1D(Direction::yDir, iy);
-        #endif
-        #if (AMREX_SPACEDIM == 3)
-        loc[2] = location_1D(Direction::zDir, iz);
-        #endif
+        loc[0] = location_1_d(Direction::xDir, ix);
+#if (AMREX_SPACEDIM > 1)
+        loc[1] = location_1_d(Direction::yDir, iy);
+#endif
+#if (AMREX_SPACEDIM == 3)
+        loc[2] = location_1_d(Direction::zDir, iz);
+#endif
         return loc;
     }
     AMREX_GPU_HOST_DEVICE
-    std::array<amrex::Real, AMREX_SPACEDIM> location(std::array<int, AMREX_SPACEDIM> const& idx)
+    std::array<amrex::Real, AMREX_SPACEDIM> location (std::array<int, AMREX_SPACEDIM> const& idx)
     {
         return location(AMREX_D_DECL(idx[0], idx[1], idx[2]));
     }
@@ -122,6 +123,7 @@ public:
     AMREX_GPU_HOST_DEVICE
     bool is_periodic (Direction dir) const { return m_periodicity[dir]; }
     std::array<bool, AMREX_SPACEDIM> is_periodic () const { return m_periodicity; }
+
 private:
     std::array<amrex::Real, AMREX_SPACEDIM> m_domainLo{};
     std::array<amrex::Real, AMREX_SPACEDIM> m_domainHi{};
@@ -135,9 +137,9 @@ private:
 namespace Impl
 {
 amrex::IndexType to_amrex_idx_type(DiscreteGrid const& discreteGrid);
-amrex::Box to_amrex_box(DiscreteGrid const& DiscreteGrid);
+amrex::Box to_amrex_box(DiscreteGrid const& discreteGrid);
 amrex::RealBox to_amrex_real_box(DiscreteGrid const& discreteGrid);
-amrex::Geometry to_amrex_geometry(DiscreteGrid const& DiscreteGrid);
+amrex::Geometry to_amrex_geometry(DiscreteGrid const& discreteGrid);
 amrex::Periodicity to_amrex_periodicty(DiscreteGrid const& discreteGrid);
 } // namespace Impl
 

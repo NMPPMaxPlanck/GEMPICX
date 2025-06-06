@@ -60,8 +60,8 @@ public:
 
     DiscreteField() = delete;
 
-    amrex::MultiFab const& multiFab() const;
-    amrex::MultiFab& multiFab();
+    amrex::MultiFab const& multi_fab() const;
+    amrex::MultiFab& multi_fab();
     DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
 
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1,
@@ -108,9 +108,9 @@ public:
 
     DiscreteVectorField() = delete;
 
-    DiscreteGrid const& discrete_grid (Direction dir) const;
-    amrex::MultiFab const& multiFab (Direction dir) const;
-    amrex::MultiFab& multiFab (Direction dir);
+    DiscreteGrid const& discrete_grid(Direction dir) const;
+    amrex::MultiFab const& multi_fab(Direction dir) const;
+    amrex::MultiFab& multi_fab(Direction dir);
 
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
         int ix1, int ix2, int ix3, Direction dir, int component = 0) const
@@ -144,12 +144,11 @@ private:
         m_boundaryCondition;
 };
 
+void operator*=(DiscreteVectorField&, amrex::Real const&);
+void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
 
-void operator*=(DiscreteVectorField &, amrex::Real const &);
-void operator+=(DiscreteVectorField &, DiscreteVectorField const &);
-
-amrex::Real L_inf_error(DiscreteField& a, DiscreteField& b);
-std::array<amrex::Real, AMREX_SPACEDIM> L_inf_error(DiscreteVectorField&, DiscreteVectorField&);
+amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
+std::array<amrex::Real, AMREX_SPACEDIM> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
 
 namespace Impl
 {
@@ -164,16 +163,16 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
                                         AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
                   "'AnalyticalExpression const &f' has no callable interface matching "
                   "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, int");
-    for (amrex::MFIter mfi{field.multiFab()}; mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
     {
         field.select_box(mfi);
         DiscreteGrid const& dg = field.discrete_grid();
-        ParallelFor(mfi.growntilebox(), field.multiFab().nComp(),
+        ParallelFor(mfi.growntilebox(), field.multi_fab().nComp(),
                     [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                     {
-                        amrex::Real x = dg.location_1D(xDir, ix);
-                        amrex::Real y = dg.location_1D(yDir, iy);
-                        amrex::Real z = dg.location_1D(zDir, iz);
+                        amrex::Real x = dg.location_1_d(xDir, ix);
+                        amrex::Real y = dg.location_1_d(yDir, iy);
+                        amrex::Real z = dg.location_1_d(zDir, iz);
                         field(ix, iy, iz, n) = f(AMREX_D_DECL(x, y, z), n);
                     });
     }
@@ -192,16 +191,16 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
         "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, Direction, int");
     for (Direction dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
-        for (amrex::MFIter mfi{field.multiFab(dir)}; mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
         {
             field.select_box(mfi);
             DiscreteGrid const& dg = field.discrete_grid(dir);
-            ParallelFor(mfi.growntilebox(), field.multiFab(dir).nComp(),
+            ParallelFor(mfi.growntilebox(), field.multi_fab(dir).nComp(),
                         [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                         {
-                            amrex::Real x = dg.location_1D(xDir, ix);
-                            amrex::Real y = dg.location_1D(yDir, iy);
-                            amrex::Real z = dg.location_1D(zDir, iz);
+                            amrex::Real x = dg.location_1_d(xDir, ix);
+                            amrex::Real y = dg.location_1_d(yDir, iy);
+                            amrex::Real z = dg.location_1_d(zDir, iz);
                             field(ix, iy, iz, dir, n) = f(AMREX_D_DECL(x, y, z), dir, n);
                         });
         }
@@ -267,7 +266,7 @@ struct DeRhamField
      */
     amrex::Array<amrex::MultiFab, 3> m_data;
 
-    DeRhamField (std::shared_ptr<DeRhamComplex> drc, int nVar = 1)
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar = 1)
     {
         static_assert(space != space, "This class should not be callable.");
     };
@@ -619,7 +618,7 @@ public:
         m_primalCellIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)});
     }
 
-    virtual ~DeRhamComplex () {}
+    virtual ~DeRhamComplex() {}
 
     /// Getter for the number of ghost cells
     amrex::IntVect const& get_n_ghost () const { return m_nGhost; }
@@ -1524,7 +1523,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::D
 // Synchronization necessary after cpu and gpu particle loops
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::
-    post_particle_loop_sync ()
+    post_particle_loop_sync()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::post_particle_loop_sync()");
     for (int comp = 0; comp < 3; ++comp)
@@ -1543,7 +1542,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 
 template <Grid grid, Space space>
 inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::
-    post_particle_loop_sync ()
+    post_particle_loop_sync()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
     m_data.SumBoundary(0, m_data.nComp(), m_deRham->get_n_ghost(), amrex::IntVect::Zero,
@@ -1556,7 +1555,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm
 // FillBoundary of DeRhamFields following the same logic as above
 template <Grid grid, Space space>
 inline void
-DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill_boundary ()
+DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill_boundary()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
@@ -1564,7 +1563,7 @@ DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::fill
 
 template <Grid grid, Space space>
 inline void
-DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::fill_boundary ()
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::fill_boundary()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
@@ -1606,7 +1605,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm
 
 // ApplyBC of DeRhamFields
 template <Grid grid, Space space>
-inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::apply_bc ()
+inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::apply_bc()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::apply_bc()");
     m_deRham->apply_bc(*this);
@@ -1614,7 +1613,7 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
 
 template <Grid grid, Space space>
 inline void
-DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::apply_bc ()
+DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<space>>>::apply_bc()
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::apply_bc()");
     m_deRham->apply_bc(*this);

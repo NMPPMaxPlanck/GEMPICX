@@ -24,11 +24,11 @@ TEST(DiscreteGridTest, Node)
     for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
         EXPECT_EQ(discreteGrid.position(dir), DiscreteGrid::Node);
-        EXPECT_DOUBLE_EQ(discreteGrid.location_1D(dir, 0), discreteGrid.min(dir));
-        EXPECT_DOUBLE_EQ(discreteGrid.location_1D(dir, discreteGrid.size(dir) - 1),
+        EXPECT_DOUBLE_EQ(discreteGrid.location_1_d(dir, 0), discreteGrid.min(dir));
+        EXPECT_DOUBLE_EQ(discreteGrid.location_1_d(dir, discreteGrid.size(dir) - 1),
                          discreteGrid.max(dir));
         EXPECT_DOUBLE_EQ(discreteGrid.max(dir) - discreteGrid.min(dir), discreteGrid.length(dir));
-        EXPECT_DOUBLE_EQ(discreteGrid.location_1D(dir, 2) - discreteGrid.location_1D(dir, 1),
+        EXPECT_DOUBLE_EQ(discreteGrid.location_1_d(dir, 2) - discreteGrid.location_1_d(dir, 1),
                          discreteGrid.dx(dir));
     }
 }
@@ -50,12 +50,12 @@ TEST(DiscreteGridTest, Cell)
     for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
         EXPECT_EQ(discreteGrid.position(dir), DiscreteGrid::Cell);
-        EXPECT_DOUBLE_EQ(discreteGrid.location_1D(dir, 0),
+        EXPECT_DOUBLE_EQ(discreteGrid.location_1_d(dir, 0),
                          discreteGrid.min(dir) + discreteGrid.dx(dir) / 2.0);
-        EXPECT_DOUBLE_EQ(discreteGrid.location_1D(dir, discreteGrid.size(dir) - 1),
+        EXPECT_DOUBLE_EQ(discreteGrid.location_1_d(dir, discreteGrid.size(dir) - 1),
                          discreteGrid.max(dir) - discreteGrid.dx(dir) / 2.0);
         EXPECT_DOUBLE_EQ(discreteGrid.max(dir) - discreteGrid.min(dir), discreteGrid.length(dir));
-        EXPECT_DOUBLE_EQ(discreteGrid.location_1D(dir, 2) - discreteGrid.location_1D(dir, 1),
+        EXPECT_DOUBLE_EQ(discreteGrid.location_1_d(dir, 2) - discreteGrid.location_1_d(dir, 1),
                          discreteGrid.dx(dir));
     }
 }

@@ -2,10 +2,10 @@
 #define GEMPIC_BOUNDARY_CONDITIONS_H_
 
 #include <AMReX.H>
-#include <AMReX_Print.H>
-#include <AMReX_Geometry.H>
 #include <AMReX_BCRec.H>
 #include <AMReX_BC_TYPES.H>
+#include <AMReX_Geometry.H>
+#include <AMReX_Print.H>
 
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Parameters.H"
@@ -209,8 +209,8 @@ struct BoundaryCondition
                     int const origComp) const
     {
         amrex::Box const& domainBox = amrex::convert(geom.Domain(), m_idxType);
-        auto const &domainLo = domainBox.loVect();
-        auto const &domainHi = domainBox.hiVect();
+        auto const& domainLo = domainBox.loVect();
+        auto const& domainHi = domainBox.hiVect();
 
         int const i = iv[xDir];
         int const ilo = domainLo[xDir];
@@ -227,7 +227,7 @@ struct BoundaryCondition
 #endif
 
         // Needs to be iterated on if multiple components are added
-        const amrex::BCRec& bc = bcr[0];
+        amrex::BCRec const& bc = bcr[0];
         // Sides in x-direction
         if (i < ilo)
         {
