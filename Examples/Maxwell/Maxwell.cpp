@@ -32,9 +32,11 @@ int main (int argc, char* argv[])
     }
     MPI_Barrier(MPI_COMM_WORLD); // All threads will wait here until you give thread 0 an input
 #endif
-
     {
         Gempic::Utils::Verbosity::set_level(1);
+        std::string mIOcustomId{"HighResSubcellOutputProcessor"};
+        // Add my new custom strategy
+        Gempic::Io::add_output_processor<Gempic::Io::HighResSubcellOutputProcessor>(mIOcustomId);
         // Use TypeSelector to select the appropriate class
         using myRKTBtype =
             typename Gempic::TimeLoop::RKTypeSelector<myRKstages, 0>::selected_RK_ButcherTableau;

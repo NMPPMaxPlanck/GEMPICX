@@ -13,6 +13,7 @@
 #include <AMReX_MultiFab.H>
 
 #include "GEMPIC_DiagnosticStrategies.H"
+#include "GEMPIC_Interpolation.H"
 
 namespace Gempic::Io::Impl
 {
@@ -189,6 +190,8 @@ public:
      */
     void operator()(amrex::MultiFab& mfDst, int /*dcomp*/) const override;
 
+    amrex::BoxArray get_box_array(amrex::IndexType& t) override;
+
 protected:
     /** Alias of source MultiFab (can be multi-component) */
     amrex::MultiFab const m_mfSrc;
@@ -284,6 +287,65 @@ private:
     friend void add_output_processor(std::string const& key, CustomOperatorType const& f);
     friend Impl::ConstructorType Impl::match_custom_id(std::string const&);
 };
+
+/**
+ * A higher resolution writer: high-order interpolation on a finer grid.
+ */
+class HighResSubcellOutputProcessor : public CustomOutputProcessor
+{
+public:
+    void operator()(amrex::MultiFab& mfDst, int dcomp) const final;
+
+    amrex::BoxArray get_box_array(amrex::IndexType& t) final;
+
+    HighResSubcellOutputProcessor(amrex::MultiFab const& mfSrc,
+                                  amrex::Real const scaling,
+                                  amrex::IntVect const crseRatio);
+
+    // V0, V3 interpolation
+    /**
+     * interpolation function from the source to a finer multifab.
+     *
+     * @param mfDst[out] : destination cell-centered finer multifab (output data)
+     *
+     * @param mfDst[in] : destination cell-centered finer multifab iterator (output data)
+     *
+     * @param mfiDst0[in] : destination cell-centered non-refined multifab iterator
+     *
+     * @param mfiSrc[in] : source non-refined multifab iterator
+     */
+    template <int degree, Grid grid, Space space>
+    void io_interpolation(amrex::MultiFab& mfDst, amrex::MFIter& mfiSrc) const;
+    // V1, V2 interpolation
+    /**
+     * interpolation function from the source to a finer multifab.
+     *
+     * @param mfDst[out] : destination cell-centered finer multifab (output data)
+     *
+     * @param mfDst[in] : destination cell-centered finer multifab iterator (output data)
+     *
+     * @param mfiDst0[in] : destination cell-centered non-refined multifab iterator
+     *
+     * @param mfiSrc[in] : source non-refined multifab iterator
+     */
+    template <int degree, Grid grid, Space space, Direction dir>
+    void io_interpolation(amrex::MultiFab& mfDst, amrex::MFIter& mfiSrc) const;
+
+private:
+    static constexpr int s_polyrecDegree{4};
+    std::array<int, 3> m_sNSubCell3d{1, 1, 1};
+
+    std::array<int, 3> m_shiftNode{1, 1, 1};
+    std::array<int, 3> m_shiftCell{0, 0, 0};
+    std::array<int, 3> m_shiftXFace{1, 0, 0};
+    std::array<int, 3> m_shiftYFace{0, 1, 0};
+    std::array<int, 3> m_shiftZFace{0, 0, 1};
+    std::array<int, 3> m_shiftXEdge{0, 1, 1};
+    std::array<int, 3> m_shiftYEdge{1, 0, 1};
+    std::array<int, 3> m_shiftZEdge{1, 1, 0};
+    std::array<int, 3> m_shiftV{0, 0, 0};
+};
+
 } //namespace Gempic::Io
 
 #endif // GEMPIC_CUSTOMDIAGNOSTICSTRATEGIES_H_

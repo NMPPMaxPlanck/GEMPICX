@@ -2,7 +2,7 @@
 simName = "Maxwell"
 
 # Grid parameters
-ComputationalDomain.nCell = 32 32 8
+ComputationalDomain.nCell = 16 16 8
 ComputationalDomain.maxGridSize = 8 8 8
 ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
@@ -15,21 +15,44 @@ ComputationalDomain.domainHi = 1.0 1.0  0.5
 TimeLoop.nmaxSteps = 500
 TimeLoop.dt = 0.02
 TimeLoop.tend = 1.0
+TimeLoop.tini = 0.0  
+TimeLoop.dt_max = 1.0
+TimeLoop.CFL = 0.8
+
  
 # PDE parameters 
 
-# FullDiagnostics
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
-FullDiagnostics.groupNames = field 
-FullDiagnostics.saveFolder = FullDiagnostics/OutputProcessorTest
+
+## FullDiagnostics
+#FullDiagnostics.groupNames = field 
+#FullDiagnostics.saveFolder = FullDiagnostics/OutputProcessorTest
+#
+#
+#FullDiagnostics.field.varNames = Bx By Bz Ex Ey Ez
+#FullDiagnostics.field.outputProcessor = CellCenter
+#FullDiagnostics.field.customID = CellCenterOutputProcessor
+#
+#
+#FullDiagnostics.save = 1						# 1 for true, 0 for false
+#FullDiagnostics.saveInterval = 10
+#FullDiagnostics.saveTime = 0					# 1 for true, 0 for false
+#FullDiagnostics.saveTimeInterval = 0.04
+
+#
+#
+FullDiagnostics.groupNames = customEmpty 
+FullDiagnostics.saveFolder = FullDiagnostics/CustomOutputProcessorTest
 
 
-FullDiagnostics.field.varNames = Bx By Bz Ex Ey Ez
-FullDiagnostics.field.outputProcessor = CellCenter
-FullDiagnostics.field.customID = CellCenterOutputProcessor
+FullDiagnostics.customEmpty.varNames = By  Ez  # 		#By Bz Ex Ey Ez
+FullDiagnostics.customEmpty.outputProcessor = Custom
+FullDiagnostics.customEmpty.customID = HighResSubcellOutputProcessor
 
+FullDiagnostics.HighResSubcellOutputProcessor.nSubCells = 13 5 1   
 
 FullDiagnostics.save = 1						# 1 for true, 0 for false
 FullDiagnostics.saveInterval = 10
 FullDiagnostics.saveTime = 0					# 1 for true, 0 for false
 FullDiagnostics.saveTimeInterval = 0.04
+

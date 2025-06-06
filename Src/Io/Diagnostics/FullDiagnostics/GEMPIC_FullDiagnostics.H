@@ -258,10 +258,18 @@ private:
             {
                 filePrefix += "_" + m_diagVarnames[i];
             }
-
-            m_flushFormat->write_to_file(m_actualVarnames[i], *(m_mfOutputs[i]), m_geomOutput, step,
-                                         simTime, m_particles, nlev, filePrefix, m_fileMinDigits,
-                                         m_plotParticles);
+            amrex::Geometry mGeomOutputLoc;
+            if (m_allFieldOutputProcessors[i])
+            {
+                mGeomOutputLoc = m_allFieldOutputProcessors[i]->m_compDom.m_geom;
+            }
+            else
+            {
+                mGeomOutputLoc = m_geomOutput;
+            }
+            m_flushFormat->write_to_file(m_actualVarnames[i], *(m_mfOutputs[i]), mGeomOutputLoc,
+                                         step, simTime, m_particles, nlev, filePrefix,
+                                         m_fileMinDigits, m_plotParticles);
         }
     }
 
@@ -428,10 +436,11 @@ private:
                     // nGhost 0 as just copying.
                     int nGhost = 0;
                     int nComp = fieldMap.at(m_diagVarnames[i]).nComp();
-                    m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(
-                        fieldMap.at(m_diagVarnames[i]).boxArray(),
-                        fieldMap.at(m_diagVarnames[i]).DistributionMap(), nComp, nGhost));
-
+                    amrex::IndexType t = fieldMap.at(m_diagVarnames[i]).ixType();
+                    amrex::BoxArray ba = m_allFieldOutputProcessors[i]->get_box_array(t);
+                    amrex::DistributionMapping const dm =
+                        fieldMap.at(m_diagVarnames[i]).DistributionMap();
+                    m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(ba, dm, nComp, nGhost));
                     m_actualVarnames.push_back(get_comp_names(nComp, i));
                 }
             }

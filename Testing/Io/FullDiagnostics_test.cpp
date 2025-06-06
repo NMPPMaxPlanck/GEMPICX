@@ -41,18 +41,25 @@ void define_expected (amrex::MFIter& mfi,
         });
 }
 
-ComputationalDomain get_compdom ()
+Io::Parameters set_parameters ()
 {
-    // 2pi(domainHi - domainLo) = k
+    // Variables that could come from the input file and are stored by amrex during the whole
+    // simulation
+    Io::Parameters parameters{};
+    /* computational domain */
     std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
     std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(8, 8, 8)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(4, 4, 4)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    parameters.set("ComputationalDomain.domainLo", domainLo);
+    parameters.set("ComputationalDomain.domainHi", domainHi);
+    amrex::Vector<int> const nCell{AMREX_D_DECL(8, 8, 8)};
+    parameters.set("ComputationalDomain.nCell", nCell);
+    amrex::Vector<int> const maxGridSize{AMREX_D_DECL(4, 4, 4)};
+    parameters.set("ComputationalDomain.maxGridSize", maxGridSize);
+    amrex::Vector<int> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
+    parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
 
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
+    return Io::Parameters{};
+};
 class FullDiagnosticsTest : public testing::Test
 {
 protected:
@@ -66,12 +73,12 @@ protected:
     static int const s_vdim{3};
     static int const s_ndata{1};
 
+    Io::Parameters m_parameters{set_parameters()};
     ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
-    Io::Parameters m_parameters{};
 
     // Setup all the tests in the TestSuite
-    FullDiagnosticsTest() : m_infra{get_compdom()}
+    FullDiagnosticsTest()
     {
         // Variables that could come from the input file and are stored by amrex during the whole
         // simulation

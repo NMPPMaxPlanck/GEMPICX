@@ -2,7 +2,11 @@
 #define DIAGNOSTICSTRATEGIES_H_
 
 #include <AMReX.H>
+#include <AMReX_BoxArray.H>
+#include <AMReX_DistributionMapping.H>
 #include <AMReX_MultiFab.H>
+
+#include "GEMPIC_ComputationalDomain.H"
 
 namespace Gempic::Io
 {
@@ -22,6 +26,11 @@ public:
      * MultiFab */
     int n_comp() const;
 
+    /** Reference computational domain to write to the output
+     * MultiFab. This will give the Geometry to WriteSingleLevelPlotfile.
+     * (temporary solution). */
+    ComputationalDomain m_compDom;
+
     /** Compute a field and store the result in mfDst, which gets printed to an output file
      *
      * \param[out] mfDst output MultiFab where the result is written
@@ -29,6 +38,8 @@ public:
      *            to the output diagnostic MultiFab, mfDst.
      */
     virtual void operator()(amrex::MultiFab& mfDst, int dcomp) const = 0;
+
+    virtual amrex::BoxArray get_box_array(amrex::IndexType& t) = 0;
 
 protected:
     /** Coarsening ratio used to interpolate fields from simulation MultiFabs to output MultiFab. */
@@ -62,6 +73,8 @@ public:
      */
     void operator()(amrex::MultiFab& mfDst, int dcomp) const override;
 
+    amrex::BoxArray get_box_array(amrex::IndexType& t) override;
+
 private:
     /** Alias of source MultiFab (can be multi-component) */
     amrex::MultiFab const m_mfSrc;
@@ -94,6 +107,8 @@ public:
      *            data is stored
      */
     void operator()(amrex::MultiFab& mfDst, int dcomp) const override;
+
+    amrex::BoxArray get_box_array(amrex::IndexType& t) override;
 
 private:
     /** Alias of source MultiFab (can be multi-component) */

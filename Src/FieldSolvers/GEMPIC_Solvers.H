@@ -38,6 +38,7 @@ private:
     int m_verbose;
     int m_convergedAtIter;
     amrex::Real m_convergedWithTol;
+    amrex::Real m_mysqrtres;
 
 public:
     Operation m_operator;
@@ -131,6 +132,7 @@ public:
                 hasConverged = true;
                 m_convergedAtIter = iter;
                 m_convergedWithTol = sqrt(normResSquareNew);
+                m_mysqrtres = sqrt(normResSquareOld);
                 break;
             }
             beta = normResSquareNew / normResSquareOld;

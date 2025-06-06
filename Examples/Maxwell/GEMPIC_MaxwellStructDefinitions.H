@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <random>
+#include <string>
 #include <type_traits>
 
 #include <AMReX.H>
@@ -13,6 +14,7 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_CustomDiagnosticStrategies.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
