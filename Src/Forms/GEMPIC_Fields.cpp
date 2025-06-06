@@ -89,7 +89,7 @@ DiscreteVectorField::DiscreteVectorField (
     params.get("ComputationalDomain.maxGridSize", maxGridSizeTmp);
     for (int i{0}; i < AMREX_SPACEDIM; ++i) maxGridSize[i] = maxGridSizeTmp[i];
 
-    std::array<amrex::MultiFab, AMREX_SPACEDIM> data{};
+    std::array<amrex::MultiFab, 3> data{};
     for (int dir{0}; dir < AMREX_SPACEDIM; dir++)
     {
         amrex::BoxArray boxArray{Impl::to_amrex_box(discrete_grid(static_cast<Direction>(dir)))};
@@ -105,7 +105,7 @@ DiscreteVectorField::DiscreteVectorField (
         amrex::DistributionMapping dm{boxArray};
         data[dir] = amrex::MultiFab{boxArray, dm, 1, 0};
     }
-    m_data = std::make_shared<std::array<amrex::MultiFab, AMREX_SPACEDIM>>(std::move(data));
+    m_data = std::make_shared<std::array<amrex::MultiFab, 3>>(std::move(data));
     for (size_t dir{0}; dir < AMREX_SPACEDIM; dir++)
     {
         amrex::GpuBndryFuncFab<Forms::BoundaryCondition> bc{Forms::BoundaryCondition{
@@ -132,7 +132,7 @@ amrex::MultiFab &DiscreteVectorField::multiFab (Direction dir) { return m_data->
 std::array<amrex::Box, 3> const DiscreteVectorField::select_box (amrex::MFIter const &mfi)
 {
     std::array<amrex::Box, 3> boxes{};
-    for (int dir = 0; dir < 3; dir++)
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
     {
         m_view[dir] = this->multiFab(static_cast<Direction>(dir)).array(mfi);
         boxes[dir] = this->multiFab(static_cast<Direction>(dir))[mfi].box();
@@ -160,7 +160,7 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
             amrex::DistributionMapping dm{
                 this->multiFab(static_cast<Direction>(dir)).DistributionMap()};
             amrex::IntVect ng;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < AMREX_SPACEDIM; i++)
             {
                 ng[i] = m_haloWidth[static_cast<Direction>(i)];
             }
@@ -227,17 +227,17 @@ amrex::Real L_inf_error (DiscreteField &a, DiscreteField &b)
     return tmp.multiFab().norminf();
 }
 
-std::array<amrex::Real, 3> L_inf_error (DiscreteVectorField &a, DiscreteVectorField &b)
+std::array<amrex::Real, AMREX_SPACEDIM> L_inf_error (DiscreteVectorField &a, DiscreteVectorField &b)
 {
-    std::array<amrex::Real, 3> maxError{0.0};
+    std::array<amrex::Real, AMREX_SPACEDIM> maxError{0.0};
     Io::Parameters param{};
     // The last to parameters are not relevant.
     DiscreteVectorField tmp{"tmp",
                             param,
-                            {a.discrete_grid(xDir), a.discrete_grid(yDir), a.discrete_grid(zDir)},
+                            {AMREX_D_DECL(a.discrete_grid(xDir), a.discrete_grid(yDir), a.discrete_grid(zDir))},
                             Grid::primal,
                             0};
-    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         for (amrex::MFIter mfi{a.multiFab(dir)}; mfi.isValid(); ++mfi)
         {
@@ -263,8 +263,12 @@ void fill_boundary (DiscreteField &field)
 void fill_boundary (DiscreteVectorField &field)
 {
     field.multiFab(xDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(xDir)));
+    #if AMREX_SPACEDIM>1
     field.multiFab(yDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(yDir)));
+    #endif
+    #if AMREX_SPACEDIM == 3
     field.multiFab(zDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(zDir)));
+    #endif
 }
 } //namespace Impl
 

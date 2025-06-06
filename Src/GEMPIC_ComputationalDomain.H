@@ -65,20 +65,20 @@ public:
      * @param idx idx\f$\in[0,\f$ @ref DiscreteGrid::size - 1\f$]\f$
      */
     AMREX_GPU_HOST_DEVICE
-    amrex::Real location (Direction dir, int idx) const
+    amrex::Real location_1D (Direction dir, int idx) const
     {
         return min(dir) + (m_offset[dir] + static_cast<amrex::Real>(idx)) * dx(dir);
     }
     AMREX_GPU_HOST_DEVICE
-    std::array<amrex::Real, AMREX_SPACEDIM> location (int ix, int iy, int iz)
+    std::array<amrex::Real, AMREX_SPACEDIM> location (AMREX_D_DECL(int ix, int iy, int iz))
     {
         std::array<amrex::Real, AMREX_SPACEDIM> loc{};
-        loc[0] = location(Direction::xDir, ix);
+        loc[0] = location_1D(Direction::xDir, ix);
         #if (AMREX_SPACEDIM > 1)
-        loc[1] = location(Direction::yDir, iy);
+        loc[1] = location_1D(Direction::yDir, iy);
         #endif
         #if (AMREX_SPACEDIM == 3)
-        loc[2] = location(Direction::zDir, iz);
+        loc[2] = location_1D(Direction::zDir, iz);
         #endif
         return loc;
     }
