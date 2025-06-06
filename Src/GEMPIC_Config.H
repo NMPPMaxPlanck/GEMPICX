@@ -193,4 +193,5 @@ constexpr Field complement_form ()
             return Field::DualZeroForm;
     }
 }
+
 #endif

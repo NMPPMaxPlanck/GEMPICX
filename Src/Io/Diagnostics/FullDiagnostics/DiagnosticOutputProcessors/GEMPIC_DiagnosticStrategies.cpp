@@ -26,6 +26,12 @@ RawOutputProcessor::RawOutputProcessor(amrex::MultiFab const& mfSrc,
     BL_PROFILE("RawOutputProcessor::RawOutputProcessor()");
 }
 
+amrex::BoxArray RawOutputProcessor::get_box_array (amrex::IndexType& t)
+{
+    amrex::BoxArray bx = convert(m_compDom.m_grid, t);
+    return bx;
+};
+
 void RawOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
 {
     BL_PROFILE("RawOutputProcessor::operator()");
@@ -47,6 +53,14 @@ CellCenterOutputProcessor::CellCenterOutputProcessor(amrex::MultiFab const& mfSr
     AMREX_D_TERM(m_ishift = indexTypeSrc[xDir];, m_jshift = indexTypeSrc[yDir];
                  , m_kshift = indexTypeSrc[zDir];)
 }
+
+amrex::BoxArray CellCenterOutputProcessor::get_box_array (amrex::IndexType& t)
+{
+    amrex::IndexType tNew{t};
+    tNew.clear(); // cell-centered plotter;
+    amrex::BoxArray bx = convert(m_compDom.m_grid, tNew);
+    return bx;
+};
 
 void CellCenterOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
 {

@@ -55,6 +55,36 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex,
     }
     return vals[0];
 }
+/**
+ *  the same but on the reference grid xk=0,dx=1;
+ */
+template <int degree>
+AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Real const y)
+{
+    amrex::GpuArray<amrex::Real, degree> vals;
+    amrex::GpuArray<amrex::Real, degree> nodes;
+    for (int j = 0; j < degree; ++j)
+    {
+        if (j == polyIndex + degree / 2 - 1)
+        {
+            vals[j] = 1;
+        }
+        else
+        {
+            vals[j] = 0;
+        }
+        nodes[j] = (1 - degree / 2 + j);
+    }
+    for (int i = 1; i <= degree - 1; ++i)
+    {
+        for (int j = 0; j < degree - i; ++j)
+        {
+            vals[j] = vals[j + 1] +
+                      (y - nodes[j + i]) * (vals[j + 1] - vals[j]) / (nodes[j + i] - nodes[j]);
+        }
+    }
+    return vals[0];
+}
 
 /**
  * @brief Evaluates a 1D edge function
@@ -150,6 +180,71 @@ AMREX_GPU_DEVICE amrex::Real eval_edge (int const polyIndex,
 
     return val;
 }
+/**
+ * the same but on the reference grid with xk=0;dx=1;
+ *
+ */
+template <int degree>
+AMREX_GPU_DEVICE amrex::Real eval_edge (int const polyIndex, amrex::Real const y)
+{
+    amrex::Real val = 0;
+    amrex::Real diff = y;
+    switch (degree)
+    {
+        case 2:
+            val = 1.;
+            break;
+        case 4:
+            switch (polyIndex)
+            {
+                case -1:
+                    val = ((diff / 2 - 1.) * diff + 1. / 3.);
+                    break;
+                case 0:
+                    val = ((-diff + 1.) * diff + 5. / 6.);
+                    break;
+                case 1:
+                    val = (std::pow(diff, 2) / 2 - 1. / 6.);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case 6:
+            switch (polyIndex)
+            {
+                case -2:
+                    val =
+                        ((((1. / 24. * diff - 1. / 6.) * diff + 1. / 8.) * diff + 1. / 12.) * diff -
+                         1. / 20.);
+                    break;
+                case -1:
+                    val = (((((-1. / 6. * diff) + 1. / 2.) * diff + 1. / 4.) * diff - 5. / 4.) *
+                               diff +
+                           9. / 20.);
+                    break;
+                case 0:
+                    val = (((((1. / 4. * diff) - 1. / 2.) * diff - 1.) * diff + 5. / 4.) * diff +
+                           47. / 60.);
+                    break;
+                case 1:
+                    val = (((((-1. / 6. * diff) + 1. / 6.) * diff + 3. / 4.) * diff - 1. / 12.) *
+                               diff -
+                           13. / 60.);
+                    break;
+                case 2:
+                    val = ((1. / 24. * std::pow(diff, 2) - 1. / 8.) * std::pow(diff, 2) + 1. / 30.);
+                    break;
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return val;
+}
 // NOLINTEND(readability-magic-numbers)
 
 template <int degree, Grid grid>
@@ -165,6 +260,22 @@ AMREX_GPU_DEVICE inline amrex::Real eval_lagrange_primal_dual (int const polyInd
     else
     {
         return eval_lagrange<degree>(polyIndex, xk + dx, dx, y);
+    }
+}
+/**
+the same but with xk=0,  dx = 1;
+*/
+template <int degree, Grid grid>
+AMREX_GPU_DEVICE inline amrex::Real eval_lagrange_primal_dual (int const polyIndex,
+                                                               amrex::Real const y)
+{
+    if constexpr (grid == Grid::primal)
+    {
+        return eval_lagrange<degree>(polyIndex, y);
+    }
+    else
+    {
+        return eval_lagrange<degree>(polyIndex, y - 1.0);
     }
 }
 
@@ -204,6 +315,44 @@ AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex,
     else // if constexpr (space == Space::edge)
     {
         return eval_edge<degree>(polyIndex, xk, dx, y);
+    }
+}
+
+/**
+the same but assuming xk=0, dx = 1
+*/
+template <int degree, Grid grid, Space space, Direction dir, Direction coordinate>
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex, amrex::Real const y)
+{
+    static_assert(space == Space::face || space == Space::edge,
+                  "Tried to call 1-/2-form choose_eval with a 0-/3-form.\n\tThe 0-/3-form "
+                  "choose_eval function takes no direction template argument.");
+    if constexpr ((space == Space::edge && dir != coordinate) ||
+                  (space == Space::face && dir == coordinate))
+    {
+        return eval_lagrange_primal_dual<degree, grid>(polyIndex, y);
+    }
+    else
+    {
+        return eval_edge<degree>(polyIndex, y);
+    }
+}
+/**
+the same but assuming dx = 1
+*/
+template <int degree, Grid grid, Space space>
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex, amrex::Real const y)
+{
+    static_assert(space == Space::node || space == Space::cell,
+                  "Tried to call 0-/3-form choose_eval with a 1-/2-form.\n\tThe 1-/2-form "
+                  "choose_eval function takes a direction template argument.");
+    if constexpr (space == Space::node)
+    {
+        return eval_lagrange_primal_dual<degree, grid>(polyIndex, y);
+    }
+    else // if constexpr (space == Space::edge)
+    {
+        return eval_edge<degree>(polyIndex, y);
     }
 }
 
