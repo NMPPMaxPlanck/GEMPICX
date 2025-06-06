@@ -117,6 +117,16 @@
 #endif
 
 /**
+ * Tiny profiler macro for host device functions. Profiling uses a host function which cannot be
+ * called from a device context.
+ */
+#ifdef GEMPIC_PROFILE_KERNELS
+#define BL_PROFILE_HOST_DEVICE(fname) AMREX_IF_ON_HOST((BL_PROFILE(fname)))
+#else
+#define BL_PROFILE_HOST_DEVICE(fname)
+#endif
+
+/**
  * The GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE and GEMPIC_ERROR macros allow for dynamic messages at run
  * time
  */

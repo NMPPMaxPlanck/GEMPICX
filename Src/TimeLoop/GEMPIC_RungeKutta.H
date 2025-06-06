@@ -38,7 +38,7 @@ inline AMREX_GPU_HOST_DEVICE void lsrk_stage_dk_particle (
     amrex::Real coeffsAStageIndex,
     amrex::Real coeffsBStageIndex)
 {
-    BL_PROFILE("Gempic::TimeLoop::Impl::lsrk_stage_dk_particle()");
+    BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Impl::lsrk_stage_dk_particle()");
 
     // grad Bpar = grad Bz is neglected for the moment and B_par^* = Bz (assuming initial B contains
     // background field)
@@ -69,7 +69,7 @@ inline AMREX_GPU_HOST_DEVICE void lsrk_stage_kinetic_particle (
     amrex::Real coeffsAStageIndex,
     amrex::Real coeffsBStageIndex)
 {
-    BL_PROFILE("Gempic::TimeLoop::Impl::lsrk_stage_kinetic_particle()");
+    BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Impl::lsrk_stage_kinetic_particle()");
     for (int d = 0; d < AMREX_SPACEDIM; d++)
     {
         s2R[d] = coeffsAStageIndex * s2R[d] + dt * V[d];
@@ -109,7 +109,7 @@ inline AMREX_GPU_HOST_DEVICE void dxvpardt_drift_kinetic (
     amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& eA,
     amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& bA)
 {
-    BL_PROFILE("Gempic::TimeLoop::Impl::dxvpardt_drift_kinetic");
+    BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Impl::dxvpardt_drift_kinetic");
     // grad Bpar = grad Bz is neglected for the moment and B_par^* = Bz (assuming initial B contains
     // background field)
 

@@ -1,4 +1,9 @@
 #!/bin/bash -l
+#
+# Slurm job script for (larger) gpu runs on Raven
+# using one or multiple GPU nodes (4 x A100 GPU each).
+# Job submission:  sbatch run_gpu_raven.sh
+#
 # Standard output and error:
 #SBATCH -o ./tjob.out.%j
 #SBATCH -e ./tjob.err.%j
@@ -8,14 +13,14 @@
 #SBATCH -J gempic
 #
 ## Plain MPI job using GPUs
-#SBATCH --nodes=1 # Request 1 (or more) node(s)
+#SBATCH --nodes=1             # Request 1 (or more) node(s)
 #SBATCH --constraint="gpu"
-#SBATCH --ntasks-per-node=72   # Launch 72 tasks per node
+#SBATCH --ntasks-per-node=4   # Launch 1 task per GPU
+#SBATCH --cpus-per-task=1     # No OMP, just one CPU core per task/GPU
 #SBATCH --gres=gpu:a100:4     # Request all 4 GPUs of each node
-#SBATCH --nvmps               # Launch NVIDIA MPS to enable concurrent access to the GPUs from multiple processes efficiently
 #
 #SBATCH --mail-type=none
-#SBATCH --mail-user=@ipp.mpg.de
+#SBATCH --mail-user=userid@ipp.mpg.de
 #
 # Wall clock limit:
 #SBATCH --time=0:30:00

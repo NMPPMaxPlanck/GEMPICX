@@ -110,7 +110,7 @@ public:
         amrex::Real const chargeOverMass,
         amrex::Real const dt) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_particle()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_particle()");
         // evaluate the electric field
         amrex::GpuArray<amrex::Real, vdim> efield =
             spline.template eval_spline_field<Field::PrimalOneForm>(eA);
@@ -169,7 +169,7 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i()");
 
         amrex::Real posNew = pos[dir] + dt * vel[dir];
         spline.template update_1d_splines<dir>(posNew, infra.geometry_data().ProbLo(dir),
@@ -232,7 +232,7 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i_euler()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i_euler()");
 
         amrex::Real const dtv = dt * vel[pDir];
 
@@ -278,7 +278,7 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_x()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_x()");
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
@@ -328,7 +328,7 @@ public:
                            DeRhamField<Grid::dual, Space::edge>& H,
                            amrex::Real const dt)
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
         // Operator H_B for dt/2
         // Solve Ampere-Maxwell with no current
         deRham->hodge(H, B, deRham->scaling_bto_h());
@@ -351,7 +351,7 @@ public:
                                  DeRhamField<Grid::dual, Space::face>& D,
                                  amrex::Real const dt)
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
         deRham->hodge(E, D, deRham->scaling_dto_e());
         // Operator H_E for dt (-dt for the Faraday equation)
         deRham->add_dt_curl(B, E, -dt);
