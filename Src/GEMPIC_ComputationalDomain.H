@@ -121,7 +121,7 @@ public:
     // @todo amrex::Geometry is not accessible on GPU. Therefore, we provide
     // the geometry_data() function as an intermediate solution to access
     // geometry data on GPU.
-    AMREX_GPU_HOST_DEVICE const amrex::GeometryData& geometry_data () const { return m_geomData; }
+    AMREX_GPU_HOST_DEVICE amrex::GeometryData const& geometry_data () const { return m_geomData; }
     amrex::Box const& box () const { return m_geom.Domain(); }
     AMREX_GPU_HOST_DEVICE amrex::Real cell_volume () const
     {

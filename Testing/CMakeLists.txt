@@ -4,6 +4,8 @@ gempic_FetchContent_Declare(
   GIT_TAG v1.14.0
   SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/googletest-src
 )
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable (GtestTests GEMPIC_UnitTests.cpp)
@@ -34,9 +36,6 @@ add_custom_command(
           ${CMAKE_CURRENT_SOURCE_DIR}/InputFiles
           ${CMAKE_CURRENT_BINARY_DIR}/InputFiles
 )
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 include(GoogleTest)
 # Setup target to be compiled with CUDA and be linked against CUDA-enabled AMReX
