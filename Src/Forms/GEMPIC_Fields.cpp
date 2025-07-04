@@ -16,10 +16,8 @@ DiscreteField::DiscreteField(std::string const& label,
                              int const& boundaryExtrapolationDegree) :
     m_label{std::make_shared<std::string>(label)}, m_discreteGrid{discreteGrid}
 {
-    amrex::Vector<int> maxGridSizeTmp;
     amrex::IntVect maxGridSize;
-    params.get("ComputationalDomain.maxGridSize", maxGridSizeTmp);
-    for (int i{0}; i < AMREX_SPACEDIM; ++i) maxGridSize[i] = maxGridSizeTmp[i];
+    params.get("ComputationalDomain.maxGridSize", maxGridSize);
 
     amrex::BoxArray boxArray{Impl::to_amrex_box(discrete_grid())};
     boxArray.maxSize(maxGridSize);
@@ -84,10 +82,8 @@ DiscreteVectorField::DiscreteVectorField(
     int const& boundaryExtrapolationDegree) :
     m_label{std::make_shared<std::string>(label)}, m_discreteGrid{discreteGrid}
 {
-    amrex::Vector<int> maxGridSizeTmp;
     amrex::IntVect maxGridSize;
-    params.get("ComputationalDomain.maxGridSize", maxGridSizeTmp);
-    for (int i{0}; i < AMREX_SPACEDIM; ++i) maxGridSize[i] = maxGridSizeTmp[i];
+    params.get("ComputationalDomain.maxGridSize", maxGridSize);
 
     std::array<amrex::MultiFab, 3> data{};
     for (int dir{0}; dir < AMREX_SPACEDIM; dir++)

@@ -77,7 +77,7 @@ public:
 
 private:
     // std::string is not GPU capable.
-    // For now rap into a shared pointer to allow copying the data to GPU
+    // For now wrap into a shared pointer to allow copying the data to GPU
     std::shared_ptr<std::string> m_label;
 
     // The MultiFab is an owning datastructure which can not be copied.
@@ -124,7 +124,7 @@ public:
 
 private:
     // std::string is not GPU capable.
-    // For now rap into a shared pointer to allow copying the data to GPU
+    // For now wrap into a shared pointer to allow copying the data to GPU
     std::shared_ptr<std::string> m_label{};
 
     // The MultiFab is an owning datastructure which can not be copied.
