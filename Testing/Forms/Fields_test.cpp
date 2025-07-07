@@ -112,15 +112,14 @@ TEST_F(DiscreteFieldsTest, fillVectorField)
 
     fill_vector_field_with_one_two_three(df);
 
-
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        EXPECT_EQ(df.multi_fab(dir).norm0(), dir+1);
-        EXPECT_EQ(df.multi_fab(dir).norm1(), (dir+1)*
-                  GEMPIC_D_MULT(df.discrete_grid(dir).size(xDir), df.discrete_grid(dir).size(yDir),
-                                df.discrete_grid(dir).size(zDir)));
+        EXPECT_EQ(df.multi_fab(dir).norm0(), dir + 1);
+        EXPECT_EQ(df.multi_fab(dir).norm1(),
+                  (dir + 1) * GEMPIC_D_MULT(df.discrete_grid(dir).size(xDir),
+                                            df.discrete_grid(dir).size(yDir),
+                                            df.discrete_grid(dir).size(zDir)));
     }
-
 }
 
 TEST_F(DiscreteFieldsTest, setGhostCellsScalarField)

@@ -171,12 +171,12 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
                     [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                     {
                         amrex::Real x = dg.location_1_d(xDir, ix);
-                        #if AMREX_SPACEDIM > 1
+#if AMREX_SPACEDIM > 1
                         amrex::Real y = dg.location_1_d(yDir, iy);
-                        #endif
-                        #if AMREX_SPACEDIM == 3
+#endif
+#if AMREX_SPACEDIM == 3
                         amrex::Real z = dg.location_1_d(zDir, iz);
-                        #endif
+#endif
                         field(ix, iy, iz, n) = f(AMREX_D_DECL(x, y, z), n);
                     });
     }
@@ -203,12 +203,12 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
                         [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                         {
                             amrex::Real x = dg.location_1_d(xDir, ix);
-                            #if AMREX_SPACEDIM > 1
+#if AMREX_SPACEDIM > 1
                             amrex::Real y = dg.location_1_d(yDir, iy);
-                            #endif
-                            #if AMREX_SPACEDIM == 3
+#endif
+#if AMREX_SPACEDIM == 3
                             amrex::Real z = dg.location_1_d(zDir, iz);
-                            #endif
+#endif
                             field(ix, iy, iz, dir, n) = f(AMREX_D_DECL(x, y, z), dir, n);
                         });
         }

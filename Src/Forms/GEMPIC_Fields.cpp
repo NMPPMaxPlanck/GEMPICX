@@ -74,12 +74,11 @@ void DiscreteField::set_ghost_size (int width, Direction dir)
     }
 };
 
-DiscreteVectorField::DiscreteVectorField(
-    std::string const& label,
-    Io::Parameters& params,
-    std::array<DiscreteGrid, 3> const& discreteGrid,
-    Grid const& grid,
-    int const& boundaryExtrapolationDegree) :
+DiscreteVectorField::DiscreteVectorField(std::string const& label,
+                                         Io::Parameters& params,
+                                         std::array<DiscreteGrid, 3> const& discreteGrid,
+                                         Grid const& grid,
+                                         int const& boundaryExtrapolationDegree) :
     m_label{std::make_shared<std::string>(label)}, m_discreteGrid{discreteGrid}
 {
     amrex::IntVect maxGridSize;
@@ -223,12 +222,11 @@ std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorFi
     std::array<amrex::Real, 3> maxError{0.0};
     Io::Parameters param{};
     // The last to parameters are not relevant.
-    DiscreteVectorField tmp{
-        "tmp",
-        param,
-        {a.discrete_grid(xDir), a.discrete_grid(yDir), a.discrete_grid(zDir)},
-        Grid::primal,
-        0};
+    DiscreteVectorField tmp{"tmp",
+                            param,
+                            {a.discrete_grid(xDir), a.discrete_grid(yDir), a.discrete_grid(zDir)},
+                            Grid::primal,
+                            0};
     for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
         for (amrex::MFIter mfi{a.multi_fab(dir)}; mfi.isValid(); ++mfi)
