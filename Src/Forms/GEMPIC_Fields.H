@@ -101,7 +101,7 @@ class DiscreteVectorField
 public:
     DiscreteVectorField(std::string const& label,
                         Io::Parameters& params,
-                        std::array<DiscreteGrid, AMREX_SPACEDIM> const& discreteGrid,
+                        std::array<DiscreteGrid, 3> const& discreteGrid,
                         Grid const& grid,
                         // extrapolation degree should be configurable from input file
                         int const& boundaryExtrapolationDegree);
@@ -138,9 +138,9 @@ private:
         {Direction::xDir, 0}, {Direction::yDir, 0}, {Direction::zDir, 0}};
 
     // The indexType of the box in geometry does not coincides with the index type of the MultiFab
-    std::array<DiscreteGrid, AMREX_SPACEDIM> m_discreteGrid;
+    std::array<DiscreteGrid, 3> m_discreteGrid;
 
-    std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, AMREX_SPACEDIM>
+    std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, 3>
         m_boundaryCondition;
 };
 
@@ -148,7 +148,7 @@ void operator*=(DiscreteVectorField&, amrex::Real const&);
 void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
 
 amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
-std::array<amrex::Real, AMREX_SPACEDIM> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
+std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
 
 namespace Impl
 {
@@ -171,8 +171,12 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
                     [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                     {
                         amrex::Real x = dg.location_1_d(xDir, ix);
+                        #if AMREX_SPACEDIM > 1
                         amrex::Real y = dg.location_1_d(yDir, iy);
+                        #endif
+                        #if AMREX_SPACEDIM == 3
                         amrex::Real z = dg.location_1_d(zDir, iz);
+                        #endif
                         field(ix, iy, iz, n) = f(AMREX_D_DECL(x, y, z), n);
                     });
     }
@@ -189,7 +193,7 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
                               AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), Direction, int>,
         "'AnalyticalExpression const &f' has no callable interface matching "
         "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, Direction, int");
-    for (Direction dir : {AMREX_D_DECL(xDir, yDir, zDir)})
+    for (Direction dir : {xDir, yDir, zDir})
     {
         for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
         {
@@ -199,8 +203,12 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
                         [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                         {
                             amrex::Real x = dg.location_1_d(xDir, ix);
+                            #if AMREX_SPACEDIM > 1
                             amrex::Real y = dg.location_1_d(yDir, iy);
+                            #endif
+                            #if AMREX_SPACEDIM == 3
                             amrex::Real z = dg.location_1_d(zDir, iz);
+                            #endif
                             field(ix, iy, iz, dir, n) = f(AMREX_D_DECL(x, y, z), dir, n);
                         });
         }
