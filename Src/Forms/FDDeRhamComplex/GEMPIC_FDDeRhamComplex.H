@@ -389,7 +389,8 @@ public:
     FDDeRhamComplex(ComputationalDomain const& infra,
                     int const hodgeDegree,
                     int const maxSplineDegree,
-                    HodgeScheme const hodgeScheme = HodgeScheme::FDHodge);
+                    HodgeScheme const hodgeScheme = HodgeScheme::FDHodge,
+                    int nComp = 1);
 
     ~FDDeRhamComplex() override;
 
