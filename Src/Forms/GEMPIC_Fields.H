@@ -80,9 +80,8 @@ private:
     // For now wrap into a shared pointer to allow copying the data to GPU
     std::shared_ptr<std::string> m_label;
 
-    // The MultiFab is an owning datastructure which can not be copied.
-    // We need to copy DiscreteField to GPU which is not possible for the MultiFab.
-    // Therefore the copy-constructor is implemented copying all datastructures except the MultiFab.
+    // The MultiFab is an owning datastructure which cannot be copied.
+    // For now wrap into a shared pointer to allow copying the discrete field to GPU
     std::shared_ptr<amrex::MultiFab> m_data;
     amrex::Array4<amrex::Real> m_view;
     Impl::BoxStatus m_boxStatus{Impl::BoxStatus::boxChanged};
@@ -90,7 +89,7 @@ private:
     std::map<Direction, int> m_haloWidth{
         {Direction::xDir, 0}, {Direction::yDir, 0}, {Direction::zDir, 0}};
 
-    // The indexType of the box in geometry does not coincides with the index type of the MultiFab
+    // The indexType of the box in geometry does not coincide with the index type of the MultiFab
     DiscreteGrid m_discreteGrid;
 
     amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> m_boundaryCondition;
@@ -112,10 +111,11 @@ public:
     amrex::MultiFab const& multi_fab(Direction dir) const;
     amrex::MultiFab& multi_fab(Direction dir);
 
-    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
+    AMREX_GPU_HOST_DEVICE inline amrex::Real& operator()(
         int ix1, int ix2, int ix3, Direction dir, int component = 0) const
     {
         AMREX_ASSERT(dir <= AMREX_SPACEDIM);
+        AMREX_ASSERT(m_boxStatus == Impl::BoxStatus::boxSelected);
         return m_view[dir](ix1, ix2, ix3, component);
     }
     std::array<amrex::Box, 3> const select_box(amrex::MFIter const& mfi);

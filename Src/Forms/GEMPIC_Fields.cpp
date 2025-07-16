@@ -204,7 +204,7 @@ void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
 amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
 {
     Io::Parameters param{};
-    // The last to parameters are not relevant.
+    // The last two parameters are not relevant.
     DiscreteField tmp{"tmp", param, a.discrete_grid(), Grid::primal, 0};
     for (amrex::MFIter mfi{a.multi_fab()}; mfi.isValid(); ++mfi)
     {
@@ -221,7 +221,7 @@ std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorFi
 {
     std::array<amrex::Real, 3> maxError{0.0};
     Io::Parameters param{};
-    // The last to parameters are not relevant.
+    // The last two parameters are not relevant.
     DiscreteVectorField tmp{"tmp",
                             param,
                             {a.discrete_grid(xDir), a.discrete_grid(yDir), a.discrete_grid(zDir)},
