@@ -19,12 +19,12 @@ class DiscreteFieldsTest : public ::testing::Test
 public:
     DiscreteFieldsTest()
     {
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", m_domainLo);
-        pp.addarr("ComputationalDomain.k", m_k);
-        pp.addarr("ComputationalDomain.nCell", m_nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", m_maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", m_isPeriodic);
+        Gempic::Io::Parameters parameters;
+        parameters.set("ComputationalDomain.domainLo", m_domainLo);
+        parameters.set("ComputationalDomain.k", m_k);
+        parameters.set("ComputationalDomain.nCell", m_nCell);
+        parameters.set("ComputationalDomain.maxGridSize", m_maxGridSize);
+        parameters.set("ComputationalDomain.isPeriodic", m_isPeriodic);
     }
     amrex::Vector<amrex::Real> const m_domainLo{
         AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};
@@ -182,12 +182,12 @@ class LinearAlgebraTest : public ::testing::Test
 public:
     LinearAlgebraTest()
     {
-        amrex::ParmParse pp;
-        pp.addarr("ComputationalDomain.domainLo", m_domainLo);
-        pp.addarr("ComputationalDomain.k", m_k);
-        pp.addarr("ComputationalDomain.nCell", m_nCell);
-        pp.addarr("ComputationalDomain.maxGridSize", m_maxGridSize);
-        pp.addarr("ComputationalDomain.isPeriodic", m_isPeriodic);
+        Gempic::Io::Parameters parameters;
+        parameters.set("ComputationalDomain.domainLo", m_domainLo);
+        parameters.set("ComputationalDomain.k", m_k);
+        parameters.set("ComputationalDomain.nCell", m_nCell);
+        parameters.set("ComputationalDomain.maxGridSize", m_maxGridSize);
+        parameters.set("ComputationalDomain.isPeriodic", m_isPeriodic);
     }
     amrex::Vector<amrex::Real> const m_domainLo{
         AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)};

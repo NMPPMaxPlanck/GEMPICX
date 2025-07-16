@@ -13,14 +13,14 @@ TEST(DiscreteGridTest, Node)
     amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2.0, 2.5, 4.0)};
     amrex::Vector<int> nCell{AMREX_D_DECL(5, 6, 7)};
     amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
-    Io::Parameters params{};
-    params.set("ComputationalDomain.domainLo", domainLo);
-    params.set("ComputationalDomain.domainHi", domainHi);
-    params.set("ComputationalDomain.nCell", nCell);
-    params.set("ComputationalDomain.isPeriodic", isPeriodic);
+    Io::Parameters parameters{};
+    parameters.set("ComputationalDomain.domainLo", domainLo);
+    parameters.set("ComputationalDomain.domainHi", domainHi);
+    parameters.set("ComputationalDomain.nCell", nCell);
+    parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
 
     DiscreteGrid discreteGrid{
-        params, {AMREX_D_DECL(DiscreteGrid::Node, DiscreteGrid::Node, DiscreteGrid::Node)}};
+        parameters, {AMREX_D_DECL(DiscreteGrid::Node, DiscreteGrid::Node, DiscreteGrid::Node)}};
     for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
         EXPECT_EQ(discreteGrid.position(dir), DiscreteGrid::Node);
@@ -35,18 +35,19 @@ TEST(DiscreteGridTest, Node)
 
 TEST(DiscreteGridTest, Cell)
 {
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(2.0, 2.5, 4.0)};
-    amrex::Array<int, AMREX_SPACEDIM> nCell{AMREX_D_DECL(5, 6, 7)};
-    amrex::Array<bool, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(2.0, 2.5, 4.0)};
+    amrex::Vector<int> nCell{AMREX_D_DECL(5, 6, 7)};
+    amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    Io::Parameters parameters{};
+    parameters.set("ComputationalDomain.domainLo", domainLo);
+    parameters.set("ComputationalDomain.domainHi", domainHi);
+    parameters.set("ComputationalDomain.nCell", nCell);
+    parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
 
-    Io::Parameters params{};
     DiscreteGrid discreteGrid{
-        domainLo,
-        domainHi,
-        nCell,
-        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)},
-        isPeriodic};
+        parameters,
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
     for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
         EXPECT_EQ(discreteGrid.position(dir), DiscreteGrid::Cell);
