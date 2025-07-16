@@ -50,8 +50,8 @@ void fill_scalar_field_with_sin (DiscreteField& sf)
 void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
 {
     auto fillFunc =
-        [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
-                                  Direction dir, int n)
+        [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                                  int n)
     {
         switch (dir)
         {
@@ -70,7 +70,7 @@ void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
 void fill_vector_field_with_sin (DiscreteVectorField& vf)
 {
     auto fillFunc =
-        [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(double x, double y, double z), Direction dir, int n)
+        [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(double x, double y, double z), int n)
     { return GEMPIC_D_MULT(std::sin(x), std::sin(y), std::sin(z)) * (dir + 1); };
     Gempic::fill(vf, fillFunc);
 }

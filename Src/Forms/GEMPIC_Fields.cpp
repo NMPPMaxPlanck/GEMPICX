@@ -181,7 +181,7 @@ void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
             field.select_box(mfi);
             amrex::ParallelFor(mfi.validbox(), field.multi_fab(dir).nComp(),
                                [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz, int n)
-                               { field(ix, iy, iz, dir, n) *= scalar; });
+                               { field(dir, ix, iy, iz, n) *= scalar; });
         }
     }
 }
@@ -196,7 +196,7 @@ void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
             auto const& otherView{b.multi_fab(dir).array(mfi)};
             amrex::ParallelFor(mfi.validbox(), a.multi_fab(dir).nComp(),
                                [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz, int n)
-                               { a(ix, iy, iz, dir, n) += otherView(ix, iy, iz, n); });
+                               { a(dir, ix, iy, iz, n) += otherView(ix, iy, iz, n); });
         }
     }
 }
@@ -236,7 +236,7 @@ std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorFi
             tmp.select_box(mfi);
             amrex::ParallelFor(
                 mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                { tmp(ix, iy, iz, dir) = std::abs(a(ix, iy, iz, dir) - b(ix, iy, iz, dir)); });
+                { tmp(dir, ix, iy, iz) = std::abs(a(dir, ix, iy, iz) - b(dir, ix, iy, iz)); });
         }
         maxError[dir] = tmp.multi_fab(dir).norminf();
     }

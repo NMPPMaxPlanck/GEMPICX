@@ -111,8 +111,8 @@ public:
     amrex::MultiFab const& multi_fab(Direction dir) const;
     amrex::MultiFab& multi_fab(Direction dir);
 
-    AMREX_GPU_HOST_DEVICE inline amrex::Real& operator()(
-        int ix1, int ix2, int ix3, Direction dir, int component = 0) const
+    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
+        Direction dir, int ix1, int ix2, int ix3, int component = 0) const
     {
         AMREX_ASSERT(dir <= AMREX_SPACEDIM);
         AMREX_ASSERT(m_boxStatus == Impl::BoxStatus::boxSelected);
@@ -190,9 +190,9 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
 {
     static_assert(
         std::is_invocable_r_v<amrex::Real, AnalyticalExpression,
-                              AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), Direction, int>,
+                              Direction, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
         "'AnalyticalExpression const &f' has no callable interface matching "
-        "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, Direction, int");
+        "amrex::Real(Direction, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, int");
     for (Direction dir : {xDir, yDir, zDir})
     {
         for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
@@ -209,7 +209,7 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
 #if AMREX_SPACEDIM == 3
                             amrex::Real z = dg.location_1_d(zDir, iz);
 #endif
-                            field(ix, iy, iz, dir, n) = f(AMREX_D_DECL(x, y, z), dir, n);
+                            field(dir, ix, iy, iz, n) = f(dir, AMREX_D_DECL(x, y, z), n);
                         });
         }
     }
