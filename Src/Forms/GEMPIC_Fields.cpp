@@ -144,10 +144,10 @@ amrex::MultiFab& DiscreteVectorField::multi_fab(Direction dir) { return m_data->
 std::array<amrex::Box, 3> const DiscreteVectorField::select_box(amrex::MFIter const& mfi)
 {
     std::array<amrex::Box, 3> boxes{};
-    for (int dir = 0; dir < 3; dir++)
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        m_view[dir] = this->multi_fab(static_cast<Direction>(dir)).array(mfi);
-        boxes[dir] = this->multi_fab(static_cast<Direction>(dir))[mfi].box();
+        m_view[dir] = this->multi_fab(dir).array(mfi);
+        boxes[dir] = this->multi_fab(dir)[mfi].box();
     }
     m_boxStatus = Impl::BoxStatus::boxSelected;
     m_selectedBoxIdx = mfi.index();
@@ -165,20 +165,18 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
     {
         m_haloWidth[dir] = width;
         std::array<amrex::MultiFab, 3> dataNew{};
-        for (size_t dir = 0; dir < 3; dir++)
+        for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
         {
-            amrex::BoxArray ba{this->multi_fab(static_cast<Direction>(dir)).boxArray()};
-            amrex::DistributionMapping dm{
-                this->multi_fab(static_cast<Direction>(dir)).DistributionMap()};
+            amrex::BoxArray ba{this->multi_fab(dir).boxArray()};
+            amrex::DistributionMapping dm{this->multi_fab(dir).DistributionMap()};
             amrex::IntVect ng;
             for (int i = 0; i < AMREX_SPACEDIM; i++)
             {
                 ng[i] = m_haloWidth[i];
             }
-            int n{this->multi_fab(static_cast<Direction>(dir)).nComp()};
+            int n{this->multi_fab(dir).nComp()};
             dataNew[dir].define(ba, dm, n, ng);
-            dataNew[dir].LocalCopy(this->multi_fab(static_cast<Direction>(dir)), 0, 0, n,
-                                   amrex::IntVect{0});
+            dataNew[dir].LocalCopy(this->multi_fab(dir), 0, 0, n, amrex::IntVect{0});
         }
         m_data.reset();
         m_data = std::make_shared<std::array<amrex::MultiFab, 3>>(std::move(dataNew));

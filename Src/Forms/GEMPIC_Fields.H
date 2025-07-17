@@ -229,12 +229,12 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
         ParallelFor(mfi.growntilebox(), field.multi_fab().nComp(),
                     [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                     {
-                        amrex::Real x = dg.location_1_d(xDir, ix);
+                        amrex::Real x = dg.location_1d(xDir, ix);
 #if AMREX_SPACEDIM > 1
-                        amrex::Real y = dg.location_1_d(yDir, iy);
+                        amrex::Real y = dg.location_1d(yDir, iy);
 #endif
 #if AMREX_SPACEDIM == 3
-                        amrex::Real z = dg.location_1_d(zDir, iz);
+                        amrex::Real z = dg.location_1d(zDir, iz);
 #endif
                         field(ix, iy, iz, n) = f(AMREX_D_DECL(x, y, z), n);
                     });
@@ -257,12 +257,12 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
             ParallelFor(mfi.growntilebox(), field.multi_fab(dir).nComp(),
                         [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
                         {
-                            amrex::Real x = dg.location_1_d(xDir, ix);
+                            amrex::Real x = dg.location_1d(xDir, ix);
 #if AMREX_SPACEDIM > 1
-                            amrex::Real y = dg.location_1_d(yDir, iy);
+                            amrex::Real y = dg.location_1d(yDir, iy);
 #endif
 #if AMREX_SPACEDIM == 3
-                            amrex::Real z = dg.location_1_d(zDir, iz);
+                            amrex::Real z = dg.location_1d(zDir, iz);
 #endif
                             field(dir, ix, iy, iz, n) = f(dir, AMREX_D_DECL(x, y, z), n);
                         });

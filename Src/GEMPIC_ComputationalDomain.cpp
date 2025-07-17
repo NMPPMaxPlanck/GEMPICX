@@ -72,13 +72,13 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
     if (AMREX_D_TERM(periodicity[xDir], || periodicity[yDir], || periodicity[zDir]))
     {
         // Attempt to use k first
-        if (params.exists("ComputationalDomain.k"))
+        if (params.exists("k"))
         {
             if (params.is_in_input_file("ComputationalDomain.domainHi"))
             {
                 std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
             }
-            params.get("ComputationalDomain.k", k);
+            params.get("k", k);
             for (int i = 0; i < AMREX_SPACEDIM; i++)
             {
                 if (periodicity[i] == 1)
