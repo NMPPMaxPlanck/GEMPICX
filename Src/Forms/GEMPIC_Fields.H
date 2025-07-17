@@ -48,9 +48,28 @@ std::string copy_error_message (std::string const& label)
 
 } //namespace Impl
 
+// clang-format off
+/**
+ * @class DiscreteField
+ * @brief The discretized scalar field connects degrees of freedom indexed 
+ *        by integers with the domain defined by @ref discrete_grid
+ * 
+ * @details The underlying datastructure which stores degrees of freedom is an amrex::MultiFab.
+ *          Therefore, to actually access degrees of freedoms, a box needs to be selected with @ref select_box.
+ *          Then data stored in the @ref DiscreteField can be accessed using @ref DiscreteField::operator()(int, int, int, int) const
+ *          The following example provides an idea how to use @ref DiscreteField.
+ *          Note that the developer of an operation on the field is responsible to ensure the availability of required data.
+ * 
+ *          @snippet Forms/Fields_test.cpp DiscreteFieldExample.DiscreteDerivative
+ * 
+ *          List of concepts to be handled by the developer of an operation:
+ *          - Ghost cells using @ref set_ghost_size
+ */
+// clang-format on
 class DiscreteField
 {
 public:
+    DiscreteField() = delete;
     DiscreteField(std::string const& label,
                   Io::Parameters& params,
                   DiscreteGrid const& discreteGrid,
@@ -58,12 +77,12 @@ public:
                   Grid const& grid,
                   int const& boundaryExtrapolationDegree);
 
-    DiscreteField() = delete;
-
+    //! Discretized domain which maps indexable degrees of freedom to a continuous domain
+    DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
     amrex::MultiFab const& multi_fab() const;
     amrex::MultiFab& multi_fab();
-    DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
 
+    //! Access indexable degrees of freedom stored in the @ref DiscreteVectorField
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1,
                                                   int ix2,
                                                   int ix3,
@@ -71,8 +90,18 @@ public:
     {
         return m_view(ix1, ix2, ix3, component);
     }
+    // clang-format off
+    //! Select a box from an amrex::MultiFab to use in the @ref DiscreteField::operator()(int, int, int, int) const
+    // clang-format on
     amrex::Box const& select_box(amrex::MFIter const& mfi);
+    //! Currently selected box of the amrex::MultiFab.
     amrex::Box const& selected_box() const;
+    // clang-format off
+    /**
+     * @brief Resizes and fill the ghost cells for all components of the vector field while preserving the data in the computational domain. 
+     *        If already enough ghost cells are available this call just fills the required ghost cells.
+     */
+    // clang-format on
     void set_ghost_size(int width, Direction dir);
 
 private:
@@ -94,22 +123,48 @@ private:
     amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> m_boundaryCondition;
 };
 
+// clang-format off
+/**
+ * @class DiscreteVectorField
+ * @brief The discretized vector field connects degrees of freedom of three directions indexed by integers with the domain defined by @ref discrete_grid.
+ *        The indexing in different directions may differ.
+ * 
+ * @details The underlying datastructure which stores degrees of freedom is an amrex::MultiFab.
+ *          Therefore, to actually access degrees of freedoms, a box needs to be selected with @ref select_box.
+ *          Then data stored in the @ref DiscreteVectorField can be accessed using @ref DiscreteVectorField::operator()(Direction, int, int, int, int) const
+ *          The following example provides an idea how to use @ref DiscreteVectorField.
+ *          Note that the developer of an operation on the vector field is responsible to ensure the availability of required data.
+ * 
+ *          @snippet Forms/Fields_test.cpp DiscreteVectorFieldExample.DiscreteDivergence
+ * 
+ *          List of concepts to be handled by the developer of an operation:
+ *          - Ghost cells using @ref set_ghost_size
+ */
+// clang-format on
 class DiscreteVectorField
 {
 public:
-    DiscreteVectorField(std::string const& label,
-                        Io::Parameters& params,
-                        std::array<DiscreteGrid, 3> const& discreteGrid,
-                        // ToDo: externalize boundary conditions to be injected into the DiscreteFields
-                        Grid const& grid,
-                        int const& boundaryExtrapolationDegree);
+    DiscreteVectorField(
+        std::string const& label,
+        Io::Parameters& params,
+        std::array<DiscreteGrid, 3> const& discreteGrid,
+        // ToDo: externalize boundary conditions to be injected into the DiscreteFields
+        Grid const& grid,
+        int const& boundaryExtrapolationDegree);
 
     DiscreteVectorField() = delete;
 
+    //clang-format off
+    /**
+     * @brief Discretized domain which maps indexable degrees of freedom to a continuous domain
+     * @param dir @ref DiscreteGrid of the amrex::MultiFab in the corresponding direction
+     */
+    //clang-format on
     DiscreteGrid const& discrete_grid(Direction dir) const;
     amrex::MultiFab const& multi_fab(Direction dir) const;
     amrex::MultiFab& multi_fab(Direction dir);
 
+    //! Access indexable degrees of freedom stored in the @ref DiscreteVectorField
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
         Direction dir, int ix1, int ix2, int ix3, int component = 0) const
     {
@@ -117,8 +172,20 @@ public:
         AMREX_ASSERT(m_boxStatus == Impl::BoxStatus::boxSelected);
         return m_view[dir](ix1, ix2, ix3, component);
     }
+
+    // clang-format off
+    //! Select a box for all amrex::MultiFab in all directions to use in the @ref DiscreteVectorField::operator()(Direction, int, int, int, int) const
+    // clang-format on
     std::array<amrex::Box, 3> const select_box(amrex::MFIter const& mfi);
+    //! Currently selected boxes of amrex::MultiFabs in given direction.
     amrex::Box const& selected_box(Direction dir) const;
+    // clang-format off
+    /**
+     * @brief Resizes and fill the ghost cells for all components of the vector field while preserving the data in the computational domain.
+     *        If already enough ghost cells are available this call just fills the required ghost cells.
+     *        The number of ghost cells in a specific direction is the same for every component of the vector field
+     */
+    // clang-format on
     void set_ghost_size(int width, Direction dir);
 
 private:
@@ -148,12 +215,6 @@ void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
 amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
 std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
 
-namespace Impl
-{
-void fill_boundary(DiscreteField& field);
-void fill_boundary(DiscreteVectorField& field);
-} //namespace Impl
-
 template <typename AnalyticalExpression>
 void fill (DiscreteField& field, AnalyticalExpression const& f)
 {
@@ -178,19 +239,15 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
                         field(ix, iy, iz, n) = f(AMREX_D_DECL(x, y, z), n);
                     });
     }
-    // Honestly I have no idea why this is here.
-    // I just put it because I found it in the previous implementation.
-    Impl::fill_boundary(field);
 }
 
 template <typename AnalyticalExpression>
 void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
 {
-    static_assert(
-        std::is_invocable_r_v<amrex::Real, AnalyticalExpression,
-                              Direction, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
-        "'AnalyticalExpression const &f' has no callable interface matching "
-        "amrex::Real(Direction, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, int");
+    static_assert(std::is_invocable_r_v<amrex::Real, AnalyticalExpression, Direction,
+                                        AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
+                  "'AnalyticalExpression const &f' has no callable interface matching "
+                  "amrex::Real(Direction, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, int");
     for (Direction dir : {xDir, yDir, zDir})
     {
         for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
@@ -211,9 +268,6 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
                         });
         }
     }
-    // Honestly I have no idea why this is here.
-    // I just put it because I found it in the previous implementation.
-    Impl::fill_boundary(field);
 }
 
 } //namespace Gempic

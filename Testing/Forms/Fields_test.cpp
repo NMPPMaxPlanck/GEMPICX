@@ -50,8 +50,8 @@ void fill_scalar_field_with_sin (DiscreteField& sf)
 void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
 {
     auto fillFunc =
-        [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
-                                  int n)
+        [=] AMREX_GPU_HOST_DEVICE(Direction dir,
+                                  AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int n)
     {
         switch (dir)
         {
@@ -73,6 +73,44 @@ void fill_vector_field_with_sin (DiscreteVectorField& vf)
         [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(double x, double y, double z), int n)
     { return GEMPIC_D_MULT(std::sin(x), std::sin(y), std::sin(z)) * (dir + 1); };
     Gempic::fill(vf, fillFunc);
+}
+
+void discrete_field_example_kernel (DiscreteField& f, DiscreteField& g)
+{
+    //! [DiscreteFieldExample.DiscreteDerivative]
+    g.set_ghost_size(1, Direction::xDir);
+    for (amrex::MFIter mfi{g.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        f.select_box(mfi);
+        g.select_box(mfi);
+        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                           { f(ix, iy, iz) = g(ix, iy, iz) - g(ix - 1, iy, iz); });
+    }
+    //! [DiscreteFieldExample.DiscreteDerivative]
+}
+
+void discrete_vector_field_example_kernel (DiscreteField& f, DiscreteVectorField& g)
+{
+    //! [DiscreteVectorFieldExample.DiscreteDivergence]
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        g.set_ghost_size(1, dir);
+    }
+    for (amrex::MFIter mfi{g.multi_fab(Direction::xDir)}; mfi.isValid(); ++mfi)
+    {
+        f.select_box(mfi);
+        g.select_box(mfi);
+        amrex::ParallelFor(
+            mfi.validbox(),
+            [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+            {
+                f(ix, iy, iz) = GEMPIC_D_ADD(
+                    g(Direction::xDir, ix, iy, iz) - g(Direction::xDir, ix - 1, iy, iz),
+                    g(Direction::yDir, ix, iy, iz) - g(Direction::yDir, ix, iy - 1, iz),
+                    g(Direction::zDir, ix, iy, iz) - g(Direction::zDir, ix, iy, iz - 1));
+            });
+    }
+    //! [DiscreteVectorFieldExample.DiscreteDivergence]
 }
 
 TEST_F(DiscreteFieldsTest, fillScalarField)
@@ -175,6 +213,46 @@ TEST_F(DiscreteFieldsTest, setGhostCellsVectorField)
     EXPECT_EQ(lInfError[xDir], 0.0);
     EXPECT_EQ(lInfError[yDir], 0.0);
     EXPECT_EQ(lInfError[zDir], 0.0);
+}
+
+TEST_F(DiscreteFieldsTest, DiscreteFieldKernelExample)
+{
+    Gempic::Io::Parameters parameters;
+
+    DiscreteField f{
+        "f", parameters,
+        DiscreteGrid{parameters,
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}},
+        Grid::dual, 3};
+    DiscreteField g{
+        "g", parameters,
+        DiscreteGrid{parameters,
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}},
+        Grid::dual, 3};
+    g.multi_fab().setVal(1);
+    discrete_field_example_kernel(f, g);
+    EXPECT_EQ(f.multi_fab().norm0(), 0);
+}
+
+TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
+{
+    Gempic::Io::Parameters parameters;
+
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
+    std::array<DiscreteGrid, 3> grids{};
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        grids[dir] = DiscreteGrid{parameters, position};
+    }
+    DiscreteField f{"df", parameters, grids[Direction::xDir], Grid::dual, 3};
+    DiscreteVectorField g{"df", parameters, grids, Grid::dual, 3};
+    fill_vector_field_with_one_two_three(g);
+    g.multi_fab(Direction::xDir).setVal(1.0);
+    g.multi_fab(Direction::yDir).setVal(2.0);
+    g.multi_fab(Direction::zDir).setVal(3.0);
+    discrete_vector_field_example_kernel(f, g);
+    EXPECT_EQ(f.multi_fab().norm0(), 0);
 }
 
 class LinearAlgebraTest : public ::testing::Test

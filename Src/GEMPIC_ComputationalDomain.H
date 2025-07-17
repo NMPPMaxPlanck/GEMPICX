@@ -13,34 +13,32 @@
 namespace Gempic
 {
 
+// clang-format off
 /**
  * @class DiscreteGrid
- * @brief Represents a tensor grid axis for equidistant finite difference
- * grids
+ * @brief Represents a tensor grid axis for equidistant finite difference grids
  *
  * @details A single axis manages data for a 1-D finite difference grid.
- *          The axis is defined by its length, the minimum value, the number of
- *          cells (degrees of freedom) and the type of the axis.
+ *          The axis is defined by its length, the minimum value, the number of cells (degrees of freedom) and the type of the axis.
  *
  *          The computational domain of the axis is given by \f$L = min - max\f$
  *
- * Two independent definitions for axes are available depending on where in
- * the cell a degree of freedom is positioned.
+ * Two independent definitions for axes are available depending on where in the cell a degree of freedom is positioned.
  *
  * @ref DiscreteGrid::Position Cell:
- * The degree of freedom is located in the center of a cell. The interval of
- * the cell is a closed interval at the lower boundary and an open interval on
- * the upper boundary.
+ * The degree of freedom is located in the center of a cell.
+ * The interval of the cell is a closed interval at the lower boundary and an open interval on the upper boundary.
  *
  * @image html GEMPIC_DiscreteGridAxisCell.png
  *
  * @ref DiscreteGrid::Position Node:
- * The degree of freedom is located on the cell nodes or on the boundareis of
- * the cell. Therefore size-2 cells in an axis have size-1 degrees of freedom.
+ * The degree of freedom is located on the cell nodes or on the boundareis of the cell.
+ * Therefore size-2 cells in an axis have size-1 degrees of freedom.
  *
  * @image html GEMPIC_DiscreteGridAxisNode.png
  *
  */
+// clang-format on
 class DiscreteGrid
 {
 public:

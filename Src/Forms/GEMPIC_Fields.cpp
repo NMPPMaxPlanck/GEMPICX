@@ -9,6 +9,21 @@
 namespace Gempic
 {
 
+namespace Impl
+{
+void fill_ghost_cells (DiscreteField& field)
+{
+    field.multi_fab().FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid()));
+}
+
+void fill_ghost_cells (DiscreteVectorField& field)
+{
+    field.multi_fab(xDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(xDir)));
+    field.multi_fab(yDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(yDir)));
+    field.multi_fab(zDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(zDir)));
+}
+} //namespace Impl
+
 DiscreteField::DiscreteField(std::string const& label,
                              Io::Parameters& params,
                              DiscreteGrid const& discreteGrid,
@@ -65,13 +80,15 @@ void DiscreteField::set_ghost_size (int width, Direction dir)
         {
             ng[i] = m_haloWidth[i];
         }
-        amrex::MultiFab mDataNew{ba, dm, this->multi_fab().nComp(), ng};
-        mDataNew.ParallelCopy(this->multi_fab());
-        m_data = std::make_shared<amrex::MultiFab>(std::move(mDataNew));
+        int n{this->multi_fab().nComp()};
+        amrex::MultiFab dataNew{ba, dm, n, ng};
+        dataNew.LocalCopy(this->multi_fab(), 0, 0, n, amrex::IntVect{0});
+        m_data = std::make_shared<amrex::MultiFab>(std::move(dataNew));
         m_view = amrex::Array4<amrex::Real>{};
         m_boxStatus = Impl::BoxStatus::boxChanged;
         m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
+    Impl::fill_ghost_cells(*this);
 };
 
 DiscreteVectorField::DiscreteVectorField(std::string const& label,
@@ -158,8 +175,10 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
             {
                 ng[i] = m_haloWidth[i];
             }
-            dataNew[dir].define(ba, dm, this->multi_fab(static_cast<Direction>(dir)).nComp(), ng);
-            dataNew[dir].ParallelCopy(this->multi_fab(static_cast<Direction>(dir)));
+            int n{this->multi_fab(static_cast<Direction>(dir)).nComp()};
+            dataNew[dir].define(ba, dm, n, ng);
+            dataNew[dir].LocalCopy(this->multi_fab(static_cast<Direction>(dir)), 0, 0, n,
+                                   amrex::IntVect{0});
         }
         m_data.reset();
         m_data = std::make_shared<std::array<amrex::MultiFab, 3>>(std::move(dataNew));
@@ -170,6 +189,7 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
         m_boxStatus = Impl::BoxStatus::boxChanged;
         m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
+    Impl::fill_ghost_cells(*this);
 };
 
 void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
@@ -242,20 +262,5 @@ std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorFi
     }
     return maxError;
 }
-
-namespace Impl
-{
-void fill_boundary (DiscreteField& field)
-{
-    field.multi_fab().FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid()));
-}
-
-void fill_boundary (DiscreteVectorField& field)
-{
-    field.multi_fab(xDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(xDir)));
-    field.multi_fab(yDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(yDir)));
-    field.multi_fab(zDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(zDir)));
-}
-} //namespace Impl
 
 } //namespace Gempic

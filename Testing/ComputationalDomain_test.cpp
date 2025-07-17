@@ -46,8 +46,7 @@ TEST(DiscreteGridTest, Cell)
     parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
 
     DiscreteGrid discreteGrid{
-        parameters,
-        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
+        parameters, {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
     for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
         EXPECT_EQ(discreteGrid.position(dir), DiscreteGrid::Cell);
