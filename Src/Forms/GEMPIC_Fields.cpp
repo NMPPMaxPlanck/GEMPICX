@@ -63,7 +63,7 @@ void DiscreteField::set_ghost_size (int width, Direction dir)
         amrex::IntVect ng;
         for (int i = 0; i < AMREX_SPACEDIM; i++)
         {
-            ng[i] = m_haloWidth[static_cast<Direction>(i)];
+            ng[i] = m_haloWidth[i];
         }
         amrex::MultiFab mDataNew{ba, dm, this->multi_fab().nComp(), ng};
         mDataNew.ParallelCopy(this->multi_fab());
@@ -156,7 +156,7 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
             amrex::IntVect ng;
             for (int i = 0; i < AMREX_SPACEDIM; i++)
             {
-                ng[i] = m_haloWidth[static_cast<Direction>(i)];
+                ng[i] = m_haloWidth[i];
             }
             dataNew[dir].define(ba, dm, this->multi_fab(static_cast<Direction>(dir)).nComp(), ng);
             dataNew[dir].ParallelCopy(this->multi_fab(static_cast<Direction>(dir)));

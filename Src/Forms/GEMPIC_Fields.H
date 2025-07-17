@@ -54,8 +54,8 @@ public:
     DiscreteField(std::string const& label,
                   Io::Parameters& params,
                   DiscreteGrid const& discreteGrid,
+                  // ToDo: externalize boundary conditions to be injected into the DiscreteFields
                   Grid const& grid,
-                  // extrapolation degree should be configurable from input file
                   int const& boundaryExtrapolationDegree);
 
     DiscreteField() = delete;
@@ -86,8 +86,7 @@ private:
     amrex::Array4<amrex::Real> m_view;
     Impl::BoxStatus m_boxStatus{Impl::BoxStatus::boxChanged};
     int m_selectedBoxIdx;
-    std::map<Direction, int> m_haloWidth{
-        {Direction::xDir, 0}, {Direction::yDir, 0}, {Direction::zDir, 0}};
+    std::array<int, AMREX_SPACEDIM> m_haloWidth{AMREX_D_DECL(0, 0, 0)};
 
     // The indexType of the box in geometry does not coincide with the index type of the MultiFab
     DiscreteGrid m_discreteGrid;
@@ -101,8 +100,8 @@ public:
     DiscreteVectorField(std::string const& label,
                         Io::Parameters& params,
                         std::array<DiscreteGrid, 3> const& discreteGrid,
+                        // ToDo: externalize boundary conditions to be injected into the DiscreteFields
                         Grid const& grid,
-                        // extrapolation degree should be configurable from input file
                         int const& boundaryExtrapolationDegree);
 
     DiscreteVectorField() = delete;
@@ -134,8 +133,7 @@ private:
     std::array<amrex::Array4<amrex::Real>, 3> m_view;
     Impl::BoxStatus m_boxStatus{Impl::BoxStatus::boxChanged};
     int m_selectedBoxIdx;
-    std::map<Direction, int> m_haloWidth{
-        {Direction::xDir, 0}, {Direction::yDir, 0}, {Direction::zDir, 0}};
+    std::array<int, AMREX_SPACEDIM> m_haloWidth{AMREX_D_DECL(0, 0, 0)};
 
     // The indexType of the box in geometry does not coincides with the index type of the MultiFab
     std::array<DiscreteGrid, 3> m_discreteGrid;
