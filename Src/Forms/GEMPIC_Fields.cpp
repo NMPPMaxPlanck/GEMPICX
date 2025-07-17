@@ -68,9 +68,9 @@ void DiscreteField::set_ghost_size (int width, Direction dir)
         amrex::MultiFab mDataNew{ba, dm, this->multi_fab().nComp(), ng};
         mDataNew.ParallelCopy(this->multi_fab());
         m_data = std::make_shared<amrex::MultiFab>(std::move(mDataNew));
-        //m_view = this->multiFab()[0].array();
+        m_view = amrex::Array4<amrex::Real>{};
         m_boxStatus = Impl::BoxStatus::boxChanged;
-        //m_selectedBoxIdx = 0;
+        m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
 };
 
@@ -163,12 +163,12 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
         }
         m_data.reset();
         m_data = std::make_shared<std::array<amrex::MultiFab, 3>>(std::move(dataNew));
-        //for (int dir = 0; dir < 3; dir++)
-        //{
-        //    m_view[dir] = this->multiFab(static_cast<Direction>(dir)).array(0);
-        //}
+        for (int dir = 0; dir < 3; dir++)
+        {
+            m_view[dir] = amrex::Array4<amrex::Real>{};
+        }
         m_boxStatus = Impl::BoxStatus::boxChanged;
-        //m_selectedBoxIdx = 0;
+        m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
 };
 
