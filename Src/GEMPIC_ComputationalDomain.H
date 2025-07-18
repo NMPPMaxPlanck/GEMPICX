@@ -32,7 +32,7 @@ namespace Gempic
  * @image html GEMPIC_DiscreteGridAxisCell.png
  *
  * @ref DiscreteGrid::Position Node:
- * The degree of freedom is located on the cell nodes or on the boundareis of the cell.
+ * The degree of freedom is located on the cell nodes or on the boundaries of the cell.
  * Therefore size-2 cells in an axis have size-1 degrees of freedom.
  *
  * @image html GEMPIC_DiscreteGridAxisNode.png

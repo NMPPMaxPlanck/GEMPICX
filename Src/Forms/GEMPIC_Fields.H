@@ -55,7 +55,7 @@ std::string copy_error_message (std::string const& label)
  *        by integers with the domain defined by @ref discrete_grid
  * 
  * @details The underlying datastructure which stores degrees of freedom is an amrex::MultiFab.
- *          Therefore, to actually access degrees of freedoms, a box needs to be selected with @ref select_box.
+ *          Therefore, to actually access degrees of freedom, a box needs to be selected with @ref select_box.
  *          Then data stored in the @ref DiscreteField can be accessed using @ref DiscreteField::operator()(int, int, int, int) const
  *          The following example provides an idea how to use @ref DiscreteField.
  *          Note that the developer of an operation on the field is responsible to ensure the availability of required data.
@@ -98,8 +98,8 @@ public:
     amrex::Box const& selected_box() const;
     // clang-format off
     /**
-     * @brief Resizes and fill the ghost cells for all components of the vector field while preserving the data in the computational domain. 
-     *        If already enough ghost cells are available this call just fills the required ghost cells.
+     * @brief Resize and fill the ghost cells for all components of the vector field while preserving the data in the computational domain. 
+     *        If enough ghost cells are already available this call just fills the required ghost cells.
      */
     // clang-format on
     void set_ghost_size(int width, Direction dir);
@@ -181,8 +181,8 @@ public:
     amrex::Box const& selected_box(Direction dir) const;
     // clang-format off
     /**
-     * @brief Resizes and fill the ghost cells for all components of the vector field while preserving the data in the computational domain.
-     *        If already enough ghost cells are available this call just fills the required ghost cells.
+     * @brief Resize and fill the ghost cells for all components of the vector field while preserving the data in the computational domain.
+     *        If enough ghost cells are already available this call just fills the required ghost cells.
      *        The number of ghost cells in a specific direction is the same for every component of the vector field
      */
     // clang-format on
