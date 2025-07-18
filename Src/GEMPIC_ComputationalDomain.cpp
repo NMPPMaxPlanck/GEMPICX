@@ -1,14 +1,16 @@
+#include <array>
+
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Parameters.H"
 
 namespace Gempic
 {
-DiscreteGrid::DiscreteGrid(amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo,
-                           amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi,
-                           amrex::Array<int, AMREX_SPACEDIM> nCells,
-                           amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
-                           amrex::Array<bool, AMREX_SPACEDIM> periodicity) :
+DiscreteGrid::DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
+                           std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
+                           std::array<int, AMREX_SPACEDIM> nCells,
+                           std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
+                           std::array<bool, AMREX_SPACEDIM> periodicity) :
     m_domainLo{domainLo},
     m_domainHi{domainHi},
     m_idxPosition{idxPosition},
@@ -36,14 +38,14 @@ DiscreteGrid::DiscreteGrid(amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo,
 }
 
 DiscreteGrid::DiscreteGrid(Io::Parameters& params,
-                           amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition)
+                           std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition)
 {
     // Initialize infrastructure:
-    amrex::Array<int, AMREX_SPACEDIM> nCells{};
+    std::array<int, AMREX_SPACEDIM> nCells{};
     params.get("ComputationalDomain.nCell", nCells);
-    amrex::Array<int, AMREX_SPACEDIM> isPeriodic{};
+    std::array<int, AMREX_SPACEDIM> isPeriodic{};
     params.get("ComputationalDomain.isPeriodic", isPeriodic);
-    amrex::Array<bool, AMREX_SPACEDIM> periodicity{};
+    std::array<bool, AMREX_SPACEDIM> periodicity{};
     for (int dir{0}; dir < AMREX_SPACEDIM; dir++)
     {
         if (isPeriodic[dir])
@@ -57,10 +59,10 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
     }
     // In periodic directions domain is [0, 2pi / k]. Otherwise, we use domain_lo/_hi directly
     // Probably needs to check that both are not provided for the same direction?
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
     params.get_or_set("ComputationalDomain.domainLo", domainLo);
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> k;
+    std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
+    std::array<amrex::Real, AMREX_SPACEDIM> k;
     // Non-periodic directions exist
     if (!(AMREX_D_TERM(periodicity[xDir], &&periodicity[yDir], &&periodicity[zDir])))
     {
@@ -76,7 +78,7 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
             {
                 std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
             }
-            params.get("ComputationalDomain.k", k);
+            params.get("k", k);
             for (int i = 0; i < AMREX_SPACEDIM; i++)
             {
                 if (periodicity[i] == 1)
@@ -93,6 +95,66 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
 
     *this = DiscreteGrid{domainLo, domainHi, nCells, idxPosition, periodicity};
 }
+
+namespace Impl
+{
+amrex::IndexType to_amrex_idx_type (DiscreteGrid const& discreteGrid)
+{
+    amrex::IndexType idx{};
+    for (int i = 0; i < AMREX_SPACEDIM; i++)
+    {
+        switch (discreteGrid.position(static_cast<Direction>(i)))
+        {
+            case DiscreteGrid::Position::Cell:
+                idx.setType(i, amrex::CellIndexEnum::CELL);
+                break;
+            case DiscreteGrid::Position::Node:
+                idx.setType(i, amrex::CellIndexEnum::NODE);
+                break;
+        }
+    }
+    return idx;
+}
+amrex::Box to_amrex_box (DiscreteGrid const& discreteGrid)
+{
+    amrex::IndexType idx{to_amrex_idx_type(discreteGrid)};
+    amrex::Box box;
+    amrex::IntVect low(AMREX_D_DECL(0, 0, 0));
+    std::array<int, AMREX_SPACEDIM> size{discreteGrid.size()};
+    amrex::IntVect high(AMREX_D_DECL(size[xDir] - 1, size[yDir] - 1, size[zDir] - 1));
+    return amrex::Box{low, high, idx};
+}
+amrex::RealBox to_amrex_real_box (DiscreteGrid const& discreteGrid)
+{
+    auto min = discreteGrid.min();
+    auto max = discreteGrid.max();
+    return amrex::RealBox{min, max};
+}
+amrex::Geometry to_amrex_geometry (DiscreteGrid const& discreteGrid)
+{
+    std::array<int, AMREX_SPACEDIM> periodicity{
+        AMREX_D_DECL(static_cast<int>(discreteGrid.is_periodic(Direction::xDir)),
+                     static_cast<int>(discreteGrid.is_periodic(Direction::yDir)),
+                     static_cast<int>(discreteGrid.is_periodic(Direction::zDir)))};
+    //  AMReX geometry always requires for some ridiculous reasons a cell centered box.
+    //  Well luckily we can simply convert any box to be cell centered.
+    //  https://amrex-codes.github.io/amrex/docs_html/Basics.html#realbox-and-geometry
+    //  https://amrex-codes.github.io/amrex/doxygen/classamrex_1_1Geometry.html#ab9cc9315f181884f554c5866cd1e68e5
+    return amrex::Geometry{
+        amrex::convert(to_amrex_box(discreteGrid),
+                       amrex::IndexType(amrex::IntVect{AMREX_D_DECL(amrex::CellIndexEnum::CELL,
+                                                                    amrex::CellIndexEnum::CELL,
+                                                                    amrex::CellIndexEnum::CELL)})),
+        to_amrex_real_box(discreteGrid), amrex::CoordSys::cartesian, periodicity};
+}
+amrex::Periodicity to_amrex_periodicty (DiscreteGrid const& discreteGrid)
+{
+    // amrex::Periodicity object is not a bool but returns the highest index of a periodic domain
+    // To avoid errors we return the periodicity instance that is taken from an amrex geometry
+    // and therefore should hopefully be compatible with all calls to amrex functions.
+    return to_amrex_geometry(discreteGrid).periodicity();
+}
+} // namespace Impl
 
 ComputationalDomain::ComputationalDomain(std::array<amrex::Real, AMREX_SPACEDIM> const& domainLo,
                                          std::array<amrex::Real, AMREX_SPACEDIM> const& domainHi,
@@ -120,7 +182,6 @@ ComputationalDomain::ComputationalDomain(std::array<amrex::Real, AMREX_SPACEDIM>
 
 ComputationalDomain::ComputationalDomain()
 {
-    BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain()");
     Io::Parameters params("ComputationalDomain");
     // Initialize infrastructure:
     amrex::IntVect nCell;
@@ -128,7 +189,7 @@ ComputationalDomain::ComputationalDomain()
     amrex::IntVect maxGridSize;
     params.get("maxGridSize", maxGridSize);
 
-    amrex::Array<int, AMREX_SPACEDIM> isPeriodic;
+    std::array<int, AMREX_SPACEDIM> isPeriodic;
     params.get("isPeriodic", isPeriodic);
     // In periodic directions domain is [0, 2pi / k]. Otherwise, we use domain_lo/_hi directly
     // Probably needs to check that both are not provided for the same direction?

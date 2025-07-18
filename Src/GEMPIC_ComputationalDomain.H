@@ -1,18 +1,11 @@
 #ifndef COMPUTATIONAL_DOMAIN_H_
 #define COMPUTATIONAL_DOMAIN_H_
 
-#include <AMReX.H>
-#include <AMReX_Array.H>
-#include <AMReX_BLProfiler.H>
+#include <array>
+
 #include <AMReX_Box.H>
-#include <AMReX_BoxArray.H>
-#include <AMReX_CoordSys.H>
-#include <AMReX_DistributionMapping.H>
 #include <AMReX_Geometry.H>
-#include <AMReX_IntVect.H>
-#include <AMReX_Print.H>
 #include <AMReX_REAL.H>
-#include <AMReX_RealBox.H>
 
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Parameters.H"
@@ -20,34 +13,32 @@
 namespace Gempic
 {
 
+// clang-format off
 /**
  * @class DiscreteGrid
- * @brief Represents a tensor grid axis for equidistant finite difference
- * grids
+ * @brief Represents a tensor grid axis for equidistant finite difference grids
  *
  * @details A single axis manages data for a 1-D finite difference grid.
- *          The axis is defined by its length, the minimum value, the number of
- *          cells (degrees of freedom) and the type of the axis.
+ *          The axis is defined by its length, the minimum value, the number of cells (degrees of freedom) and the type of the axis.
  *
  *          The computational domain of the axis is given by \f$L = min - max\f$
  *
- * Two independent definitions for axes are available depending on where in
- * the cell a degree of freedom is positioned.
+ * Two independent definitions for axes are available depending on where in the cell a degree of freedom is positioned.
  *
  * @ref DiscreteGrid::Position Cell:
- * The degree of freedom is located in the center of a cell. The interval of
- * the cell is a closed interval at the lower boundary and an open interval on
- * the upper boundary.
+ * The degree of freedom is located in the center of a cell.
+ * The interval of the cell is a closed interval at the lower boundary and an open interval on the upper boundary.
  *
  * @image html GEMPIC_DiscreteGridAxisCell.png
  *
  * @ref DiscreteGrid::Position Node:
- * The degree of freedom is located on the cell nodes or on the boundareis of
- * the cell. Therefore size-2 cells in an axis have size-1 degrees of freedom.
+ * The degree of freedom is located on the cell nodes or on the boundaries of the cell.
+ * Therefore size-2 cells in an axis have size-1 degrees of freedom.
  *
  * @image html GEMPIC_DiscreteGridAxisNode.png
  *
  */
+// clang-format on
 class DiscreteGrid
 {
 public:
@@ -56,13 +47,14 @@ public:
         Cell,
         Node
     };
-    DiscreteGrid(amrex::Array<amrex::Real, AMREX_SPACEDIM> domainLo,
-                 amrex::Array<amrex::Real, AMREX_SPACEDIM> domainHi,
-                 amrex::Array<int, AMREX_SPACEDIM> nCells,
-                 amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
-                 amrex::Array<bool, AMREX_SPACEDIM> periodic = {AMREX_D_DECL(true, true, true)});
+    DiscreteGrid() = default;
+    DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
+                 std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
+                 std::array<int, AMREX_SPACEDIM> nCells,
+                 std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
+                 std::array<bool, AMREX_SPACEDIM> periodic = {AMREX_D_DECL(true, true, true)});
     DiscreteGrid(Io::Parameters& params,
-                 amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition);
+                 std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition);
     /**
      * @brief Calculate the location of the given index in the interval
      *        [@ref DiscreteGrid::min, @ref DiscreteGrid::max] of the physical domain
@@ -71,40 +63,83 @@ public:
      * @param idx idx\f$\in[0,\f$ @ref DiscreteGrid::size - 1\f$]\f$
      */
     AMREX_GPU_HOST_DEVICE
-    amrex::Real location (Direction dir, int idx)
+    amrex::Real location_1d (Direction dir, int idx) const
     {
         return min(dir) + (m_offset[dir] + static_cast<amrex::Real>(idx)) * dx(dir);
     }
+    AMREX_GPU_HOST_DEVICE
+    std::array<amrex::Real, AMREX_SPACEDIM> location (AMREX_D_DECL(int ix, int iy, int iz))
+    {
+        std::array<amrex::Real, AMREX_SPACEDIM> loc{};
+        loc[0] = location_1d(Direction::xDir, ix);
+#if (AMREX_SPACEDIM > 1)
+        loc[1] = location_1d(Direction::yDir, iy);
+#endif
+#if (AMREX_SPACEDIM == 3)
+        loc[2] = location_1d(Direction::zDir, iz);
+#endif
+        return loc;
+    }
+    AMREX_GPU_HOST_DEVICE
+    std::array<amrex::Real, AMREX_SPACEDIM> location (std::array<int, AMREX_SPACEDIM> const& idx)
+    {
+        return location(AMREX_D_DECL(idx[0], idx[1], idx[2]));
+    }
     //! Lower domain boundary
     AMREX_GPU_HOST_DEVICE
-    amrex::Real min (Direction dir) { return m_domainLo[dir]; }
+    amrex::Real min (Direction dir) const { return m_domainLo[dir]; }
+    std::array<amrex::Real, AMREX_SPACEDIM> min () const { return m_domainLo; }
     //! Upper domain boundary
     AMREX_GPU_HOST_DEVICE
-    amrex::Real max (Direction dir) { return m_domainHi[dir]; }
+    amrex::Real max (Direction dir) const { return m_domainHi[dir]; }
+    std::array<amrex::Real, AMREX_SPACEDIM> max () const { return m_domainHi; }
     //! Length of the domain
     AMREX_GPU_HOST_DEVICE
-    amrex::Real length (Direction dir) { return max(dir) - min(dir); }
+    amrex::Real length (Direction dir) const { return max(dir) - min(dir); }
+    std::array<amrex::Real, AMREX_SPACEDIM> length ()
+    {
+        std::array<amrex::Real, AMREX_SPACEDIM> l{};
+        for (size_t i = 0; i < l.size(); i++)
+        {
+            l[i] = length(static_cast<Direction>(i));
+        }
+        return l;
+    }
     //! Width of a single cell
     AMREX_GPU_HOST_DEVICE
-    amrex::Real dx (Direction dir) { return m_dx[dir]; }
+    amrex::Real dx (Direction dir) const { return m_dx[dir]; }
+    std::array<amrex::Real, AMREX_SPACEDIM> dx () const { return m_dx; }
     //! Position of the degrees of freedom within a cell
     AMREX_GPU_HOST_DEVICE
-    DiscreteGrid::Position position (Direction dir) { return m_idxPosition[dir]; }
+    DiscreteGrid::Position position (Direction dir) const { return m_idxPosition[dir]; }
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position () const { return m_idxPosition; }
     //! Number of degrees of freedom in the domain
     AMREX_GPU_HOST_DEVICE
-    int size (Direction dir) { return m_degreesOfFreedom[dir]; }
+    int size (Direction dir) const { return m_degreesOfFreedom[dir]; }
+    std::array<int, AMREX_SPACEDIM> size () const { return m_degreesOfFreedom; }
     AMREX_GPU_HOST_DEVICE
-    bool is_periodic (Direction dir) { return m_periodicity[dir]; }
+    bool is_periodic (Direction dir) const { return m_periodicity[dir]; }
+    std::array<bool, AMREX_SPACEDIM> is_periodic () const { return m_periodicity; }
 
 private:
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_domainLo{};
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_domainHi{};
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_dx{};
-    amrex::Array<DiscreteGrid::Position, AMREX_SPACEDIM> m_idxPosition{};
-    amrex::Array<amrex::Real, AMREX_SPACEDIM> m_offset{};
-    amrex::Array<int, AMREX_SPACEDIM> m_degreesOfFreedom{};
-    amrex::Array<bool, AMREX_SPACEDIM> m_periodicity{};
+    std::array<amrex::Real, AMREX_SPACEDIM> m_domainLo{};
+    std::array<amrex::Real, AMREX_SPACEDIM> m_domainHi{};
+    std::array<amrex::Real, AMREX_SPACEDIM> m_dx{};
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> m_idxPosition{};
+    std::array<amrex::Real, AMREX_SPACEDIM> m_offset{};
+    std::array<int, AMREX_SPACEDIM> m_degreesOfFreedom{};
+    std::array<bool, AMREX_SPACEDIM> m_periodicity{};
 };
+
+namespace Impl
+{
+amrex::IndexType to_amrex_idx_type(DiscreteGrid const& discreteGrid);
+amrex::Box to_amrex_box(DiscreteGrid const& discreteGrid);
+amrex::RealBox to_amrex_real_box(DiscreteGrid const& discreteGrid);
+amrex::Geometry to_amrex_geometry(DiscreteGrid const& discreteGrid);
+amrex::Periodicity to_amrex_periodicty(DiscreteGrid const& discreteGrid);
+} // namespace Impl
+
 /**
  * Class containing all the necessary structures (such as the @p domain and the @p distriMap) and
  * information (such as @p dx and @p n_cell).

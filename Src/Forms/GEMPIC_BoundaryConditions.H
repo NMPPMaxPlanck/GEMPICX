@@ -2,6 +2,9 @@
 #define GEMPIC_BOUNDARY_CONDITIONS_H_
 
 #include <AMReX.H>
+#include <AMReX_BCRec.H>
+#include <AMReX_BC_TYPES.H>
+#include <AMReX_Geometry.H>
 #include <AMReX_Print.H>
 
 #include "GEMPIC_Config.H"
@@ -114,17 +117,18 @@ enum class DomainEnd
     high
 };
 
-template <Grid grid, Space space>
-struct BoundaryConditions
+struct BoundaryCondition
 {
     // Index type cannot be inferred from arguments in operator() and has to be specified in
     // instantiation of functor
     amrex::IndexType m_idxType;
     int m_extrapDegree;
     amrex::GpuArray<amrex::GpuArray<amrex::Real, 6>, 3> m_extrapStencil;
+    Grid m_grid;
 
-    BoundaryConditions(amrex::IndexType idxType, int extrapDegree) :
-        m_idxType(idxType), m_extrapDegree(extrapDegree)
+    BoundaryCondition() = default;
+    BoundaryCondition(amrex::IndexType idxType, int extrapDegree, Grid grid) :
+        m_idxType(idxType), m_extrapDegree(extrapDegree), m_grid{grid}
     {
         // Select polynomial extrapolation stencil, available for up to 3 ghost cells
         switch (m_extrapDegree)
@@ -207,7 +211,6 @@ struct BoundaryConditions
         amrex::Box const& domainBox = amrex::convert(geom.Domain(), m_idxType);
         auto const& domainLo = domainBox.loVect();
         auto const& domainHi = domainBox.hiVect();
-        amrex::BCRec const& bc = bcr[0];
 
         int const i = iv[xDir];
         int const ilo = domainLo[xDir];
@@ -216,13 +219,15 @@ struct BoundaryConditions
         int const j = iv[yDir];
         int const jlo = domainLo[yDir];
         int const jhi = domainHi[yDir];
+#endif
 #if AMREX_SPACEDIM == 3
         int const k = iv[zDir];
         int const klo = domainLo[zDir];
         int const khi = domainHi[zDir];
 #endif
-#endif
 
+        // Needs to be iterated on if multiple components are added
+        amrex::BCRec const& bc = bcr[0];
         // Sides in x-direction
         if (i < ilo)
         {
@@ -231,7 +236,7 @@ struct BoundaryConditions
             // centered data with amrex::GpuBndryFuncFab::nddoit) but the value is set implicitly
             // from every outward ghost cell. This ensures correctness of extrapolation independent
             // of index order.
-            if constexpr (grid == Grid::primal)
+            if (m_grid == Grid::primal)
             {
                 if (m_idxType.nodeCentered(xDir) && bc.lo(xDir) == BCType::hom_dir)
                 {
@@ -249,7 +254,7 @@ struct BoundaryConditions
         }
         else if (i > ihi)
         {
-            if constexpr (grid == Grid::primal)
+            if (m_grid == Grid::primal)
             {
                 if (m_idxType.nodeCentered(xDir) && bc.hi(xDir) == BCType::hom_dir)
                 {
@@ -270,7 +275,7 @@ struct BoundaryConditions
         // Sides in y-direction
         if (j < jlo)
         {
-            if constexpr (grid == Grid::primal)
+            if (m_grid == Grid::primal)
             {
                 if (m_idxType.nodeCentered(yDir) && bc.lo(yDir) == BCType::hom_dir)
                 {
@@ -288,7 +293,7 @@ struct BoundaryConditions
         }
         else if (j > jhi)
         {
-            if constexpr (grid == Grid::primal)
+            if (m_grid == Grid::primal)
             {
                 if (m_idxType.nodeCentered(yDir) && bc.hi(yDir) == BCType::hom_dir)
                 {
@@ -304,12 +309,12 @@ struct BoundaryConditions
                     break;
             }
         }
-
+#endif
 #if AMREX_SPACEDIM == 3
         // Sides in z-direction
         if (k < klo)
         {
-            if constexpr (grid == Grid::primal)
+            if (m_grid == Grid::primal)
             {
                 if (m_idxType.nodeCentered(zDir) && bc.lo(zDir) == BCType::hom_dir)
                 {
@@ -327,7 +332,7 @@ struct BoundaryConditions
         }
         else if (k > khi)
         {
-            if constexpr (grid == Grid::primal)
+            if (m_grid == Grid::primal)
             {
                 if (m_idxType.nodeCentered(zDir) && bc.hi(zDir) == BCType::hom_dir)
                 {
@@ -343,7 +348,6 @@ struct BoundaryConditions
                     break;
             }
         }
-#endif
 #endif
         // Edges and corners do not have to be treated separately. The values are computed by
         // extrapolation from extrapolated values in a previous direction. AMReX ensures correct

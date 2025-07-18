@@ -8,6 +8,14 @@ are of Finite Difference type, which means that the discrete forms are primarily
 by their degrees of freedom on a (primal or dual) cartesian grid.
 
 .. doxygenclass:: Gempic::DiscreteGrid
+   :members:
+
+.. doxygenclass:: Gempic::DiscreteField
+   :members:
+
+.. doxygenclass:: Gempic::DiscreteVectorField
+   :members:
+
 .. doxygenfile:: GEMPIC_FDDeRhamComplex.H
 .. doxygenfile:: GEMPIC_ExtDerivatives.cpp
    

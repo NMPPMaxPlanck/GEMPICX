@@ -135,6 +135,7 @@
 
 #define GEMPIC_ERROR(MSG) amrex::Assert(std::string(MSG).c_str(), __FILE__, __LINE__)
 
+//! Directions available in GEMPIC
 enum Direction : unsigned int
 {
     xDir = 0,
