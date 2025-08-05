@@ -215,13 +215,26 @@ void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
 amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
 std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
 
+/**
+ * @brief Fill a @ref DiscreteField with values from an analytical expression at the
+ *        location of each cell (or grid point).
+ *
+ * @details An example to fill the discrete field with a purely constant value is
+ *          @snippet Forms/Fields_test.cpp DiscreteFieldExample.Fill
+ *
+ * @tparam AnalyticalExpression A callable object or function-like entity with a signature
+ *         compatible with the field's dimensionality, such as:
+ *         @code{.cpp}
+ *         amrex::Real(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int component);
+ *         @endcode
+ */
 template <typename AnalyticalExpression>
 void fill (DiscreteField& field, AnalyticalExpression const& f)
 {
     static_assert(std::is_invocable_r_v<amrex::Real, AnalyticalExpression,
                                         AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
                   "'AnalyticalExpression const &f' has no callable interface matching "
-                  "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, int");
+                  "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int)");
     for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
     {
         field.select_box(mfi);
@@ -241,6 +254,22 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
     }
 }
 
+// clang-format off
+/**
+ * @brief Fill a @ref DiscreteVectorField with values from an analytical expression at the
+ *        location of each cell (or grid point) for every direction @ref Direction of the
+ *        vector.
+ *
+ * @details An example to fill the discrete field with a constant value in all directions
+ *          @snippet Forms/Fields_test.cpp DiscreteVectorFieldExample.Fill
+ *
+ * @tparam AnalyticalExpression A callable object or function-like entity with a signature
+ *         compatible with the field's dimensionality, such as:
+ *         @code{.cpp}
+ *         amrex::Real(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int component);
+ *         @endcode
+ */
+// clang-format on
 template <typename AnalyticalExpression>
 void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
 {
