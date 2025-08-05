@@ -36,10 +36,12 @@ public:
 
 void fill_scalar_field_with_one (DiscreteField& sf)
 {
+    //! [DiscreteFieldExample.Fill]
     auto fillFunc =
         [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int n)
     { return 1.0; };
     Gempic::fill(sf, fillFunc);
+    //! [DiscreteFieldExample.Fill]
 }
 void fill_scalar_field_with_sin (DiscreteField& sf)
 {
@@ -49,6 +51,7 @@ void fill_scalar_field_with_sin (DiscreteField& sf)
 }
 void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
 {
+    //! [DiscreteVectorFieldExample.Fill]
     auto fillFunc =
         [=] AMREX_GPU_HOST_DEVICE(Direction dir,
                                   AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int n)
@@ -66,6 +69,7 @@ void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
         };
     };
     Gempic::fill(vf, fillFunc);
+    //! [DiscreteVectorFieldExample.Fill]
 }
 void fill_vector_field_with_sin (DiscreteVectorField& vf)
 {

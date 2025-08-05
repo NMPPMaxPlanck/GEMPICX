@@ -10,8 +10,12 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
 .. doxygenclass:: Gempic::DiscreteGrid
    :members:
 
+.. doxygenfunction:: Gempic::fill(DiscreteField&, AnalyticalExpression const&)
+
 .. doxygenclass:: Gempic::DiscreteField
    :members:
+
+.. doxygenfunction:: Gempic::fill(DiscreteVectorField&, AnalyticalExpression const&)
 
 .. doxygenclass:: Gempic::DiscreteVectorField
    :members:
