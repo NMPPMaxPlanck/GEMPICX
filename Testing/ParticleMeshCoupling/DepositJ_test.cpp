@@ -26,7 +26,7 @@ using namespace Particle;
 using namespace ParticleMeshCoupling;
 
 /**
- * @brief Tests the deposit_j function using analytical function fields
+ * @brief Tests the deposit_twoform(j) function using analytical function fields
  */
 template <typename SplineDegreeStruct>
 class DepositJTest : public testing::Test
@@ -96,7 +96,7 @@ public:
     template <int n>
     amrex::Real j_solve ()
     {
-        Gempic::Io::Parameters parameters;
+        Gempic::Io::Parameters parameters{};
 
         // Initialize computational_domain
         amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
@@ -193,7 +193,7 @@ public:
                                                                   infra.inv_cell_size_array());
 
                         amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
-                        deposit_j(jA, spline, vel, charge * weight[pp]);
+                        deposit_twoform(jA, spline, vel, charge * weight[pp]);
                     });
             }
         }

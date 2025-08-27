@@ -520,6 +520,7 @@ struct DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>
     void operator-=(DeRhamField<grid, space>&);
     DeRhamField<grid, space> operator-(DeRhamField<grid, space>&);
     void operator+=(amrex::Real c);
+    void operator+=(amrex::Vector<amrex::Real> c);
     void operator-=(amrex::Real c);
 };
 
@@ -1844,6 +1845,18 @@ inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<sp
     for (int comp = 0; comp < 3; ++comp)
     {
         m_data[comp].plus(c, nGhost[xDir]);
+    }
+}
+
+template <Grid grid, Space space>
+inline void DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::operator+=(
+    amrex::Vector<amrex::Real> c)
+{
+    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=(amrex::Real)");
+    auto nGhost = m_deRham->get_n_ghost();
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        m_data[comp].plus(c[comp], nGhost[xDir]);
     }
 }
 

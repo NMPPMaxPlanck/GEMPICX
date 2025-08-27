@@ -946,117 +946,72 @@ AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const&
  * @tparam degY Spline degree in y
  * @tparam degZ Spline degree in z
  *
+ * @param[out] twoForm generic twoForm field to be computed
+ * @param spline Splines evaluated at given particle position
+ * @param dep_vector The deposit vector
+ * @param coeff
+ */
+template <int degX, int degY, int degZ, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void deposit_twoform (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& twoForm,
+    SplineBase<degX, degY, degZ> const& spline,
+    amrex::GpuArray<amrex::Real, vDim> const& depVector,
+    amrex::Real chargeWeight)
+{
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_twoform()")
+    AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
+    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
+                        for (int kk = 0; kk <= degZ; ++kk))
+        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
+                                              spline.m_firstIndex[yDir] + jj,
+                                              spline.m_firstIndex[zDir] + kk)};
+
+        // Ensure that we only access existing elements of cellSplineVals
+        if (ii < degX)
+        {
+            double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk);
+            amrex::HostDevice::Atomic::Add(
+                twoForm[xDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                sCoeff * chargeWeight * depVector[xDir]);
+        }
+
+        if constexpr (vDim > 1)
+        {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (jj < degY)
+            {
+                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, yDir>(ii, jj, kk);
+                amrex::HostDevice::Atomic::Add(
+                    twoForm[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    sCoeff * chargeWeight * depVector[yDir]);
+            }
+        }
+        if constexpr (vDim == 3)
+        {
+            // Ensure that we only access existing elements of cellSplineVals
+            if (kk < degZ)
+            {
+                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, zDir>(ii, jj, kk);
+                amrex::HostDevice::Atomic::Add(
+                    twoForm[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    sCoeff * chargeWeight * depVector[zDir]);
+            }
+        }
+    GEMPIC_D_LOOP_END
+}
+
+/**
+ * @brief
+ *
+ * @tparam degX Spline degree in x
+ * @tparam degY Spline degree in y
+ * @tparam degZ Spline degree in z
+ *
  * @param[out] currentDensity current density to be computed
  * @param spline Splines evaluated at given particle position
  * @param vel The velocity vector
  * @param coeff
  */
-template <int degX, int degY, int degZ, unsigned int vDim>
-AMREX_GPU_HOST_DEVICE inline void deposit_j (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& currentDensity,
-    SplineBase<degX, degY, degZ> const& spline,
-    amrex::GpuArray<amrex::Real, vDim> const& vel,
-    amrex::Real coeff)
-{
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_j()")
-    AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
-    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
-                        for (int kk = 0; kk <= degZ; ++kk))
-        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
-                                              spline.m_firstIndex[yDir] + jj,
-                                              spline.m_firstIndex[zDir] + kk)};
-
-        // Ensure that we only access existing elements of cellSplineVals
-        if (ii < degX)
-        {
-            double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk);
-            amrex::HostDevice::Atomic::Add(
-                currentDensity[xDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                sCoeff * coeff * vel[xDir]);
-        }
-
-        if constexpr (vDim > 1)
-        {
-            // Ensure that we only access existing elements of cellSplineVals
-            if (jj < degY)
-            {
-                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, yDir>(ii, jj, kk);
-                amrex::HostDevice::Atomic::Add(
-                    currentDensity[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                    sCoeff * coeff * vel[yDir]);
-            }
-        }
-        if constexpr (vDim == 3)
-        {
-            // Ensure that we only access existing elements of cellSplineVals
-            if (kk < degZ)
-            {
-                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, zDir>(ii, jj, kk);
-                amrex::HostDevice::Atomic::Add(
-                    currentDensity[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                    sCoeff * coeff * vel[zDir]);
-            }
-        }
-    GEMPIC_D_LOOP_END
-}
-
-template <int degX, int degY, int degZ, unsigned int vDim>
-AMREX_GPU_HOST_DEVICE inline void deposit_jcrossb (
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& lorentzForce,
-    SplineBase<degX, degY, degZ> const& spline,
-    amrex::GpuArray<amrex::Real, vDim> const& vel,
-    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& bA,
-    amrex::Real coeff)
-{
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_jcrossb()");
-
-    amrex::GpuArray<amrex::Real, vDim> bfield =
-        spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
-    amrex::GpuArray<amrex::Real, vDim> vcrossb{
-        (vel[yDir] * bfield[zDir] - vel[zDir] * bfield[yDir]),
-        (vel[zDir] * bfield[xDir] - vel[xDir] * bfield[zDir]),
-        (vel[xDir] * bfield[yDir] - vel[yDir] * bfield[xDir])};
-
-    AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
-    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
-                        for (int kk = 0; kk <= degZ; ++kk))
-        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
-                                              spline.m_firstIndex[yDir] + jj,
-                                              spline.m_firstIndex[zDir] + kk)};
-
-        // Ensure that we only access existing elements of cellSplineVals
-        if (ii < degX)
-        {
-            double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk);
-            amrex::HostDevice::Atomic::Add(
-                lorentzForce[xDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                sCoeff * coeff * vcrossb[xDir]);
-        }
-
-        if constexpr (vDim > 1)
-        {
-            // Ensure that we only access existing elements of cellSplineVals
-            if (jj < degY)
-            {
-                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, yDir>(ii, jj, kk);
-                amrex::HostDevice::Atomic::Add(
-                    lorentzForce[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                    sCoeff * coeff * vcrossb[yDir]);
-            }
-        }
-        if constexpr (vDim == 3)
-        {
-            // Ensure that we only access existing elements of cellSplineVals
-            if (kk < degZ)
-            {
-                double sCoeff = spline.template eval_b_spline<Field::DualTwoForm, zDir>(ii, jj, kk);
-                amrex::HostDevice::Atomic::Add(
-                    lorentzForce[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                    sCoeff * coeff * vcrossb[zDir]);
-            }
-        }
-    GEMPIC_D_LOOP_END
-}
 
 template <Direction dir, int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_deldot_s_coefficient (
@@ -1139,6 +1094,173 @@ AMREX_GPU_HOST_DEVICE inline void deposit_deldot_s (
     GEMPIC_D_LOOP_END
 }
 
+template <Field form, Direction dir, int degX, int degY, int degZ, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_curlj_coefficient (
+    SplineWithFirstDerivative<degX, degY, degZ> const& spline,
+    amrex::GpuArray<amrex::Real, vDim> const& vel,
+    int ii,
+    int jj,
+    int kk)
+{
+    static_assert(vDim <= 3 && vDim >= 1, "unknown vDim");
+    if constexpr (vDim < dir)
+    {
+        return 0;
+    }
+
+    if constexpr (vDim == 1)
+    {
+        if (dir == xDir)
+        {
+            return 0.0;
+        }
+        else if (dir == yDir)
+        {
+            return GEMPIC_D_ADD(
+                0.0, 0.0,
+                (vel[xDir] *
+                 spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
+        }
+        else if (dir == zDir)
+        {
+            return GEMPIC_D_ADD(
+                0.0,
+                (-vel[xDir] *
+                 spline.template eval_b_spline_derivative<form, dir, yDir>(ii, jj, kk)),
+                0.0);
+        }
+    }
+    else if constexpr (vDim == 2)
+    {
+        if (dir == xDir)
+        {
+            return GEMPIC_D_ADD(
+                0.0, 0.0,
+                (-vel[yDir] *
+                 spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
+        }
+        else if (dir == yDir)
+        {
+            return GEMPIC_D_ADD(
+                0.0, 0.0,
+                (vel[xDir] *
+                 spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
+        }
+        else if (dir == zDir)
+        {
+            return GEMPIC_D_ADD(
+                (vel[yDir] * spline.template eval_b_spline_derivative<form, dir, xDir>(ii, jj, kk)),
+                (-vel[xDir] *
+                 spline.template eval_b_spline_derivative<form, dir, yDir>(ii, jj, kk)),
+                0.0);
+        }
+    }
+    else
+    {
+        if (dir == xDir)
+        {
+            return GEMPIC_D_ADD(
+                0.0,
+                (vel[zDir] * spline.template eval_b_spline_derivative<form, dir, yDir>(ii, jj, kk)),
+                (-vel[yDir] *
+                 spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
+        }
+        else if (dir == yDir)
+        {
+            return GEMPIC_D_ADD(
+                (-vel[zDir] *
+                 spline.template eval_b_spline_derivative<form, dir, xDir>(ii, jj, kk)),
+                0.0,
+                (vel[xDir] *
+                 spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
+        }
+        else if (dir == zDir)
+        {
+            return GEMPIC_D_ADD(
+                (vel[yDir] * spline.template eval_b_spline_derivative<form, dir, xDir>(ii, jj, kk)),
+                (-vel[xDir] *
+                 spline.template eval_b_spline_derivative<form, dir, yDir>(ii, jj, kk)),
+                0.0);
+        }
+    }
+}
+
+template <Field form, int degX, int degY, int degZ, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void deposit_curlj (
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& curlJ,
+    SplineWithFirstDerivative<degX, degY, degZ> const& spline,
+    amrex::GpuArray<amrex::Real, vDim> const& vel,
+    amrex::Real chargeWeight)
+{
+    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_curlj()")
+
+    bool xCond{false};
+    bool yCond{false};
+    bool zCond{false};
+
+    AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
+    GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
+                        for (int kk = 0; kk <= degZ; ++kk))
+        amrex::Dim3 cellIndex = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
+                                              spline.m_firstIndex[yDir] + jj,
+                                              spline.m_firstIndex[zDir] + kk)};
+
+        if constexpr (form == Field::DualTwoForm)
+        {
+            xCond = (ii < degX);
+        }
+        else if constexpr (form == Field::DualOneForm)
+        {
+            xCond = AMREX_D_TERM(true, &&(jj < degY), &&(kk < degZ));
+        }
+
+        if (xCond)
+        {
+            amrex::Real sCoeff{deposit_curlj_coefficient<form, xDir>(spline, vel, ii, jj, kk)};
+            amrex::HostDevice::Atomic::Add(
+                curlJ[xDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0), sCoeff * chargeWeight);
+        }
+        if constexpr (vDim > 1)
+        {
+            if constexpr (form == Field::DualTwoForm)
+            {
+                yCond = AMREX_D_TERM(true, &&(jj < degY), );
+            }
+            else if constexpr (form == Field::DualOneForm)
+            {
+                yCond = AMREX_D_TERM((ii < degX), , &&(kk < degZ));
+            }
+
+            if (yCond)
+            {
+                amrex::Real sCoeff{deposit_curlj_coefficient<form, yDir>(spline, vel, ii, jj, kk)};
+                amrex::HostDevice::Atomic::Add(
+                    curlJ[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    sCoeff * chargeWeight);
+            }
+        }
+        if constexpr (vDim == 3)
+        {
+            if constexpr (form == Field::DualTwoForm)
+            {
+                zCond = AMREX_D_TERM(true, , &&(kk < degZ));
+            }
+            else if constexpr (form == Field::DualOneForm)
+            {
+                zCond = AMREX_D_TERM((ii < degX), &&(jj < degY), );
+            }
+
+            if (zCond)
+            {
+                amrex::Real sCoeff{deposit_curlj_coefficient<form, zDir>(spline, vel, ii, jj, kk)};
+                amrex::HostDevice::Atomic::Add(
+                    curlJ[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                    sCoeff * chargeWeight);
+            }
+        }
+    GEMPIC_D_LOOP_END
+}
+
 template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
 void deposit_particle_density (
     Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& particleDensity,
@@ -1181,6 +1303,338 @@ void deposit_particle_density (
         particleDensity.post_particle_loop_sync();
     }
 }
+
+template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
+void deposit_individual_particle_density (
+    std::vector<Gempic::Forms::DeRhamField<Grid::dual, Space::cell>>& rhoVec,
+    std::vector<Gempic::Forms::DeRhamField<Grid::dual, Space::cell>>& rhoMassVec,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    bool doSync = true)
+{
+    int index = 0;
+    for (auto& particleSpecies : particles)
+    {
+        rhoVec[index].m_data.setVal(0.0);
+        rhoMassVec[index].m_data.setVal(0.0);
+
+        amrex::Real charge = particleSpecies->get_charge();
+        amrex::Real mass = particleSpecies->get_mass();
+
+        for (auto& pti : *particleSpecies)
+        {
+            long const np = pti.numParticles();
+            auto* const particles = pti.GetArrayOfStructs()().data();
+            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
+
+            amrex::Array4<amrex::Real> rhoA;
+            amrex::Array4<amrex::Real> rhoMassA;
+
+            rhoA = rhoVec[index].m_data[pti].array();
+            rhoMassA = rhoMassVec[index].m_data[pti].array();
+
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
+
+            amrex::ParallelFor(np,
+                               [=] AMREX_GPU_DEVICE(long pp)
+                               {
+                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
+                                   {
+                                       positionParticle[d] = particles[pp].pos(d);
+                                   }
+
+                                   SplineBase<degX, degY, degZ> spline(
+                                       positionParticle, plo, compDom.inv_cell_size_array());
+
+                                   deposit_rho(rhoA, spline, charge * weight[pp]);
+                                   deposit_rho(rhoMassA, spline, mass * weight[pp]);
+                               });
+        }
+        if (doSync)
+        {
+            rhoVec[index].post_particle_loop_sync();
+            rhoMassVec[index].post_particle_loop_sync();
+        }
+
+        index++;
+    }
+}
+
+template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
+void deposit_current_density (
+    Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    bool doSync = true)
+{
+    for (int comp = 0; comp < vDim; ++comp)
+    {
+        J.m_data[comp].setVal(0.0);
+    }
+    for (auto& particleSpecies : particles)
+    {
+        amrex::Real charge = particleSpecies->get_charge();
+
+        for (auto& pti : *particleSpecies)
+        {
+            long const np = pti.numParticles();
+            auto* const particles = pti.GetArrayOfStructs()().data();
+            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
+
+            auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
+            auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
+            auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
+
+            for (int cc = 0; cc < vDim; cc++)
+            {
+                jA[cc] = (J.m_data[cc])[pti].array();
+            }
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
+
+            amrex::ParallelFor(np,
+                               [=] AMREX_GPU_DEVICE(long pp)
+                               {
+                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
+                                   {
+                                       positionParticle[d] = particles[pp].pos(d);
+                                   }
+
+                                   SplineBase<degX, degY, degZ> spline(
+                                       positionParticle, plo, compDom.inv_cell_size_array());
+
+                                   amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
+                                                                          velz[pp]};
+                                   deposit_twoform(jA, spline, vel, charge * weight[pp]);
+                               });
+        }
+    }
+
+    if (doSync)
+    {
+        J.post_particle_loop_sync();
+    }
+}
+
+template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
+void deposit_rho_weighted_electric_field (
+    Gempic::Forms::DeRhamField<Grid::dual, Space::face>& rhoE,
+    Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    bool doSync = true)
+{
+    for (int comp = 0; comp < vDim; ++comp)
+    {
+        rhoE.m_data[comp].setVal(0.0);
+    }
+
+    // Fill up E_coeffs
+    for (auto& particleSpecies : particles)
+    {
+        amrex::Real charge = particleSpecies->get_charge();
+        amrex::Real mass = particleSpecies->get_mass();
+        amrex::Real chargeSqrByMass = charge * charge / mass;
+
+        for (auto& pti : *particleSpecies)
+        {
+            long const np = pti.numParticles();
+            auto* const particles = pti.GetArrayOfStructs()().data();
+            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
+
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eA;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> rhoeA;
+
+            for (int cc = 0; cc < vDim; cc++)
+            {
+                eA[cc] = (E.m_data[cc])[pti].array();
+                rhoeA[cc] = (rhoE.m_data[cc])[pti].array();
+            }
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
+
+            amrex::ParallelFor(np,
+                               [=] AMREX_GPU_DEVICE(long pp)
+                               {
+                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
+                                   {
+                                       positionParticle[d] = particles[pp].pos(d);
+                                   }
+
+                                   SplineBase<degX, degY, degZ> spline(
+                                       positionParticle, plo, compDom.inv_cell_size_array());
+
+                                   amrex::GpuArray<amrex::Real, vDim> efield =
+                                       spline.template eval_spline_field<Field::PrimalOneForm>(eA);
+                                   deposit_twoform(rhoeA, spline, efield,
+                                                   chargeSqrByMass * weight[pp]);
+                               });
+        }
+    }
+
+    if (doSync)
+    {
+        rhoE.post_particle_loop_sync();
+    }
+}
+
+template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
+void deposit_rho_j_jcrossb_deldots (
+    Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& rho,
+    Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+    Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
+    Gempic::Forms::DeRhamField<Grid::dual, Space::face>& jcrossB,
+    Gempic::Forms::DeRhamField<Grid::dual, Space::face>& delDotS,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    bool doSync = true)
+{
+    BL_PROFILE("deposit_rho_j_jcrossb_deldots()");
+    rho.m_data.setVal(0.0);
+    for (int comp = 0; comp < vDim; ++comp)
+    {
+        J.m_data[comp].setVal(0.0);
+        jcrossB.m_data[comp].setVal(0.0);
+        delDotS.m_data[comp].setVal(0.0);
+    }
+    for (auto& particleSpecies : particles)
+    {
+        amrex::Real charge = particleSpecies->get_charge();
+        amrex::Real mass = particleSpecies->get_mass();
+        amrex::Real chargeByMass = charge / mass;
+
+        particleSpecies->reset_total_weight(compDom.geometry().ProbSize());
+
+        for (auto& pti : *particleSpecies)
+        {
+            long const np = pti.numParticles();
+            auto* const particles = pti.GetArrayOfStructs()().data();
+            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
+
+            auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
+            auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
+            auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+
+            amrex::Array4<amrex::Real> rhoA;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> bA;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jcrossbA;
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> deldotsA;
+
+            rhoA = rho.m_data[pti].array();
+            for (int cc = 0; cc < vDim; cc++)
+            {
+                jA[cc] = (J.m_data[cc])[pti].array();
+                bA[cc] = (B.m_data[cc])[pti].array();
+                jcrossbA[cc] = (jcrossB.m_data[cc])[pti].array();
+                deldotsA[cc] = (delDotS.m_data[cc])[pti].array();
+            }
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
+
+            amrex::ParallelFor(
+                np,
+                [=] AMREX_GPU_DEVICE(long pp)
+                {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
+                    {
+                        positionParticle[d] = particles[pp].pos(d);
+                    }
+
+                    SplineBase<degX, degY, degZ> spline(positionParticle, plo,
+                                                        compDom.inv_cell_size_array());
+                    SplineWithFirstDerivative<degX, degY, degZ> splineWithDeriv(
+                        positionParticle, plo, compDom.inv_cell_size_array(),
+                        compDom.cell_size_array());
+
+                    amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
+
+                    deposit_rho(rhoA, splineWithDeriv, charge * weight[pp]);
+                    deposit_twoform(jA, splineWithDeriv, vel, charge * weight[pp]);
+
+                    amrex::GpuArray<amrex::Real, vDim> bfield =
+                        spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
+                    amrex::GpuArray<amrex::Real, vDim> vcrossb{
+                        (vel[yDir] * bfield[zDir] - vel[zDir] * bfield[yDir]),
+                        (vel[zDir] * bfield[xDir] - vel[xDir] * bfield[zDir]),
+                        (vel[xDir] * bfield[yDir] - vel[yDir] * bfield[xDir])};
+                    deposit_twoform(jcrossbA, splineWithDeriv, vcrossb,
+                                    chargeByMass * charge * weight[pp]);
+
+                    deposit_deldot_s(deldotsA, splineWithDeriv, vel, charge * weight[pp]);
+                });
+        }
+    }
+
+    if (doSync)
+    {
+        rho.post_particle_loop_sync();
+        J.post_particle_loop_sync();
+        jcrossB.post_particle_loop_sync();
+        delDotS.post_particle_loop_sync();
+    }
+}
+
+template <unsigned int vDim>
+inline void push_x_using_v (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& pos,
+                            amrex::GpuArray<amrex::Real, vDim> const& vel,
+                            amrex::Real dt)
+{
+    for (int i = 0; i < AMREX_SPACEDIM; i++)
+    {
+        pos[i] += vel[i] * dt;
+    }
+}
+
+template <unsigned int vDim>
+inline void push_v_using_e (amrex::GpuArray<amrex::Real, vDim>& vel,
+                            amrex::GpuArray<amrex::Real, vDim> const& efield,
+                            amrex::Real dt,
+                            amrex::Real chargeByMass)
+{
+    for (int i = 0; i < vDim; i++)
+    {
+        vel[i] += chargeByMass * efield[i] * dt;
+    }
+}
+
+template <unsigned int vDim>
+inline void rotate_v_using_b (amrex::GpuArray<amrex::Real, vDim>& vel,
+                              amrex::GpuArray<amrex::Real, vDim> const& bfield,
+                              amrex::Real dt,
+                              amrex::Real chargeByMass)
+{
+    amrex::Real bmag = std::sqrt(bfield[xDir] * bfield[xDir] + bfield[yDir] * bfield[yDir] +
+                                 bfield[zDir] * bfield[zDir]);
+    if (bmag != 0.0)
+    {
+        amrex::GpuArray<amrex::Real, vDim> b{bfield[xDir] / bmag, bfield[yDir] / bmag,
+                                             bfield[zDir] / bmag};
+        amrex::Real a = chargeByMass * bmag * dt;
+        amrex::Real ca = cos(a);
+        amrex::Real sa = sin(a);
+        amrex::GpuArray<amrex::Real, vDim> vtemp{vel[xDir], vel[yDir], vel[zDir]};
+
+        vel[xDir] =
+            (b[xDir] * b[xDir] + (b[yDir] * b[yDir] + b[zDir] * b[zDir]) * ca) * vtemp[xDir] +
+            (b[zDir] * sa + b[yDir] * b[xDir] * (1.0 - ca)) * vtemp[yDir] +
+            (-b[yDir] * sa + b[zDir] * b[xDir] * (1.0 - ca)) * vtemp[zDir];
+
+        vel[yDir] =
+            (-b[zDir] * sa + b[yDir] * b[xDir] * (1.0 - ca)) * vtemp[xDir] +
+            (b[yDir] * b[yDir] + (b[xDir] * b[xDir] + b[zDir] * b[zDir]) * ca) * vtemp[yDir] +
+            (b[xDir] * sa + b[zDir] * b[yDir] * (1.0 - ca)) * vtemp[zDir];
+
+        vel[zDir] =
+            (b[yDir] * sa + b[zDir] * b[xDir] * (1.0 - ca)) * vtemp[xDir] +
+            (-b[xDir] * sa + b[zDir] * b[yDir] * (1.0 - ca)) * vtemp[yDir] +
+            (b[zDir] * b[zDir] + (b[xDir] * b[xDir] + b[yDir] * b[yDir]) * ca) * vtemp[zDir];
+    }
+}
+
 } // namespace Gempic::ParticleMeshCoupling
 
 #endif

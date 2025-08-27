@@ -275,7 +275,7 @@ int main (int argc, char* argv[])
                                 deposit_rho(rhoarr, spline, charge * weight[pp]);
                                 amrex::GpuArray<amrex::Real, 3> V{vx[pp], vy[pp], vz[pp]};
 
-                                deposit_j(jarr, spline, V, charge * weight[pp]);
+                                deposit_twoform(jarr, spline, V, charge * weight[pp]);
                             });
                     }
                     else if (simType == "DriftKinetic")
@@ -297,7 +297,8 @@ int main (int argc, char* argv[])
                                 vx[pp] = 0;
                                 vy[pp] = 0;
 
-                                deposit_j(jarr, spline, {0.0, 0.0, vz[pp]}, charge * weight[pp]);
+                                deposit_twoform(jarr, spline, {0.0, 0.0, vz[pp]},
+                                                charge * weight[pp]);
                             });
                     }
                     else if (simType == "DeFi")
@@ -321,8 +322,8 @@ int main (int argc, char* argv[])
                                     vx[pp] = 0;
                                     vy[pp] = 0;
 
-                                    deposit_j(jarr, spline, {0.0, 0.0, vz[pp]},
-                                              charge * weight[pp]);
+                                    deposit_twoform(jarr, spline, {0.0, 0.0, vz[pp]},
+                                                    charge * weight[pp]);
                                 });
                         }
                         else
@@ -341,7 +342,7 @@ int main (int argc, char* argv[])
                                     deposit_rho(rhoarr, spline, charge * weight[pp]);
                                     amrex::GpuArray<amrex::Real, 3> V{vx[pp], vy[pp], vz[pp]};
 
-                                    deposit_j(jarr, spline, V, charge * weight[pp]);
+                                    deposit_twoform(jarr, spline, V, charge * weight[pp]);
                                 });
                         }
                     }

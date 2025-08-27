@@ -26,10 +26,10 @@ using namespace Particle;
 using namespace ParticleMeshCoupling;
 
 /**
- * @brief Tests the deposit_twoform(jcrossb) function using analytical function fields
+ * @brief Tests the deposit_curlj function using analytical function fields
  */
 template <typename SplineDegreeStruct>
-class DepositJcrossBTest : public testing::Test
+class DepositCurlJ_Edge_Test : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
@@ -43,38 +43,28 @@ public:
 
     static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
-    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcB;
-    amrex::Array<amrex::Parser, 3> m_parserB;
+    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcCurlJ;
+    amrex::Array<amrex::Parser, 3> m_parserCurlJ;
 
-    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcJcrossB;
-    amrex::Array<amrex::Parser, 3> m_parserJcrossB;
-
-    DepositJcrossBTest()
+    DepositCurlJ_Edge_Test()
     {
         if constexpr (AMREX_SPACEDIM != 1)
         {
-            amrex::Array<std::string, 3> analyticalB;
-            amrex::Array<std::string, 3> analyticalJcrossB;
+            amrex::Array<std::string, 3> analyticalCurlJ;
             if constexpr (AMREX_SPACEDIM == 2)
             {
-                analyticalB = {"sin(x)", "sin(y)", "sin(x+y)"};
-                analyticalJcrossB = {"sin(x)", "-sin(y)", "sin(y-x)"};
+                analyticalCurlJ = {"cos(x+y)", "-cos(x+y)", "cos(x)-cos(y)"};
             }
             else if constexpr (AMREX_SPACEDIM == 3)
             {
-                analyticalB = {"sin(x)", "sin(y)", "sin(z)"};
-                analyticalJcrossB = {"sin(z-y)", "sin(x-z)", "sin(y-x)"};
+                analyticalCurlJ = {"cos(x+y)-cos(x+z)", "cos(y+z)-cos(x+y)", "cos(x+z)-cos(y+z)"};
             }
 
             for (int i = 0; i < 3; ++i)
             {
-                m_parserB[i].define(analyticalB[i]);
-                m_parserB[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-                m_funcB[i] = m_parserB[i].compile<s_nVar>();
-
-                m_parserJcrossB[i].define(analyticalJcrossB[i]);
-                m_parserJcrossB[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-                m_funcJcrossB[i] = m_parserJcrossB[i].compile<s_nVar>();
+                m_parserCurlJ[i].define(analyticalCurlJ[i]);
+                m_parserCurlJ[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+                m_funcCurlJ[i] = m_parserCurlJ[i].compile<s_nVar>();
             }
         }
 
@@ -99,13 +89,15 @@ public:
     {
         if constexpr (AMREX_SPACEDIM == 1)
         {
-            GTEST_SKIP() << "This function only works in 2D and 3D.";
+            GTEST_SKIP() << "This function works in 2D and 3D.";
         }
     }
 
     template <int n>
-    amrex::Real jcross_b_solve ()
+    amrex::Real curlj_edge_solve ()
     {
+        // For studies other than convergence, this should be in SetUpTestSuite under Grid
+        // parameters
         Gempic::Io::Parameters parameters{};
 
         // Initialize computational_domain
@@ -128,7 +120,22 @@ public:
             ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
         }
 
-        int const numParticles{GEMPIC_D_MULT(n, n, n)};
+        int const percelldir{1};
+
+        int const percell{GEMPIC_D_MULT(percelldir, percelldir, percelldir)};
+        int const numParticles{percell * GEMPIC_D_MULT(n, n, n)};
+
+        std::vector<std::vector<amrex::Real>> oss(percell);
+
+        // Any value of 'off' in [0,1] works for deg 2,3,4,5
+        amrex::Real off{0.0};
+
+        GEMPIC_D_LOOP_BEGIN(for (int i = 0; i < percelldir; i++),
+                            for (int j = 0; j < percelldir; j++),
+                            for (int k = 0; k < percelldir; k++))
+            oss[GEMPIC_D_ADD(i, j * percelldir, k * percelldir * percelldir)] = {AMREX_D_DECL(
+                (i + off) / percelldir, (j + off) / percelldir, (k + off) / percelldir)};
+        GEMPIC_D_LOOP_END
 
         amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
@@ -136,22 +143,31 @@ public:
 
         int i{0}, j{0}, k{0};
         auto const& dx{infra.cell_size_array()};
+
         GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
                             for (k = 0; k < n; k++))
 
-            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {
-                AMREX_D_DECL(infra.geometry().ProbLo(xDir) + (i + 0.5) * dx[xDir],
-                             infra.geometry().ProbLo(yDir) + (j + 0.5) * dx[yDir],
-                             infra.geometry().ProbLo(zDir) + (k + 0.5) * dx[zDir])};
+            for (int p = 0; p < percell; p++)
+            {
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {
+                    AMREX_D_DECL(infra.geometry().ProbLo(xDir) + (i + oss[p][0]) * dx[xDir],
+                                 infra.geometry().ProbLo(yDir) + (j + oss[p][1]) * dx[yDir],
+                                 infra.geometry().ProbLo(zDir) + (k + oss[p][2]) * dx[zDir])};
 
-            positions[i + j * n + k * n * n] = {AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
+                positions[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
+                    AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
+
 #if AMREX_SPACEDIM == 2
-            velocities[i + j * n + k * n * n] = {cos(loc[xDir]), cos(loc[yDir]),
-                                                 cos(loc[xDir] + loc[yDir])};
+                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
+                    sin(loc[yDir]), sin(loc[xDir]), sin(loc[xDir] + loc[yDir])};
 #elif AMREX_SPACEDIM == 3
-            velocities[i + j * n + k * n * n] = {cos(loc[xDir]), cos(loc[yDir]), cos(loc[zDir])};
+                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
+                    sin(loc[yDir] + loc[zDir]), sin(loc[xDir] + loc[zDir]),
+                    sin(loc[xDir] + loc[yDir])};
 #endif
-            weights[i + j * n + k * n * n] = infra.cell_volume();
+                weights[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
+                    (1.0 / percell) * infra.cell_volume();
+            }
         GEMPIC_D_LOOP_END
 
         Gempic::Test::Utils::add_single_particles(ions[0].get(), infra, weights, positions,
@@ -160,34 +176,31 @@ public:
         ions[0]->Redistribute();
 
         // Computed fields
-        DeRhamField<Grid::primal, Space::face> B(deRham, m_funcB);
-        DeRhamField<Grid::dual, Space::face> jcrossB(deRham);
+        DeRhamField<Grid::dual, Space::edge> curlJ(deRham);
 
         // Analytical fields
-        DeRhamField<Grid::dual, Space::face> jcrossBAn(deRham, m_funcJcrossB);
+        DeRhamField<Grid::dual, Space::edge> curljAn(deRham, m_funcCurlJ);
 
         // Deposit initial charge
         for (auto& particleSpecies : ions)
         {
             amrex::Real charge = particleSpecies->get_charge();
 
-            for (auto& particleGrid : *particleSpecies)
+            for (auto& pti : *particleSpecies)
             {
-                long const np = particleGrid.numParticles();
-                auto* const particles = particleGrid.GetArrayOfStructs()().data();
-                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(s_vdim).data();
+                long const np = pti.numParticles();
+                auto* const particles = pti.GetArrayOfStructs()().data();
+                auto* const weight = pti.GetStructOfArrays().GetRealData(s_vdim).data();
 
-                auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+                auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
+                auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
+                auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
 
-                amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> bA;
-                amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> jcrossbA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> curljA;
 
                 for (int cc = 0; cc < s_vdim; cc++)
                 {
-                    bA[cc] = (B.m_data[cc])[particleGrid].array();
-                    jcrossbA[cc] = (jcrossB.m_data[cc])[particleGrid].array();
+                    curljA[cc] = (curlJ.m_data[cc])[pti].array();
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
@@ -201,49 +214,43 @@ public:
                             positionParticle[d] = particles[pp].pos(d);
                         }
 
-                        SplineBase<s_degX, s_degY, s_degZ> spline(positionParticle, plo,
-                                                                  infra.inv_cell_size_array());
+                        SplineWithFirstDerivative<s_degX, s_degY, s_degZ> splineDeriv(
+                            positionParticle, plo, infra.inv_cell_size_array(), dx);
 
                         amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
-
-                        amrex::GpuArray<amrex::Real, s_vdim> bfield =
-                            spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
-                        amrex::GpuArray<amrex::Real, s_vdim> vcrossb{
-                            (vel[yDir] * bfield[zDir] - vel[zDir] * bfield[yDir]),
-                            (vel[zDir] * bfield[xDir] - vel[xDir] * bfield[zDir]),
-                            (vel[xDir] * bfield[yDir] - vel[yDir] * bfield[xDir])};
-                        deposit_twoform(jcrossbA, spline, vcrossb, charge * weight[pp]);
+                        deposit_curlj<Field::DualOneForm>(curljA, splineDeriv, vel,
+                                                          charge * weight[pp]);
                     });
             }
         }
-        jcrossB.post_particle_loop_sync();
+        curlJ.post_particle_loop_sync();
 
-        jcrossB -= jcrossBAn;
+        curlJ -= curljAn;
 
-        amrex::GpuArray<amrex::Real, 3> dxi3d{GEMPIC_D_PAD_ONE(infra.geometry().InvCellSize(xDir),
-                                                               infra.geometry().InvCellSize(yDir),
-                                                               infra.geometry().InvCellSize(zDir))};
-        return (Utils::gempic_norm(jcrossB.m_data[xDir], infra, 1) * dxi3d[yDir] * dxi3d[zDir] +
-                Utils::gempic_norm(jcrossB.m_data[yDir], infra, 1) * dxi3d[zDir] * dxi3d[xDir] +
-                Utils::gempic_norm(jcrossB.m_data[zDir], infra, 1) * dxi3d[xDir] * dxi3d[yDir]);
+        amrex::GpuArray<amrex::Real, 3> dxi3d{infra.inv_cell_size_3darray()};
+
+        return (Utils::gempic_norm(curlJ.m_data[xDir], infra, 1) * dxi3d[xDir] +
+                Utils::gempic_norm(curlJ.m_data[yDir], infra, 1) * dxi3d[yDir] +
+                Utils::gempic_norm(curlJ.m_data[zDir], infra, 1) * dxi3d[zDir]);
     }
 };
 
-using MyTypes = ::testing::Types<std::integral_constant<int, 3>,
+using MyTypes = ::testing::Types<std::integral_constant<int, 2>,
+                                 std::integral_constant<int, 3>,
                                  std::integral_constant<int, 4>,
                                  std::integral_constant<int, 5>>;
-TYPED_TEST_SUITE(DepositJcrossBTest, MyTypes);
+TYPED_TEST_SUITE(DepositCurlJ_Edge_Test, MyTypes);
 
-TYPED_TEST(DepositJcrossBTest, SingleParticlePerCellJcrossB)
+TYPED_TEST(DepositCurlJ_Edge_Test, SingleParticlePerCellCurlJ_Edge)
 {
     constexpr int coarse = 12;
     constexpr int fine = 24;
     amrex::Real errorCoarse, errorFine;
-    amrex::Real tol = 0.15;
+    amrex::Real tol = 0.1;
 
     amrex::Real rateOfConvergence;
-    errorCoarse = this->template jcross_b_solve<coarse>();
-    errorFine = this->template jcross_b_solve<fine>();
+    errorCoarse = this->template curlj_edge_solve<coarse>();
+    errorFine = this->template curlj_edge_solve<fine>();
     rateOfConvergence = std::log2(errorCoarse / errorFine);
     EXPECT_NEAR(rateOfConvergence, 2.0, tol);
 }

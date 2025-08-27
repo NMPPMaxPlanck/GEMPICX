@@ -256,6 +256,9 @@ public:
         params.get_or_set("numGaussians", numGauss);
         m_numGauss = numGauss;
         m_vMean.resize(numGauss);
+        m_funcvMeanParser.resize(numGauss);
+        m_funcvMean.resize(numGauss);
+        m_vMeanScheme.resize(numGauss);
         m_vDev.resize(numGauss);
         m_funcvDevParser.resize(numGauss);
         m_funcvDev.resize(numGauss);
@@ -282,6 +285,7 @@ public:
         std::partial_sum(vWeight.begin(), vWeight.end(), m_velCum.begin());
 
         m_vMeanPtr = m_vMean.data();
+        m_funcvMeanPtr = m_funcvMean.data();
         m_vDevPtr = m_vDev.data();
         m_funcvMeanPtr = m_funcvMean.data();
         m_funcvDevPtr = m_funcvDev.data();
@@ -295,6 +299,12 @@ public:
         m_vMeanGpu.resize(m_numGauss);
         amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_vMean.begin(), m_vMean.end(),
                               m_vMeanGpu.begin());
+        m_funcvMeanGpu.resize(m_numGauss);
+        amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_funcvMean.begin(), m_funcvMean.end(),
+                              m_funcvMeanGpu.begin());
+        m_vMeanSchemeGpu.resize(m_numGauss);
+        amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_vMeanScheme.begin(), m_vMeanScheme.end(),
+                              m_vMeanSchemeGpu.begin());
         m_vDevGpu.resize(m_numGauss);
         amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_vDev.begin(), m_vDev.end(),
                               m_vDevGpu.begin());
