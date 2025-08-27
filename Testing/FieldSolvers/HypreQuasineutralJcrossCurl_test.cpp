@@ -157,7 +157,7 @@ public:
         DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);
         DeRhamField<Grid::dual, Space::face> rhs(deRham, m_funcRHS);
 
-        HypreQuasineutralLinearSystem<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
+        QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
             hypreParticleJcrossCurl(infra, deRham);
 
         hypreParticleJcrossCurl.solve_jcrosscurl_plus_field_charge_e(rhs, E, ions, rho);

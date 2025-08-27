@@ -87,7 +87,7 @@ public:
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,
                                                         HodgeScheme::FDHodge);
 
-        HypreQuasineutralLinearSystem<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
+        QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
             hypreCurlcurlPlusFieldRho(infra, deRham);
 
         DeRhamField<Grid::dual, Space::cell> rho(deRham, m_funcRho);

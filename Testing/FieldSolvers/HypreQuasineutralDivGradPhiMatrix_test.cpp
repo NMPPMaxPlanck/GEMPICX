@@ -27,11 +27,11 @@ using namespace ParticleMeshCoupling;
 using namespace FieldSolvers;
 
 /**
- * @brief Tests the Charge matrix of the quasineutral solver.
- * The rho*E is deposited from particles.
+ * @brief Tests the DivGradV matrix of the quasineutral solver.
+ * The rho*gradV is deposited from particles.
  */
 template <typename SplineDegreeStruct>
-class HypreQuasineutralChargeMatrixTest : public testing::Test
+class HypreQuasineutralDivGradPhiMatrixTest : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
@@ -46,42 +46,28 @@ public:
 
     static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
-    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
-    amrex::Array<amrex::Parser, 3> m_parserE;
+    amrex::Parser m_parserPhi;
+    amrex::ParserExecutor<s_nVar> m_funcPhi;
 
-    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcRhoE;
-    amrex::Array<amrex::Parser, 3> m_parserRhoE;
-
-    HypreQuasineutralChargeMatrixTest()
+    HypreQuasineutralDivGradPhiMatrixTest()
     {
 #if AMREX_SPACEDIM == 2
-        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(x)", "sin(x+y)"};
         /*/ SINGLE SPECIES
-        amrex::Array<std::string, 3> const analyticalRhoE = {"sin(y)", "sin(x)", "sin(x+y)"};//*/
+        const std::string analyticalPhi = "sqrt(3.0)*2.0*(cos(x) + cos(y))";//*/
         // DOUBLE SPECIES
-        amrex::Array<std::string, 3> const analyticalRhoE = {"(0.5+2.0/sqrt(5.0))*sin(y)",
-                                                             "(0.5+2.0/sqrt(5.0))*sin(x)",
-                                                             "(0.5+2.0/sqrt(5.0))*sin(x+y)"}; //*/
+        std::string const analyticalPhi =
+            "((1.0 - sqrt(2.0))/(0.5 + 2.0/sqrt(5.0)))*2.0*(cos(x) + cos(y))"; //*/
 #elif AMREX_SPACEDIM == 3
-        amrex::Array<std::string, 3> const analyticalE = {"sin(y)", "sin(z)", "sin(x)"};
         /*/ SINGLE SPECIES
-        amrex::Array<std::string, 3> const analyticalRhoE = {"sin(y)", "sin(z)", "sin(x)"};//*/
+        const std::string analyticalPhi = "sqrt(3.0)*2.0*(cos(x) + cos(y) + cos(z))";//*/
         // DOUBLE SPECIES
-        amrex::Array<std::string, 3> const analyticalRhoE = {"(0.5+2.0/sqrt(5.0))*sin(y)",
-                                                             "(0.5+2.0/sqrt(5.0))*sin(z)",
-                                                             "(0.5+2.0/sqrt(5.0))*sin(x)"}; //*/
+        std::string const analyticalPhi =
+            "((1.0 - sqrt(2.0))/(0.5 + 2.0/sqrt(5.0)))*2.0*(cos(x) + cos(y) + cos(z))"; //*/
 #endif
 
-        for (int i = 0; i < 3; ++i)
-        {
-            m_parserE[i].define(analyticalE[i]);
-            m_parserE[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            m_funcE[i] = m_parserE[i].compile<s_nVar>();
-
-            m_parserRhoE[i].define(analyticalRhoE[i]);
-            m_parserRhoE[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-            m_funcRhoE[i] = m_parserRhoE[i].compile<s_nVar>();
-        }
+        m_parserPhi.define(analyticalPhi);
+        m_parserPhi.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        m_funcPhi = m_parserPhi.compile<s_nVar>();
 
         Gempic::Io::Parameters parameters;
 
@@ -89,10 +75,10 @@ public:
         std::string speciesNames{"species0"};
         parameters.set("Particle.speciesNames", speciesNames);
 
-        amrex::Real charge{-sqrt(2.0)};
+        amrex::Real charge{-sqrt(3.0)};
         parameters.set("Particle.species0.charge", charge);
 
-        amrex::Real mass{2.0};
+        amrex::Real mass{3.0};
         parameters.set("Particle.species0.mass", mass);//*/
 
         // DOUBLE SPECIES
@@ -113,13 +99,17 @@ public:
     }
 
     template <int n>
-    amrex::Real chargematrix_solve ()
+    amrex::Real divgradphimatrix_solve (amrex::Real& divJFinalNorm)
     {
-        Gempic::Io::Parameters parameters;
+        // For studies other than convergence, this should be in SetUpTestSuite under Grid
+        // parameters
+        Gempic::Io::Parameters parameters{};
         amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
 
         // Initialize computational_domain
         auto infra = Gempic::Test::Utils::get_compdom(nCell);
+
+        amrex::Real dt = 0.05;
 
         // Initialize particle groups
         std::vector<std::shared_ptr<ParticleGroups<s_vdim>>>
@@ -129,6 +119,15 @@ public:
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, s_hodgeDegree, s_maxSplineDegree,
                                                         HodgeScheme::FDHodge);
+
+        // Computed fields
+        DeRhamField<Grid::dual, Space::face> J(deRham);
+        DeRhamField<Grid::dual, Space::cell> divJ(deRham);
+        DeRhamField<Grid::primal, Space::node> phiCorr(deRham);
+        DeRhamField<Grid::primal, Space::edge> eCorr(deRham);
+
+        // Analytical fields
+        DeRhamField<Grid::primal, Space::node> phiCorrAn(deRham, m_funcPhi);
 
         // Adding AMREX_SPACEDIM individual particles starts here
         /*/ SINGLE SPECIES
@@ -142,38 +141,53 @@ public:
             ions[spec] = std::make_shared<ParticleGroups<s_vdim>>(spec, infra);
         }
 
-        int const numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};
+        int const percelldir{3}; // GTest works for any value of percelldir
+
+        int const percell{GEMPIC_D_MULT(percelldir, percelldir, percelldir)};
+        int const numParticles{percell * GEMPIC_D_MULT(n, n, n)};
+
+        amrex::Vector<amrex::Real> oss[percell];
+
+        // Any value of 'off' in [0,1] works for deg 1,2,3
+        amrex::Real off(0.5);
+
+        GEMPIC_D_LOOP_BEGIN(for (int i = 0; i < percelldir; i++),
+                            for (int j = 0; j < percelldir; j++),
+                            for (int k = 0; k < percelldir; k++))
+            oss[AMREX_D_TERM(i, +j * percelldir, +k * percelldir * percelldir)] = {AMREX_D_DECL(
+                (i + off) / percelldir, (j + off) / percelldir, (k + off) / percelldir)};
+        GEMPIC_D_LOOP_END
 
         amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
         amrex::Array<amrex::GpuArray<amrex::Real, s_vdim>, numParticles> velocities;
         amrex::Array<amrex::Real, numParticles> weights;
 
-        // particles on edges or faces both works, although below implementation is with particles
-        // on edges
-        amrex::Vector<amrex::Real> offset[AMREX_SPACEDIM] = {
-            AMREX_D_DECL({AMREX_D_DECL(0.5, 0.0, 0.0)}, {AMREX_D_DECL(0.0, 0.5, 0.0)},
-                         {AMREX_D_DECL(0.0, 0.0, 0.5)})};
-
         int i{0}, j{0}, k{0};
-        auto const dx{infra.cell_size_array()};
+        auto const& dx{infra.cell_size_array()};
 
-        for (int ndir = 0; ndir < AMREX_SPACEDIM; ++ndir)
-        {
-            GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
-                                for (k = 0; k < n; k++))
+        GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
+                            for (k = 0; k < n; k++))
 
-                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {AMREX_D_DECL(
-                    infra.geometry().ProbLo(xDir) + (i + offset[ndir][xDir]) * dx[xDir],
-                    infra.geometry().ProbLo(yDir) + (j + offset[ndir][yDir]) * dx[yDir],
-                    infra.geometry().ProbLo(zDir) + (k + offset[ndir][zDir]) * dx[zDir])};
+            for (int p = 0; p < percell; p++)
+            {
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {
+                    AMREX_D_DECL(infra.geometry().ProbLo(xDir) + (i + oss[p][0]) * dx[xDir],
+                                 infra.geometry().ProbLo(yDir) + (j + oss[p][1]) * dx[yDir],
+                                 infra.geometry().ProbLo(zDir) + (k + oss[p][2]) * dx[zDir])};
 
-                positions[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
+                positions[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
                     AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
-                velocities[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {0.0, 0.0, 0.0};
-                weights[ndir * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    (1.0 / AMREX_SPACEDIM) * infra.cell_volume();
-            GEMPIC_D_LOOP_END
-        }
+#if AMREX_SPACEDIM == 2 // analyticalDivJ = "-sqrt(3.0)*0.1*(cos(x) + cos(y))"
+                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
+                    0.1 * sin(loc[xDir]), 0.1 * sin(loc[yDir]), 0.0};
+#elif AMREX_SPACEDIM == 3 //analyticalDivJ = "-sqrt(3.0)*0.1*(cos(x) + cos(y) + cos(z))"
+                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
+                    0.1 * sin(loc[xDir]), 0.1 * sin(loc[yDir]), 0.1 * sin(loc[zDir])};
+#endif
+                weights[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
+                    (1.0 / percell) * infra.cell_volume();
+            }
+        GEMPIC_D_LOOP_END
 
         for (int spec{0}; spec < numspec; spec++)
         {
@@ -183,26 +197,16 @@ public:
         }
         // Adding AMREX_SPACEDIM individual particles ends here
 
-        // Computed fields
-        DeRhamField<Grid::primal, Space::edge> E(deRham);
+        QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
+            hypreParticleDivGradV(infra, deRham);
 
-        // Analytical fields
-        DeRhamField<Grid::primal, Space::edge> eAn(deRham, m_funcE);
-        DeRhamField<Grid::dual, Space::face> rhoEAn(deRham, m_funcRhoE);
+        hypreParticleDivGradV.push_particles_and_correct_div_j(J, phiCorr, ions, dt);
 
-        QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ> hypreParticleRho(
-            infra, deRham);
+        deRham->div(divJ, J);
+        divJFinalNorm = Utils::gempic_norm(divJ.m_data, infra, 2);
 
-        hypreParticleRho.solve_particle_charge_e(rhoEAn, E, ions);
-
-        E -= eAn;
-
-        amrex::GpuArray<amrex::Real, 3> dxi{GEMPIC_D_PAD_ONE(infra.geometry().InvCellSize(xDir),
-                                                             infra.geometry().InvCellSize(yDir),
-                                                             infra.geometry().InvCellSize(zDir))};
-        return Utils::gempic_norm (E.m_data[xDir], infra, 1) * dxi[xDir] +
-               Utils::gempic_norm(E.m_data[yDir], infra, 1) * dxi[yDir] +
-               Utils::gempic_norm(E.m_data[zDir], infra, 1) * dxi[zDir];
+        phiCorr -= phiCorrAn;
+        return Utils::gempic_norm(phiCorr.m_data, infra, 2);
     }
 };
 
@@ -220,23 +224,33 @@ using MyTypes = ::testing::Types<std::tuple<std::integral_constant<int, 1>,
                                             std::integral_constant<int, 2>,
                                             std::integral_constant<int, 3>>>;
 
-TYPED_TEST_SUITE(HypreQuasineutralChargeMatrixTest, MyTypes);
+TYPED_TEST_SUITE(HypreQuasineutralDivGradPhiMatrixTest, MyTypes);
 
-TYPED_TEST(HypreQuasineutralChargeMatrixTest, HypreQuasineutralChargeMatrix)
+TYPED_TEST(HypreQuasineutralDivGradPhiMatrixTest, HypreQuasineutralDivGradPhiMatrix)
 {
     constexpr int coarse = 8;
     constexpr int fine = 16;
     amrex::Real errorCoarse, errorFine;
     amrex::Real tol = 0.15;
 
+    amrex::Real divJFinalNormCoarse, divJFinalNormFine;
+    amrex::Real divJTol = 1.0e-14;
+
     amrex::Real rateOfConvergence;
     constexpr int splineDegreeX = TestFixture::s_degX;
     constexpr int splineDegreeY = TestFixture::s_degY;
     constexpr int splineDegreeZ = TestFixture::s_degZ;
-    errorCoarse = this->template chargematrix_solve<coarse>();
-    amrex::Print() << "errorCoarse: " << errorCoarse << "\n";
-    errorFine = this->template chargematrix_solve<fine>();
-    amrex::Print() << "errorFine: " << errorFine << "\n";
+
+    errorCoarse = this->template divgradphimatrix_solve<coarse>(divJFinalNormCoarse);
+    ASSERT_LT(divJFinalNormCoarse, divJTol);
+    amrex::Print() << "errorCoarse: " << errorCoarse
+                   << ". Divergence of J after particle push: " << divJFinalNormCoarse << "\n";
+
+    errorFine = this->template divgradphimatrix_solve<fine>(divJFinalNormFine);
+    ASSERT_LT(divJFinalNormFine, divJTol);
+    amrex::Print() << "errorFine: " << errorFine
+                   << ". Divergence of J after particle push: " << divJFinalNormFine << "\n";
+
     rateOfConvergence = std::log2(errorCoarse / errorFine);
     amrex::Print() << "rate_of_convergence_<" << splineDegreeX << "," << splineDegreeY << ","
                    << splineDegreeZ << ">:" << rateOfConvergence << "\n";

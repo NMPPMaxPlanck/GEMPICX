@@ -439,7 +439,7 @@ public:
                     // get the spline at the particle's new position
                     Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> newSpline(R, plo,
                                                                                          dxInverse);
-                    deposit_j(jarr, newSpline, V, charge * weight[pp]);
+                    deposit_twoform(jarr, newSpline, V, charge * weight[pp]);
                 }); // end of parallel_for
         } //end of loop over particles
         particleSpecies->Redistribute();
@@ -540,7 +540,7 @@ public:
                     Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> newSpline(R, plo,
                                                                                          dxInverse);
                     // Only j_// !!!
-                    deposit_j(jarr, newSpline, velGC, charge * weight[pp]);
+                    deposit_twoform(jarr, newSpline, velGC, charge * weight[pp]);
                 }); // end of parallel_for
         } //end of loop over particles
         //redistribute particles

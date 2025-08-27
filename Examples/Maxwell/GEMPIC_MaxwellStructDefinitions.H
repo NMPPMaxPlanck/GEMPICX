@@ -161,7 +161,7 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
     /**
      * the get_nfields method
      */
-    int get_nfields () override { return s_n_fields; }
+    int get_nfields () override { return s_nFields; }
 
     /**
      * Explicitly define copy assignment operator to avoid default deletion (from DeRhamFields)
@@ -203,7 +203,7 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
 private:
     int m_nComp;
     amrex::IntVect m_nGhost;
-    static constexpr int s_n_fields{2};
+    static constexpr int s_nFields{2};
 };
 
 /**

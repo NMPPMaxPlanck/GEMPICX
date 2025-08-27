@@ -1,0 +1,89 @@
+# General setting
+Sim.Type = "VlasovMaxwell"
+
+# Grid parameters
+ComputationalDomain.nCell = 64 8 8
+ComputationalDomain.maxGridSize = 32 8 8
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Scaling factors
+sV = 1
+sOmega = 1
+
+# Particle parameters
+Particle.speciesNames = electrons ions
+Particle.sampler = Sobol
+Particle.electrons.nPartPerCell = 20 # number of particles per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1 # vector (one entry per species)
+Particle.electrons.density = "1.0"
+Particle.electrons.numGaussians = 1
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 0.0 0.0 0.0
+Particle.electrons.G0.vThermal = 0.000001 0.000001 0.000001
+Particle.electrons.G0.vWeight = 1.0
+
+Particle.ions.nPartPerCell = 20 # number of particles per cell
+Particle.ions.charge = 1.0 # vector (one entry per species)
+Particle.ions.mass = 4 # vector (one entry per species)
+Particle.ions.density = "1.0"
+Particle.ions.numGaussians = 1
+
+# Gaussian parameters
+Particle.ions.G0.vMean = 0.0 0.0 0.0
+Particle.ions.G0.vThermal = 0.0000005 0.0000005 0.0000005
+Particle.ions.G0.vWeight = 1.0
+
+# wave vector
+k = .1 1 1
+
+# Simulation parameters
+TimeLoop.nSteps = 40000
+TimeLoop.dt = 0.05
+
+# Initial conditions
+ICs.Bmean = 1.0 0.0 0.0
+Function.idealRho = "0.0"
+
+# Filter
+Filter.enable = 0 # 1 for true, 0 for false
+Filter.nPass = 1 1 1
+
+# Function parameters
+Function.Ex = "0.0"
+Function.Ey = "0.0"
+Function.Ez = "0.0"
+Function.Bx = "1.0"
+Function.By = "0.0"
+Function.Bz = "0.0"
+
+# Diagnostics
+#Full Diagnostics 
+FullDiagnostics.enable = 1 # 1 for true, 0 for false
+FullDiagnostics.groupNames = part field 
+FullDiagnostics.part.varNames = electrons
+FullDiagnostics.part.saveInterval = 100000
+FullDiagnostics.field.varNames = rho Ex Ey Ez Bx By Bz
+FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.saveInterval = 5
+
+# Reduced Diagnostics 
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy #GaussError
+ReducedDiagnostics.saveInterval = 1 # saveInterval
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+#ReducedDiagnostics.GaussError.types = GaussError
+ReducedDiagnostics.Part.types = Particle
+
+hypre.hypre_solver = GMRES # BoomerAMG(default) GMRES COGMRES LGMRES FlexGMRES BiCGSTAB PCG Hybrid
+hypre.hypre_preconditioner = euclid # none(default: hypre.hypre_solver=BoomerAMG will only work with hypre.hypre_preconditioner=none) BoomerAMG euclid
+
+hypre.num_krylov = 50 # integer. Default:50
+hypre.max_iterations = 10000 # integer. Default:200
+
+hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+hypre.logging = 0 # integer. Default:0. >1(latest residual available)
+hypre.euclid_level = 4
+hypre.euclid_use_block_jacobi = 1

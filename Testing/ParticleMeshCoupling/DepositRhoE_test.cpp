@@ -6,6 +6,7 @@
 #include <AMReX.H>
 #include <AMReX_Particles.H>
 
+#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -26,10 +27,10 @@ using namespace Particle;
 using namespace ParticleMeshCoupling;
 
 /**
- * @brief Tests the deposit_deldotS function using analytical function fields
+ * @brief Tests the deposit_rho_weighted_electric_field function using analytical function fields
  */
 template <typename SplineDegreeStruct>
-class DepositDelDotSTest : public testing::Test
+class DepositRhoETest : public testing::Test
 {
 public:
     static constexpr int s_vdim{3};
@@ -43,34 +44,38 @@ public:
 
     static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
 
-    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcJ;
-    amrex::Array<amrex::Parser, 3> m_parserJ;
+    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcE;
+    amrex::Array<amrex::Parser, 3> m_parserE;
 
-    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcDelDotS;
-    amrex::Array<amrex::Parser, 3> m_parserDelDotS;
+    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcRhoE;
+    amrex::Array<amrex::Parser, 3> m_parserRhoE;
 
-    DepositDelDotSTest()
+    DepositRhoETest()
     {
         if constexpr (AMREX_SPACEDIM != 1)
         {
-            amrex::Array<std::string, 3> analyticalDelDotS;
+            amrex::Array<std::string, 3> analyticalE;
+            amrex::Array<std::string, 3> analyticalRhoE;
             if constexpr (AMREX_SPACEDIM == 2)
             {
-                analyticalDelDotS = {"sin(x)*(2.0*cos(x) + cos(y))", "sin(y)*(cos(x) + 2.0*cos(y))",
-                                     "sin(2.0*x+y) + sin(2.0*y+x)"};
+                analyticalE = {"sin(x)", "sin(y)", "sin(x+y)"};
+                analyticalRhoE = {"cos(x+y)*sin(x)", "cos(x+y)*sin(y)", "cos(x+y)*sin(x+y)"};
             }
             else if constexpr (AMREX_SPACEDIM == 3)
             {
-                analyticalDelDotS = {"sin(x)*(2.0*cos(x) + cos(y) + cos(z))",
-                                     "sin(y)*(cos(x) + 2.0*cos(y) + cos(z))",
-                                     "sin(z)*(cos(x) + cos(y) + 2.0*cos(z))"};
+                analyticalE = {"sin(x)", "sin(y)", "sin(z)"};
+                analyticalRhoE = {"cos(x+y+z)*sin(x)", "cos(x+y+z)*sin(y)", "cos(x+y+z)*sin(z)"};
             }
 
             for (int i = 0; i < 3; ++i)
             {
-                m_parserDelDotS[i].define(analyticalDelDotS[i]);
-                m_parserDelDotS[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-                m_funcDelDotS[i] = m_parserDelDotS[i].compile<s_nVar>();
+                m_parserE[i].define(analyticalE[i]);
+                m_parserE[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+                m_funcE[i] = m_parserE[i].compile<s_nVar>();
+
+                m_parserRhoE[i].define(analyticalRhoE[i]);
+                m_parserRhoE[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+                m_funcRhoE[i] = m_parserRhoE[i].compile<s_nVar>();
             }
         }
 
@@ -79,33 +84,15 @@ public:
         std::string speciesNames{"ions"};
         parameters.set("Particle.speciesNames", speciesNames);
 
-        std::string samplerName{"Sobol"};
-        parameters.set("Particle.sampler", samplerName);
-
-        int nPartPerCell{20000};
-        parameters.set("Particle.ions.nPartPerCell", nPartPerCell);
-
         amrex::Real charge{1.0};
         parameters.set("Particle.ions.charge", charge);
 
         amrex::Real mass{1.0};
         parameters.set("Particle.ions.mass", mass);
 
-        std::string density{"1.0"};
-        parameters.set("Particle.ions.density", density);
-
-        int numGaussians{1};
-        parameters.set("Particle.ions.numGaussians", numGaussians);
-
         // Gaussian parameters
-        amrex::Vector<amrex::Real> vMean{{0.0, 0.0, 0.0}};
+        amrex::Vector<amrex::Real> vMean{{0.0, 0.0, 0.0}}; // for nodesplinederiv testing
         parameters.set("Particle.ions.G0.vMean", vMean);
-
-        amrex::Vector<amrex::Real> vThermal{{0.0, 0.0, 0.0}};
-        parameters.set("Particle.ions.G0.vThermal", vThermal);
-
-        amrex::Real vWeightG0{1.0};
-        parameters.set("Particle.ions.G0.vWeight", vWeightG0);
     }
 
     // virtual void SetUp() will be called before each test is run.
@@ -118,7 +105,7 @@ public:
     }
 
     template <int n>
-    amrex::Real del_dot_s_solve ()
+    amrex::Real rhoe_solve ()
     {
         // For studies other than convergence, this should be in SetUpTestSuite under Grid
         // parameters
@@ -144,14 +131,14 @@ public:
             ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
         }
 
-        int const percelldir{1}; // GTest works for any value of percelldir
+        int const percelldir{1};
 
         int const percell{GEMPIC_D_MULT(percelldir, percelldir, percelldir)};
         int const numParticles{percell * GEMPIC_D_MULT(n, n, n)};
 
         std::vector<std::vector<amrex::Real>> oss(percell);
 
-        // Any value of 'off' in [0,1] works for deg 3,4,5
+        // Any value of 'off' in [0,1] works for deg 2,3,4,5
         amrex::Real off{0.0};
 
         GEMPIC_D_LOOP_BEGIN(for (int i = 0; i < percelldir; i++),
@@ -167,7 +154,6 @@ public:
 
         int i{0}, j{0}, k{0};
         auto const& dx{infra.cell_size_array()};
-
         GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++),
                             for (k = 0; k < n; k++))
 
@@ -182,14 +168,14 @@ public:
                     AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
 
 #if AMREX_SPACEDIM == 2
-                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
-                    sin(loc[xDir]), sin(loc[yDir]), sin(loc[xDir] + loc[yDir])};
-#elif AMREX_SPACEDIM == 3
-                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {
-                    sin(loc[xDir]), sin(loc[yDir]), sin(loc[zDir])};
-#endif
+                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {0.0, 0.0, 0.0};
                 weights[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
-                    (1.0 / percell) * infra.cell_volume();
+                    (1.0 / percell) * infra.cell_volume() * cos(loc[xDir] + loc[yDir]);
+#elif AMREX_SPACEDIM == 3
+                velocities[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] = {0.0, 0.0, 0.0};
+                weights[p * GEMPIC_D_MULT(n, n, n) + i + j * n + k * n * n] =
+                    (1.0 / percell) * infra.cell_volume() * cos(loc[xDir] + loc[yDir] + loc[zDir]);
+#endif
             }
         GEMPIC_D_LOOP_END
 
@@ -199,61 +185,22 @@ public:
         ions[0]->Redistribute();
 
         // Computed fields
-        DeRhamField<Grid::dual, Space::face> delDotS(deRham);
+        DeRhamField<Grid::primal, Space::edge> E(deRham, m_funcE);
+        DeRhamField<Grid::dual, Space::face> rhoE(deRham);
 
         // Analytical fields
-        DeRhamField<Grid::dual, Space::face> delDotSAn(deRham, m_funcDelDotS);
+        DeRhamField<Grid::dual, Space::face> rhoEAn(deRham, m_funcRhoE);
 
-        // Deposit initial charge
-        for (auto& particleSpecies : ions)
-        {
-            amrex::Real mass = particleSpecies->get_mass();
+        deposit_rho_weighted_electric_field<s_degX, s_degY, s_degZ, s_vdim, s_ndata>(rhoE, E, ions,
+                                                                                     infra);
 
-            for (auto& pti : *particleSpecies)
-            {
-                long const np = pti.numParticles();
-                auto* const particles = pti.GetArrayOfStructs()().data();
-                auto* const weight = pti.GetStructOfArrays().GetRealData(s_vdim).data();
-
-                auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
-
-                amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> deldotsA;
-
-                for (int cc = 0; cc < s_vdim; cc++)
-                {
-                    deldotsA[cc] = (delDotS.m_data[cc])[pti].array();
-                }
-                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
-
-                amrex::ParallelFor(
-                    np,
-                    [=] AMREX_GPU_DEVICE(long pp)
-                    {
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                        {
-                            positionParticle[d] = particles[pp].pos(d);
-                        }
-
-                        SplineWithFirstDerivative<s_degX, s_degY, s_degZ> splineDeriv(
-                            positionParticle, plo, infra.inv_cell_size_array(), dx);
-
-                        amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
-                        deposit_deldot_s(deldotsA, splineDeriv, vel, mass * weight[pp]);
-                    });
-            }
-        }
-        delDotS.post_particle_loop_sync();
-
-        delDotS -= delDotSAn;
+        rhoE -= rhoEAn;
 
         amrex::GpuArray<amrex::Real, 3> dxi3d{infra.inv_cell_size_3darray()};
 
-        return (Utils::gempic_norm(delDotS.m_data[xDir], infra, 1) * dxi3d[yDir] * dxi3d[zDir] +
-                Utils::gempic_norm(delDotS.m_data[yDir], infra, 1) * dxi3d[zDir] * dxi3d[xDir] +
-                Utils::gempic_norm(delDotS.m_data[zDir], infra, 1) * dxi3d[xDir] * dxi3d[yDir]);
+        return (Utils::gempic_norm(rhoE.m_data[xDir], infra, 1) * dxi3d[yDir] * dxi3d[zDir] +
+                Utils::gempic_norm(rhoE.m_data[yDir], infra, 1) * dxi3d[zDir] * dxi3d[xDir] +
+                Utils::gempic_norm(rhoE.m_data[zDir], infra, 1) * dxi3d[xDir] * dxi3d[yDir]);
     }
 };
 
@@ -261,18 +208,18 @@ using MyTypes = ::testing::Types<std::integral_constant<int, 2>,
                                  std::integral_constant<int, 3>,
                                  std::integral_constant<int, 4>,
                                  std::integral_constant<int, 5>>;
-TYPED_TEST_SUITE(DepositDelDotSTest, MyTypes);
+TYPED_TEST_SUITE(DepositRhoETest, MyTypes);
 
-TYPED_TEST(DepositDelDotSTest, SingleParticlePerCellDelDotS)
+TYPED_TEST(DepositRhoETest, SingleParticlePerCellRhoE)
 {
     constexpr int coarse = 20;
     constexpr int fine = 40;
     amrex::Real errorCoarse, errorFine;
-    amrex::Real tol = 0.1;
+    amrex::Real tol = 0.15;
 
     amrex::Real rateOfConvergence;
-    errorCoarse = this->template del_dot_s_solve<coarse>();
-    errorFine = this->template del_dot_s_solve<fine>();
+    errorCoarse = this->template rhoe_solve<coarse>();
+    errorFine = this->template rhoe_solve<fine>();
     rateOfConvergence = std::log2(errorCoarse / errorFine);
     EXPECT_NEAR(rateOfConvergence, 2.0, tol);
 }
