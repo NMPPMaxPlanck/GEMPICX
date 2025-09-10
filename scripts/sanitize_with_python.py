@@ -223,8 +223,8 @@ def fix_files_syntax(folders, forceMove=False):
     testingFolder = pathlib.Path('Testing').resolve()
 
     replacementMade = False
-    nameCamelCase = re.compile('^[A-Z][a-zA-Z]*$')
-    gempicCamelCase = re.compile('^GEMPIC_[A-Z][a-zA-Z]*$')
+    nameCamelCase = re.compile('^[A-Z][a-zA-Z0-9]*$')
+    gempicCamelCase = re.compile('^GEMPIC_[A-Z][a-zA-Z0-9]*$')
     for folderName in folders:
         folderName = pathlib.Path(folderName).resolve()
         for file in folderName.rglob('*.H'):
@@ -248,7 +248,7 @@ def fix_files_syntax(folders, forceMove=False):
             codeFiles = find_files(['*.H', '*.cpp'])
             correct_in_files(rf'(^#include ).([^">]*){file.name}[">]', rf'\1"\2{newName}"', codeFiles)
         
-        testCase = re.compile('^[A-Z][a-zA-Z]*_test$')
+        testCase = re.compile('^[A-Z][a-zA-Z0-9]*_test$')
         outdatedTestCase = re.compile(r'^test\w*$')
         for file in folderName.rglob('*.cpp'):
             if gempicCamelCase.fullmatch(file.stem):
