@@ -57,18 +57,18 @@ std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask (amrex::MultiFab& thisMF,
     amrex::ParallelFor(tags, 1,
                        [=] AMREX_GPU_DEVICE(int i, int j, int k, int n,
                                             amrex::Array4BoxTag<amrex::Real> const& tag) noexcept
-                       {
-                           amrex::Real* p = tag.dfab.ptr(i, j, k, n);
-                           amrex::Gpu::Atomic::AddNoRet(p, amrex::Real(1.0));
-                       });
+                       { tag.dfab(i, j, k, n) = amrex::Real(1.0); });
 #endif
 
     return p;
 }
 
-/***
- * modified from WeightedSync
- ***/
+/**
+ * @brief overload from
+template <typename dataStruct>
+void sum_boundary_sync (amrex::FabArray<amrex::BaseFab<dataStruct>>& thisMF,
+                            amrex::Periodicity const& period)
+ */
 void sum_boundary_sync (amrex::MultiFab& thisMF, amrex::Periodicity const& period)
 {
     if (thisMF.ixType().cellCentered())
@@ -76,16 +76,13 @@ void sum_boundary_sync (amrex::MultiFab& thisMF, amrex::Periodicity const& perio
         return;
     }
 
-    auto wgt = get_shared_bnd_mask(thisMF, period);
-
     int const ncomp = thisMF.nComp();
 
     amrex::MultiFab tmpmf(thisMF.boxArray(), thisMF.DistributionMap(), ncomp, 0, amrex::MFInfo(),
                           thisMF.Factory());
     tmpmf.setVal(amrex::Real(0.0));
     tmpmf.ParallelCopy(thisMF, period, amrex::FabArrayBase::ADD);
-
-    amrex::MultiFab::Copy(thisMF, tmpmf, 0, 0, ncomp, 0);
+    thisMF.ParallelCopy(tmpmf, period);
     return;
 }
 
@@ -228,7 +225,7 @@ typename FAB::value_type wgt_dot (amrex::FabArray<FAB> const& wgt,
     BL_ASSERT(x.DistributionMap() == y.DistributionMap());
     BL_ASSERT(x.nGrowVect().allGE(nghost) && y.nGrowVect().allGE(nghost));
 
-    BL_PROFILE("amrex::Dot()");
+    BL_PROFILE("wgt_dot()");
 
     using T = typename FAB::value_type;
     auto sm = T(0.0);
@@ -307,7 +304,7 @@ amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
 {
     BL_ASSERT(x.nGrowVect().allGE(nghost));
 
-    BL_PROFILE("MultiFab::Dot()");
+    BL_PROFILE("multi_fab_wgt_dot()");
 
     auto sm = amrex::Real(0.0);
 #ifdef AMREX_USE_GPU
@@ -354,4 +351,397 @@ amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
     }
 
     return sm;
+}
+
+/**
+ * computes n Gauss-Legendre quadrature nodes x in [x1,x2] and the corresponding quadrature weights
+ * w this comes directly from numerical recipies, pdf free available on the website. this comes
+ * directly from numerical recipies, pdf free available on the website.
+ *
+ * \param x1
+ * \param x2
+ * \param x
+ * \param w
+ */
+void gauleg (std::vector<amrex::Real>& x,
+             std::vector<amrex::Real>& w,
+             amrex::Real const x1,
+             amrex::Real const x2,
+             int n)
+{
+    // Ensure valid inputs
+    BL_ASSERT(n > 0);                              // n must be greater than zero.
+    BL_ASSERT(x.size() == static_cast<size_t>(n)); // x must have size n.
+    BL_ASSERT(w.size() == static_cast<size_t>(n)); // w must have size n.
+    // Given the lower and upper limits of integration x1 and x2, this routine returns arrays
+    // x[0..n-1] and w[0..n-1] of length n, containing the abscissas and weights of the
+    // Gauss-Legendre n-point quadrature formula.
+    constexpr amrex::Real eps = 1.0e-15; // EPS is the relative precision.
+    amrex::Real z1, z, xm, xl, pp, p3, p2, p1;
+    int m = (n + 1) / 2;  // The roots are symmetric in the interval, so
+    xm = 0.5 * (x2 + x1); // we only have to find half of them.
+    xl = 0.5 * (x2 - x1);
+    amrex::Real const factor = M_PI / (n + 0.5);
+    for (int i = 0; i < m; i++)
+    {                                 // Loop over the desired roots.
+        z = cos(factor * (i + 0.75)); // Starting with this approximation to the ith
+                                      // root, we enter the main
+                                      // loop of refinement
+        do
+        {
+            p1 = 1.0;
+            p2 = 0.0;
+            for (int j = 0; j < n; j++)
+            {            // Loop up the recurrence relation to get the
+                p3 = p2; // Legendre polynomial evaluated at z.
+                p2 = p1;
+                p1 = ((2.0 * j + 1.0) * z * p2 - j * p3) / (j + 1);
+            }
+            // p1 is now the desired Legendre polynomial.We next compute pp, its derivative,
+            //     by a standard relation involving also p2,
+            //     the polynomial of one lower order.
+            pp = n * (z * p1 - p2) / (z * z - 1.0);
+            z1 = z;
+            z = z1 - p1 / pp; // Newton's method.
+        } while (std::abs(z - z1) > eps);
+        x[i] = xm - xl * z;                          // Scale the root to the desired interval,
+        x[n - 1 - i] = xm + xl * z;                  // and put in its symmetric counterpart.
+        w[i] = 2.0 * xl / ((1.0 - z * z) * pp * pp); // Compute the weight
+        w[n - 1 - i] = w[i];                         // and its symmetric counterpart.
+    }
+}
+
+#ifdef USE_MKL
+#include <vector>
+
+double ConditionNumber (std::vector<std::vector<double>> const& A, int N)
+{
+    std::vector<double> flatA(N * N);
+    for (int i = 0; i < N; ++i)
+        for (int j = 0; j < N; ++j) flatA[i * N + j] = A[i][j];
+
+    int info;
+    std::vector<int> ipiv(N);
+    dgetrf(&N, &N, flatA.data(), &N, ipiv.data(), &info);
+
+    double normA = LAPACKE_dlange(LAPACK_ROW_MAJOR, '1', N, N, flatA.data(), N);
+    double normInvA;
+
+    // Allocate workspace for inversion
+    int lwork = N * N;
+    std::vector<double> work(lwork);
+
+    // Compute the inverse
+    dgetri(&N, flatA.data(), &N, ipiv.data(), work.data(), &lwork, &info);
+    normInvA = LAPACKE_dlange(LAPACK_ROW_MAJOR, '1', N, N, flatA.data(), N);
+
+    return normA * normInvA;
+}
+
+void matrix_inverseMKL (std::vector<std::vector<double>>& iA,
+                        std::vector<std::vector<double>> const& A,
+                        int const N)
+{
+    // Flatten the matrix A into a one-dimensional array for MKL
+    std::vector<double> flatA(N * N);
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            flatA[i * N + j] = A[i][j];
+        }
+    }
+
+    std::vector<int> ipiv(N);
+    int info;
+
+    // Perform LU decomposition
+    dgetrf(&N, &N, flatA.data(), &N, ipiv.data(), &info);
+    if (info != 0)
+    {
+        std::cerr << "Error in LU decomposition: " << info << std::endl;
+        return;
+    }
+
+    // Allocate workspace for inversion
+    int lwork = N * N;
+    std::vector<double> work(lwork);
+
+    // Compute the inverse
+    dgetri(&N, flatA.data(), &N, ipiv.data(), work.data(), &lwork, &info);
+    if (info != 0)
+    {
+        std::cerr << "Error in matrix inversion: " << info << std::endl;
+        return;
+    }
+
+    // Reshape the flattened array back to 2D iA
+    iA.resize(N, std::vector<double>(N));
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            iA[i][j] = flatA[i * N + j];
+        }
+    }
+}
+#endif // USE_MKL
+
+/**
+ * Compute matrix inverse with Gauss-Jordan Elimination.
+ *
+ * \param iA
+ * \param A
+ * \param N
+ */
+void matrix_inverse (std::vector<std::vector<double>>& iA,
+                     std::vector<std::vector<double>> const& A,
+                     int const N)
+{
+    // Initialize C matrix
+    std::vector<std::vector<double>> C(N, std::vector<double>(2 * N, 0.0));
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            C[i][j] = A[i][j];
+        }
+        C[i][N + i] = 1.0;
+    }
+
+    // Forward elimination and row swapping (if necessary)
+    for (int i = 0; i < N; ++i)
+    {
+        //If pivot element is zero, then swap rows
+        int ml = 0;
+        for (int k = i + 1; k < N; ++k)
+        {
+            if (std::abs(C[k][i]) > std::abs(C[i + ml][i]))
+            {
+                ml = k - i;
+            }
+        }
+        int iswap = i + ml;
+        if (iswap != i) std::swap(C[i], C[iswap]);
+        if (C[i][i] == 0.0)
+        {
+            std::cerr << "ERROR. Matrix is singular!" << std::endl;
+            for (auto const& row : A)
+            {
+                for (auto const& val : row)
+                {
+                    std::cerr << val << " ";
+                }
+                std::cerr << std::endl;
+            }
+            std::exit(1);
+        }
+        double piv = 1.0 / C[i][i];
+        for (int l = 0; l < 2 * N; ++l)
+        {
+            C[i][l] *= piv;
+        }
+        for (int j = i + 1; j < N; ++j)
+        {
+            double factor = C[j][i];
+            for (int l = 0; l < 2 * N; ++l)
+            {
+                C[j][l] -= factor * C[i][l];
+            }
+        }
+    }
+
+    // Back substitution
+    for (int i = N - 1; i >= 0; --i)
+    {
+        for (int j = i - 1; j >= 0; --j)
+        {
+            double factor = C[j][i];
+            for (int l = 0; l < 2 * N; ++l)
+            {
+                C[j][l] -= factor * C[i][l];
+            }
+        }
+    }
+
+    // Compute inverse matrix
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            iA[i][j] = C[i][N + j];
+        }
+    }
+}
+
+void matrix_inverse_ld (std::vector<std::vector<my_precision>>& iA,
+                        std::vector<std::vector<my_precision>> const& A,
+                        int const N)
+{
+#if defined(DEBUG) || defined(_DEBUG)
+    // Assertions to validate inputs
+    BL_ASSERT(N > 0);                              // N must be positive.
+    BL_ASSERT(A.size() == static_cast<size_t>(N)); // A must have N rows.
+    for (auto const& row : A)
+    {
+        BL_ASSERT(row.size() == static_cast<size_t>(N)); // Each row in A must have N columns.
+    }
+
+    BL_ASSERT(iA.size() == static_cast<size_t>(N)); // iA must have N rows.
+    for (auto const& row : iA)
+    {
+        BL_ASSERT(row.size() == static_cast<size_t>(N)); // Each row in iA must have N columns.
+    }
+#endif
+    // Initialize C matrix
+    std::vector<std::vector<my_precision>> C(N, std::vector<my_precision>(2 * N, 0.0));
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            C[i][j] = A[i][j];
+        }
+        C[i][N + i] = 1.0;
+    }
+
+    // Forward elimination and row swapping (if necessary)
+    for (int i = 0; i < N; ++i)
+    {
+        //If pivot element is zero, then swap rows
+        int ml = 0;
+        for (int k = i + 1; k < N; ++k)
+        {
+            if (std::abs(C[k][i]) > std::abs(C[i + ml][i]))
+            {
+                ml = k - i;
+            }
+        }
+        int iswap = i + ml;
+        if (iswap != i) std::swap(C[i], C[iswap]);
+        if (C[i][i] == 0.0)
+        {
+            std::cerr << "ERROR. Matrix is singular!" << std::endl;
+            for (auto const& row : A)
+            {
+                for (auto const& val : row)
+                {
+                    std::cerr << val << " ";
+                }
+                std::cerr << std::endl;
+            }
+            std::exit(1);
+        }
+        my_precision piv = 1.0 / C[i][i];
+        for (int l = 0; l < 2 * N; ++l)
+        {
+            C[i][l] *= piv;
+        }
+        for (int j = i + 1; j < N; ++j)
+        {
+            my_precision factor = C[j][i];
+            for (int l = 0; l < 2 * N; ++l)
+            {
+                C[j][l] -= factor * C[i][l];
+            }
+        }
+    }
+
+    // Back substitution
+    for (int i = N - 1; i >= 0; --i)
+    {
+        for (int j = i - 1; j >= 0; --j)
+        {
+            my_precision factor = C[j][i];
+            for (int l = 0; l < 2 * N; ++l)
+            {
+                C[j][l] -= factor * C[i][l];
+            }
+        }
+    }
+
+    // Compute inverse matrix
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            iA[i][j] = C[i][N + j];
+        }
+    }
+}
+
+#ifdef USE_MKL
+
+void solve_system_mkl (std::vector<std::vector<double>> const& M,
+                       std::vector<std::vector<double>> const& K,
+                       std::vector<std::vector<double>>& A,
+                       int N)
+{
+    // Flatten the matrices M and K for MKL
+    std::vector<double> flatM(N * N);
+    std::vector<double> flatK(N * N);
+    std::vector<double> flatA(N * N);
+
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            flatM[i * N + j] = M[i][j];
+            flatK[i * N + j] = K[i][j];
+        }
+    }
+
+    int info;
+    std::vector<int> ipiv(N);
+
+    // Perform LU decomposition on M
+    dgetrf(&N, &N, flatM.data(), &N, ipiv.data(), &info);
+    if (info != 0)
+    {
+        std::cerr << "Error in LU decomposition: " << info << std::endl;
+        return;
+    }
+
+    // Solve the system M * A = K for A
+    dgetrs("N", &N, &N, flatM.data(), &N, ipiv.data(), flatK.data(), &N, &info);
+    if (info != 0)
+    {
+        std::cerr << "Error in solving the system: " << info << std::endl;
+        return;
+    }
+
+    // Copy the solution from flatK to flatA
+    std::copy(flatK.begin(), flatK.end(), flatA.begin());
+
+    // Reshape the flattened solution array back to 2D A
+    A.resize(N, std::vector<double>(N));
+    for (int i = 0; i < N; ++i)
+    {
+        for (int j = 0; j < N; ++j)
+        {
+            A[i][j] = flatA[i * N + j];
+        }
+    }
+}
+
+#endif
+
+amrex::Real minmod (amrex::Real const a, amrex::Real const b)
+{
+    if (a * b <= 0)
+    {
+        return 0.0;
+    }
+    else
+    {
+        amrex::Real absb = std::abs(b);
+        amrex::Real absa = std::abs(a);
+        if (absa < absb)
+        {
+            return a;
+        }
+        else
+        {
+            return b;
+        }
+    }
 }

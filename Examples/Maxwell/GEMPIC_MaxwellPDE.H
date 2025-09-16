@@ -254,7 +254,7 @@ public:
     }
 
     /**
-     * initialize new time step.
+     * is_finaltime_reached?
      */
     bool is_finaltime_reached () override { return m_disc.m_time >= m_disc.m_tend; }
     /**

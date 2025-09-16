@@ -1,0 +1,60 @@
+# General setting
+simName = "MHD"
+
+# Grid parameters
+ComputationalDomain.nCell = 16 16 16 
+ComputationalDomain.maxGridSize = 8 8 8
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
+
+# grid vector
+ComputationalDomain.domainLo =  0.0  0.0  0.0
+ComputationalDomain.domainHi = 10.0 10.0 10.0
+
+# Simulation parameters
+TimeLoop.dt = 0.1
+TimeLoop.dt_max = 1.0
+TimeLoop.tend = 5.0 #5.0
+TimeLoop.tini = 0.0 
+TimeLoop.nmaxSteps = 1000     #00000
+TimeLoop.CFL = 0.8
+
+# Finite-Volume scheme parameters
+FV.ReconstructionMode = Anything   #CharacteristicVars		#default is PrimitiveVars   #
+
+# PDE description
+PDE.gamma = 1.6666666666666666666666666666667
+PDE.mu = 0.0
+PDE.nu = 0.0
+PDE.eta = 0.0
+PDE.cv = 1.0
+
+FullDiagnostics.groupNames = HighResPlt 
+FullDiagnostics.saveFolder = FullDiagnostics/CustomOutputProcessorTest
+
+
+FullDiagnostics.HighResPlt.varNames = Q  # 		#By Bz Ex Ey Ez
+FullDiagnostics.HighResPlt.outputProcessor = Custom
+FullDiagnostics.HighResPlt.customID = HighResSubcellOutputProcessor
+FullDiagnostics.HighResPlt.saveFolder = FullDiagnostics/HighResPlt
+FullDiagnostics.HighResPlt.filePrefix = plt_MHD
+FullDiagnostics.HighResPlt.dumpLastTimestep = 0
+FullDiagnostics.HighResPlt.format = plotfile
+FullDiagnostics.HighResPlt.saveInterval = 25
+
+
+FullDiagnostics.HighResSubcellOutputProcessor.nSubCells = 5 5 1   
+
+FullDiagnostics.save = 0						# 1 for true, 0 for false
+FullDiagnostics.saveInterval = 25
+FullDiagnostics.saveTime = 1					# 1 for true, 0 for false
+FullDiagnostics.saveTimeInterval = 0.5
+
+
+
+FullDiagnostics.enable = 1 # 1 for true, 0 for false
+
+nGhostExtra = 3 
+sV = 1
+sOmega = 1
+
+Debugging.mpiDebuggingMode = 0  // 1 for true, 0 for false
