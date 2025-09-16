@@ -99,10 +99,10 @@ public:
     // clang-format off
     /**
      * @brief Resize and fill the ghost cells for all components of the vector field while preserving the data in the computational domain. 
-     *        If enough ghost cells are already available this call just fills the required ghost cells.
+     *        If enough ghost cells are already available this call just fills the requested number of ghost cells.
      */
     // clang-format on
-    void set_ghost_size(int width, Direction dir);
+    void set_ghost_size(std::array<size_t, AMREX_SPACEDIM> width);
 
 private:
     // std::string is not GPU capable.
@@ -168,7 +168,6 @@ public:
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
         Direction dir, int ix1, int ix2, int ix3, int component = 0) const
     {
-        AMREX_ASSERT(dir <= AMREX_SPACEDIM);
         AMREX_ASSERT(m_boxStatus == Impl::BoxStatus::boxSelected);
         return m_view[dir](ix1, ix2, ix3, component);
     }
@@ -182,11 +181,11 @@ public:
     // clang-format off
     /**
      * @brief Resize and fill the ghost cells for all components of the vector field while preserving the data in the computational domain.
-     *        If enough ghost cells are already available this call just fills the required ghost cells.
+     *        If enough ghost cells are already available this call just fills the requested number of ghost cells.
      *        The number of ghost cells in a specific direction is the same for every component of the vector field
      */
     // clang-format on
-    void set_ghost_size(int width, Direction dir);
+    void set_ghost_size(std::array<size_t, AMREX_SPACEDIM> width);
 
 private:
     // std::string is not GPU capable.

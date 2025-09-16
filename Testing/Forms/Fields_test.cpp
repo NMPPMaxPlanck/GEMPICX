@@ -82,7 +82,7 @@ void fill_vector_field_with_sin (DiscreteVectorField& vf)
 void discrete_field_example_kernel (DiscreteField& f, DiscreteField& g)
 {
     //! [DiscreteFieldExample.DiscreteDerivative]
-    g.set_ghost_size(1, Direction::xDir);
+    g.set_ghost_size({AMREX_D_DECL(1, 0, 0)});
     for (amrex::MFIter mfi{g.multi_fab()}; mfi.isValid(); ++mfi)
     {
         f.select_box(mfi);
@@ -96,10 +96,7 @@ void discrete_field_example_kernel (DiscreteField& f, DiscreteField& g)
 void discrete_vector_field_example_kernel (DiscreteField& f, DiscreteVectorField& g)
 {
     //! [DiscreteVectorFieldExample.DiscreteDivergence]
-    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
-    {
-        g.set_ghost_size(1, dir);
-    }
+    g.set_ghost_size({AMREX_D_DECL(1, 1, 1)});
     for (amrex::MFIter mfi{g.multi_fab(Direction::xDir)}; mfi.isValid(); ++mfi)
     {
         f.select_box(mfi);
@@ -183,8 +180,16 @@ TEST_F(DiscreteFieldsTest, setGhostCellsScalarField)
     for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         EXPECT_EQ(df.multi_fab().nGrow(dir), 0);
-        df.set_ghost_size(1, dir);
-        EXPECT_EQ(df.multi_fab().nGrow(dir), 1);
+    }
+    df.set_ghost_size({AMREX_D_DECL(1, 2, 3)});
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        EXPECT_EQ(df.multi_fab().nGrow(dir), dir + 1);
+    }
+    df.set_ghost_size({AMREX_D_DECL(0, 1, 2)});
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        EXPECT_EQ(df.multi_fab().nGrow(dir), dir + 1);
     }
     EXPECT_EQ(l_inf_error(df, res), 0.0);
 }
@@ -207,10 +212,25 @@ TEST_F(DiscreteFieldsTest, setGhostCellsVectorField)
     fill_vector_field_with_sin(res);
     for (Direction gridDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
+        for (Direction fieldDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+        {
+            EXPECT_EQ(df.multi_fab(fieldDir).nGrow(gridDir), 0);
+        }
+    }
+    df.set_ghost_size({AMREX_D_DECL(1, 2, 3)});
+    for (Direction gridDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
         for (Direction fieldDir : {Direction::xDir, Direction::yDir, Direction::zDir})
         {
-            df.set_ghost_size(gridDir + fieldDir, gridDir);
-            EXPECT_EQ(df.multi_fab(fieldDir).nGrow(gridDir), gridDir + fieldDir);
+            EXPECT_EQ(df.multi_fab(fieldDir).nGrow(gridDir), gridDir + 1);
+        }
+    }
+    df.set_ghost_size({AMREX_D_DECL(0, 1, 2)});
+    for (Direction gridDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        for (Direction fieldDir : {Direction::xDir, Direction::yDir, Direction::zDir})
+        {
+            EXPECT_EQ(df.multi_fab(fieldDir).nGrow(gridDir), gridDir + 1);
         }
     }
     std::array<amrex::Real, 3> lInfError{l_inf_error(df, res)};
