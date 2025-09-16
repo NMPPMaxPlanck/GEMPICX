@@ -6,6 +6,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#if defined(_DEBUG) || defined(DEBUG)
+#define GEMPIC_FORCE_INLINE inline
+#else
+#define GEMPIC_FORCE_INLINE AMREX_FORCE_INLINE
+#endif
+
 #if AMREX_SPACEDIM == 1
 /**
  * The GEMPIC_D_MULT(a,b,c) macro multiplies the elements of a
@@ -134,6 +140,42 @@
     (EX) ? ((void)0) : amrex::Assert(#EX, __FILE__, __LINE__, std::string(MSG).c_str())
 
 #define GEMPIC_ERROR(MSG) amrex::Assert(std::string(MSG).c_str(), __FILE__, __LINE__)
+
+#if AMREX_SPACEDIM == 1
+/**
+ * The GEMPIC_D_PAD_ONEX(a), like GEMPIC_D_PAD_ONE
+ * but working only on the x component
+ */
+#define GEMPIC_D_PAD_ONEX(a) a
+#define GEMPIC_D_PAD_ONEY(a) 1
+#define GEMPIC_D_PAD_ONEZ(a) 1
+#elif AMREX_SPACEDIM == 2
+#define GEMPIC_D_PAD_ONEX(a) a
+#define GEMPIC_D_PAD_ONEY(a) a
+#define GEMPIC_D_PAD_ONEZ(a) 1
+#elif AMREX_SPACEDIM == 3
+#define GEMPIC_D_PAD_ONEX(a) a
+#define GEMPIC_D_PAD_ONEY(a) a
+#define GEMPIC_D_PAD_ONEZ(a) a
+#endif
+
+#if AMREX_SPACEDIM == 1
+/**
+ * The GEMPIC_D_PAD_X(a), like GEMPIC_D_PAD
+ * but working only on the x component
+ */
+#define GEMPIC_D_PAD_X(a) a
+#define GEMPIC_D_PAD_Y(a) 0
+#define GEMPIC_D_PAD_Z(a) 0
+#elif AMREX_SPACEDIM == 2
+#define GEMPIC_D_PAD_X(a) a
+#define GEMPIC_D_PAD_Y(a) a
+#define GEMPIC_D_PAD_Z(a) 0
+#elif AMREX_SPACEDIM == 3
+#define GEMPIC_D_PAD_X(a) a
+#define GEMPIC_D_PAD_Y(a) a
+#define GEMPIC_D_PAD_Z(a) a
+#endif
 
 //! Directions available in GEMPIC
 enum Direction : unsigned int

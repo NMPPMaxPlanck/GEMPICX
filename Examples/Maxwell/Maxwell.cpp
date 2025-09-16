@@ -70,7 +70,7 @@ int main (int argc, char* argv[])
             for (int tStep = 1; tStep < nmaxSteps; tStep++)
             {
                 // eventually recompute dt:
-                int breakLoop = myMaxwell.is_finaltime_reached();
+                bool breakLoop = myMaxwell.is_finaltime_reached();
                 if (breakLoop) break;
 
                 myMaxwell.init_new_timestep();

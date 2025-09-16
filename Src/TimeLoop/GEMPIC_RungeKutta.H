@@ -774,7 +774,7 @@ public:
     {
         for (int i = 0; i < nRKstages; ++i)
         {
-            m_timeDerivativeStages[i] = std::make_unique<FieldsHandler>(drc, m_scheme.get_ncomp());
+            m_timeDerivativeStages[i] = std::make_shared<FieldsHandler>(drc, m_scheme.get_ncomp());
             *(m_timeDerivativeStages[i]) = *m_timeDerivativeExplicit;
         }
 
@@ -805,6 +805,7 @@ private:
 template <class FieldsHandler, int myRKstages>
 void ExplicitRK<FieldsHandler, myRKstages>::one_step_solve_dqdt_explicit ()
 {
+    BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::one_step_solve_dqdt_explicit()");
     m_scheme.one_step_solve_dqdt_explicit();
 }
 
@@ -816,9 +817,10 @@ void ExplicitRK<FieldsHandler, myRKstages>::finalize_rk (amrex::Real const dt,
                                                         std::shared_ptr<FieldsHandler>& dst,
                                                         RKStagesArray const& srcArray)
 {
+    BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::finalize_rk()");
     for (int r = 0; r < myRKstages; r++)
     {
-        amrex::Real const coeff = m_rkTableau.b[r] * dt;
+        amrex::Real const coeff = m_rkTableau.m_b[r] * dt;
         dst->mult_and_add(coeff, srcArray[r]);
     }
 }
@@ -830,13 +832,14 @@ template <class FieldsHandler, int myRKstages>
 void ExplicitRK<FieldsHandler, myRKstages>::integrate_step (amrex::Real const time,
                                                            amrex::Real const dt)
 {
+    BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::integrate_step()");
     amrex::Print() << "time = " << time << ",  dt = " << dt << std::endl;
     for (int s = 0; s < myRKstages; s++)
     {
         *m_solutionTmpExplicit = *m_solutionInOut;
         for (int r = 0; r < s; r++)
         {
-            amrex::Real const coeff = m_rkTableau.a[s][r] * dt;
+            amrex::Real const coeff = m_rkTableau.m_a[s][r] * dt;
             m_solutionTmpExplicit->mult_and_add(coeff, m_timeDerivativeStages[r]);
         }
         one_step_solve_dqdt_explicit(); // this will use m_solutionTmpExplicit as initial state to
@@ -943,6 +946,7 @@ private:
 template <class FieldsHandler, int myRKstages>
 void ImexRk<FieldsHandler, myRKstages>::one_step_solve_dqdt_semiimplicit (amrex::Real dtLoc)
 {
+    BL_PROFILE("GEMPIC::RungeKutta::ImexRk::one_step_solve_dqdt_semiimplicit()");
     m_scheme.one_step_solve_dqdt_semiimplicit(dtLoc);
 }
 
@@ -954,6 +958,7 @@ void ImexRk<FieldsHandler, myRKstages>::finalize_rk (amrex::Real const dt,
                                                     std::shared_ptr<FieldsHandler>& dst,
                                                     RKStagesArray const& srcArray)
 {
+    BL_PROFILE("GEMPIC::RungeKutta::ImexRk::finalize_rk()");
     for (int r = 0; r < myRKstages; r++)
     {
         amrex::Real const coeff = m_rkTableau.m_implicitRkButcherTableau.m_b[r] * dt;
@@ -967,6 +972,7 @@ void ImexRk<FieldsHandler, myRKstages>::finalize_rk (amrex::Real const dt,
 template <class FieldsHandler, int myRKstages>
 void ImexRk<FieldsHandler, myRKstages>::integrate_step (amrex::Real const time, amrex::Real const dt)
 {
+    BL_PROFILE("GEMPIC::RungeKutta::ImexRk::integrate_step()");
     // use  the multi components to cast the multi-stage vectors;
     if (Gempic::Utils::Verbosity::level() > 0)
     {
