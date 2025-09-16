@@ -9,21 +9,6 @@
 namespace Gempic
 {
 
-namespace Impl
-{
-void fill_ghost_cells (DiscreteField& field)
-{
-    field.multi_fab().FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid()));
-}
-
-void fill_ghost_cells (DiscreteVectorField& field)
-{
-    field.multi_fab(xDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(xDir)));
-    field.multi_fab(yDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(yDir)));
-    field.multi_fab(zDir).FillBoundary(Impl::to_amrex_periodicty(field.discrete_grid(zDir)));
-}
-} //namespace Impl
-
 DiscreteField::DiscreteField(std::string const& label,
                              Io::Parameters& params,
                              DiscreteGrid const& discreteGrid,
@@ -68,19 +53,27 @@ amrex::Box const& DiscreteField::selected_box() const
 {
     return m_data->get(m_selectedBoxIdx).box();
 };
-void DiscreteField::set_ghost_size (int width, Direction dir)
+void DiscreteField::set_ghost_size (std::array<size_t, AMREX_SPACEDIM> width)
 {
-    if (m_haloWidth[dir] < width)
+    bool increaseHalo{false};
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        m_haloWidth[dir] = width;
+        if (m_haloWidth[dir] < width[dir])
+        {
+            m_haloWidth[dir] = width[dir];
+            increaseHalo = true;
+        }
+    }
+    amrex::IntVect ng;
+    for (int i = 0; i < AMREX_SPACEDIM; i++)
+    {
+        ng[i] = m_haloWidth[i];
+    }
+    if (increaseHalo)
+    {
+        int n{this->multi_fab().nComp()};
         amrex::BoxArray ba{this->multi_fab().boxArray()};
         amrex::DistributionMapping dm{this->multi_fab().DistributionMap()};
-        amrex::IntVect ng;
-        for (int i = 0; i < AMREX_SPACEDIM; i++)
-        {
-            ng[i] = m_haloWidth[i];
-        }
-        int n{this->multi_fab().nComp()};
         amrex::MultiFab dataNew{ba, dm, n, ng};
         dataNew.LocalCopy(this->multi_fab(), 0, 0, n, amrex::IntVect{0});
         m_data = std::make_shared<amrex::MultiFab>(std::move(dataNew));
@@ -88,8 +81,13 @@ void DiscreteField::set_ghost_size (int width, Direction dir)
         m_boxStatus = Impl::BoxStatus::boxChanged;
         m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
-    Impl::fill_ghost_cells(*this);
-};
+    // Interface notes:
+    // scomp is the starting index of the components copied
+    // We always copy all components and do not treat it as a special parameter.
+    // Parameter cross specifies whether all corners of the multifab should also be filled or not
+    this->multi_fab().FillBoundary(0, this->multi_fab().nComp(), ng,
+                                   Impl::to_amrex_periodicty(this->discrete_grid()), false);
+}
 
 DiscreteVectorField::DiscreteVectorField(std::string const& label,
                                          Io::Parameters& params,
@@ -159,11 +157,24 @@ amrex::Box const& DiscreteVectorField::selected_box(Direction dir) const
     return m_data->operator[](dir)[m_selectedBoxIdx].box();
 }
 
-void DiscreteVectorField::set_ghost_size (int width, Direction dir)
+void DiscreteVectorField::set_ghost_size (std::array<size_t, AMREX_SPACEDIM> width)
 {
-    if (m_haloWidth[dir] < width)
+    bool increaseHalo{false};
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        m_haloWidth[dir] = width;
+        if (m_haloWidth[dir] < width[dir])
+        {
+            m_haloWidth[dir] = width[dir];
+            increaseHalo = true;
+        }
+    }
+    amrex::IntVect ng;
+    for (int i = 0; i < AMREX_SPACEDIM; i++)
+    {
+        ng[i] = m_haloWidth[i];
+    }
+    if (increaseHalo)
+    {
         std::array<amrex::MultiFab, 3> dataNew{};
         for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
         {
@@ -187,7 +198,16 @@ void DiscreteVectorField::set_ghost_size (int width, Direction dir)
         m_boxStatus = Impl::BoxStatus::boxChanged;
         m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
-    Impl::fill_ghost_cells(*this);
+    // Interface notes:
+    // scomp is the starting index of the components copied
+    // We always copy all components and do not treat it as a special parameter.
+    // Parameter cross specifies whether all corners of the multifab should also be filled or not
+    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        this->multi_fab(dir).FillBoundary(0, this->multi_fab(dir).nComp(), ng,
+                                          Impl::to_amrex_periodicty(this->discrete_grid(dir)),
+                                          false);
+    }
 };
 
 void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
