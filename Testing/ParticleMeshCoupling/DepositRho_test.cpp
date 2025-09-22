@@ -94,11 +94,10 @@ protected:
     DepositRhoTest() : m_infra{get_compdom()}
     {
         // particle settings
-        double charge{1};
-        double mass{1};
-
-        m_params.set("Particle.species0.charge", charge);
-        m_params.set("Particle.species0.mass", mass);
+        m_params.set("Particle.species0.charge", m_charge[0]);
+        m_params.set("Particle.species0.mass", m_mass[0]);
+        m_params.set("Particle.species1.charge", m_charge[1]);
+        m_params.set("Particle.species1.mass", m_mass[1]);
 
         int const hodgeDegree{2};
         int const maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
@@ -205,6 +204,7 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
             particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
 
+        amrex::Gpu::streamSynchronize();
         // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero and
         // receiving 1/8 the weight of the particle (3)
         CHECK_FIELD(
@@ -249,6 +249,7 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
             particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
 
+        amrex::Gpu::streamSynchronize();
         // Expect the 2^AMREX_SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
         // non-zero and  0 nodes receiving (3/4) and 1 nodes receiving (1/4) the weight of the
         // particle (1)
@@ -303,6 +304,7 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
             particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
 
+        amrex::Gpu::streamSynchronize();
         // See SingleParticle test for explanation of expectations
         CHECK_FIELD(m_rhoPtr->m_data[particleGrid].array(), particleGrid.validbox(),
                     {[] (AMREX_D_DECL(int a, int b, int c))
@@ -352,6 +354,7 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
             particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
 
+        amrex::Gpu::streamSynchronize();
         // See SingleParticle test for explanation of expectations
         CHECK_FIELD(m_rhoPtr->m_data[particleGrid].array(), particleGrid.validbox(),
                     {[] (AMREX_D_DECL(int a, int b, int c))
@@ -406,6 +409,7 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
 
             if (spec == s_numSpec - 1)
             {
+                amrex::Gpu::streamSynchronize();
                 // See SingleParticle test for explanation of expectations
                 CHECK_FIELD(m_rhoPtr->m_data[particleGrid].array(), particleGrid.validbox(),
                             {[] (AMREX_D_DECL(int a, int b, int c))

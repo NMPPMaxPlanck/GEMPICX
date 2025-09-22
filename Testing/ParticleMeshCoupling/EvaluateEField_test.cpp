@@ -53,6 +53,8 @@ void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGri
                                spline.template eval_spline_field<Field::PrimalOneForm>(eArray);
                        });
 
+    amrex::Gpu::streamSynchronize();
+
     EXPECT_NEAR(efields[0][xDir], 1.0, 1e-12);
     EXPECT_NEAR(efields[0][yDir], 1.0, 1e-12);
     EXPECT_NEAR(efields[0][zDir], 1.0, 1e-12);

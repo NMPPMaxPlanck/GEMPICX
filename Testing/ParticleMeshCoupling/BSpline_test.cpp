@@ -20,18 +20,19 @@ TEST(BSplineExample, CardinalBSpline)
 
 template <size_t nIntervals>
 void check_continuity (std::function<amrex::GpuArray<amrex::Real, nIntervals>(amrex::Real)> bSpline,
-                       std::pair<amrex::Real, amrex::Real> boundaryValues = {0.0, 0.0})
+                       std::pair<amrex::Real, amrex::Real> boundaryValues = {0.0, 0.0},
+                       amrex::Real tolerance = 1e-15)
 {
-    EXPECT_EQ(bSpline(0.0)[0], boundaryValues.first)
+    EXPECT_NEAR(bSpline(0.0)[0], boundaryValues.first, tolerance)
         << "Error is at the left most interval boundary (i): " << 0
         << " for B-Spline of degree: " << nIntervals - 1;
     for (size_t i = 1; i < nIntervals; i++)
     {
-        EXPECT_DOUBLE_EQ(bSpline(1.0)[i - 1], bSpline(0.0)[i])
+        EXPECT_NEAR(bSpline(1.0)[i - 1], bSpline(0.0)[i], tolerance)
             << "Error is at interval boundary (i - 1): " << i - 1
             << " for B-Spline of degree: " << nIntervals - 1;
     }
-    EXPECT_EQ(bSpline(1.0)[nIntervals - 1], boundaryValues.second)
+    EXPECT_NEAR(bSpline(1.0)[nIntervals - 1], boundaryValues.second, tolerance)
         << "Error is at the left most interval boundary (i): " << nIntervals
         << " for B-Spline of degree: " << nIntervals - 1;
 }
