@@ -376,15 +376,15 @@ class WENOweight<3>
 {
 private:
     static constexpr int s_nStencil = 3;
-    static constexpr int s_weno_r = 8;
-    static constexpr amrex::Real s_weno_epsilon = 1e-14;
-    static constexpr amrex::Real s_weno_lambdaC = 1e5;
+    static constexpr int s_wenoR = 8;
+    static constexpr amrex::Real s_wenoEpsilon = 1e-14;
+    static constexpr amrex::Real s_wenoLambdaC = 1e5;
 
 public:
     static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real get_weno_lambda (int ind)
     {
         constexpr std::array<amrex::Real, 3> wenoLambda = {
-            s_weno_lambdaC, 1.0, 1.0}; // must be defined here for device code
+            s_wenoLambdaC, 1.0, 1.0}; // must be defined here for device code
         return wenoLambda[ind];
     }
 
@@ -393,8 +393,7 @@ public:
     {
         AMREX_ASSERT_WITH_MESSAGE(iStencil >= 0 && iStencil < s_nStencil,
                                   "WENO weight evaluation: stencil index out of bounds");
-        amrex::Real denominator =
-            amrex::Math::powi<s_weno_r>(oscillationIndicator + s_weno_epsilon);
+        amrex::Real denominator = amrex::Math::powi<s_wenoR>(oscillationIndicator + s_wenoEpsilon);
         return get_weno_lambda(iStencil) / denominator;
     }
     WENOweight() { return; };
@@ -404,25 +403,23 @@ template <int nVarFv, int polyrecDegreeFv>
 class FVreconstruction
 {
 public:
-    static constexpr int s_weno_nStencil = 3;  // do not change this.
-    using WENO3 = WENOweight<s_weno_nStencil>; // do not confuse this with the method WENO3. the 3
-                                               // is merely for the number of stencils.
-    static constexpr int s_weno_hist_nDof = polyrecDegreeFv + 1;
-    static constexpr int s_weno_int_nDof = polyrecDegreeFv + 2;
-    static constexpr int s_weno_stencil_shift{polyrecDegreeFv};
+    static constexpr int s_wenoNStencil = 3;  // do not change this.
+    using WENO3 = WENOweight<s_wenoNStencil>; // do not confuse this with the method WENO3. the 3
+                                              // is merely for the number of stencils.
+    static constexpr int s_wenoHistNDof = polyrecDegreeFv + 1;
+    static constexpr int s_wenoIntNDof = polyrecDegreeFv + 2;
+    static constexpr int s_wenoStencilShift{polyrecDegreeFv};
 
-    static constexpr int s_weno_1dCellStencil_lo{-polyrecDegreeFv};
-    static constexpr int s_weno_1dCellStencil_hi{polyrecDegreeFv};
-    static constexpr int s_weno_1dNodeStencil_lo{-polyrecDegreeFv};
-    static constexpr int s_weno_1dNodeStencil_hi{polyrecDegreeFv + 1};
+    static constexpr int s_weno1dCellStencilLo{-polyrecDegreeFv};
+    static constexpr int s_weno1dCellStencilHi{polyrecDegreeFv};
+    static constexpr int s_weno1dNodeStencilLo{-polyrecDegreeFv};
+    static constexpr int s_weno1dNodeStencilHi{polyrecDegreeFv + 1};
 
-    static constexpr int s_volumeDof{
-        AMREX_D_PICK(s_weno_hist_nDof,
-                     s_weno_hist_nDof* s_weno_hist_nDof,
-                     s_weno_hist_nDof* s_weno_hist_nDof* s_weno_hist_nDof)};
-    static constexpr int s_faceDof{
-        AMREX_D_PICK(1, s_weno_hist_nDof, s_weno_hist_nDof* s_weno_hist_nDof)};
-    static constexpr int s_edgeDof{AMREX_D_PICK(1, 1, s_weno_hist_nDof)};
+    static constexpr int s_volumeDof{AMREX_D_PICK(s_wenoHistNDof,
+                                                  s_wenoHistNDof* s_wenoHistNDof,
+                                                  s_wenoHistNDof* s_wenoHistNDof* s_wenoHistNDof)};
+    static constexpr int s_faceDof{AMREX_D_PICK(1, s_wenoHistNDof, s_wenoHistNDof* s_wenoHistNDof)};
+    static constexpr int s_edgeDof{AMREX_D_PICK(1, 1, s_wenoHistNDof)};
 
     // V3 polynomial degree Accessors
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int fv_degree (int iDir)
@@ -454,15 +451,15 @@ public:
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_n_dof_x ()
     {
-        return GEMPIC_D_PAD_ONEX(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEX(s_wenoHistNDof);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_n_dof_y ()
     {
-        return GEMPIC_D_PAD_ONEY(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEY(s_wenoHistNDof);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_n_dof_z ()
     {
-        return GEMPIC_D_PAD_ONEZ(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEZ(s_wenoHistNDof);
     }
 
     // V2x, V2y, V2z nDof Accessors
@@ -474,15 +471,15 @@ public:
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_n_dof_x ()
     {
-        return GEMPIC_D_PAD_ONEX(s_weno_hist_nDof + 1);
+        return GEMPIC_D_PAD_ONEX(s_wenoHistNDof + 1);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_n_dof_y ()
     {
-        return GEMPIC_D_PAD_ONEY(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEY(s_wenoHistNDof);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_n_dof_z ()
     {
-        return GEMPIC_D_PAD_ONEZ(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEZ(s_wenoHistNDof);
     }
 
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_n_dof (int iDir)
@@ -493,15 +490,15 @@ public:
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_n_dof_x ()
     {
-        return GEMPIC_D_PAD_ONEX(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEX(s_wenoHistNDof);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_n_dof_y ()
     {
-        return GEMPIC_D_PAD_ONEY(s_weno_hist_nDof + 1);
+        return GEMPIC_D_PAD_ONEY(s_wenoHistNDof + 1);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_n_dof_z ()
     {
-        return GEMPIC_D_PAD_ONEZ(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEZ(s_wenoHistNDof);
     }
 
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_n_dof (int iDir)
@@ -512,132 +509,132 @@ public:
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_n_dof_x ()
     {
-        return GEMPIC_D_PAD_ONEX(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEX(s_wenoHistNDof);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_n_dof_y ()
     {
-        return GEMPIC_D_PAD_ONEY(s_weno_hist_nDof);
+        return GEMPIC_D_PAD_ONEY(s_wenoHistNDof);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_n_dof_z ()
     {
-        return GEMPIC_D_PAD_ONEZ(s_weno_hist_nDof + 1);
+        return GEMPIC_D_PAD_ONEZ(s_wenoHistNDof + 1);
     }
 
     // V3 Stencil Bounds
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_stencil_lo_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_X(s_weno1dCellStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_stencil_lo_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_Y(s_weno1dCellStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_stencil_lo_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_Z(s_weno1dCellStencilLo);
     }
 
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_stencil_hi_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_X(s_weno1dCellStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_stencil_hi_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_Y(s_weno1dCellStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v3_stencil_hi_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_Z(s_weno1dCellStencilHi);
     }
 
     // V2x Stencil Bounds
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_stencil_lo_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dNodeStencil_lo);
+        return GEMPIC_D_PAD_X(s_weno1dNodeStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_stencil_lo_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_Y(s_weno1dCellStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_stencil_lo_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_Z(s_weno1dCellStencilLo);
     }
 
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_stencil_hi_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dNodeStencil_hi);
+        return GEMPIC_D_PAD_X(s_weno1dNodeStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_stencil_hi_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_Y(s_weno1dCellStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2x_stencil_hi_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_Z(s_weno1dCellStencilHi);
     }
 
     // V2y Stencil Bounds
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_stencil_lo_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_X(s_weno1dCellStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_stencil_lo_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dNodeStencil_lo);
+        return GEMPIC_D_PAD_Y(s_weno1dNodeStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_stencil_lo_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_Z(s_weno1dCellStencilLo);
     }
 
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_stencil_hi_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_X(s_weno1dCellStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_stencil_hi_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dNodeStencil_hi);
+        return GEMPIC_D_PAD_Y(s_weno1dNodeStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2y_stencil_hi_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_Z(s_weno1dCellStencilHi);
     }
 
     // V2z Stencil Bounds
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_stencil_lo_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_X(s_weno1dCellStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_stencil_lo_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dCellStencil_lo);
+        return GEMPIC_D_PAD_Y(s_weno1dCellStencilLo);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_stencil_lo_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dNodeStencil_lo);
+        return GEMPIC_D_PAD_Z(s_weno1dNodeStencilLo);
     }
 
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_stencil_hi_x ()
     {
-        return GEMPIC_D_PAD_X(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_X(s_weno1dCellStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_stencil_hi_y ()
     {
-        return GEMPIC_D_PAD_Y(s_weno_1dCellStencil_hi);
+        return GEMPIC_D_PAD_Y(s_weno1dCellStencilHi);
     }
     AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE static constexpr int v2z_stencil_hi_z ()
     {
-        return GEMPIC_D_PAD_Z(s_weno_1dNodeStencil_hi);
+        return GEMPIC_D_PAD_Z(s_weno1dNodeStencilHi);
     }
 
-    amrex::GpuArray<amrex::Real, s_weno_hist_nDof + 1> m_wenoStencilLocNodes;
+    amrex::GpuArray<amrex::Real, s_wenoHistNDof + 1> m_wenoStencilLocNodes;
 
     static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real get_weno_shift (int ind)
     {
-        constexpr amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoShift = {
-            0.0, static_cast<amrex::Real>(s_weno_hist_nDof / 2),
-            -static_cast<amrex::Real>(s_weno_hist_nDof / 2)};
+        constexpr amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoShift = {
+            0.0, static_cast<amrex::Real>(s_wenoHistNDof / 2),
+            -static_cast<amrex::Real>(s_wenoHistNDof / 2)};
         return wenoShift[ind];
     }
 
@@ -653,8 +650,8 @@ public:
      */
     static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE int get_weno_left (int ind)
     {
-        constexpr amrex::GpuArray<int, s_weno_nStencil> wenoLeft = {-(s_weno_hist_nDof) / 2,
-                                                                    -s_weno_hist_nDof + 1, 0};
+        constexpr amrex::GpuArray<int, s_wenoNStencil> wenoLeft = {-(s_wenoHistNDof) / 2,
+                                                                   -s_wenoHistNDof + 1, 0};
         return wenoLeft[ind];
     }
 
@@ -693,14 +690,14 @@ public:
     // quadrature points in the cell)
 
     // stencil averages-histopolating basis to local-in-cell interpolating basis
-    squareMatrixArray<s_weno_nStencil, s_weno_hist_nDof> m_wenOhist2LocalGLint;
+    squareMatrixArray<s_wenoNStencil, s_wenoHistNDof> m_wenOhist2LocalGLint;
     // stencil nodal-intepolating basis to local-in-cell interpolating basis
-    squareMatrixArray<s_weno_nStencil, s_weno_int_nDof> m_wenOint2LocalGLint;
+    squareMatrixArray<s_wenoNStencil, s_wenoIntNDof> m_wenOint2LocalGLint;
 
-    squareMatrixArray<s_weno_nStencil, s_weno_hist_nDof> m_wenoOiMatrix;
-    squareMatrixArray<s_weno_nStencil, s_weno_int_nDof> m_wenoOiMatrix2;
-    squareMatrix<s_weno_hist_nDof> m_wenoOiMatrixC;
-    squareMatrix<s_weno_int_nDof> m_wenoOiMatrix2C;
+    squareMatrixArray<s_wenoNStencil, s_wenoHistNDof> m_wenoOiMatrix;
+    squareMatrixArray<s_wenoNStencil, s_wenoIntNDof> m_wenoOiMatrix2;
+    squareMatrix<s_wenoHistNDof> m_wenoOiMatrixC;
+    squareMatrix<s_wenoIntNDof> m_wenoOiMatrix2C;
 
     //auto m_nodesGLeg_table = MakeNodesTable<polyrecDegreeFv + 2>{};
     MakeNodesTable<polyrecDegreeFv + 1> m_nodesGLegTable;
@@ -809,32 +806,32 @@ public:
         BL_PROFILE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
         // get local transformation matrices: stencil histopolating polynomials to local
         // interpolating polinomials
-        amrex::Array3D<amrex::Real, 0, s_weno_nStencil - 1, 0, nVarFv - 1, 0, s_weno_hist_nDof - 1,
+        amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoHistNDof - 1,
                        amrex::Order::C>
             whRec;
         for (int iVar = 0; iVar < nVarFv; iVar++)
         {
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 whWeno(iVar, i) = 0.0;
             }
         }
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
 
         for (int iVar = 0; iVar < nVarFv; iVar++)
         {
-            for (int s = 0; s < s_weno_nStencil; s++)
+            for (int s = 0; s < s_wenoNStencil; s++)
             {
                 wenoOi[s] = 0.0;
-                amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_weno_hist_nDof - 1, amrex::Order::C>
+                amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoHistNDof - 1, amrex::Order::C>
                     whLoc;
-                int jSL = s_weno_stencil_shift +
+                int jSL = s_wenoStencilShift +
                           get_weno_left(s); // weno_left assumes the central cell being the zeroth;
-                for (int i = 0; i < s_weno_hist_nDof; i++)
+                for (int i = 0; i < s_wenoHistNDof; i++)
                 {
                     amrex::Real whSum = 0;
-                    for (int j = 0; j < s_weno_hist_nDof; j++)
+                    for (int j = 0; j < s_wenoHistNDof; j++)
                     {
                         int jloc = j + jSL;
                         whSum += wenOhist2LocalGLintIn(s, i, j) * inputVector(iVar, jloc);
@@ -842,10 +839,10 @@ public:
                     whRec(s, iVar, i) = whSum;
                     whLoc(iVar, i) = whSum;
                 }
-                for (int i = 0; i < s_weno_hist_nDof; i++)
+                for (int i = 0; i < s_wenoHistNDof; i++)
                 {
                     amrex::Real w1 = whLoc(iVar, i);
-                    for (int j = 0; j < s_weno_hist_nDof; j++)
+                    for (int j = 0; j < s_wenoHistNDof; j++)
                     {
                         amrex::Real factor = wenoOiMatrixCIn(i, j) * whLoc(iVar, j);
                         wenoOi[s] += w1 * factor;
@@ -855,16 +852,16 @@ public:
             }
 
             amrex::Real omegaSum = 0.0;
-            for (int s = 0; s < s_weno_nStencil; s++)
+            for (int s = 0; s < s_wenoNStencil; s++)
             {
                 omegaSum += wenoOmega[s];
             }
 
-            for (int s = 0; s < s_weno_nStencil; s++)
+            for (int s = 0; s < s_wenoNStencil; s++)
             {
                 wenoOmega[s] /= omegaSum;
                 amrex::Real omegaLoc = wenoOmega[s];
-                for (int i = 0; i < s_weno_hist_nDof; i++)
+                for (int i = 0; i < s_wenoHistNDof; i++)
                 {
                     whWeno(iVar, i) += omegaLoc * whRec(s, iVar, i);
                 }
@@ -880,26 +877,26 @@ public:
     {
         BL_PROFILE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
         amrex::Real omegaSum = 0.0;
-        amrex::Array3D<amrex::Real, 0, s_weno_nStencil - 1, 0, 0, 0, s_weno_hist_nDof - 1,
+        amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, 0, 0, s_wenoHistNDof - 1,
                        amrex::Order::C>
             whRec;
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             whWeno(i) = 0.0;
         }
 
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
-        for (int s = 0; s < s_weno_nStencil; s++)
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOi[s] = 0.0;
-            amrex::Array1D<amrex::Real, 0, s_weno_hist_nDof - 1> whLoc;
-            int jSL = s_weno_stencil_shift +
+            amrex::Array1D<amrex::Real, 0, s_wenoHistNDof - 1> whLoc;
+            int jSL = s_wenoStencilShift +
                       get_weno_left(s); // weno_left assumes the central cell being the zeroth;
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 amrex::Real whSum = 0;
-                for (int j = 0; j < s_weno_hist_nDof; j++)
+                for (int j = 0; j < s_wenoHistNDof; j++)
                 {
                     int jloc = j + jSL;
                     whSum += wenOhist2LocalGLintIn(s, i, j) * inputVector(jloc);
@@ -907,10 +904,10 @@ public:
                 whRec(s, 0, i) = whSum;
                 whLoc(i) = whSum;
             }
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 amrex::Real w1 = whLoc(i);
-                for (int j = 0; j < s_weno_hist_nDof; j++)
+                for (int j = 0; j < s_wenoHistNDof; j++)
                 {
                     amrex::Real factor = wenoOiMatrixCIn(i, j) * whLoc(j);
                     wenoOi[s] += w1 * factor;
@@ -920,11 +917,11 @@ public:
             omegaSum += wenoOmega[s];
         }
 
-        for (int s = 0; s < s_weno_nStencil; s++)
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOmega[s] /= omegaSum;
             amrex::Real omegaLoc = wenoOmega[s];
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 whWeno(i) += omegaLoc * whRec(s, 0, i);
             }
@@ -957,33 +954,32 @@ public:
     {
         BL_PROFILE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
         amrex::Real omegaSum = 0.0;
-        amrex::Array3D<amrex::Real, 0, s_weno_nStencil - 1, 0, nVarFv - 1, 0, s_weno_int_nDof - 1,
+        amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoIntNDof - 1,
                        amrex::Order::C>
             whRec;
         for (int iVar = 0; iVar < nVarFv; iVar++)
         {
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 whWeno(iVar, i) = 0.0;
             }
         }
 
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
-        for (int s = 0; s < s_weno_nStencil; s++)
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOi[s] = 0.0;
-            amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_weno_int_nDof - 1, amrex::Order::C>
-                whLoc;
-            int jSL = s_weno_stencil_shift +
+            amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoIntNDof - 1, amrex::Order::C> whLoc;
+            int jSL = s_wenoStencilShift +
                       get_weno_left(s); // weno_left assumes the central index being the zeroth,
                                         // which is placed at the weno_stencil_shift2-th position;
             for (int iVar = 0; iVar < nVarFv; iVar++)
             {
-                for (int i = 0; i < s_weno_int_nDof; i++)
+                for (int i = 0; i < s_wenoIntNDof; i++)
                 {
                     amrex::Real whSum = 0;
-                    for (int j = 0; j < s_weno_int_nDof; j++)
+                    for (int j = 0; j < s_wenoIntNDof; j++)
                     {
                         int jloc = j + jSL;
                         whSum += wenOint2LocalGLintIn(s, i, j) * inputVector(iVar, jloc);
@@ -994,10 +990,10 @@ public:
             }
             for (int iVar = 0; iVar < nVarFv; iVar++)
             {
-                for (int i = 0; i < s_weno_int_nDof; i++)
+                for (int i = 0; i < s_wenoIntNDof; i++)
                 {
                     amrex::Real w1 = whLoc(iVar, i);
-                    for (int j = 0; j < s_weno_int_nDof; j++)
+                    for (int j = 0; j < s_wenoIntNDof; j++)
                     {
                         amrex::Real factor = wenoOiMatrix2CIn(i, j) * whLoc(iVar, j);
                         wenoOi[s] += w1 * factor;
@@ -1008,11 +1004,11 @@ public:
             omegaSum += wenoOmega[s];
         }
 
-        for (int s = 0; s < s_weno_nStencil; s++)
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOmega[s] /= omegaSum;
             amrex::Real omegaLoc = wenoOmega[s];
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 for (int iVar = 0; iVar < nVarFv; iVar++)
                 {
@@ -1030,29 +1026,29 @@ public:
     {
         BL_PROFILE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
         amrex::Real omegaSum = 0.0;
-        amrex::Array3D<amrex::Real, 0, s_weno_nStencil - 1, 0, 0, 0, s_weno_int_nDof - 1,
+        amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, 0, 0, s_wenoIntNDof - 1,
                        amrex::Order::C>
             whRec;
 
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
             whWeno(i) = 0.0;
         }
 
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-        amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
-        for (int s = 0; s < s_weno_nStencil; s++)
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+        amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOi[s] = 0.0;
-            amrex::Array1D<amrex::Real, 0, s_weno_int_nDof - 1> whLoc;
-            int jSL = s_weno_stencil_shift +
+            amrex::Array1D<amrex::Real, 0, s_wenoIntNDof - 1> whLoc;
+            int jSL = s_wenoStencilShift +
                       get_weno_left(s); // weno_left assumes the central index being the zeroth,
                                         // which is placed at the weno_stencil_shift2-th position;
 
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 amrex::Real whSum = 0;
-                for (int j = 0; j < s_weno_int_nDof; j++)
+                for (int j = 0; j < s_wenoIntNDof; j++)
                 {
                     int jloc = j + jSL;
                     whSum += wenOint2LocalGLintIn(s, i, j) * inputVector(jloc);
@@ -1060,10 +1056,10 @@ public:
                 whRec(s, 0, i) = whSum;
                 whLoc(i) = whSum;
             }
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 amrex::Real w1 = whLoc(i);
-                for (int j = 0; j < s_weno_int_nDof; j++)
+                for (int j = 0; j < s_wenoIntNDof; j++)
                 {
                     amrex::Real factor = wenoOiMatrix2CIn(i, j) * whLoc(j);
                     wenoOi[s] += w1 * factor;
@@ -1073,11 +1069,11 @@ public:
             omegaSum += wenoOmega[s];
         }
 
-        for (int s = 0; s < s_weno_nStencil; s++)
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOmega[s] /= omegaSum;
             amrex::Real omegaLoc = wenoOmega[s];
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 whWeno(i) += omegaLoc * whRec(s, 0, i);
             }
@@ -1306,16 +1302,16 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::tvd_reconstruction_1d(
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
         amrex::Real slopeL =
-            inputVector(iVar, s_weno_stencil_shift) - inputVector(iVar, s_weno_stencil_shift - 1);
+            inputVector(iVar, s_wenoStencilShift) - inputVector(iVar, s_wenoStencilShift - 1);
         amrex::Real slopeR =
-            inputVector(iVar, s_weno_stencil_shift + 1) - inputVector(iVar, s_weno_stencil_shift);
+            inputVector(iVar, s_wenoStencilShift + 1) - inputVector(iVar, s_wenoStencilShift);
         slope[iVar] = minmod(slopeL, slopeR);
-        q0[iVar] = inputVector(iVar, s_weno_stencil_shift);
+        q0[iVar] = inputVector(iVar, s_wenoStencilShift);
     }
 
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             amrex::Real dxI = m_nodesGLegP[i] - 0.5;
             whWeno(iVar, i) = q0[iVar] + dxI * slope[iVar];
@@ -1335,16 +1331,16 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::linear_reconstruction_1d(
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
         amrex::Real slopeL =
-            inputVector(iVar, s_weno_stencil_shift) - inputVector(iVar, s_weno_stencil_shift - 1);
+            inputVector(iVar, s_wenoStencilShift) - inputVector(iVar, s_wenoStencilShift - 1);
         amrex::Real slopeR =
-            inputVector(iVar, s_weno_stencil_shift + 1) - inputVector(iVar, s_weno_stencil_shift);
+            inputVector(iVar, s_wenoStencilShift + 1) - inputVector(iVar, s_wenoStencilShift);
         slope[iVar] = 0.5 * (slopeL + slopeR);
-        q0[iVar] = inputVector(iVar, s_weno_stencil_shift);
+        q0[iVar] = inputVector(iVar, s_wenoStencilShift);
     }
 
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             amrex::Real dxI = m_nodesGLegP[i] - 0.5;
             whWeno(iVar, i) = q0[iVar] + dxI * slope[iVar];
@@ -1367,12 +1363,12 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::zero_reconstruction_1d(
     amrex::GpuArray<amrex::Real, nVarFv> q0;
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        q0[iVar] = inputVector(iVar, s_weno_stencil_shift);
+        q0[iVar] = inputVector(iVar, s_wenoStencilShift);
     }
 
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             whWeno(iVar, i) = q0[iVar];
         }
@@ -1399,7 +1395,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
     std::vector<std::vector<amrex::Real>> hist2intLoc;
     std::vector<std::vector<amrex::Real>> int2histLoc;
 
-    std::vector<std::vector<amrex::Real>> wenoRecStencil[s_weno_nStencil];
+    std::vector<std::vector<amrex::Real>> wenoRecStencil[s_wenoNStencil];
 
     std::vector<std::vector<amrex::Real>> phipsi, psiphi;
     std::vector<std::vector<amrex::Real>> mlocHist, iMlocHist;
@@ -1416,9 +1412,9 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
 
     // define uniform local scaled ( dx = 1 ) stencil nodes of the FV reconstruction: weno3 has
     // [-1,0]U[0,1]U[1,2];
-    for (int i = 0; i < s_weno_hist_nDof + 1; i++)
+    for (int i = 0; i < s_wenoHistNDof + 1; i++)
     {
-        m_wenoStencilLocNodes[i] = -static_cast<amrex::Real>((s_weno_hist_nDof) / 2) + i;
+        m_wenoStencilLocNodes[i] = -static_cast<amrex::Real>((s_wenoHistNDof) / 2) + i;
     }
 
     // Initialize the list of vectors
@@ -1668,9 +1664,9 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
     // basis conversion between stencil-histopolating basis and local GL quadrature points
     // interpolating basis.
     hist2intLoc = std::vector<std::vector<amrex::Real>>(
-        polyrecDegreeFv + 1, std::vector<amrex::Real>(s_weno_hist_nDof, 0.0));
+        polyrecDegreeFv + 1, std::vector<amrex::Real>(s_wenoHistNDof, 0.0));
     int2histLoc = std::vector<std::vector<amrex::Real>>(
-        s_weno_hist_nDof, std::vector<amrex::Real>(polyrecDegreeFv + 1, 0.0));
+        s_wenoHistNDof, std::vector<amrex::Real>(polyrecDegreeFv + 1, 0.0));
 
     int2histLoc = Gempic::matmul(iMlocHist, psiphi);
     hist2intLoc = Gempic::matmul(iMlocVec[polyrecDegreeFv], phipsi);
@@ -1693,49 +1689,49 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
         iMKlocPowIntT[i] = Gempic::mattranspose(iMKlocPowInt[i]);
     }
 
-    for (int s = 0; s < s_weno_nStencil; s++)
+    for (int s = 0; s < s_wenoNStencil; s++)
     {
         amrex::Real stencilShift = get_weno_shift(s);
         std::vector<std::vector<amrex::Real>> kwenohist2LocalGLint(
-            s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof, 0.0));
+            s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof, 0.0));
         std::vector<std::vector<amrex::Real>> kwenoint2LocalGLint(
             polyrecDegreeFv + 2, std::vector<amrex::Real>(polyrecDegreeFv + 2, 0.0));
-        for (int g = 0; g < s_weno_hist_nDof; g++)
+        for (int g = 0; g < s_wenoHistNDof; g++)
         {
             amrex::Real weightLoc = mWeightsGLeg[polyrecDegreeFv][g];
             amrex::Real xiLoc = mNodesGLeg[polyrecDegreeFv][g] + stencilShift;
-            std::vector<amrex::Real> basisLocalGlInt(s_weno_hist_nDof);
-            std::vector<amrex::Real> basisLocalGlIntXi(s_weno_hist_nDof);
-            amrex::GpuArray<amrex::Real, s_weno_hist_nDof> basiswenostencilHist;
+            std::vector<amrex::Real> basisLocalGlInt(s_wenoHistNDof);
+            std::vector<amrex::Real> basisLocalGlIntXi(s_wenoHistNDof);
+            amrex::GpuArray<amrex::Real, s_wenoHistNDof> basiswenostencilHist;
             legendre_interpolating_vec(basisLocalGlInt, basisLocalGlIntXi,
                                        mNodesGLeg[polyrecDegreeFv][g]);
             legendre_histopolating_weno_stencil_nodes<polyrecDegreeFv>(basiswenostencilHist, xiLoc);
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 amrex::Real phiIloc = basisLocalGlInt[i];
-                for (int j = 0; j < s_weno_hist_nDof; j++)
+                for (int j = 0; j < s_wenoHistNDof; j++)
                 {
                     amrex::Real factor = weightLoc * basiswenostencilHist[j];
                     kwenohist2LocalGLint[i][j] += factor * phiIloc;
                 }
             }
         }
-        for (int g = 0; g < s_weno_int_nDof; g++)
+        for (int g = 0; g < s_wenoIntNDof; g++)
         {
             amrex::Real weightLoc = mWeightsGLeg[polyrecDegreeFv + 1][g];
             amrex::Real xiLoc = mNodesGLeg[polyrecDegreeFv + 1][g] + stencilShift;
-            std::vector<amrex::Real> basisLocalGlInt(s_weno_int_nDof);
-            std::vector<amrex::Real> basisLocalGlIntXi(s_weno_int_nDof);
-            amrex::GpuArray<amrex::Real, s_weno_int_nDof> basiswenostencilInt;
-            amrex::GpuArray<amrex::Real, s_weno_int_nDof> basiswenostencilIntXi;
+            std::vector<amrex::Real> basisLocalGlInt(s_wenoIntNDof);
+            std::vector<amrex::Real> basisLocalGlIntXi(s_wenoIntNDof);
+            amrex::GpuArray<amrex::Real, s_wenoIntNDof> basiswenostencilInt;
+            amrex::GpuArray<amrex::Real, s_wenoIntNDof> basiswenostencilIntXi;
             legendre_interpolating_vec(basisLocalGlInt, basisLocalGlIntXi,
                                        mNodesGLeg[polyrecDegreeFv + 1][g]);
             legendre_interpolating_weno_stencil_nodes<polyrecDegreeFv + 1>(
                 basiswenostencilInt, basiswenostencilIntXi, xiLoc);
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 amrex::Real phiIloc = basisLocalGlInt[i];
-                for (int j = 0; j < s_weno_int_nDof; j++)
+                for (int j = 0; j < s_wenoIntNDof; j++)
                 {
                     amrex::Real factor = weightLoc * basiswenostencilInt[j];
                     kwenoint2LocalGLint[i][j] += factor * phiIloc;
@@ -1745,11 +1741,11 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
 
         // from the i-th weno stencil hist dof, get local int. polynomial dofs
         std::vector<std::vector<amrex::Real>> wenOhist2LocalGLintLoc(
-            s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof));
+            s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof));
         wenOhist2LocalGLintLoc = Gempic::matmul(iMlocVec[polyrecDegreeFv], kwenohist2LocalGLint);
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
-            for (int j = 0; j < s_weno_hist_nDof; j++)
+            for (int j = 0; j < s_wenoHistNDof; j++)
             {
                 m_wenOhist2LocalGLint(s, i, j) = wenOhist2LocalGLintLoc[i][j];
                 if (Gempic::Utils::Verbosity::level() > 1)
@@ -1761,11 +1757,11 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
         }
         // from the i-th weno stencil int dof, get local int. polynomial dofs
         std::vector<std::vector<amrex::Real>> wenOint2LocalGLintLoc(
-            s_weno_int_nDof, std::vector<amrex::Real>(s_weno_int_nDof));
+            s_wenoIntNDof, std::vector<amrex::Real>(s_wenoIntNDof));
         wenOint2LocalGLintLoc = Gempic::matmul(iMlocVec[polyrecDegreeFv + 1], kwenoint2LocalGLint);
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
-            for (int j = 0; j < s_weno_int_nDof; j++)
+            for (int j = 0; j < s_wenoIntNDof; j++)
             {
                 m_wenOint2LocalGLint(s, i, j) = wenOint2LocalGLintLoc[i][j];
             }
@@ -1774,34 +1770,34 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
         // build HISTOPOLATING weno operator computing the sum of all k-norms for the oscillation
         // indicator (OI)
         std::vector<std::vector<amrex::Real>> wenoOiMatrixLoc(
-            s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof, 0.0));
+            s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof, 0.0));
         for (int n = 0; n < polyrecDegreeFv; n++)
         {
             std::vector<std::vector<amrex::Real>> iMKlocPow2(
-                s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof));
+                s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof));
             std::vector<std::vector<amrex::Real>> temp(n + 1,
-                                                       std::vector<amrex::Real>(s_weno_hist_nDof));
+                                                       std::vector<amrex::Real>(s_wenoHistNDof));
             temp = Gempic::matmul(
                 mlocVec[n],
                 iMKlocPow[n]); //this account of the quadrature weights of the integral!
             iMKlocPow2 = Gempic::matmul(iMKlocPowT[n], temp);
             //
-            std::vector<std::vector<amrex::Real>> atmp(s_weno_hist_nDof,
-                                                       std::vector<amrex::Real>(s_weno_hist_nDof));
+            std::vector<std::vector<amrex::Real>> atmp(s_wenoHistNDof,
+                                                       std::vector<amrex::Real>(s_wenoHistNDof));
             atmp = Gempic::matmul(iMKlocPow2, wenOhist2LocalGLintLoc);
             std::vector<std::vector<amrex::Real>> wenOhist2LocalGLintT(
-                s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof));
+                s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof));
             wenOhist2LocalGLintT = Gempic::mattranspose(wenOhist2LocalGLintLoc);
             std::vector<std::vector<amrex::Real>> wenoOiMatrixLocTmp(
-                s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof));
+                s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof));
             wenoOiMatrixLocTmp = Gempic::matmul(wenOhist2LocalGLintT, atmp);
             wenoOiMatrixLoc =
                 Gempic::matsum(wenoOiMatrixLoc, wenoOiMatrixLocTmp); //, weno_nDof, weno_nDof);
         }
 
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
-            for (int j = 0; j < s_weno_hist_nDof; j++)
+            for (int j = 0; j < s_wenoHistNDof; j++)
             {
                 m_wenoOiMatrix(s, i, j) = wenoOiMatrixLoc[i][j];
             }
@@ -1811,36 +1807,36 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
         // indicator (OI)
         //weno_OI_matrix_loc.resize(weno_nDof2, std::vector<amrex::Real>(weno_nDof2, 0.0));  BUG,
         //only resizes rows
-        wenoOiMatrixLoc.resize(s_weno_int_nDof);
-        for (int i = 0; i < s_weno_int_nDof; ++i)
+        wenoOiMatrixLoc.resize(s_wenoIntNDof);
+        for (int i = 0; i < s_wenoIntNDof; ++i)
         {
-            wenoOiMatrixLoc[i].resize(s_weno_int_nDof, 0.0);
+            wenoOiMatrixLoc[i].resize(s_wenoIntNDof, 0.0);
         }
         for (int n = 0; n < polyrecDegreeFv + 1; n++)
         {
             std::vector<std::vector<amrex::Real>> iMKlocPow2(
-                s_weno_int_nDof, std::vector<amrex::Real>(s_weno_int_nDof));
+                s_wenoIntNDof, std::vector<amrex::Real>(s_wenoIntNDof));
             std::vector<std::vector<amrex::Real>> temp(n + 1,
-                                                       std::vector<amrex::Real>(s_weno_int_nDof));
+                                                       std::vector<amrex::Real>(s_wenoIntNDof));
             temp = Gempic::matmul(
                 mlocVec[n],
                 iMKlocPowInt[n]); //this account of the quadrature weights of the integral!
             iMKlocPow2 = Gempic::matmul(iMKlocPowIntT[n], temp);
             //
-            std::vector<std::vector<amrex::Real>> atmp(s_weno_int_nDof,
-                                                       std::vector<amrex::Real>(s_weno_int_nDof));
+            std::vector<std::vector<amrex::Real>> atmp(s_wenoIntNDof,
+                                                       std::vector<amrex::Real>(s_wenoIntNDof));
             atmp = Gempic::matmul(iMKlocPow2, wenOint2LocalGLintLoc);
             std::vector<std::vector<amrex::Real>> wenOint2LocalGLintT(
-                s_weno_int_nDof, std::vector<amrex::Real>(s_weno_int_nDof));
+                s_wenoIntNDof, std::vector<amrex::Real>(s_wenoIntNDof));
             wenOint2LocalGLintT = Gempic::mattranspose(wenOint2LocalGLintLoc);
             std::vector<std::vector<amrex::Real>> wenoOiMatrixLocTmp(
-                s_weno_int_nDof, std::vector<amrex::Real>(s_weno_int_nDof));
+                s_wenoIntNDof, std::vector<amrex::Real>(s_wenoIntNDof));
             wenoOiMatrixLocTmp = Gempic::matmul(wenOint2LocalGLintT, atmp);
             wenoOiMatrixLoc = Gempic::matsum(wenoOiMatrixLoc, wenoOiMatrixLocTmp);
         }
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
-            for (int j = 0; j < s_weno_int_nDof; j++)
+            for (int j = 0; j < s_wenoIntNDof; j++)
             {
                 m_wenoOiMatrix2(s, i, j) = wenoOiMatrixLoc[i][j];
             }
@@ -1850,13 +1846,12 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
     // build HISTOPOLATING weno operator computing the sum of all k-norms for the oscillation
     // indicator (OI)
     std::vector<std::vector<amrex::Real>> wenoOiMatrixLoc(
-        s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof, 0.0));
+        s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof, 0.0));
     for (int n = 0; n < polyrecDegreeFv; n++)
     {
         std::vector<std::vector<amrex::Real>> wenoOiMatrixLocTmp(
-            s_weno_hist_nDof, std::vector<amrex::Real>(s_weno_hist_nDof));
-        std::vector<std::vector<amrex::Real>> temp(n + 1,
-                                                   std::vector<amrex::Real>(s_weno_hist_nDof));
+            s_wenoHistNDof, std::vector<amrex::Real>(s_wenoHistNDof));
+        std::vector<std::vector<amrex::Real>> temp(n + 1, std::vector<amrex::Real>(s_wenoHistNDof));
         temp =
             Gempic::matmul(mlocVec[n],
                            iMKlocPow[n]); //this account of the quadrature weights of the integral!
@@ -1864,9 +1859,9 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
         wenoOiMatrixLoc = Gempic::matsum(wenoOiMatrixLoc, wenoOiMatrixLocTmp);
     }
 
-    for (int i = 0; i < s_weno_hist_nDof; i++)
+    for (int i = 0; i < s_wenoHistNDof; i++)
     {
-        for (int j = 0; j < s_weno_hist_nDof; j++)
+        for (int j = 0; j < s_wenoHistNDof; j++)
         {
             m_wenoOiMatrixC(i, j) = wenoOiMatrixLoc[i][j];
         }
@@ -1874,17 +1869,16 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
 
     // build INTERPOLATING weno operator computing the sum of all k-norms for the oscillation
     // indicator (OI)
-    wenoOiMatrixLoc.resize(s_weno_int_nDof);
-    for (int i = 0; i < s_weno_int_nDof; ++i)
+    wenoOiMatrixLoc.resize(s_wenoIntNDof);
+    for (int i = 0; i < s_wenoIntNDof; ++i)
     {
-        wenoOiMatrixLoc[i].resize(s_weno_int_nDof, 0.0);
+        wenoOiMatrixLoc[i].resize(s_wenoIntNDof, 0.0);
     }
     for (int n = 0; n < polyrecDegreeFv + 1; n++)
     {
         std::vector<std::vector<amrex::Real>> wenoOiMatrixLocTmp(
-            s_weno_int_nDof, std::vector<amrex::Real>(s_weno_int_nDof));
-        std::vector<std::vector<amrex::Real>> temp(n + 1,
-                                                   std::vector<amrex::Real>(s_weno_int_nDof));
+            s_wenoIntNDof, std::vector<amrex::Real>(s_wenoIntNDof));
+        std::vector<std::vector<amrex::Real>> temp(n + 1, std::vector<amrex::Real>(s_wenoIntNDof));
         temp = Gempic::matmul(
             mlocVec[n],
             iMKlocPowInt[n]); //this account of the quadrature weights of the integral!
@@ -1892,9 +1886,9 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
         wenoOiMatrixLoc = Gempic::matsum(wenoOiMatrixLoc, wenoOiMatrixLocTmp);
     }
 
-    for (int i = 0; i < s_weno_int_nDof; i++)
+    for (int i = 0; i < s_wenoIntNDof; i++)
     {
-        for (int j = 0; j < s_weno_int_nDof; j++)
+        for (int j = 0; j < s_wenoIntNDof; j++)
         {
             m_wenoOiMatrix2C(i, j) = wenoOiMatrixLoc[i][j];
         }
@@ -1907,7 +1901,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
     */
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int ishift = -s_weno_stencil_shift, iloc = 0; iloc < 2 * s_weno_hist_nDof - 1;
+        for (int ishift = -s_wenoStencilShift, iloc = 0; iloc < 2 * s_wenoHistNDof - 1;
              iloc++, ishift++)
         {
             amrex::Real xLoc = 0.1 * iloc;
@@ -2028,32 +2022,32 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
     BL_PROFILE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
     // get local transformation matrices: stencil histopolating polynomials to local interpolating
     // polinomials
-    amrex::Array3D<amrex::Real, 0, s_weno_nStencil - 1, 0, nVarFv - 1, 0, s_weno_hist_nDof - 1,
+    amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoHistNDof - 1,
                    amrex::Order::C>
         whRec;
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             whWeno(iVar, i) = 0.0;
         }
     }
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
 
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int s = 0; s < s_weno_nStencil; s++)
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOi[s] = 0.0;
-            amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_weno_hist_nDof - 1, amrex::Order::C>
+            amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoHistNDof - 1, amrex::Order::C>
                 whLoc;
-            int jSL = s_weno_stencil_shift +
+            int jSL = s_wenoStencilShift +
                       get_weno_left(s); // weno_left assumes the central cell being the zeroth;
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 amrex::Real whSum = 0;
-                for (int j = 0; j < s_weno_hist_nDof; j++)
+                for (int j = 0; j < s_wenoHistNDof; j++)
                 {
                     int jloc = j + jSL;
                     whSum += m_wenOhist2LocalGLint(s, i, j) * inputVector(iVar, jloc);
@@ -2061,10 +2055,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
                 whRec(s, iVar, i) = whSum;
                 whLoc(iVar, i) = whSum;
             }
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 amrex::Real w1 = whLoc(iVar, i);
-                for (int j = 0; j < s_weno_hist_nDof; j++)
+                for (int j = 0; j < s_wenoHistNDof; j++)
                 {
                     amrex::Real factor = m_wenoOiMatrixC(i, j) * whLoc(iVar, j);
                     wenoOi[s] += w1 * factor;
@@ -2074,16 +2068,16 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
         }
 
         amrex::Real omegaSum = 0.0;
-        for (int s = 0; s < s_weno_nStencil; s++)
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             omegaSum += wenoOmega[s];
         }
 
-        for (int s = 0; s < s_weno_nStencil; s++)
+        for (int s = 0; s < s_wenoNStencil; s++)
         {
             wenoOmega[s] /= omegaSum;
             amrex::Real omegaLoc = wenoOmega[s];
-            for (int i = 0; i < s_weno_hist_nDof; i++)
+            for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 whWeno(iVar, i) += omegaLoc * whRec(s, iVar, i);
             }
@@ -2099,25 +2093,25 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
 {
     BL_PROFILE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
     amrex::Real omegaSum = 0.0;
-    amrex::Array2D<amrex::Real, 0, s_weno_nStencil - 1, 0, s_weno_hist_nDof - 1, amrex::Order::C>
+    amrex::Array2D<amrex::Real, 0, s_wenoNStencil - 1, 0, s_wenoHistNDof - 1, amrex::Order::C>
         whRec;
-    for (int i = 0; i < s_weno_hist_nDof; i++)
+    for (int i = 0; i < s_wenoHistNDof; i++)
     {
         whWeno(i) = 0.0;
     }
 
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
-    for (int s = 0; s < s_weno_nStencil; s++)
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
+    for (int s = 0; s < s_wenoNStencil; s++)
     {
         wenoOi[s] = 0.0;
-        amrex::Array1D<amrex::Real, 0, s_weno_hist_nDof - 1> whLoc;
-        int jSL = s_weno_stencil_shift +
+        amrex::Array1D<amrex::Real, 0, s_wenoHistNDof - 1> whLoc;
+        int jSL = s_wenoStencilShift +
                   get_weno_left(s); // weno_left assumes the central cell being the zeroth;
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             amrex::Real whSum = 0;
-            for (int j = 0; j < s_weno_hist_nDof; j++)
+            for (int j = 0; j < s_wenoHistNDof; j++)
             {
                 int jloc = j + jSL;
                 whSum += m_wenOhist2LocalGLint(s, i, j) * inputVector(jloc);
@@ -2125,10 +2119,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
             whRec(s, i) = whSum;
             whLoc(i) = whSum;
         }
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             amrex::Real w1 = whLoc(i);
-            for (int j = 0; j < s_weno_hist_nDof; j++)
+            for (int j = 0; j < s_wenoHistNDof; j++)
             {
                 amrex::Real factor = m_wenoOiMatrixC(i, j) * whLoc(j);
                 wenoOi[s] += w1 * factor;
@@ -2138,11 +2132,11 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
         omegaSum += wenoOmega[s];
     }
 
-    for (int s = 0; s < s_weno_nStencil; s++)
+    for (int s = 0; s < s_wenoNStencil; s++)
     {
         wenoOmega[s] /= omegaSum;
         amrex::Real omegaLoc = wenoOmega[s];
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             whWeno(i) += omegaLoc * whRec(s, i);
         }
@@ -2167,32 +2161,32 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
 {
     BL_PROFILE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
     amrex::Real omegaSum = 0.0;
-    amrex::Array3D<amrex::Real, 0, s_weno_nStencil - 1, 0, nVarFv - 1, 0, s_weno_int_nDof - 1,
+    amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoIntNDof - 1,
                    amrex::Order::C>
         whRec;
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
             whWeno(iVar, i) = 0.0;
         }
     }
 
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
-    for (int s = 0; s < s_weno_nStencil; s++)
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
+    for (int s = 0; s < s_wenoNStencil; s++)
     {
         wenoOi[s] = 0.0;
-        amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_weno_int_nDof - 1, amrex::Order::C> whLoc;
-        int jSL = s_weno_stencil_shift +
+        amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoIntNDof - 1, amrex::Order::C> whLoc;
+        int jSL = s_wenoStencilShift +
                   get_weno_left(s); // weno_left assumes the central index being the zeroth, which
                                     // is placed at the weno_stencil_shift2-th position;
         for (int iVar = 0; iVar < nVarFv; iVar++)
         {
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 amrex::Real whSum = 0;
-                for (int j = 0; j < s_weno_int_nDof; j++)
+                for (int j = 0; j < s_wenoIntNDof; j++)
                 {
                     int jloc = j + jSL;
                     whSum += m_wenOint2LocalGLint(s, i, j) * inputVector(iVar, jloc);
@@ -2203,10 +2197,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
         }
         for (int iVar = 0; iVar < nVarFv; iVar++)
         {
-            for (int i = 0; i < s_weno_int_nDof; i++)
+            for (int i = 0; i < s_wenoIntNDof; i++)
             {
                 amrex::Real w1 = whLoc(iVar, i);
-                for (int j = 0; j < s_weno_int_nDof; j++)
+                for (int j = 0; j < s_wenoIntNDof; j++)
                 {
                     amrex::Real factor = m_wenoOiMatrix2C(i, j) * whLoc(iVar, j);
                     wenoOi[s] += w1 * factor;
@@ -2217,11 +2211,11 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
         omegaSum += wenoOmega[s];
     }
 
-    for (int s = 0; s < s_weno_nStencil; s++)
+    for (int s = 0; s < s_wenoNStencil; s++)
     {
         wenoOmega[s] /= omegaSum;
         amrex::Real omegaLoc = wenoOmega[s];
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
             for (int iVar = 0; iVar < nVarFv; iVar++)
             {
@@ -2239,28 +2233,27 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
 {
     BL_PROFILE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
     amrex::Real omegaSum = 0.0;
-    amrex::Array2D<amrex::Real, 0, s_weno_nStencil - 1, 0, s_weno_int_nDof - 1, amrex::Order::C>
-        whRec;
+    amrex::Array2D<amrex::Real, 0, s_wenoNStencil - 1, 0, s_wenoIntNDof - 1, amrex::Order::C> whRec;
 
-    for (int i = 0; i < s_weno_int_nDof; i++)
+    for (int i = 0; i < s_wenoIntNDof; i++)
     {
         whWeno(i) = 0.0;
     }
 
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOi;
-    amrex::GpuArray<amrex::Real, s_weno_nStencil> wenoOmega;
-    for (int s = 0; s < s_weno_nStencil; s++)
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOi;
+    amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoOmega;
+    for (int s = 0; s < s_wenoNStencil; s++)
     {
         wenoOi[s] = 0.0;
-        amrex::Array1D<amrex::Real, 0, s_weno_int_nDof - 1> whLoc;
-        int jSL = s_weno_stencil_shift +
+        amrex::Array1D<amrex::Real, 0, s_wenoIntNDof - 1> whLoc;
+        int jSL = s_wenoStencilShift +
                   get_weno_left(s); // weno_left assumes the central index being the zeroth, which
                                     // is placed at the weno_stencil_shift2-th position;
 
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
             amrex::Real whSum = 0;
-            for (int j = 0; j < s_weno_int_nDof; j++)
+            for (int j = 0; j < s_wenoIntNDof; j++)
             {
                 int jloc = j + jSL;
                 whSum += m_wenOint2LocalGLint(s, i, j) * inputVector(jloc);
@@ -2268,10 +2261,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
             whRec(s, i) = whSum;
             whLoc(i) = whSum;
         }
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
             amrex::Real w1 = whLoc(i);
-            for (int j = 0; j < s_weno_int_nDof; j++)
+            for (int j = 0; j < s_wenoIntNDof; j++)
             {
                 amrex::Real factor = m_wenoOiMatrix2C(i, j) * whLoc(j);
                 wenoOi[s] += w1 * factor;
@@ -2281,11 +2274,11 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
         omegaSum += wenoOmega[s];
     }
 
-    for (int s = 0; s < s_weno_nStencil; s++)
+    for (int s = 0; s < s_wenoNStencil; s++)
     {
         wenoOmega[s] /= omegaSum;
         amrex::Real omegaLoc = wenoOmega[s];
-        for (int i = 0; i < s_weno_int_nDof; i++)
+        for (int i = 0; i < s_wenoIntNDof; i++)
         {
             whWeno(i) += omegaLoc * whRec(s, i);
         }
@@ -2302,20 +2295,20 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::polynomial_reconstruction_1d(
     BL_PROFILE("GEMPIC::FVreconstruction::polynomial_reconstruction_1d()");
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             whWeno(iVar, i) = 0.0;
         }
     }
     int s = 0;
-    int jSL = s_weno_stencil_shift +
+    int jSL = s_wenoStencilShift +
               get_weno_left(s); // weno_left assumes the central cell being the zeroth;
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
-        for (int i = 0; i < s_weno_hist_nDof; i++)
+        for (int i = 0; i < s_wenoHistNDof; i++)
         {
             amrex::Real whSum = 0;
-            for (int j = 0; j < s_weno_hist_nDof; j++)
+            for (int j = 0; j < s_wenoHistNDof; j++)
             {
                 int jloc = j + jSL;
                 whSum += m_wenOhist2LocalGLint(s, i, j) * inputVector(iVar, jloc);

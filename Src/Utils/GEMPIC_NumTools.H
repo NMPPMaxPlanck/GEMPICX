@@ -166,7 +166,7 @@ template <typename DataStruct>
 void soa2aos_fab (amrex::FabArray<amrex::BaseFab<DataStruct>>& aosMFA, amrex::MultiFab& soaMFA)
 {
     constexpr unsigned int size = get_array_size<DataStruct>::s_myValue;
-    BL_ASSERT(soaMFA.nComp() == aosMFA.nComp() * dataStruct.size());
+    BL_ASSERT(soaMFA.nComp() == aosMFA.nComp() * size);
     for (amrex::MFIter mfi(aosMFA); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx =
