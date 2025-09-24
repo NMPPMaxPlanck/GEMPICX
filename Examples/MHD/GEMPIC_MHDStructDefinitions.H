@@ -90,12 +90,12 @@ struct StructDefinitions
     static constexpr int s_degz{0};
     static constexpr int s_maxSplineDegree{std::max(std::max(s_degx, s_degy), s_degz)};
 
-    static constexpr int s_nDof_1D{polyrecDegreeMHD + 1};
-    static constexpr int s_hodgeDegree{s_nDof_1D};
-    static constexpr int s_hodgeOrder{s_nDof_1D};
+    static constexpr int s_nDof1D{polyrecDegreeMHD + 1};
+    static constexpr int s_hodgeDegree{s_nDof1D};
+    static constexpr int s_hodgeOrder{s_nDof1D};
     //static constexpr int s_nghost{s_hodgeDegree / 2 -
     //                              1}; //s_hodgeDegree / 2 }; //hodgeDegree / 2 - 1 + 1
-    static constexpr int s_nghost{s_nDof_1D}; //s_hodgeOrder / 2}; //hodgeDegree / 2 - 1 + 1
+    static constexpr int s_nghost{s_nDof1D}; //s_hodgeOrder / 2}; //hodgeDegree / 2 - 1 + 1
 
     Gempic::ComputationalDomain m_compDom;
 
@@ -189,7 +189,7 @@ public:
     /**
      * the get_nfields method
      */
-    int get_nfields () override { return s_n_fields; }
+    int get_nfields () override { return s_nFields; }
 
     /**
      * Explicitly define copy assignment operator to avoid default deletion (from DeRhamFields)
@@ -237,7 +237,7 @@ public:
 private:
     int m_nComp;
     amrex::IntVect m_nGhost;
-    static constexpr int s_n_fields{2};
+    static constexpr int s_nFields{2};
 };
 
 /**
@@ -264,9 +264,9 @@ public:
     std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTold;
 
     static constexpr int s_volumeDof{
-        AMREX_D_PICK(s_nDof_1D, s_nDof_1D* s_nDof_1D, s_nDof_1D* s_nDof_1D* s_nDof_1D)};
-    static constexpr int s_faceDof{AMREX_D_PICK(1, s_nDof_1D, s_nDof_1D* s_nDof_1D)};
-    static constexpr int s_edgeDof{AMREX_D_PICK(1, 1, s_nDof_1D)};
+        AMREX_D_PICK(s_nDof1D, s_nDof1D* s_nDof1D, s_nDof1D* s_nDof1D* s_nDof1D)};
+    static constexpr int s_faceDof{AMREX_D_PICK(1, s_nDof1D, s_nDof1D* s_nDof1D)};
+    static constexpr int s_edgeDof{AMREX_D_PICK(1, 1, s_nDof1D)};
 
     amrex::IndexType m_primalCellIndex{amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)})};
     amrex::GpuArray<amrex::IndexType, AMREX_SPACEDIM> m_primalFaceIndex{
