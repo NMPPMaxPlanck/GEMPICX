@@ -4,19 +4,22 @@
 
 #include <AMReX_Periodicity.H>
 
+#include "GEMPIC_CustomDiagnosticStrategies.H"
 #include "GEMPIC_MaxwellInit.H"
 #include "GEMPIC_MaxwellPDE.H"
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_RungeKutta.H"
 #include "GEMPIC_Solvers.H"
 
-static constexpr int timeDegree = 2;
-static constexpr int myRKstages = timeDegree + 1; // polynomial degree of the reconstruction.
-static constexpr int myTimeIntegration = 2;       // 0: explicit; 1: implicit, 2: imex ...
+static constexpr Gempic::TimeLoop::RungeKuttaTag rkTag = Gempic::TimeLoop::RungeKuttaTag::RK3;
+static constexpr Gempic::TimeLoop::RungeKuttaTag imExRkTag =
+    Gempic::TimeLoop::RungeKuttaTag::SASPImExRK3;
 
 int main (int argc, char* argv[])
 {
     amrex::Initialize(argc, argv);
+    Gempic::Io::Parameters parameters{};
+
 #ifdef MPIDEBUG
     int myrank, nMPIranks;
     nMPIranks = 1;
@@ -38,51 +41,49 @@ int main (int argc, char* argv[])
         // Add my new custom strategy
         Gempic::Io::add_output_processor<Gempic::Io::HighResSubcellOutputProcessor>(mIOcustomId);
         // Use TypeSelector to select the appropriate class
-        using myRKTBtype =
-            typename Gempic::TimeLoop::RKTypeSelector<myRKstages, 0>::selected_RK_ButcherTableau;
+        using RKTBtype =
+            typename Gempic::TimeLoop::RKTypeSelector<rkTag>::selected_RK_ButcherTableau;
         // Create an instance of the selected type
-        myRKTBtype rKreference;
+        RKTBtype rKreference;
         // Use TypeSelector to select the appropriate class
-        using myIMEXRKTBtype = typename Gempic::TimeLoop::RKTypeSelector<
-            myRKstages, myTimeIntegration>::selected_RK_ButcherTableau;
+        using IMEXRKTBtype =
+            typename Gempic::TimeLoop::RKTypeSelector<imExRkTag>::selected_RK_ButcherTableau;
         // Create an instance of the selected type
-        myIMEXRKTBtype imexrKreference;
+        IMEXRKTBtype imexrKreference;
 
         // labels for the output state in the diagnostics
         std::array<std::string, 2> outputFields = {"B", "E"};
 
         // the Maxwell numerical scheme class
-        MaxwellNumericalScheme myMaxwell(outputFields);
+        MaxwellNumericalScheme maxwell(outputFields);
 
         // the IMEX RK class
-        Gempic::TimeLoop::ImexRk<MaxwellFieldsHandlerStruct, myRKstages> myImplicitExplicitRK(
-            myMaxwell.m_disc.m_myfields, myMaxwell.m_disc.m_myfieldsTmpEx,
-            myMaxwell.m_disc.m_myfieldsTmpIm, myMaxwell.m_disc.m_myfieldsDtEx,
-            myMaxwell.m_disc.m_myfieldsDtIm, myMaxwell, myMaxwell.m_disc.m_drc, imexrKreference);
-
+        Gempic::TimeLoop::ImexRk<MaxwellFieldsHandlerStruct, imExRkTag> implicitExplicitRk(
+            maxwell.m_disc.m_myfields, maxwell, maxwell.m_disc.m_drc, imexrKreference);
         {
-            // set initial condition
-            myMaxwell.set_initial_condition();
+            maxwell.set_initial_condition();
             // print initial condition
-            myMaxwell.print_now();
-            int nmaxSteps{myMaxwell.m_nmaxSteps};
+            maxwell.print_now();
+            int nmaxSteps{maxwell.m_nmaxSteps};
             // time loop
             for (int tStep = 1; tStep < nmaxSteps; tStep++)
             {
-                // eventually recompute dt:
-                bool breakLoop = myMaxwell.is_finaltime_reached();
-                if (breakLoop) break;
+                // break if final time is reached
+                if (maxwell.is_finaltime_reached()) break;
 
-                myMaxwell.init_new_timestep();
+                // eventually recompute dt:
+                bool breakLoop = maxwell.is_finaltime_reached();
+                if (breakLoop) break;
+                maxwell.init_new_timestep();
 
                 // use IMEX RK to update one time-step
-                myImplicitExplicitRK.integrate_step(myMaxwell.m_disc.m_time, myMaxwell.m_disc.m_dt);
+                implicitExplicitRk.integrate_step(maxwell.m_disc.m_time, maxwell.m_disc.m_dt);
 
-                myMaxwell.finalize_new_timestep();
+                maxwell.finalize_new_timestep();
                 // print
-                myMaxwell.check_and_print(tStep);
+                maxwell.check_and_print(tStep);
                 amrex::Print() << "finished time-step: " << tStep
-                               << " at time: " << myMaxwell.m_disc.m_time << std::endl;
+                               << " at time: " << maxwell.m_disc.m_time << std::endl;
             }
         }
     }

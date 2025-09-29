@@ -14,15 +14,12 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_ComputationalDomain.H"
-#include "GEMPIC_CustomDiagnosticStrategies.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_ParticleGroups.H"
-
-using namespace Gempic;
-using namespace Forms;
+#include "GEMPIC_RungeKutta.H"
 
 /**
  * auxiliary parameter struct;
@@ -36,10 +33,10 @@ struct IOParameters
 
     IOParameters()
     {
-        Io::Parameters paramsTIME("TimeLoop");
+        Gempic::Io::Parameters paramsTIME("TimeLoop");
         paramsTIME.get("tend", m_tEnd);
         paramsTIME.get("nmaxSteps", m_nmaxSteps);
-        Io::Parameters paramsIO("FullDiagnostics");
+        Gempic::Io::Parameters paramsIO("FullDiagnostics");
         paramsIO.get("save", m_printOutNSteps);
         paramsIO.get("saveInterval", m_nStepsIo);
         paramsIO.get("saveTime", m_printOutTime);
@@ -66,48 +63,10 @@ struct StructDefinitions
     static constexpr int s_hodgeDegree{4};
     static constexpr int s_nghost{s_hodgeDegree / 2}; //hodgeDegree / 2 - 1 + 1
 
-    ComputationalDomain m_compDom;
+    Gempic::ComputationalDomain m_compDom;
 
     // still needed for diagnostic?
-    std::vector<std::shared_ptr<Particle::ParticleGroups<s_vdim>>> m_particles;
-};
-
-/**
- * Base Handler structure for the physical state
- *
- * @param Derived : using CRTP
- */
-template <typename Derived>
-struct BaseFieldsHandlerStruct
-{
-    virtual ~BaseFieldsHandlerStruct() = default; // Virtual destructor
-    // Assing function using CRTP
-    void operator=(BaseFieldsHandlerStruct const& other)
-    {
-        static_cast<Derived*>(this)->assign(static_cast<Derived const&>(
-            other)); // define template base class, defining the = operator, calling the assign
-                     // function to be implemented in the derived classes.
-    }
-
-    /**
-     * Addition and scaling function using CRTP
-     *
-     * @param Derived : using CRTP
-     */
-    void mult_and_add (amrex::Real alpha, std::shared_ptr<BaseFieldsHandlerStruct> const& other)
-    {
-        static_cast<Derived*>(this)->mult_and_add(alpha, static_cast<Derived const&>(other));
-    }
-
-    /**
-     * fill_boundary
-     */
-    virtual void fill_boundary() = 0;
-
-    /**
-     * get_nfields
-     */
-    virtual int get_nfields() = 0;
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<s_vdim>>> m_particles;
 };
 
 /**
@@ -115,11 +74,12 @@ struct BaseFieldsHandlerStruct
  *
  * @param Derived
  */
-struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandlerStruct>
+struct MaxwellFieldsHandlerStruct
+    : Gempic::TimeLoop::BaseFieldsHandlerStruct<MaxwellFieldsHandlerStruct>
 {
     // and the variables
-    DeRhamField<Grid::primal, Space::face> m_b;
-    DeRhamField<Grid::primal, Space::edge> m_e;
+    Gempic::Forms::DeRhamField<Grid::primal, Space::face> m_b;
+    Gempic::Forms::DeRhamField<Grid::primal, Space::edge> m_e;
 
     /**
      * the assign method
@@ -150,18 +110,13 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
     /**
      * the fill_boundary method
      */
-    void fill_boundary () override
+    void fill_boundary ()
     {
         m_b.fill_boundary_nowait();
         m_e.fill_boundary_nowait();
         m_b.fill_boundary_finish();
         m_e.fill_boundary_finish();
     }
-
-    /**
-     * the get_nfields method
-     */
-    int get_nfields () override { return s_nFields; }
 
     /**
      * Explicitly define copy assignment operator to avoid default deletion (from DeRhamFields)
@@ -180,7 +135,7 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
     /**
      * Constructor, overloaded for variables initialized with the GEMPIC diagnostic
      */
-    MaxwellFieldsHandlerStruct(std::shared_ptr<FDDeRhamComplex>& drc,
+    MaxwellFieldsHandlerStruct(std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
                                int nVar,
                                std::array<std::string, 2> strings) :
         m_b(drc, strings[0]), m_e(drc, strings[1]), m_nComp{nVar}, m_nGhost{drc->get_n_ghost()}
@@ -190,7 +145,7 @@ struct MaxwellFieldsHandlerStruct : BaseFieldsHandlerStruct<MaxwellFieldsHandler
     /**
      * Constructor
      */
-    MaxwellFieldsHandlerStruct(std::shared_ptr<FDDeRhamComplex>& drc, int nVar) :
+    MaxwellFieldsHandlerStruct(std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc, int nVar) :
         m_b(drc), m_e(drc), m_nComp{nVar}, m_nGhost{AMREX_D_DECL(0, 0, 0)} //{drc->get_n_ghost()}
     {
     }
@@ -211,13 +166,13 @@ private:
  */
 struct MaxwellDiscretization : public StructDefinitions
 {
-    typedef DeRhamField<Grid::primal, Space::edge> V1field;
-    typedef DeRhamField<Grid::primal, Space::face> V2field;
-    typedef DeRhamField<Grid::dual, Space::face> V1field_dual;
-    typedef DeRhamField<Grid::dual, Space::edge> V2field_dual;
+    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::edge> V1field;
+    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::face> V2field;
+    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::face> V1field_dual;
+    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::edge> V2field_dual;
 
     // Initialize the De Rham Complex
-    std::shared_ptr<FDDeRhamComplex> m_drc; //  HodgeScheme::GDECHodge); //
+    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> m_drc; //  HodgeScheme::GDECHodge); //
 
     // auxiliary state variables for the time integrators
     std::shared_ptr<MaxwellFieldsHandlerStruct> m_myfields;
@@ -237,11 +192,8 @@ struct MaxwellDiscretization : public StructDefinitions
     IOParameters m_iopar;
 
     MaxwellDiscretization(std::array<std::string, 2> const& outputFields) :
-        m_drc{std::make_shared<FDDeRhamComplex>(m_compDom,
-                                                s_hodgeDegree,
-                                                s_maxSplineDegree,
-                                                //HodgeScheme::GDECLumpHodge);  //
-                                                HodgeScheme::FDHodge)}, // HodgeScheme::GDECHodge),
+        m_drc{std::make_shared<Gempic::Forms::FDDeRhamComplex>(
+            m_compDom, s_hodgeDegree, s_maxSplineDegree, Gempic::Forms::HodgeScheme::GDECHodge)},
         m_myfields(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1, outputFields)),
         m_myfieldsDtEx(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1)),
         m_myfieldsDtIm(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1)),

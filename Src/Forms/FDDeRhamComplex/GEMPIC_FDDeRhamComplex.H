@@ -6,6 +6,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
+#include "GEMPIC_NumericalIntegrationDifferentiation.H"
 
 namespace Gempic::Forms
 {
@@ -16,6 +17,279 @@ enum class HodgeScheme
     GDECHodge,     // Galerkin Differences. No dual grid is used.
     GDECLumpHodge, // with Mass lumping
 };
+
+/**
+ * @brief compute stencil coefficients for the V0 1d mass matrix for GDEC finite elements
+ * @tparam intDegree interpolating polynomial degree
+ * @return array of stencil coefficients
+ */
+template <int intDegree> //, typename weightOperator, typename fieldsHandler>
+auto inline compute_v0_mass_matrix_1d_stencil_gdec()
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_V0_mass_matrix_1d_stencil()");
+    // Select stencil according to degree
+
+    static constexpr int massStencilLength{2 * intDegree + 1};
+    static constexpr int nDofs{intDegree + 1};
+    static constexpr int nQuadraturePoints{nDofs};
+    static constexpr int leftStencilIdx{-intDegree};
+    // polynomial indexes goes from {-n,...,0,...,n+1}, in total 2n+2 values.  n = (intDegree - 1) /
+    // 2. cell indexes goes from {-n - 1,...,0,...,n}, in total 2n+2 values.
+    static constexpr int nShift{(intDegree - 1) / 2};
+
+    // loop along the stencil of the Mass matrix
+    // this corresponds to the loop along the neighbor geometric dofs.
+    //
+    // for the nodal basis function, if we assume ell=0 is the index of the geometric dof; ell=0
+    // will be also the adjacent cell at the right of the ell-th node. ell+sigma is the index of the
+    // neighbor dof on the stencil. then we must compute the integral  int (  Lambda_{ell}
+    // Lambda_{ell+sigma}  ) using quadrature rule. Lambda_i are pw polynomials with compact support
+    // over an even number of cells (intDegree+1 ==hodgeDegree) centered at the i-th node. On every
+    // cell, Lambda_i is defined by the Lagrange interpolating polynomial built with reference to a
+    // central stencil of intDegree+1 nodes, centered at the local cell. which one? The one
+    // interpolating 1 at the i-th node, and zero otherwise.
+
+    std::array<amrex::Real, massStencilLength> stencil1d;
+    // quadrature on unit domain [0,1]
+    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
+
+    // a: stencil index
+    for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
+    {
+        stencil1d[a] = 0.0;
+        for (int iCell = -nShift - 1; iCell <= nShift; ++iCell)
+        {
+            int rightCellJ{sigma + nShift};
+            int leftCellJ{sigma - nShift - 1};
+            // if the iCell-th cell is not in the support of LambdaJ, then, continue.
+            if (iCell > rightCellJ || iCell < leftCellJ)
+            {
+                continue;
+            }
+            int iCellJ = iCell - sigma;
+            int polyIndex0 = -iCell;  // iCell is exactly the distance to the ell-th node ==
+                                      // polyIndex for eval_form
+            int polyIndexJ = -iCellJ; // iCellJ is exactly the distance to the j-th node ==
+                                      // polyIndex for eval_form
+            amrex::Real val{0.0};
+            for (int g = 0; g < nQuadraturePoints; ++g)
+            {
+                amrex::Real lambda0 = eval_lagrange<intDegree + 1>(polyIndex0, gl.m_nodes[g]);
+                amrex::Real lambdaJ = eval_lagrange<intDegree + 1>(polyIndexJ, gl.m_nodes[g]);
+                val += gl.m_weights[g] * lambda0 * lambdaJ;
+            }
+            stencil1d[a] += val;
+        }
+    }
+    return stencil1d;
+}
+
+/**
+ * @brief pre-compute matrix of coefficients necessary to evaluate V0 1d weighted mass matrix for
+ * GDEC finite elements. evaluating the basis elements at quadrature points in every cell in the
+ * support of a basis element.
+ * @tparam intDegree intepolating polynomial degree
+ * @return matrix of coefficients
+ */
+template <int intDegree> //, typename weightOperator, typename fieldsHandler>
+std::array<std::array<std::array<amrex::Real, intDegree + 1>, intDegree + 1>, 2 * intDegree + 1>
+compute_v0_weighted_mass_matrix_1d_stencil_gdec ()
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_v0_weighted_mass_matrix_1d_stencil_gdec()");
+    // Select stencil according to degree
+    static constexpr int massStencilLength{2 * intDegree + 1};
+    static constexpr int nQuadraturePoints{intDegree + 1};
+    static constexpr int leftStencilIdx{-intDegree};
+    static constexpr int rightStencilIdx{intDegree};
+    static constexpr int nShift{
+        (intDegree - 1) /
+        2}; // polyIndexes goes from {-n,...,0,...,n+1}, in total 2n+2 values.  intDegree +1
+
+    // for the nodal basis function, we assume ell=0 is the index of the geometric dof; ell=0 will
+    // be also the adjacent cell at the right of the ell-th node.
+
+    // loop along the stencil of the Mass matrix
+    // this corresponds to the loop along the adjacent geometric dofs, ell+sigma is the index of the
+    // adjacent dof we must compute the integral  int (  Lambda_{ell} Lambda_{ell+sigma}  ) using
+    // quadrature rule. Lambda_i are pw polynomials with compact support over an even number of
+    // cells (intDegree+1 ==hodgeDegree) centered at the i-th node. On every cell, Lambda_i is
+    // defined by the Lagrange interpolating polynomial built with reference to a central stencil of
+    // intDegree+1 nodes, centered at the local cell. which one? The one interpolating 1 at the
+    // i-th node, and zero otherwise.
+
+    std::array<std::array<std::array<amrex::Real, nQuadraturePoints>, intDegree + 1>,
+               massStencilLength>
+        stencil1d;
+    // reference unit domain [0,1]
+    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
+    // a: stencil index
+    for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
+    {
+        for (int iCell = -nShift - 1, cellIdx = 0; iCell <= nShift; ++iCell, ++cellIdx)
+        {
+            int rightCellJ{sigma + nShift};
+            int leftCellJ{sigma - nShift - 1};
+            // if the iCell-th cell is not in the support of LambdaJ, then, continue.
+            if (iCell > rightCellJ || iCell < leftCellJ)
+            {
+                for (int g = 0; g < nQuadraturePoints; ++g)
+                {
+                    stencil1d[a][cellIdx][g] = 0.;
+                }
+                continue;
+            }
+            int iCellJ = iCell - sigma;
+            int polyIndex0 = -iCell;  // iCell is exactly the distance to the ell-th node ==
+                                      // polyIndex for eval_form
+            int polyIndexJ = -iCellJ; // iCellJ is exactly the distance to the j-th node ==
+                                      // polyIndex for eval_form
+            for (int g = 0; g < nQuadraturePoints; ++g)
+            {
+                amrex::Real lambda0 = eval_lagrange<intDegree + 1>(polyIndex0, gl.m_nodes[g]);
+                amrex::Real lambdaJ = eval_lagrange<intDegree + 1>(polyIndexJ, gl.m_nodes[g]);
+                stencil1d[a][cellIdx][g] = gl.m_weights[g] * lambda0 * lambdaJ;
+            }
+        }
+    }
+    return stencil1d;
+}
+
+/**
+ * @brief compute stencil coefficients for the V1 1d mass matrix for GDEC finite elements
+ * @tparam intDegree intepolating polynomial degree
+ * @return array of stencil coefficients
+ */
+template <int intDegree> //, typename weightOperator, typename fieldsHandler>
+auto inline compute_v1_mass_matrix_1d_stencil_gdec()
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_v1_mass_matrix_1d_stencil_gdec()");
+    // Select stencil according to degree
+
+    constexpr int degree{intDegree - 1};
+    constexpr int massStencilLength{2 * intDegree - 1};
+    constexpr int nDofs{intDegree};
+    constexpr int nQuadraturePoints{nDofs};
+    constexpr int leftStencilIdx{-degree};
+    // polynomial indexes goes from {-n,...,0,...,n}, in total 2n+1 values.  n = (intDegree - 1) / 2
+    // = degree / 2. cell indexes goes from {-n,...,0,...,n}, in total 2n+2 values.
+    constexpr int nShift{degree / 2};
+
+    // loop along the stencil of the Mass matrix
+    // this corresponds to the loop along the neighbor geometric dofs
+    //
+    // for the baricentric basis function, we assume ell=0 is the index of the geometric dof, and
+    // polynomial indexes match cell indexes.
+    // ell+sigma is the index of the neighbor dof
+    // then we must compute the integral  int (  Lambda_{ell} Lambda_{ell+sigma}  ) using
+    // quadrature rule. Lambda_i are pw polynomials with compact support over an odd number of
+    // cells (degree+1 ==hodgeDegree-1) centered at the i-th cell. On every cell, Lambda_i is
+    // defined by the histopolating polynomial built with reference to a central stencil of
+    // degree+1 nodes, centered at the local cell. which one? The one integrating to 1 at the
+    // i-th cell, and zero otherwise.
+
+    std::array<amrex::Real, massStencilLength> stencil1d;
+    // shift and rescale to reference unit domain [0,1]
+    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
+    // a: stencil index
+    for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
+    {
+        stencil1d[a] = 0.0;
+        for (int iCell = -nShift; iCell <= nShift; ++iCell)
+        {
+            int rightCellJ{sigma + nShift};
+            int leftCellJ{sigma - nShift};
+            // if the iCell-th cell is not in the support of LambdaJ, then, continue.
+            if (iCell > rightCellJ || iCell < leftCellJ)
+            {
+                continue;
+            }
+            int iCellJ = iCell - sigma;
+            int polyIndex0 = -iCell;  // iCell is exactly the distance to the ell-th node ==
+                                      // polyIndex for eval_form
+            int polyIndexJ = -iCellJ; // iCellJ is exactly the distance to the j-th node ==
+                                      // polyIndex for eval_form
+            amrex::Real val{0.0};
+            for (int g = 0; g < nQuadraturePoints; ++g)
+            {
+                amrex::Real lambda0 = eval_edge<degree + 2>(polyIndex0, gl.m_nodes[g]);
+                amrex::Real lambdaJ = eval_edge<degree + 2>(polyIndexJ, gl.m_nodes[g]);
+                val += gl.m_weights[g] * lambda0 * lambdaJ;
+            }
+            stencil1d[a] += val;
+        }
+    }
+    return stencil1d;
+}
+
+/**
+ * @brief pre-compute matrix of coefficients necessary to evaluate V1 1d weighted mass matrix for
+ * GDEC finite elements. evaluating the basis elements at quadrature points in every cell in the
+ * support of a basis element.
+ * @tparam intDegree intepolating polynomial degree
+ * @return matrix of coefficients
+ */
+template <int intDegree> //, typename weightOperator, typename fieldsHandler>
+std::array<std::array<std::array<amrex::Real, intDegree + 1>, intDegree>, 2 * intDegree - 1>
+compute_v1_weighted_mass_matrix_1d_stencil_gdec ()
+{
+    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_v1_weighted_mass_matrix_1d_stencil_gdec()");
+    // Select stencil according to degree
+    constexpr int degree{intDegree - 1};
+    constexpr int massStencilLength{2 * intDegree - 1};
+    constexpr int nQuadraturePoints{intDegree + 1};
+    constexpr int leftStencilIdx{-degree};
+    constexpr int rightStencilIdx{degree};
+    constexpr int nShift{degree /
+                         2}; // polyIndexes goes from {-n,...,0,...,n}, in total 2n+1 values.
+
+    // for the nodal basis function, we assume ell=0 is the index of the geometric dof; ell=0 will
+    // be also the adjacent cell at the right of the ell-th node.
+
+    // loop along the stencil of the Mass matrix
+    // this corresponds to the loop along the adjacent geometric dofs, ell+sigma is the index of the
+    // adjacent dof we must compute the integral  int (  Lambda_{ell} Lambda_{ell+sigma}  ) using
+    // quadrature rule. Lambda_i are pw polynomials with compact support over an odd number of
+    // cells (degree+1 ==hodgeDegree-1) centered at the i-th cell. On every cell, Lambda_i is
+    // defined by the histopolating polynomial built with reference to a central stencil of
+    // degree+1 nodes, centered at the local cell. which one? The one integrating to 1 at the
+    // i-th cell, and zero otherwise.
+
+    std::array<std::array<std::array<amrex::Real, nQuadraturePoints>, degree + 1>,
+               massStencilLength>
+        stencil1d;
+    // reference unit domain [0,1]
+    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
+    // a: stencil index
+    for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
+    {
+        for (int iCell = -nShift, cellIdx = 0; iCell <= nShift; ++iCell, ++cellIdx)
+        {
+            int rightCellJ{sigma + nShift};
+            int leftCellJ{sigma - nShift};
+            // if the iCell-th cell is not in the support of LambdaJ, then, continue.
+            if (iCell > rightCellJ || iCell < leftCellJ)
+            {
+                for (int g = 0; g < nQuadraturePoints; ++g)
+                {
+                    stencil1d[a][cellIdx][g] = 0.0;
+                }
+                continue;
+            }
+            int iCellJ = iCell - sigma;
+            int polyIndex0 = -iCell;  // iCell is exactly the distance to the ell-th node ==
+                                      // polyIndex for eval_form
+            int polyIndexJ = -iCellJ; // iCellJ is exactly the distance to the j-th node ==
+                                      // polyIndex for eval_form
+            for (int g = 0; g < nQuadraturePoints; ++g)
+            {
+                amrex::Real lambda0 = eval_edge<degree + 2>(polyIndex0, gl.m_nodes[g]);
+                amrex::Real lambdaJ = eval_edge<degree + 2>(polyIndexJ, gl.m_nodes[g]);
+                stencil1d[a][cellIdx][g] = gl.m_weights[g] * lambda0 * lambdaJ;
+            }
+        }
+    }
+    return stencil1d;
+}
 
 /**
  * @brief Fills the arrays of Hodge stencils.
@@ -119,9 +393,11 @@ inline auto get_hodge_stencils ()
     }
     if constexpr (scheme == HodgeScheme::GDECHodge)
     {
+        constexpr unsigned int intDegree{
+            degree - 1}; // the so called degree is actually the order of accuracy (="degree"+1)
         constexpr unsigned int order{
-            degree}; // the so called degree is actually the order of accuracy (=degree+1) =>
-        constexpr unsigned int stencilLength{2 * order - 1};
+            intDegree + 1}; // the so called degree is actually the order of accuracy (="degree"+1)
+        constexpr unsigned int stencilLength{2 * intDegree + 1};
         amrex::GpuArray<amrex::Real, stencilLength>
             stencilHodgeV0; // V0 or V1 refer to the 1D complex V0 --dx--> V1
         amrex::GpuArray<amrex::Real, stencilLength>
@@ -180,17 +456,38 @@ inline auto get_hodge_stencils ()
                 stencilHodgeV1[10] = 0.;
                 break;
             default:
-                AMREX_ASSERT("order not implemented");
-                break;
+                if (order % 2 != 0)
+                {
+                    AMREX_ASSERT("Impossible error! ODD orders not implemented");
+                    amrex::Abort("Impossible error! ODD orders not implemented");
+                    //break;
+                }
+                else // even number
+                {
+                    auto stencil0tmp = compute_v0_mass_matrix_1d_stencil_gdec<intDegree>();
+                    auto stencil1tmp = compute_v1_mass_matrix_1d_stencil_gdec<intDegree>();
+                    for (int i = 0; i < stencilLength; ++i)
+                    {
+                        stencilHodgeV0[i] = stencil0tmp[i];
+                    }
+                    stencilHodgeV1[0] = 0.;
+                    stencilHodgeV1[stencilLength - 1] = 0.;
+                    for (int i = 1; i < stencilLength - 1; ++i)
+                    {
+                        stencilHodgeV1[i] = stencil1tmp[i - 1];
+                    }
+                }
         }
 
         return std::make_tuple(stencilHodgeV0, stencilHodgeV1);
     }
     if constexpr (scheme == HodgeScheme::GDECLumpHodge)
     {
+        constexpr unsigned int intDegree{
+            degree - 1}; // the so called degree is actually the order of accuracy (="degree"+1)
         constexpr unsigned int order{
-            degree}; // the so called degree is actually the order of accuracy (=degree+1) =>
-        constexpr unsigned int stencilLength{2 * order - 1};
+            intDegree + 1}; // the so called degree is actually the order of accuracy (="degree"+1)
+        constexpr unsigned int stencilLength{2 * intDegree + 1};
         amrex::GpuArray<amrex::Real, stencilLength>
             stencilHodgeV0; // V0 or V1 refer to the 1D complex V0 --dx--> V1
         amrex::GpuArray<amrex::Real, stencilLength>
@@ -1203,6 +1500,7 @@ void FDDeRhamComplex::eval_form_degree_selector (
                      std::to_string(m_hodgeDegree) + " for eval_form");
     }
 }
+
 } // namespace Gempic::Forms
 
 #endif

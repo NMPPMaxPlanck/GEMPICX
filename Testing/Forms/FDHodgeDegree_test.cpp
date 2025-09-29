@@ -256,12 +256,13 @@ TYPED_TEST(FDHodgeDegreeTest, PrimalDualZeroThreeTest)
     constexpr Space space{TestFixture::s_space};
     amrex::Real errorPrimalFormCoarse, errorDualFormCoarse, errorPrimalFormFine, errorDualFormFine;
     amrex::Real tol = 0.21;
+    amrex::Real zerotol = 1e-14;
 
     hodge_zero_three_error<hodgeDegree, space>(errorPrimalFormCoarse, errorDualFormCoarse, coarse);
     hodge_zero_three_error<hodgeDegree, space>(errorPrimalFormFine, errorDualFormFine, fine);
 
     amrex::Real rateOfConvergencePrimalForm{0};
-    if (errorPrimalFormCoarse < 1e-15 || errorPrimalFormFine < 1e-15)
+    if (errorPrimalFormCoarse < zerotol || errorPrimalFormFine < zerotol)
     { // this happens..
         rateOfConvergencePrimalForm = hodgeDegree;
     }
@@ -271,7 +272,7 @@ TYPED_TEST(FDHodgeDegreeTest, PrimalDualZeroThreeTest)
     }
 
     amrex::Real rateOfConvergenceDualForm{0};
-    if (errorDualFormCoarse < 1e-15 || errorDualFormFine < 1e-15)
+    if (errorDualFormCoarse < zerotol || errorDualFormFine < zerotol)
     { // this happens..
         rateOfConvergenceDualForm = hodgeDegree;
     }

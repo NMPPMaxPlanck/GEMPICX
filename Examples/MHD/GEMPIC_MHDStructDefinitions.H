@@ -20,12 +20,15 @@
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_RungeKutta.H"
 
 constexpr int nVarMHD = 8;          // compile time constant
-constexpr int polyrecDegreeMHD = 2; // polynomial degree of the reconstruction. // even: we only
-                                    // have 3 stencils: Left-Central-Right.
-constexpr int timeDegree =
-    2; // polynomial degree of the time discretization. // check availability in GEMPIC_NumTools.H
+constexpr int polyrecDegreeMHD = 2; // polynomial degree of the WENO-FV (V3) reconstruction. //
+                                    // even: we only have 3 stencils: Left-Central-Right.
+
+static constexpr Gempic::TimeLoop::RungeKuttaTag myRKTag = Gempic::TimeLoop::RungeKuttaTag::RK3;
+//constexpr int timeDegree =
+//    2; // polynomial degree of the time discretization. // check availability in GEMPIC_NumTools.H
 
 static constexpr int rhoIdx{0};
 static constexpr int vxIdx{1};
@@ -40,7 +43,7 @@ static constexpr int bxIdx{5};
 static constexpr int byIdx{6};
 static constexpr int bzIdx{7};
 
-constexpr int myRKstages = timeDegree + 1; // polynomial degree of the reconstruction.
+//constexpr int myRKstages = timeDegree + 1; // polynomial degree of the reconstruction.
 
 constexpr int nDof1D{polyrecDegreeMHD + 1};
 //constexpr int volumeDof{AMREX_D_PICK(nDof_1D, nDof_1D* nDof_1D, nDof1D* nDof1D* nDof1D)};
@@ -104,49 +107,11 @@ struct StructDefinitions
 };
 
 /**
- * Base Handler structure for the physical state
- *
- * @param Derived : using CRTP
- */
-template <typename Derived>
-struct BaseFieldsHandlerStruct
-{
-    virtual ~BaseFieldsHandlerStruct() = default; // Virtual destructor
-    // Assing function using CRTP
-    void operator=(BaseFieldsHandlerStruct const& other)
-    {
-        static_cast<Derived*>(this)->assign(static_cast<Derived const&>(
-            other)); // define template base class, defining the = operator, calling the assign
-                     // function to be implemented in the derived classes.
-    }
-
-    /**
-     * Addition and scaling function using CRTP
-     *
-     * @param Derived : using CRTP
-     */
-    void mult_and_add (amrex::Real alpha, std::shared_ptr<BaseFieldsHandlerStruct> const& other)
-    {
-        static_cast<Derived*>(this)->mult_and_add(alpha, static_cast<Derived const&>(other));
-    }
-
-    /**
-     * fill_boundary
-     */
-    virtual void fill_boundary() = 0;
-
-    /**
-     * get_nfields
-     */
-    virtual int get_nfields() = 0;
-};
-
-/**
  * Handler structure for the MHD physical state
  *
  * @param Derived
  */
-struct MHDFieldsHandlerStruct : BaseFieldsHandlerStruct<MHDFieldsHandlerStruct>
+struct MHDFieldsHandlerStruct : Gempic::TimeLoop::BaseFieldsHandlerStruct<MHDFieldsHandlerStruct>
 {
 public:
     // Member variables
@@ -178,7 +143,7 @@ public:
     /**
      * the fill_boundary method
      */
-    void fill_boundary () override
+    void fill_boundary ()
     {
         m_q.fill_boundary_nowait();
         //B.fill_boundary_nowait();
@@ -189,7 +154,7 @@ public:
     /**
      * the get_nfields method
      */
-    int get_nfields () override { return s_nFields; }
+    int get_nfields () { return s_nFields; }
 
     /**
      * Explicitly define copy assignment operator to avoid default deletion (from DeRhamFields)
@@ -258,10 +223,17 @@ public:
     // Initialize the input parameters
     IOParameters m_iopar;
 
-    // auxiliary state variables for the time integrators
+    // auxiliary state variables for the EXPLICIT time integrators
     std::shared_ptr<MHDFieldsHandlerStruct> m_myfields;
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsDt;
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTold;
+    //std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsDtEx;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTmpEx;
+    // auxiliary state variables for the IMPLICIT time integrators
+    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsDtEx;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsDtIm;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTmpIm;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsNew;
+
+    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTilde;
 
     static constexpr int s_volumeDof{
         AMREX_D_PICK(s_nDof1D, s_nDof1D* s_nDof1D, s_nDof1D* s_nDof1D* s_nDof1D)};
@@ -307,10 +279,7 @@ public:
     // FV explicit
     //V3field Q;
     //V3field dQdt;
-    V3field m_qtmp;
-    V3field m_qrk;
     V3field m_v;
-    V3field m_qold;
     V2field m_fluxes;
     V2field m_qlRec;
     V2field m_qrRec;
@@ -343,14 +312,15 @@ public:
                                                              Gempic::Forms::HodgeScheme::FDHodge)},
         m_iopar(),
         m_myfields(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD, outputFields)),
-        m_myfieldsDt(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
-        m_myfieldsTold(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
+        m_myfieldsTmpEx(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
+        m_myfieldsDtEx(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
+        m_myfieldsDtIm(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
+        m_myfieldsTmpIm(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
+        m_myfieldsNew(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
+        m_myfieldsTilde(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
         m_diagn(m_compDom, m_drc, m_particles),
         m_nGhosts{m_drc->get_n_ghost()},
-        m_qtmp(m_drc, nVarMHD),
-        m_qrk(m_drc, nVarMHD * myRKstages),
         m_v(m_drc, nVarMHD),
-        m_qold(m_drc, nVarMHD),
         m_fluxes(m_drc, nVarMHD),
         m_qlRec(m_drc, nVarMHD),
         m_qrRec(m_drc, nVarMHD),
@@ -363,7 +333,7 @@ public:
         m_dtLocal = m_dt;
         m_dtOld = m_dt;
         m_dtNew = m_dt;
-        for (int idim = 0; idim < AMREX_SPACEDIM; idim++)
+        for (int idim = 0; idim < 3; idim++)
         {
             m_dr[idim] = 1.0;
             m_idr[idim] = 1.0;

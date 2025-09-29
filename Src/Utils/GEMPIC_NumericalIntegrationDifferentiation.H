@@ -5,6 +5,7 @@
 #include <AMReX_REAL.H>
 
 #include "GEMPIC_Config.H"
+#include "GEMPIC_NumTools.H"
 
 namespace Gempic
 {
@@ -125,6 +126,9 @@ public:
     //! Largest Gauss-Legendre integration stencil
     static constexpr int s_maxPoints{10};
     // NOLINTEND(readability-magic-numbers)
+    std::array<amrex::Real, s_maxPoints> get_quadrature_nodes () { return m_location; };
+    std::array<amrex::Real, s_maxPoints> get_quadrature_weights () { return m_weights; };
+
 private:
     int m_points{};
     static constexpr int s_nGaussFormulas{s_maxPoints - s_minPoints + 1};
@@ -133,4 +137,27 @@ private:
     static std::array<amrex::Real, s_maxPoints> location(int points);
     static std::array<amrex::Real, s_maxPoints> weights(int points);
 };
+
+// clang-format off
+/**
+ * @brief Gauss-Legendre quadrature weights and nodes on the unit interval [0,1]
+ *
+ */
+// clang-format on
+template <int points>
+class GaussQuadratureUnit
+{
+public:
+    std::array<amrex::Real, points> m_nodes;
+    std::array<amrex::Real, points> m_weights;
+    int get_n_nodes () { return m_points; };
+    std::array<amrex::Real, points> get_quadrature_nodes () { return m_nodes; };
+    std::array<amrex::Real, points> get_quadrature_weights () { return m_weights; };
+
+    GaussQuadratureUnit() { gauleg<points>(m_nodes, m_weights, 0.0, 1.0); };
+
+private:
+    int m_points{points};
+};
+
 } // namespace Gempic

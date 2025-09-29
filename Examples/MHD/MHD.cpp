@@ -40,7 +40,7 @@ int main_new_mhdpde ()
 
     // Use TypeSelector to select the appropriate class
     using myRKTBtype =
-        typename Gempic::TimeLoop::RKTypeSelector<myRKstages, 0>::selected_RK_ButcherTableau;
+        typename Gempic::TimeLoop::RKTypeSelector<myRKTag>::selected_RK_ButcherTableau;
     // Create an instance of the selected type
     myRKTBtype rKreference;
 
@@ -49,9 +49,8 @@ int main_new_mhdpde ()
 
     amrex::Print() << "Initialization step 00" << std::endl;
 
-    Gempic::TimeLoop::ExplicitRK<MHDFieldsHandlerStruct, myRKstages> rKintegrator(
-        myMHDscheme.m_mhd.m_disc.m_myfields, myMHDscheme.m_mhd.m_disc.m_myfieldsTold,
-        myMHDscheme.m_mhd.m_disc.m_myfieldsDt, myMHDscheme, myMHDscheme.m_mhd.m_disc.m_drc,
+    Gempic::TimeLoop::ExplicitRK<MHDFieldsHandlerStruct, myRKTag> rKintegrator(
+        myMHDscheme.m_mhd.m_disc.m_myfields, myMHDscheme, myMHDscheme.m_mhd.m_disc.m_drc,
         rKreference);
 
     amrex::Print() << "Initialization step 01" << std::endl;

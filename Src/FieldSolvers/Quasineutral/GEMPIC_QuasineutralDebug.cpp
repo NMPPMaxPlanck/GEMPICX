@@ -22,8 +22,7 @@ void check_b_calculation (DeRhamField<Grid::primal, Space::edge>& E,
 
     DeRhamField<Grid::primal, Space::face> dB(drc);
     linear_combination(dB, 1.0, bOld, -1.0, B);
-    amrex::Print() << "\nB difference %:"
-                   << " "
+    amrex::Print() << "\nB difference %:" << " "
                    << (Utils::gempic_norm(dB.m_data[xDir], mInfra, 1) /
                        Utils::gempic_norm(bOld.m_data[xDir], mInfra, 1)) *
                           100.0
@@ -76,8 +75,7 @@ void check_j_change_norms (DeRhamField<Grid::dual, Space::face>& jOld,
 {
     DeRhamField<Grid::dual, Space::face> dJ(drc);
     linear_combination(dJ, 1.0, jOld, -1.0, jNew);
-    amrex::Print() << "\nJ change %:"
-                   << " "
+    amrex::Print() << "\nJ change %:" << " "
                    << (Utils::gempic_norm(dJ.m_data[xDir], mInfra, 1) /
                        Utils::gempic_norm(jOld.m_data[xDir], mInfra, 1)) *
                           100.0

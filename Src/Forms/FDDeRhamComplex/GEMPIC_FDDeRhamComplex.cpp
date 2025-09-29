@@ -3,7 +3,6 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
-#include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
 
 using namespace Gempic::Forms;

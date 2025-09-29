@@ -221,9 +221,9 @@ typename FAB::value_type wgt_dot (amrex::FabArray<FAB> const& wgt,
                                   amrex::IntVect const& nghost,
                                   bool local)
 {
-    BL_ASSERT(x.boxArray() == y.boxArray());
-    BL_ASSERT(x.DistributionMap() == y.DistributionMap());
-    BL_ASSERT(x.nGrowVect().allGE(nghost) && y.nGrowVect().allGE(nghost));
+    AMREX_ASSERT(x.boxArray() == y.boxArray());
+    AMREX_ASSERT(x.DistributionMap() == y.DistributionMap());
+    AMREX_ASSERT(x.nGrowVect().allGE(nghost) && y.nGrowVect().allGE(nghost));
 
     BL_PROFILE("wgt_dot()");
 
@@ -302,7 +302,7 @@ amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
                                int nghost,
                                bool local)
 {
-    BL_ASSERT(x.nGrowVect().allGE(nghost));
+    AMREX_ASSERT(x.nGrowVect().allGE(nghost));
 
     BL_PROFILE("multi_fab_wgt_dot()");
 
