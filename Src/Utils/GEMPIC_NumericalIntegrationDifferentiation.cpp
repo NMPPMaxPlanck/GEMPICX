@@ -5,13 +5,14 @@
 
 namespace Gempic
 {
-GaussQuadrature::GaussQuadrature(int points) :
+GaussLegendreQuadrature::GaussLegendreQuadrature(int points) :
     m_points{points},
-    m_location{GaussQuadrature::location(points)},
-    m_weights{GaussQuadrature::weights(points)}
+    m_location{GaussLegendreQuadrature::location(points)},
+    m_weights{GaussLegendreQuadrature::weights(points)}
 {
 }
-std::array<amrex::Real, GaussQuadrature::s_maxPoints> GaussQuadrature::location(int points)
+std::array<amrex::Real, GaussLegendreQuadrature::s_maxPoints> GaussLegendreQuadrature::location(
+    int points)
 {
     switch (points)
     {
@@ -55,11 +56,12 @@ std::array<amrex::Real, GaussQuadrature::s_maxPoints> GaussQuadrature::location(
             // NOLINTEND(readability-magic-numbers)
         default:
             throw std::invalid_argument (
-                "ERROR: Tried to initialize GaussQuadrature with an invalid stencil " +
+                "ERROR: Tried to initialize GaussLegendreQuadrature with an invalid stencil " +
                 std::to_string(points) + ". Only stencils 1 to 10 are implemented.");
     }
 }
-std::array<amrex::Real, GaussQuadrature::s_maxPoints> GaussQuadrature::weights(int points)
+std::array<amrex::Real, GaussLegendreQuadrature::s_maxPoints> GaussLegendreQuadrature::weights(
+    int points)
 {
     switch (points)
     {
@@ -103,7 +105,7 @@ std::array<amrex::Real, GaussQuadrature::s_maxPoints> GaussQuadrature::weights(i
             // NOLINTEND(readability-magic-numbers)
         default:
             throw std::invalid_argument (
-                "ERROR: Tried to initialize GaussQuadrature with an invalid stencil " +
+                "ERROR: Tried to initialize GaussLegendreQuadrature with an invalid stencil " +
                 std::to_string(points) + ". Only stencils 1 to 10 are implemented.");
     }
 }

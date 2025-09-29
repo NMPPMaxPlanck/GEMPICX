@@ -156,7 +156,8 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
  *
  * @details
  * Using the geometric degrees of freedeom:
- * Integrates func at time t over the cells of the primal grid by using a Gauss quadrature rule
+ * Integrates func at time t over the cells of the primal grid by using a Gauss-Legendre quadrature
+ * rule
  *
  * For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
  *
@@ -179,7 +180,7 @@ void FDDeRhamComplex::projection (
                                   ") doesn't correspond to the number of DeRhamField components (" +
                                   std::to_string(nCompField) + ").");
 
-    GaussQuadrature const integrate{gaussNodes};
+    GaussLegendreQuadrature const integrate{gaussNodes};
 
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
@@ -298,7 +299,8 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
  *
  * @details
  * Using the geometric degrees of freedom:
- * Integrates func at time t over the cells of the dual grid by using a Gauss quadrature rule
+ * Integrates func at time t over the cells of the dual grid by using a Gauss-Legendre quadrature
+ * rule
  *
  * For dimensions 1 and 2, the 3-form is taken from the "stacked" de Rham complex
  *
@@ -322,7 +324,7 @@ void FDDeRhamComplex::projection (
                                   ") doesn't correspond to the number of DeRhamField components (" +
                                   std::to_string(nCompField) + ").");
 
-    GaussQuadrature integrate{gaussNodes};
+    GaussLegendreQuadrature integrate{gaussNodes};
 
     // Volume integral
     for (amrex::MFIter mfi(field.m_data, true); mfi.isValid(); ++mfi)
@@ -378,7 +380,8 @@ inline void FDDeRhamComplex::projection(amrex::ParserExecutor<AMREX_SPACEDIM + 1
  *
  * @details
  * Using the geometric degrees of freedeom:
- * Integrates func at time t over the edges of the dual grid by using a Gauss quadrature rule
+ * Integrates func at time t over the edges of the dual grid by using a Gauss-Legendre quadrature
+ * rule
  *
  * For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
  *
@@ -407,7 +410,7 @@ void FDDeRhamComplex::projection (
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
     auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
-    GaussQuadrature integrate{gaussNodes};
+    GaussLegendreQuadrature integrate{gaussNodes};
 
     // Do the loop over comp-direction
     for (int dir{0}; dir < 3; dir++)
@@ -487,7 +490,8 @@ inline void FDDeRhamComplex::projection(
  *
  * @details
  * Using the geometric degrees of freedeom:
- * Integrates func at time t over the faces of the primal grid by using a Gauss quadrature rule
+ * Integrates func at time t over the faces of the primal grid by using a Gauss-Legendre quadrature
+ * rule
  *
  * For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
  *
@@ -515,7 +519,7 @@ void FDDeRhamComplex::projection (
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
     auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
-    GaussQuadrature integrate{gaussNodes};
+    GaussLegendreQuadrature integrate{gaussNodes};
 
     amrex::RealVect const dr = m_dr;
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();
@@ -621,7 +625,8 @@ inline void FDDeRhamComplex::projection(
  *
  * @details
  * Using the geometric degrees of freedeom:
- * Integrates func at time t over the edges of the primal grid by using a Gauss quadrature rule
+ * Integrates func at time t over the edges of the primal grid by using a Gauss-Legendre quadrature
+ * rule
  *
  * For dimensions 1 and 2, the 1-form is taken from the "stacked" de Rham complex
  *
@@ -649,7 +654,7 @@ void FDDeRhamComplex::projection (
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
     auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
-    GaussQuadrature integrate{gaussNodes};
+    GaussLegendreQuadrature integrate{gaussNodes};
 
     // Do the loop over comp-direction
     for (int dir = 0; dir < 3; ++dir)
@@ -728,7 +733,8 @@ inline void FDDeRhamComplex::projection(
  *
  * @details
  * Using the geometric degrees of freedeom:
- * Integrates func at time t over the faces of the dual grid by using a Gauss quadrature rule
+ * Integrates func at time t over the faces of the dual grid by using a Gauss-Legendre quadrature
+ * rule
  *
  * For dimensions 1 and 2, the 2-form is taken from the "stacked" de Rham complex
  *
@@ -757,7 +763,7 @@ void FDDeRhamComplex::projection (
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, funcs.begin(), funcs.end(), funcsGpu.begin());
     auto* const funcsGpuPtr = funcsGpu.dataPtr();
 
-    GaussQuadrature integrate{gaussNodes};
+    GaussLegendreQuadrature integrate{gaussNodes};
 
     amrex::RealVect const dr = m_dr;
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_geom.ProbLoArray();

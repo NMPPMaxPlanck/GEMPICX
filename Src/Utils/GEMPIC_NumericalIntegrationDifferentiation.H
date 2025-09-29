@@ -17,10 +17,10 @@ namespace Gempic
  * @todo Add concepts with C++20 for template parameter `Function`
  */
 // clang-format on
-class GaussQuadrature
+class GaussLegendreQuadrature
 {
 public:
-    GaussQuadrature(int points);
+    GaussLegendreQuadrature(int points);
     // clang-format off
     /**
      * @brief Approximates
@@ -30,7 +30,7 @@ public:
      * with Gauss quadrature
      * 
      * @details Example on how to integrate a 1D subset of a 4D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} f(x_0,y,z_0,t_0) \mathrm{d}y \f$
-     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussQuadratureExample.LineIntegral
+     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussLegendreQuadratureExample.LineIntegral
      */
     // clang-format on
     template <typename Function1D>
@@ -58,7 +58,7 @@ public:
      * with Gauss quadrature
      * 
      * @details Example on how to integrate a 2D subset of a 4D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z_0,t_0) \mathrm{d}x\mathrm{d}y \f$
-     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussQuadratureExample.SurfaceIntegral
+     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussLegendreQuadratureExample.SurfaceIntegral
      */
     // clang-format on
     template <typename Function2D>
@@ -90,7 +90,7 @@ public:
      * with Gauss quadrature
      * 
      * @details Example on how to integrate a 3D subset of a 4D function \f$ \int_{z_0-\Delta z/2}^{z_0+\Delta z/2} \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z, t_0) \mathrm{d}x\mathrm{d}y\mathrm{d}z \f$
-     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussQuadratureExample.VolumeIntegral
+     * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussLegendreQuadratureExample.VolumeIntegral
      */
     // clang-format on
     template <typename Function3D>
