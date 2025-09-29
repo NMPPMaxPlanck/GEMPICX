@@ -715,9 +715,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::init ()
                 }
             });
     }
-    amrex::MultiFab::Copy(m_disc.m_qold.m_data, m_disc.m_myfields->m_q.m_data, 0, 0, ncomp,
-                          m_disc.m_nGhosts);
-    amrex::MultiFab::Copy(m_disc.m_myfieldsTold->m_q.m_data, m_disc.m_myfields->m_q.m_data, 0, 0,
+    amrex::MultiFab::Copy(m_disc.m_myfieldsTmpEx->m_q.m_data, m_disc.m_myfields->m_q.m_data, 0, 0,
                           ncomp, m_disc.m_nGhosts);
 
     amrex::GpuArray<amrex::Real, 3> n, ndir;
@@ -767,27 +765,21 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::init ()
 }
 
 template <int nVarPde, int polyrecDegreeFv, typename ParamsClass, typename PdeTagType>
-void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::update_qold_q ()
-{
-    int ncomp = nVarPde;
-    amrex::MultiFab::Copy(m_disc.m_qold.m_data, m_disc.m_myfields->m_q.m_data, 0, 0, ncomp,
-                          m_disc.m_nGhosts);
-    amrex::MultiFab::Copy(m_disc.m_myfieldsTold->m_q.m_data, m_disc.m_myfields->m_q.m_data, 0, 0,
-                          ncomp, m_disc.m_nGhosts);
-    //NB: one also copy the MPI/PATCH ghost cells
-}
-
-template <int nVarPde, int polyrecDegreeFv, typename ParamsClass, typename PdeTagType>
 void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::update_qnew ()
 {
     //Euler update
-    amrex::MultiFab::LinComb(m_disc.m_myfields->m_q.m_data, 1.0, m_disc.m_myfieldsTold->m_q.m_data,
-                             0, m_disc.m_dt, m_disc.m_myfieldsDt->m_q.m_data, 0, 0, nVarPde,
+    amrex::MultiFab::LinComb(m_disc.m_myfields->m_q.m_data, 1.0, m_disc.m_myfieldsTmpEx->m_q.m_data,
+                             0, m_disc.m_dt, m_disc.m_myfieldsDtEx->m_q.m_data, 0, 0, nVarPde,
                              0); // no ghost cells update
     m_disc.m_myfields->m_q.m_data.FillBoundary(
         m_disc.m_compDom.m_geom.periodicity()); // this will update the mpi/patch ghost cells
 }
 
+/**
+ * This is the single-time-step update of the Explicit scheme.
+ * It must evaluate time derivative of the explicit step (stored in m_myfieldsDtEx),
+ * as a function of the explicit state (m_myfieldsTmpEx)
+ */
 template <int nVarPde, int polyrecDegreeFv, typename ParamsClass, typename PdeTagType>
 template <ReconstructionMode userRecMode>
 void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
@@ -795,15 +787,16 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
     amrex::GpuArray<amrex::Real, 3> n, ndir;
     amrex::GpuArray<amrex::Real, 3> const idrLoc = {m_disc.m_idr};
     // Fill boundary before computing the reconstruction
-    m_disc.m_myfieldsTold->m_q.m_data.FillBoundary(
+    m_disc.m_myfieldsTmpEx->m_q.m_data.FillBoundary(
         m_disc.m_compDom.m_geom.periodicity()); // this will update the mpi/patch ghost cells
     /*************************************************************************************************************/
     // LOOP OVER BARYCENTERS
     // from Q build reconstructed left/right face data
     // assume Q ghost cells are correctly filled??? NO. DO communications only before using ghost
     // cells. intialize reconstruction to zero (needed only for the boundary terms):
-    amrex::GpuArray<amrex::Real, faceDof> zeroFaceArray{0.0};
-    //amrex::GpuArray<amrex::Real, edgeDof> zeroEdgeArray{0.0};
+    amrex::GpuArray<amrex::Real, faceDof> zeroFaceArray;
+    zeroFaceArray.fill(0.0);
+    //amrex::GpuArray<amrex::Real, edgeDof> zeroEdgeArray;
     for (int iDim = 0; iDim < AMREX_SPACEDIM; ++iDim)
     {
         m_disc.m_qrRecFab[iDim].setVal(zeroFaceArray, m_disc.m_nGhosts);
@@ -818,7 +811,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
         // creating pointer to data for GPU:
         amrex::Array4<amrex::Real> const& v0 = (m_disc.m_v.m_data)[mfi].array();
         amrex::Array4<amrex::Real const> const& q0 =
-            (m_disc.m_myfieldsTold->m_q.m_data)[mfi].const_array();
+            (m_disc.m_myfieldsTmpEx->m_q.m_data)[mfi].const_array();
         amrex::Real idVolLoc{m_disc.m_idVol};
 
         ParamsClass myparams;
@@ -1023,7 +1016,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
     for (amrex::MFIter mfi(m_disc.m_myfields->m_q.m_data); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.validbox();
-        amrex::Array4<amrex::Real> const& dQdt = (m_disc.m_myfieldsDt->m_q.m_data)[mfi].array();
+        amrex::Array4<amrex::Real> const& dQdt = (m_disc.m_myfieldsDtEx->m_q.m_data)[mfi].array();
         amrex::Array4<amrex::Real const> const& Fx =
             (m_disc.m_fluxes.m_data[xDir])[mfi].const_array();
 #if AMREX_SPACEDIM > 1
@@ -1059,7 +1052,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
  *  - m_disc.myfields_dt_ex: unknown time-derivative (to be computed).
  *  - m_disc.myfields_tmp_ex: auxiliary temporary state.
  */
-class MhdfvNumericalScheme : public NumericalScheme
+class MhdfvNumericalScheme : public NumericalScheme<MHDFieldsHandlerStruct>
 {
 public:
     ReconstructionMode m_recmode;
@@ -1068,6 +1061,32 @@ public:
     MHD<nVarMHD, polyrecDegreeMHD, MhdPdeParameters, MhdPdeTag> m_mhd;
 
     int m_nmaxSteps{1000};
+
+    /**
+     * @brief get the pointer to the field used as initial condition for the explicit time-step, by
+     * reference
+     * @return shared pointer of FieldsHandlerStruct
+     */
+    std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_initial_field_explicit () override
+    {
+        return m_mhd.m_disc.m_myfieldsTmpEx;
+    }
+
+    std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_initial_field_implicit () override
+    {
+        return m_mhd.m_disc.m_myfieldsTmpIm;
+    }
+
+    std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_time_derivative_explicit () override
+    {
+        return m_mhd.m_disc.m_myfieldsDtEx;
+    }
+
+    std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_time_derivative_implicit () override
+    {
+        return m_mhd.m_disc.m_myfieldsDtIm;
+    }
+
     /**
      * set the initial condition.
      */
@@ -1083,12 +1102,12 @@ public:
         m_mhd.init();
     }
 
-    void compute_norms_reduce () override
+    void compute_norms_reduce ()
     {
         m_mhd.compute_norms_reduce(); // e.g. evaluate initial time-step
     }
 
-    void one_step_solve_dqdt_explicit () override
+    void one_step_solve_dqdt_explicit (amrex::Real rkTime) override
     {
         if (m_recmode == ReconstructionMode::CharacteristicVars)
         {
@@ -1112,20 +1131,57 @@ public:
      */
     void one_step_eval_dqdt_implicit (amrex::Real dtLoc) override { return; }
 
-    /**
+    /** TO BE IMPLEMENTED
      * solve one implicit (Euler) step
+     *
+     *      here we must
+     *       - glue the Ex -> Im steps;
+     *           i.
+     *       - update the MatOp;
+     *             - Q => m
+     *     - m + dp^{n+1,r}
+     *     - compute rhoKb(m)
+     *     - restore m
+     *     - Picard iterations:
+     *       - compute enthalpy => (update Matop)
+     *       - rhs
+     *       - Newton (gen EOS) or CG
+     *       - m + dp^{n+1}
+     *       - compute rhoKb
+     *     - (end inner acoustic PicarD)
+     *     - Update Kin Energy (UpdateRhoE)
+     *     - update Q(5)=E=rhoE
+     *
      */
-    void one_step_solve_q_implicit (amrex::Real dtLoc) override { return; }
+    void one_step_solve_q_implicit (amrex::Real rkTime, amrex::Real dtLoc) override { return; }
 
     /**
-     * compute time derivative for the semi-implicit solver.
+     * compute time derivative for the semi-implicit solver (stored in m_myfieldsDtIm).
+     *  k_i =  H(qExplicit,qStar + dt*aii*k_i
+     *  dtloc = dt*aii
+     * =>  qImplicit = qStar + dtloc*(HE(qExplicit) + HI(qImplicit))
+     *
+     * we assume:
+     *  - qExplicit and qStar already computed in the RK algorithm.
+     * then:
+     *  i. first compute HE(qExplicit): one_step_solve_dqdt_explicit
+     *  ii. solve for qImplicit
+     *  iii. evaluate k_i := (qImplicit - qStar)/dtLoc.
+     *  => continue with the RK algorithm.
      *
      * @param dtloc : time step
      */
-    void one_step_solve_dqdt_semiimplicit (amrex::Real dtLoc) override { return; }
+    void one_step_solve_dqdt_semiimplicit (amrex::Real timeI,
+                                           amrex::Real dtI,
+                                           amrex::Real timeE,
+                                           amrex::Real dtE) override
+    {
+        return;
+    }
 
     /**
-     * is_finaltime_reached?
+     * @brief return `true` if the current time is greater than or equal to the final time,
+     * otherwise `false`.
      */
     bool is_finaltime_reached () override { return m_mhd.m_disc.m_time >= m_mhd.m_disc.m_tend; }
     /**
@@ -1151,15 +1207,10 @@ public:
      */
     void finalize_new_timestep () override { m_mhd.m_disc.m_time += m_mhd.m_disc.m_dt; }
 
-    void init_first_register () override { return; }
-    void cumulative_mult_and_add () override { return; }
-    void prepare_registers_type () override { return; }
-    void prepare_registers () override { return; }
-
     /**
      * print now.
      */
-    void print_now () override
+    void print_now ()
     {
         m_mhd.m_disc.m_myfields->fill_boundary();
         m_mhd.m_disc.m_diagn.compute_and_write_to_file(m_mhd.m_disc.m_timeStep, m_mhd.m_disc.m_time,
@@ -1169,7 +1220,7 @@ public:
     /**
      * check and eventually print.
      */
-    void check_and_print (int timeStep) override
+    void check_and_print (int timeStep)
     {
         if (m_mhd.m_disc.m_iopar.m_printOutNSteps &&
             timeStep % m_mhd.m_disc.m_iopar.m_nStepsIo == 0)
@@ -1186,11 +1237,6 @@ public:
             print_now();
         }
     }
-
-    /**
-     * get the number of fields in the state handler.
-     */
-    int get_nfields () override { return m_mhd.m_disc.m_myfields->get_nfields(); }
 
     /**
      * get the number of components.

@@ -299,43 +299,99 @@ amrex::Real multi_fab_wgt_dot(amrex::MultiFab const& wgt,
                               bool local);
 
 /**
+ * @brief computes n Gauss-Legendre quadrature nodes x in [x1,x2] and the corresponding quadrature
+ * weights w. The algorithm comes from numerical recipies.
+ * @tparam n int, number of quadrature points
+ * @param x array, quadrature nodes
+ * @param w array, quadrature weights
+ * @param x1 amrex::Real, left endpoint
+ * @param x2 amrex::Real, right endpoint
+ */
+template <int n>
+void gauleg (std::array<amrex::Real, n>& x,
+             std::array<amrex::Real, n>& w,
+             amrex::Real const x1,
+             amrex::Real const x2)
+{
+    // Ensure valid inputs
+    static_assert(n > 0);                             // n must be greater than zero.
+    AMREX_ASSERT(x.size() == static_cast<size_t>(n)); // x must have size n.
+    AMREX_ASSERT(w.size() == static_cast<size_t>(n)); // w must have size n.
+    // Given the lower and upper limits of integration x1 and x2, this routine returns arrays
+    // x[0..n-1] and w[0..n-1] of length n, containing the abscissas and weights of the
+    // Gauss-Legendre n-point quadrature formula.
+    constexpr amrex::Real eps = 1.0e-15; // EPS is the relative precision.
+    amrex::Real z1, z, xm, xl, pp, p3, p2, p1;
+    int m = (n + 1) / 2;  // The roots are symmetric in the interval, so
+    xm = 0.5 * (x2 + x1); // we only have to find half of them.
+    xl = 0.5 * (x2 - x1);
+    amrex::Real const factor = M_PI / (n + 0.5);
+    for (int i = 0; i < m; i++)
+    {                                 // Loop over the desired roots.
+        z = cos(factor * (i + 0.75)); // Starting with this approximation to the ith
+                                      // root, we enter the main
+                                      // loop of refinement
+        do
+        {
+            p1 = 1.0;
+            p2 = 0.0;
+            for (int j = 0; j < n; j++)
+            {            // Loop up the recurrence relation to get the
+                p3 = p2; // Legendre polynomial evaluated at z.
+                p2 = p1;
+                p1 = ((2.0 * j + 1.0) * z * p2 - j * p3) / (j + 1);
+            }
+            // p1 is now the desired Legendre polynomial.We next compute pp, its derivative,
+            //     by a standard relation involving also p2,
+            //     the polynomial of one lower order.
+            pp = n * (z * p1 - p2) / (z * z - 1.0);
+            z1 = z;
+            z = z1 - p1 / pp; // Newton's method.
+        } while (std::abs(z - z1) > eps);
+        x[i] = xm - xl * z;                          // Scale the root to the desired interval,
+        x[n - 1 - i] = xm + xl * z;                  // and put in its symmetric counterpart.
+        w[i] = 2.0 * xl / ((1.0 - z * z) * pp * pp); // Compute the weight
+        w[n - 1 - i] = w[i];                         // and its symmetric counterpart.
+    }
+}
+
+/**
  * Numerical Scheme handler
  */
+template <class FieldsHandler>
 class NumericalScheme
 {
 private:
 public:
+    /**
+     * @brief get the pointer to the field used as initial condition for the explicit time-step, by
+     * reference
+     * @return shared pointer of FieldsHandlerStruct
+     */
+    virtual std::shared_ptr<FieldsHandler> const& get_pointer_initial_field_explicit() = 0;
+    virtual std::shared_ptr<FieldsHandler> const& get_pointer_initial_field_implicit() = 0;
+
+    virtual std::shared_ptr<FieldsHandler> const& get_pointer_time_derivative_explicit() = 0;
+    virtual std::shared_ptr<FieldsHandler> const& get_pointer_time_derivative_implicit() = 0;
+
     virtual void set_initial_condition() = 0;
 
-    virtual void compute_norms_reduce() = 0;
-
-    virtual void one_step_solve_dqdt_explicit() = 0;
+    virtual void one_step_solve_dqdt_explicit(amrex::Real rkTime) = 0;
 
     virtual void one_step_eval_dqdt_implicit(amrex::Real dtLoc) = 0;
 
-    virtual void one_step_solve_q_implicit(amrex::Real dtLoc) = 0;
+    virtual void one_step_solve_q_implicit(amrex::Real rkTime, amrex::Real dtLoc) = 0;
 
-    virtual void one_step_solve_dqdt_semiimplicit(amrex::Real dtLoc) = 0;
+    virtual void one_step_solve_dqdt_semiimplicit(amrex::Real timeI,
+                                                  amrex::Real dtI,
+                                                  amrex::Real timeE,
+                                                  amrex::Real dtE) = 0;
 
     virtual bool is_finaltime_reached() = 0;
 
     virtual void init_new_timestep() = 0;
 
     virtual void finalize_new_timestep() = 0;
-
-    virtual void init_first_register() = 0;
-
-    virtual void cumulative_mult_and_add() = 0;
-
-    virtual void prepare_registers_type() = 0;
-
-    virtual void prepare_registers() = 0;
-
-    virtual void print_now() = 0;
-
-    virtual void check_and_print(int timeStep) = 0;
-
-    virtual int get_nfields() = 0;
 
     virtual int get_ncomp() = 0;
 

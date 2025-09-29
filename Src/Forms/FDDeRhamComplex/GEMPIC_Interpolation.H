@@ -17,7 +17,8 @@ namespace Gempic::Forms
  * to \f$x_{k+1}\f$, and so forth. The whole grid is assumed to be uniform, evaluation is done using
  * Neville's algorithm.
  *
- * @tparam degree int, degree of basis functions used
+ * @tparam nNodes int, number of interpolation nodes used. (intDegree=nNodes-1: degree of
+ * interpolating polynomials)
  * @param polyIndex int, indicates the polynomial w.r.t. \f$x_k\f$
  * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
  * @param dx (uniform) grid size
@@ -25,17 +26,22 @@ namespace Gempic::Forms
  *
  * @return \f$L_{polyIndex} (y)\f$
  */
-template <int degree>
-AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex,
-                                            amrex::Real const xk,
-                                            amrex::Real const dx,
-                                            amrex::Real const y)
+template <int nNodes>
+AMREX_GPU_HOST_DEVICE amrex::Real eval_lagrange (int const polyIndex,
+                                                 amrex::Real const xk,
+                                                 amrex::Real const dx,
+                                                 amrex::Real const y)
 {
-    amrex::GpuArray<amrex::Real, degree> vals;
-    amrex::GpuArray<amrex::Real, degree> nodes;
-    for (int j = 0; j < degree; ++j)
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+    static_assert(nNodes % 2 == 0, "nNodes must be EVEN");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma + 1,
+                              "polyIndex must be in [-n, n+1]");
+    AMREX_ASSERT_WITH_MESSAGE(y >= xk && y <= xk + dx, "y must be in [xk, xk+dx]");
+    amrex::GpuArray<amrex::Real, nNodes> vals;
+    amrex::GpuArray<amrex::Real, nNodes> nodes;
+    for (int j = 0; j < nNodes; ++j)
     {
-        if (j == polyIndex + degree / 2 - 1)
+        if (j == polyIndex + sigma)
         {
             vals[j] = 1;
         }
@@ -43,11 +49,11 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex,
         {
             vals[j] = 0;
         }
-        nodes[j] = xk + (1 - degree / 2 + j) * dx;
+        nodes[j] = xk + (-sigma + j) * dx;
     }
-    for (int i = 1; i <= degree - 1; ++i)
+    for (int i = 1; i <= nNodes - 1; ++i)
     {
-        for (int j = 0; j < degree - i; ++j)
+        for (int j = 0; j < nNodes - i; ++j)
         {
             vals[j] = vals[j + 1] +
                       (y - nodes[j + i]) * (vals[j + 1] - vals[j]) / (nodes[j + i] - nodes[j]);
@@ -57,15 +63,22 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex,
 }
 /**
  *  the same but on the reference grid xk=0,dx=1;
+ *  the stencil nodes are then: nodes[]={-n,...,0,...,n+1}; these values correspond to the
+ * respective polyIndex. note that: even number of nodes; odd interpolating polynomial degree.
  */
-template <int degree>
-AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Real const y)
+template <int nNodes>
+AMREX_GPU_HOST_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Real const y)
 {
-    amrex::GpuArray<amrex::Real, degree> vals;
-    amrex::GpuArray<amrex::Real, degree> nodes;
-    for (int j = 0; j < degree; ++j)
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+    static_assert(nNodes % 2 == 0, "nNodes must be EVEN");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma + 1,
+                              "polyIndex must be in [-n, n+1]");
+    AMREX_ASSERT_WITH_MESSAGE(y >= 0.0 && y <= 1.0, "y must be in [0, 1]");
+    amrex::GpuArray<amrex::Real, nNodes> vals;
+    amrex::GpuArray<amrex::Real, nNodes> nodes;
+    for (int j = 0; j < nNodes; ++j)
     {
-        if (j == polyIndex + degree / 2 - 1)
+        if (j == polyIndex + sigma)
         {
             vals[j] = 1;
         }
@@ -73,11 +86,11 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Real con
         {
             vals[j] = 0;
         }
-        nodes[j] = (1 - degree / 2 + j);
+        nodes[j] = (-sigma + j);
     }
-    for (int i = 1; i <= degree - 1; ++i)
+    for (int i = 1; i <= nNodes - 1; ++i)
     {
-        for (int j = 0; j < degree - i; ++j)
+        for (int j = 0; j < nNodes - i; ++j)
         {
             vals[j] = vals[j + 1] +
                       (y - nodes[j + i]) * (vals[j + 1] - vals[j]) / (nodes[j + i] - nodes[j]);
@@ -87,32 +100,237 @@ AMREX_GPU_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Real con
 }
 
 /**
+ * @brief get the derivative of the Lagrange interpolating polynomial at point xi in [xk,xk+dx];
+ *        the interpolating polynomials is defined on a local stencil: node indexes
+ * {-n,...,0,...,n+1}; x_0 = xk;
+ * @tparam intDegree
+ * @param polyIndex in {-n,...,0,...,n+1} identifies the polynomial interplating 1 at the
+ * polyIndex-th node of the stencil.
+ * @param xk corresponds to the x_0 node of the stencil
+ * @param dx
+ * @param xi, amrex::Real, the evaluation point
+ * @return: derivatives of polyIndex-th Lagrange basis functions evaluated at xi
+ */
+template <int intDegree>
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_lagrange_der (int const polyIndex,
+                                                                        amrex::Real const xk,
+                                                                        amrex::Real const dx,
+                                                                        amrex::Real xi)
+{
+    constexpr int nNodes{intDegree + 1};
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+    AMREX_ASSERT_WITH_MESSAGE(((intDegree - 1) % 2) == 0, "intDegree must be ODD");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma + 1,
+                              "polyIndex must be in [-n, n+1]");
+    AMREX_ASSERT_WITH_MESSAGE(xi >= xk && xi <= xk + dx, "xi must be in [xk, xk+dx]");
+    amrex::Real phiXi{0.0};
+    int n = (intDegree - 1) / 2;
+    int m = polyIndex + n;
+    amrex::GpuArray<amrex::Real, nNodes> stencilNodes;
+
+    //Compute phiXi[m] : the derivative of the m - th Lagrange polynomial at xi
+    for (int i = 0; i < nNodes; ++i)
+    {
+        stencilNodes[i] = xk + (-n + i) * dx;
+    }
+    for (int i = 0; i < nNodes; ++i)
+    {
+        if (i == m)
+        {
+            continue;
+        }
+        amrex::Real tmp{1.0};
+        for (int j = 0; j < nNodes; ++j)
+        {
+            if (j == i || j == m)
+            {
+                continue;
+            }
+            tmp *= (xi - stencilNodes[j]) / (stencilNodes[m] - stencilNodes[j]);
+        }
+        phiXi += tmp / (stencilNodes[m] - stencilNodes[i]);
+    }
+    return phiXi;
+}
+
+/**
+ * @brief get the derivative of the Lagrange interpolating polynomial at point xi in [0,1];
+ *        the interpolating polynomials is defined on a local stencil: node indexes
+ * {-n,...,0,...,n+1}; x_0 = 0;
+ * @tparam intDegree degree of the Lagrange polyomial used
+ * @param polyIndex in {-n,...,0,...,n+1} identifies the polynomial interplating 1 at the
+ * polyIndex-th node of the stencil.
+ * @param xi amrex::Real, the evaluation point
+ * @return: derivatives of polyIndex-th Lagrange basis functions evaluated at xi
+ */
+template <int intDegree>
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_lagrange_der (int const polyIndex,
+                                                                        amrex::Real xi)
+{
+    constexpr int nNodes{intDegree + 1};
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+    AMREX_ASSERT_WITH_MESSAGE(((intDegree - 1) % 2) == 0, "intDegree must be ODD");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma + 1,
+                              "polyIndex must be in [-n, n+1]");
+    AMREX_ASSERT_WITH_MESSAGE(xi >= 0.0 && xi <= 1.0, "xi must be in [0, 1]");
+    amrex::Real phiXi{0.0};
+    int n = (intDegree - 1) / 2;
+    int m = polyIndex + n;
+    amrex::GpuArray<amrex::Real, nNodes> stencilNodes;
+
+    //Compute phiXi[m] : the derivative of the m - th Lagrange polynomial at xi
+    for (int i = 0; i < nNodes; ++i)
+    {
+        stencilNodes[i] = -n + i;
+    }
+    for (int i = 0; i < nNodes; ++i)
+    {
+        if (i == m)
+        {
+            continue;
+        }
+        amrex::Real tmp{1.0};
+        for (int j = 0; j < nNodes; ++j)
+        {
+            if (j == i || j == m)
+            {
+                continue;
+            }
+            tmp *= (xi - stencilNodes[j]) / (stencilNodes[m] - stencilNodes[j]);
+        }
+        phiXi += tmp / (stencilNodes[m] - stencilNodes[i]);
+    }
+    return phiXi;
+}
+
+/**
  * @brief Evaluates a 1D edge function
  *
  * @details
  * Evaluates an edge function \f$e_i\f$ on the interval \f$[x_k, x_{k+1}]\f$, where \f$e_0\f$ is
  * the edge function associated to the cell \f$[x_k,  x_{k+1}]\f$, \f$e_{-1}\f$ to \f$[x_{k-1},
  * x_k]\f$, \f$e_1\f$ to \f$[x_{k+1},  x_{k+2}]\f$, and so forth. The whole grid is assumed to be
- * uniform, only edge functions of degree 0, 2, 4 can be evaluated.
+ * uniform.
  *
- * @tparam degree int, degree of basis functions used
- * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$
+ * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: #dofs of the
+ * histopolating basis function)
+ * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$, in
+ * {-n,...,0,...,n}
  * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
  * @param dx (uniform) grid size
  * @param y Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
  *
- * @return \f$e_{polyIndex} (y)\f$
+ * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
  */
 // NOLINTBEGIN(readability-magic-numbers)
-template <int degree>
-AMREX_GPU_DEVICE amrex::Real eval_edge (int const polyIndex,
-                                        amrex::Real const xk,
-                                        amrex::Real const dx,
-                                        amrex::Real const y)
+
+template <int intDegree>
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
+    int const polyIndex, amrex::Real const xk, amrex::Real const dx, amrex::Real xi)
 {
+    constexpr int nNodes{intDegree + 1};
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+    constexpr int polyIdx = 0 - sigma;   // i = polyIndex + n;
+    AMREX_ASSERT_WITH_MESSAGE(((intDegree - 1) % 2) == 0, "intDegree must be ODD");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma,
+                              "polyIndex must be in [-n, n]");
+    AMREX_ASSERT_WITH_MESSAGE(xi >= xk && xi <= xk + dx, "y must be in [xk, xk+dx]");
+
+    amrex::Real phiEdge{eval_lagrange_der<intDegree>(polyIdx, xk, dx, xi)};
+
+    phiEdge *= -1.0;
+    for (int polyIdxLoc = 1 - sigma; polyIdxLoc < polyIndex + 1; ++polyIdxLoc)
+    {
+        amrex::Real phiXiInterp{eval_lagrange_der<intDegree>(polyIdxLoc, xk, dx, xi)};
+        phiEdge -= phiXiInterp;
+    }
+
+    return phiEdge;
+}
+
+/**
+ * @brief Evaluates a 1D edge function on unitary grid
+ *
+ * @details
+ * Evaluates an edge function \f$e_i\f$ on the interval \f$[x_k, x_{k+1}]\f$, where \f$e_0\f$ is
+ * the edge function associated to the cell \f$[x_k,  x_{k+1}]\f$, \f$e_{-1}\f$ to \f$[x_{k-1},
+ * x_k]\f$, \f$e_1\f$ to \f$[x_{k+1},  x_{k+2}]\f$, and so forth. The whole grid is assumed to be
+ * uniform.
+ *
+ * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: #dofs of the
+ * histopolating basis function)
+ * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$, in
+ * {-n,...,0,...,n}
+ * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
+ * @param dx (uniform) grid size
+ * @param y Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
+ *
+ * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
+ */
+// NOLINTBEGIN(readability-magic-numbers)
+
+template <int intDegree>
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (int const polyIndex,
+                                                                                amrex::Real xi)
+{
+    constexpr int nNodes{intDegree + 1};
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+    constexpr int polyIdx = 0 - sigma;   // i = polyIndex + n;
+
+    AMREX_ASSERT_WITH_MESSAGE(((intDegree - 1) % 2) == 0, "intDegree must be ODD");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma,
+                              "polyIndex must be in [-n, n]");
+    AMREX_ASSERT_WITH_MESSAGE(xi >= 0.0 && xi <= 1.0, "xi must be in [0, 1]");
+
+    amrex::Real phiEdge{eval_lagrange_der<intDegree>(polyIdx, xi)};
+    phiEdge *= -1.0;
+    for (int polyIdxLoc = 1 - sigma; polyIdxLoc < polyIndex + 1; ++polyIdxLoc)
+    {
+        amrex::Real phiXiInterp{eval_lagrange_der<intDegree>(polyIdxLoc, xi)};
+        phiEdge -= phiXiInterp;
+    }
+
+    return phiEdge;
+}
+
+/**
+ * @brief Evaluates a 1D edge function
+ *
+ * @details
+ * Evaluates an edge function \f$e_i\f$ on the interval \f$[x_k, x_{k+1}]\f$, where \f$e_0\f$ is
+ * the edge function associated to the cell \f$[x_k,  x_{k+1}]\f$, \f$e_{-1}\f$ to \f$[x_{k-1},
+ * x_k]\f$, \f$e_1\f$ to \f$[x_{k+1},  x_{k+2}]\f$, and so forth. The whole grid is assumed to be
+ * uniform.
+ *
+ * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: #dofs of the
+ * histopolating basis function)
+ * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$, in
+ * {-n,...,0,...,n}
+ * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
+ * @param dx (uniform) grid size
+ * @param y Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
+ *
+ * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
+ */
+// NOLINTBEGIN(readability-magic-numbers)
+
+template <int nNodes>
+AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex,
+                                             amrex::Real const xk,
+                                             amrex::Real const dx,
+                                             amrex::Real const y)
+{
+    constexpr int histDegree{nNodes - 2};
+    constexpr int intDegree{histDegree + 1};
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+
+    AMREX_ASSERT_WITH_MESSAGE((nNodes % 2) == 0, "nNodes must be EVEN");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma,
+                              "polyIndex must be in [-n, n]");
+    AMREX_ASSERT_WITH_MESSAGE(y >= xk && y <= xk + dx, "y must be in [xk, xk+dx]");
     amrex::Real val = 0;
     amrex::Real diff = y - xk;
-    switch (degree)
+    switch (nNodes)
     {
         case 2:
             val = 1. / dx;
@@ -175,21 +393,34 @@ AMREX_GPU_DEVICE amrex::Real eval_edge (int const polyIndex,
             }
             break;
         default:
-            break;
+            if (nNodes % 2 != 0) //check very last bit
+            {
+                AMREX_ASSERT("Impossible error! ODD orders not implemented");
+                amrex::Abort("Impossible error! ODD orders not implemented");
+            }
+            val = eval_edge_arbitrary_order<intDegree>(polyIndex, xk, dx, y);
     }
 
     return val;
 }
+
 /**
  * the same but on the reference grid with xk=0;dx=1;
  *
  */
-template <int degree>
-AMREX_GPU_DEVICE amrex::Real eval_edge (int const polyIndex, amrex::Real const y)
+template <int nNodes>
+AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex, amrex::Real const y)
 {
+    constexpr int intDegree{nNodes - 1};
+    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
+    AMREX_ASSERT_WITH_MESSAGE((nNodes % 2) == 0, "nNodes must be EVEN");
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma,
+                              "polyIndex must be in [-n, n]");
+    AMREX_ASSERT_WITH_MESSAGE(y >= 0.0 && y <= 1.0, "y must be in [0, 1]");
+
     amrex::Real val = 0;
     amrex::Real diff = y;
-    switch (degree)
+    switch (nNodes)
     {
         case 2:
             val = 1.;
@@ -240,12 +471,16 @@ AMREX_GPU_DEVICE amrex::Real eval_edge (int const polyIndex, amrex::Real const y
             }
             break;
         default:
-            break;
+            if (nNodes % 2 != 0) //check very last bit
+            {
+                AMREX_ASSERT("Impossible error! ODD orders not implemented");
+                amrex::Abort("Impossible error! ODD orders not implemented");
+            }
+            val = eval_edge_arbitrary_order<intDegree>(polyIndex, y);
     }
 
     return val;
 }
-// NOLINTEND(readability-magic-numbers)
 
 template <int degree, Grid grid>
 AMREX_GPU_DEVICE inline amrex::Real eval_lagrange_primal_dual (int const polyIndex,

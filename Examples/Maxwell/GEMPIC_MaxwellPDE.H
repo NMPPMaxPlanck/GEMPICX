@@ -6,8 +6,6 @@
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_Solvers.H"
 
-using namespace Gempic;
-
 /**
  * Maxwell MatOp functor class,
  * to solve the Schur complement of the homogeneous Maxwell equations.
@@ -16,13 +14,13 @@ using namespace Gempic;
 class GempicMaxwellMatOp
 {
 public:
-    std::shared_ptr<FDDeRhamComplex> m_drc;
+    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> m_drc;
     amrex::Real m_dtLocal{0.0};
 
-    typedef DeRhamField<Grid::primal, Space::edge> V1field;
-    typedef DeRhamField<Grid::primal, Space::face> V2field;
-    typedef DeRhamField<Grid::dual, Space::face> V1field_dual;
-    typedef DeRhamField<Grid::dual, Space::edge> V2field_dual;
+    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::edge> V1field;
+    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::face> V2field;
+    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::face> V1field_dual;
+    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::edge> V2field_dual;
 
     V1field_dual m_estar;
     V2field_dual m_bstar;
@@ -115,13 +113,11 @@ public:
  *  - m_disc.myfields_dt_ex: unknown time-derivative (to be computed).
  *  - m_disc.myfields_tmp_ex: auxiliary temporary state.
  */
-class MaxwellNumericalScheme : public NumericalScheme
+class MaxwellNumericalScheme : public NumericalScheme<MaxwellFieldsHandlerStruct>
 {
 public:
-    Io::Parameters m_parameters{};
-
-    typedef DeRhamField<Grid::primal, Space::edge> V1field;
-    typedef DeRhamField<Grid::dual, Space::face> V1field_dual;
+    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::edge> V1field;
+    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::face> V1field_dual;
 
     MaxwellDiscretization m_disc;
     GempicMaxwellMatOp m_maxwell;
@@ -136,11 +132,36 @@ public:
     int m_nmaxSteps{1000};
 
     /**
-     * set the initial condition.
+     * @brief get the pointer to the field used as initial condition for the explicit time-step, by
+     * reference
+     * @return shared pointer of FieldsHandlerStruct
      */
+    std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_initial_field_explicit ()
+        override
+    {
+        return m_disc.m_myfieldsTmpEx;
+    }
+
+    std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_initial_field_implicit ()
+        override
+    {
+        return m_disc.m_myfieldsTmpIm;
+    }
+
+    std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_time_derivative_explicit ()
+        override
+    {
+        return m_disc.m_myfieldsDtEx;
+    }
+
+    std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_time_derivative_implicit ()
+        override
+    {
+        return m_disc.m_myfieldsDtIm;
+    }
+
     void set_initial_condition () override
     {
-        // set initial condition
         m_disc.m_time = 0.0;
         m_disc.m_timeStep = 0;
         m_disc.m_iopar.m_timeIo = m_disc.m_time + m_disc.m_iopar.m_dtIo;
@@ -148,9 +169,7 @@ public:
         maxwell_initial_condition(m_disc);
     }
 
-    void compute_norms_reduce () override { return; }
-
-    void one_step_solve_dqdt_explicit () override { return; }
+    void one_step_solve_dqdt_explicit (amrex::Real time) override { return; }
 
     /**
      * update old state
@@ -164,7 +183,7 @@ public:
     /**
      * solve one implicit (Euler) step
      */
-    void one_step_solve_q_implicit (amrex::Real dtLoc) override
+    void one_step_solve_q_implicit (amrex::Real time, amrex::Real dtLoc) override
     {
         m_myCg2->m_operator.update(dtLoc); // => update the matop A(Q,dt)
         // in the RHS we should consider:
@@ -192,17 +211,18 @@ public:
      *
      * @param dtloc : time step
      */
-    void one_step_solve_dqdt_semiimplicit (amrex::Real dtLoc) override
+    void one_step_solve_dqdt_semiimplicit (amrex::Real timeI,
+                                           amrex::Real dtI,
+                                           amrex::Real timeE,
+                                           amrex::Real dtE) override
     {
-        //disc.myfields: in and out state.
-        //disc.myfields_dt_ex: unknown time-derivative (to be computed).
-        //disc.myfields_tmp_ex: temporary state.
-        one_step_solve_dqdt_explicit(); // this compute dQdt_ex... going in the rhs of the implicit
-                                        // system.
+        one_step_solve_dqdt_explicit(timeE); // this compute dQdt_ex... going in the rhs of the
+                                             // implicit
+                                             // system.
         one_step_solve_q_implicit(
-            dtLoc); // using dQdt_ex and q_tmp_im to solve for q_i and evaluate dqdt_implicit
+            timeI, dtI); // using dQdt_ex and q_tmp_im to solve for q_i and evaluate dqdt_implicit
         one_step_eval_dqdt_implicit(
-            dtLoc); // using dQdt_ex and q_tmp_im to solve for q_i and evaluate dqdt_implicit
+            dtI); // using dQdt_ex and q_tmp_im to solve for q_i and evaluate dqdt_implicit
     }
 
     /**
@@ -212,10 +232,6 @@ public:
      */
     void one_step_eval_dqdt_implicit (amrex::Real dtLoc) override
     {
-        //disc.myfields: in and out state.
-        //disc.myfields_dt_ex: unknown time-derivative (to be computed).
-        //disc.myfields_tmp_ex: temporary state.
-        //using dQdt_ex and q_tmp_im to solve for q_i and evaluate dqdt_implicit
         for (int idir = 0; idir < 3; ++idir)
         {
             for (amrex::MFIter mfi(m_disc.m_myfieldsDtIm->m_b.m_data[idir], true); mfi.isValid();
@@ -254,9 +270,11 @@ public:
     }
 
     /**
-     * is_finaltime_reached?
+     * @brief return `true` if the current time is greater than or equal to the final time,
+     * otherwise `false`.
      */
     bool is_finaltime_reached () override { return m_disc.m_time >= m_disc.m_tend; }
+
     /**
      * initialize new time step.
      */
@@ -274,15 +292,10 @@ public:
      */
     void finalize_new_timestep () override { m_disc.m_time += m_disc.m_dt; }
 
-    void init_first_register () override { return; }
-    void cumulative_mult_and_add () override { return; }
-    void prepare_registers_type () override { return; }
-    void prepare_registers () override { return; }
-
     /**
      * print now.
      */
-    void print_now () override
+    void print_now ()
     {
         m_disc.m_myfields->fill_boundary();
         m_disc.m_diagn.compute_and_write_to_file(m_disc.m_timeStep, m_disc.m_time);
@@ -291,7 +304,7 @@ public:
     /**
      * check and eventually print.
      */
-    void check_and_print (int timeStep) override
+    void check_and_print (int timeStep)
     {
         if (m_disc.m_iopar.m_printOutNSteps && timeStep % m_disc.m_iopar.m_nStepsIo == 0)
         {
@@ -306,11 +319,6 @@ public:
             print_now();
         }
     }
-
-    /**
-     * get the number of fields in the state handler.
-     */
-    int get_nfields () override { return m_disc.m_myfields->get_nfields(); }
 
     /**
      * get the number of components.
@@ -331,7 +339,7 @@ public:
         m_rhs(m_disc.m_drc),
         m_enew(m_disc.m_drc)
     {
-        Io::Parameters params("TimeLoop");
+        Gempic::Io::Parameters params("TimeLoop");
         amrex::Real dt;
         amrex::Real tend;
         params.get("dt", dt);
