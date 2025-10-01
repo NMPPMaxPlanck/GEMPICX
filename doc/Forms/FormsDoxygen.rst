@@ -30,7 +30,7 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
    :members:
 
 .. doxygenfile:: GEMPIC_BoundaryConditions.H
-.. doxygenclass:: Gempic::GaussQuadrature
+.. doxygenclass:: Gempic::GaussLegendreQuadrature
 
 .. toctree::
     :maxdepth: 2
