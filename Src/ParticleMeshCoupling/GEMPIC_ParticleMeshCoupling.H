@@ -1192,7 +1192,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_curlj (
     amrex::GpuArray<amrex::Real, vDim> const& vel,
     amrex::Real chargeWeight)
 {
-    BL_PROFILE("Gempic::ParticleMeshCoupling::deposit_curlj()")
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_curlj()")
 
     bool xCond{false};
     bool yCond{false};

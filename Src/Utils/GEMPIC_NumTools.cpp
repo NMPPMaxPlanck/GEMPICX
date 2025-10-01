@@ -725,7 +725,7 @@ void solve_system_mkl (std::vector<std::vector<double>> const& M,
 
 #endif
 
-amrex::Real minmod (amrex::Real const a, amrex::Real const b)
+AMREX_GPU_HOST_DEVICE amrex::Real minmod (amrex::Real const a, amrex::Real const b)
 {
     if (a * b <= 0)
     {

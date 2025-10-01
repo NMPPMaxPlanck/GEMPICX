@@ -43,7 +43,7 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE
     matmul (amrex::Array2D<T, 0, adim - 1, 0, bdim - 1, amrex::Order::C> const& aMatrix,
             amrex::Array2D<T, 0, bdim - 1, 0, cdim - 1, amrex::Order::C> const& bMatrix)
 {
-    BL_PROFILE("GEMPIC::FVreconstruction::myMatmul(a,b) arr");
+    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::myMatmul(a,b) arr");
     amrex::Array2D<T, 0, adim - 1, 0, cdim - 1, amrex::Order::C> result;
     for (int i = 0; i < adim; i++)
     {
