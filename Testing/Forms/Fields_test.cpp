@@ -71,47 +71,13 @@ void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
     Gempic::fill(vf, fillFunc);
     //! [DiscreteVectorFieldExample.Fill]
 }
+
 void fill_vector_field_with_sin (DiscreteVectorField& vf)
 {
     auto fillFunc =
         [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(double x, double y, double z), int n)
     { return GEMPIC_D_MULT(std::sin(x), std::sin(y), std::sin(z)) * (dir + 1); };
     Gempic::fill(vf, fillFunc);
-}
-
-void discrete_field_example_kernel (DiscreteField& f, DiscreteField& g)
-{
-    //! [DiscreteFieldExample.DiscreteDerivative]
-    g.set_ghost_size({AMREX_D_DECL(1, 0, 0)});
-    for (amrex::MFIter mfi{g.multi_fab()}; mfi.isValid(); ++mfi)
-    {
-        f.select_box(mfi);
-        g.select_box(mfi);
-        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                           { f(ix, iy, iz) = g(ix, iy, iz) - g(ix - 1, iy, iz); });
-    }
-    //! [DiscreteFieldExample.DiscreteDerivative]
-}
-
-void discrete_vector_field_example_kernel (DiscreteField& f, DiscreteVectorField& g)
-{
-    //! [DiscreteVectorFieldExample.DiscreteDivergence]
-    g.set_ghost_size({AMREX_D_DECL(1, 1, 1)});
-    for (amrex::MFIter mfi{g.multi_fab(Direction::xDir)}; mfi.isValid(); ++mfi)
-    {
-        f.select_box(mfi);
-        g.select_box(mfi);
-        amrex::ParallelFor(
-            mfi.validbox(),
-            [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-            {
-                f(ix, iy, iz) = GEMPIC_D_ADD(
-                    g(Direction::xDir, ix, iy, iz) - g(Direction::xDir, ix - 1, iy, iz),
-                    g(Direction::yDir, ix, iy, iz) - g(Direction::yDir, ix, iy - 1, iz),
-                    g(Direction::zDir, ix, iy, iz) - g(Direction::zDir, ix, iy, iz - 1));
-            });
-    }
-    //! [DiscreteVectorFieldExample.DiscreteDivergence]
 }
 
 TEST_F(DiscreteFieldsTest, fillScalarField)
@@ -239,7 +205,21 @@ TEST_F(DiscreteFieldsTest, setGhostCellsVectorField)
     EXPECT_EQ(lInfError[zDir], 0.0);
 }
 
-TEST_F(DiscreteFieldsTest, DiscreteFieldKernelExample)
+void discrete_field_example_kernel (DiscreteField& f, DiscreteField& g)
+{
+    //! [DiscreteFieldExample.DiscreteDerivative]
+    g.set_ghost_size({AMREX_D_DECL(1, 0, 0)});
+    for (amrex::MFIter mfi{g.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        f.select_box(mfi);
+        g.select_box(mfi);
+        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                           { f(ix, iy, iz) = g(ix, iy, iz) - g(ix - 1, iy, iz); });
+    }
+    //! [DiscreteFieldExample.DiscreteDerivative]
+}
+
+TEST_F(DiscreteFieldsTest, discreteFieldKernelExample)
 {
     Gempic::Io::Parameters parameters;
 
@@ -256,6 +236,27 @@ TEST_F(DiscreteFieldsTest, DiscreteFieldKernelExample)
     g.multi_fab().setVal(1);
     discrete_field_example_kernel(f, g);
     EXPECT_EQ(f.multi_fab().norm0(), 0);
+}
+
+void discrete_vector_field_example_kernel (DiscreteField& f, DiscreteVectorField& g)
+{
+    //! [DiscreteVectorFieldExample.DiscreteDivergence]
+    g.set_ghost_size({AMREX_D_DECL(1, 1, 1)});
+    for (amrex::MFIter mfi{g.multi_fab(Direction::xDir)}; mfi.isValid(); ++mfi)
+    {
+        f.select_box(mfi);
+        g.select_box(mfi);
+        amrex::ParallelFor(
+            mfi.validbox(),
+            [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+            {
+                f(ix, iy, iz) = GEMPIC_D_ADD(
+                    g(Direction::xDir, ix, iy, iz) - g(Direction::xDir, ix - 1, iy, iz),
+                    g(Direction::yDir, ix, iy, iz) - g(Direction::yDir, ix, iy - 1, iz),
+                    g(Direction::zDir, ix, iy, iz) - g(Direction::zDir, ix, iy, iz - 1));
+            });
+    }
+    //! [DiscreteVectorFieldExample.DiscreteDivergence]
 }
 
 TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
@@ -277,6 +278,71 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
     g.multi_fab(Direction::zDir).setVal(3.0);
     discrete_vector_field_example_kernel(f, g);
     EXPECT_EQ(f.multi_fab().norm0(), 0);
+}
+
+void fill_scalar_field_with_nan (DiscreteField f)
+{
+    auto nan = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                                        int n) -> amrex::Real
+    {
+        if (x < 1.0)
+        {
+            return std::numeric_limits<amrex::Real>::quiet_NaN();
+        }
+        else
+        {
+            return 1.0;
+        }
+    };
+    Gempic::fill(f, nan);
+}
+
+TEST_F(DiscreteFieldsTest, DiscreteFieldNan)
+{
+    Gempic::Io::Parameters parameters;
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
+    DiscreteGrid grid{parameters, position};
+    DiscreteField f{"f", parameters, grid, Grid::dual, 3};
+    fill_scalar_field_with_nan(f);
+    EXPECT_TRUE(Gempic::is_nan(f));
+    fill_scalar_field_with_one(f);
+    EXPECT_FALSE(Gempic::is_nan(f));
+}
+
+void fill_vector_field_with_nan (DiscreteVectorField& f)
+{
+    auto nan = [] AMREX_GPU_HOST_DEVICE(Direction dir,
+                                        AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                                        int n) -> amrex::Real
+    {
+        if (x < 1.0)
+        {
+            return std::numeric_limits<amrex::Real>::quiet_NaN();
+        }
+        else
+        {
+            return 0.0;
+        }
+    };
+    Gempic::fill(f, nan);
+}
+
+TEST_F(DiscreteFieldsTest, DiscreteVectorFieldIsNan)
+{
+    Gempic::Io::Parameters parameters;
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
+    DiscreteGrid grid{parameters, position};
+    DiscreteVectorField f{"f", parameters, {grid, grid, grid}, Grid::dual, 3};
+    fill_vector_field_with_nan(f);
+    EXPECT_TRUE(Gempic::is_nan(f)[Direction::xDir]);
+    EXPECT_TRUE(Gempic::is_nan(f)[Direction::yDir]);
+    EXPECT_TRUE(Gempic::is_nan(f)[Direction::zDir]);
+    fill_vector_field_with_one_two_three(f);
+    EXPECT_FALSE(Gempic::is_nan(f)[Direction::xDir]);
+    EXPECT_FALSE(Gempic::is_nan(f)[Direction::yDir]);
+    EXPECT_FALSE(Gempic::is_nan(f)[Direction::zDir]);
 }
 
 class LinearAlgebraTest : public ::testing::Test

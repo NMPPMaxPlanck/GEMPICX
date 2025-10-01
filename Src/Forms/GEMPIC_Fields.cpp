@@ -239,44 +239,116 @@ void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
     }
 }
 
+bool is_nan (DiscreteField& a)
+{
+    auto ma = a.multi_fab().const_arrays();
+    amrex::GpuTuple<int> isNan{};
+    isNan = amrex::ParReduce(amrex::TypeList<amrex::ReduceOpLogicalOr>{}, amrex::TypeList<int>{},
+                             a.multi_fab(),
+                             [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
+                                                       int iz) noexcept -> amrex::GpuTuple<int>
+                             {
+                                 auto aa = ma[boxNo];
+                                 return {std::isnan(aa(ix, iy, iz))};
+                             });
+    //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
+    //It should be noted that the reduction result of ParReduce is local and it is the user’s
+    //responsibility if MPI communication is needed
+    MPI_Allreduce(MPI_IN_PLACE, &isNan, 1, MPI_INT, MPI_LOR,
+                  amrex::ParallelContext::CommunicatorAll());
+    return amrex::get<0>(isNan);
+}
+
 amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
 {
-    Io::Parameters param{};
-    // The last two parameters are not relevant.
-    DiscreteField tmp{"tmp", param, a.discrete_grid(), Grid::primal, 0};
-    for (amrex::MFIter mfi{a.multi_fab()}; mfi.isValid(); ++mfi)
+    auto ma = a.multi_fab().const_arrays();
+    auto mb = b.multi_fab().const_arrays();
+    amrex::GpuTuple<amrex::Real, int> res{};
+    res = amrex::ParReduce(
+        amrex::TypeList<amrex::ReduceOpMax, amrex::ReduceOpLogicalOr>{},
+        amrex::TypeList<amrex::Real, int>{}, a.multi_fab(),
+        [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
+                                  int iz) noexcept -> amrex::GpuTuple<amrex::Real, int>
+        {
+            auto aa = ma[boxNo];
+            auto ba = ma[boxNo];
+            amrex::Real ldiff{aa(ix, iy, iz) - ba(ix, iy, iz)};
+            // NaN comparisons always evaluate to false, which is why we check on Nan manually.
+            // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
+            // https://rgambord.github.io/c99-doc/sections/7/12/14/index.html#id2
+            return {ldiff, static_cast<int>(std::isnan(ldiff))};
+        });
+    int isNan{amrex::get<1>(res)};
+    amrex::Real norm{amrex::get<0>(res)};
+    //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
+    //It should be noted that the reduction result of ParReduce is local and it is the user’s
+    //responsibility if MPI communication is needed
+    MPI_Allreduce(MPI_IN_PLACE, &isNan, 1, MPI_INT, MPI_LOR,
+                  amrex::ParallelContext::CommunicatorAll());
+    if (amrex::get<1>(res)) return std::numeric_limits<amrex::Real>::quiet_NaN();
+    MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE, MPI_MAX,
+                  amrex::ParallelContext::CommunicatorAll());
+    return norm;
+}
+
+std::array<bool, 3> is_nan (DiscreteVectorField& a)
+{
+    std::array<int, 3> isNan{};
+    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        a.select_box(mfi);
-        b.select_box(mfi);
-        tmp.select_box(mfi);
-        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                           { tmp(ix, iy, iz) = std::abs(a(ix, iy, iz) - b(ix, iy, iz)); });
+        auto ma = a.multi_fab(dir).const_arrays();
+        amrex::GpuTuple<int> res{};
+        res = amrex::ParReduce(amrex::TypeList<amrex::ReduceOpLogicalOr>{}, amrex::TypeList<int>{},
+                               a.multi_fab(dir),
+                               [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
+                                                         int iz) noexcept -> amrex::GpuTuple<int>
+                               {
+                                   auto aa = ma[boxNo];
+                                   return {std::isnan(aa(ix, iy, iz))};
+                               });
+        isNan[dir] = amrex::get<0>(res);
     }
-    return tmp.multi_fab().norminf();
+    //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
+    //It should be noted that the reduction result of ParReduce is local and it is the user’s
+    //responsibility if MPI communication is needed
+    MPI_Allreduce(MPI_IN_PLACE, &isNan[0], 3, MPI_INT, MPI_LOR,
+                  amrex::ParallelContext::CommunicatorAll());
+    return std::array<bool, 3>{static_cast<bool>(isNan[Direction::xDir]),
+                               static_cast<bool>(isNan[Direction::yDir]),
+                               static_cast<bool>(isNan[Direction::zDir])};
 }
 
 std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorField& b)
 {
-    std::array<amrex::Real, 3> maxError{0.0};
-    Io::Parameters param{};
-    // The last two parameters are not relevant.
-    DiscreteVectorField tmp{"tmp",
-                            param,
-                            {a.discrete_grid(xDir), a.discrete_grid(yDir), a.discrete_grid(zDir)},
-                            Grid::primal,
-                            0};
+    std::array<amrex::Real, 3> maxError{0};
+    std::array<int, 3> isNan{false, false, false};
     for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        for (amrex::MFIter mfi{a.multi_fab(dir)}; mfi.isValid(); ++mfi)
-        {
-            a.select_box(mfi);
-            b.select_box(mfi);
-            tmp.select_box(mfi);
-            amrex::ParallelFor(
-                mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                { tmp(dir, ix, iy, iz) = std::abs(a(dir, ix, iy, iz) - b(dir, ix, iy, iz)); });
-        }
-        maxError[dir] = tmp.multi_fab(dir).norminf();
+        auto ma = a.multi_fab(dir).const_arrays();
+        auto mb = b.multi_fab(dir).const_arrays();
+        amrex::GpuTuple<amrex::Real, int> res{};
+        res = amrex::ParReduce(
+            amrex::TypeList<amrex::ReduceOpMax, amrex::ReduceOpLogicalOr>{},
+            amrex::TypeList<amrex::Real, int>{}, a.multi_fab(dir),
+            [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
+                                      int iz) noexcept -> amrex::GpuTuple<amrex::Real, int>
+            {
+                auto aa = ma[boxNo];
+                auto ba = ma[boxNo];
+                amrex::Real ldiff{aa(ix, iy, iz) - ba(ix, iy, iz)};
+                // NaN comparisons always evaluate to false, which is why we check on Nan manually.
+                // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
+                // https://rgambord.github.io/c99-doc/sections/7/12/14/index.html#id2
+                return {ldiff, static_cast<int>(std::isnan(ldiff))};
+            });
+        isNan[dir] = amrex::get<1>(res);
+        maxError[dir] = amrex::get<0>(res);
+    }
+    MPI_Allreduce(MPI_IN_PLACE, &isNan[0], 3, MPI_INT, MPI_LOR,
+                  amrex::ParallelContext::CommunicatorAll());
+    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        if (isNan[dir]) maxError[dir] = std::numeric_limits<amrex::Real>::quiet_NaN();
     }
     return maxError;
 }
