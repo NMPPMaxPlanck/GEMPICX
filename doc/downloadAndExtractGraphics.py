@@ -25,7 +25,7 @@ def link_to_graphics_exists():
 
 
 def download_graphics_directory():
-    subprocess.run(r'curl -k -o graphics.zip "https://datashare.mpcdf.mpg.de/s/9DGFfLmoi1SPCEe/download"',
+    subprocess.run(r'curl -kL -o graphics.zip "https://datashare.mpcdf.mpg.de/s/9DGFfLmoi1SPCEe/download"',
                    shell=True, check=True)
 
 
