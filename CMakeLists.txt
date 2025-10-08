@@ -40,7 +40,7 @@ option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions wh
 
 include(FetchContent)
 include(cmake/gempic_FetchContent_Declare.cmake)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable Languages
 enable_language(CXX)
