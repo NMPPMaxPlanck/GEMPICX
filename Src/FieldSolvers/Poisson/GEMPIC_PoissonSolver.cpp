@@ -1,6 +1,7 @@
 #include <memory>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Solvers.H"
 #ifdef AMREX_USE_FFT
@@ -295,10 +296,7 @@ void Gempic::FieldSolvers::subtract_constant_part (DeRhamField<Grid::dual, Space
     BL_PROFILE("Gempic::FieldSolvers::subtract_constant_part()");
     if (compDom.geometry().isAllPeriodic())
     {
-        amrex::Real rhoSum = rho.m_data.sum_unique(0, false, compDom.geometry().periodicity());
-        amrex::Real ninv = 1.0 / GEMPIC_D_MULT(compDom.m_nCell[xDir], compDom.m_nCell[yDir],
-                                               compDom.m_nCell[zDir]);
-        amrex::Real rhoSumNinv = rhoSum * ninv;
-        rho -= rhoSumNinv;
+        amrex::Real rhoInt = compute_rho_integral(rho);
+        rho -= rhoInt;
     }
 }

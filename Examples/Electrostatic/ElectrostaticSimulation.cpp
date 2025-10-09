@@ -13,6 +13,7 @@
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
@@ -117,6 +118,14 @@ int main (int argc, char* argv[])
             amrex::Real rhoBackground{0.0};
             parameters.get_or_set("rhoBackground", rhoBackground);
             rho += rhoBackground * infra.cell_volume();
+            // check if this is a neutral plasma
+            amrex::Real rhoInt = compute_rho_integral(rho);
+            if (std::abs(rhoInt) > 1e-7)
+            {
+                amrex::Print()
+                    << "WARNING: you might not have a neutral plasma: the integral of rho ("
+                    << rhoInt << ") exceeds a tolerance of 1e-7\n";
+            }
 
             // Apply filter and compute phi with filtered rho
             biFilter->apply_stencil(rhoFiltered, rho);
