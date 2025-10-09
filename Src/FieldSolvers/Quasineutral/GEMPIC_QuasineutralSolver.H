@@ -1710,7 +1710,7 @@ public:
                 }
                 else
                 {
-                    GEMPIC_ERROR("Unknown particle group size: " + partGr.size());
+                    GEMPIC_ERROR("Unknown particle group size: " + std::to_string(partGr.size()));
                 }
             }
         }
