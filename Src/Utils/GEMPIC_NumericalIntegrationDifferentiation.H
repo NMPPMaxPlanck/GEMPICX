@@ -1,3 +1,6 @@
+#ifndef GEMPIC_NUMERICALINTEGRATIONDIFFERENTIATION_H_
+#define GEMPIC_NUMERICALINTEGRATIONDIFFERENTIATION_H_
+
 #include <array>
 #include <type_traits>
 
@@ -5,6 +8,7 @@
 #include <AMReX_REAL.H>
 
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Fields.H"
 #include "GEMPIC_NumTools.H"
 
 namespace Gempic
@@ -138,6 +142,8 @@ private:
     static std::array<amrex::Real, s_maxPoints> weights(int points);
 };
 
+amrex::Real compute_rho_integral(Forms::DeRhamField<Grid::dual, Space::cell>& rho);
+
 // clang-format off
 /**
  * @brief Gauss-Legendre quadrature weights and nodes on the unit interval [0,1]
@@ -161,3 +167,5 @@ private:
 };
 
 } // namespace Gempic
+
+#endif
