@@ -37,6 +37,7 @@ option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or 
 option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build." OFF)
 
 option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions when executed on host." OFF)
+option(USE_DIRTY_AMREX_REPO "Allow building from dirty AMReX git repositories" OFF)
 
 include(FetchContent)
 include(cmake/gempic_FetchContent_Declare.cmake)

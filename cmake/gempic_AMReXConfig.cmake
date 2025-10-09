@@ -40,6 +40,7 @@ gempic_FetchContent_Declare(AMReX
              GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
              GIT_TAG 041f225 # newest AMReX commit
              #GIT_TAG 25.01
+             ALLOW_DIRTY ${USE_DIRTY_AMREX_REPO}
              GIT_PROGRESS ON # AMReX takes long enough that this is nice instead of noise.
              )
 if(NOT ${AMReX_FOUND}) # AMReX_FOUND is only true if the package was installed
