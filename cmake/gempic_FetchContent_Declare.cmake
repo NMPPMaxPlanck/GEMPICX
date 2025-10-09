@@ -3,6 +3,9 @@ function(confirm_tag _name _location) #GIT_TAG (optional argument)
   # 1) Exists and is a git repository
   # 2) If given, that the extra argument corresponds to tag name of the repository
   # Check for optional args:
+  #  GIT_TAG:     Specific version to check against
+  #  ALLOW_DIRTY: Checks the GIT_TAG version if given, but allows user modified repos.
+  set(options ALLOW_DIRTY)
   set(oneValueArgs GIT_TAG)
   cmake_parse_arguments("WANTED" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
   
@@ -69,23 +72,27 @@ function(confirm_tag _name _location) #GIT_TAG (optional argument)
 
   # We check if the repository matches our requirements
   if (DEFINED WANTED_GIT_TAG)
-    if (${REPO_TAG} MATCHES "-dirty")
-      message(STATUS "... but the repository is dirty.")
-      message(FATAL_ERROR "To use dirty repositories, don't specify a GIT_TAG.")
-      set(${_name}_CORRECT_VERSION_FOUND false PARENT_SCOPE)
-    else()
-      execute_process(COMMAND git rev-parse "${WANTED_GIT_TAG}"
-                      WORKING_DIRECTORY ${_location}
-                      OUTPUT_VARIABLE WANTED_COMMIT_ID
-                      OUTPUT_STRIP_TRAILING_WHITESPACE
-                      ERROR_QUIET
-                      )
-      if("${WANTED_COMMIT_ID}" STREQUAL "${REPO_COMMIT_ID}")
-        set(${_name}_CORRECT_VERSION_FOUND true PARENT_SCOPE)
-      else()
-        message(STATUS "... which is the wrong version.")
-        set(${_name}_CORRECT_VERSION_FOUND false PARENT_SCOPE)
+    execute_process(COMMAND git rev-parse "${WANTED_GIT_TAG}"
+                    WORKING_DIRECTORY ${_location}
+                    OUTPUT_VARIABLE WANTED_COMMIT_ID
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET
+                    )
+    if("${WANTED_COMMIT_ID}" STREQUAL "${REPO_COMMIT_ID}")
+      message(STATUS "Version matches!")
+      set(${_name}_CORRECT_VERSION_FOUND true PARENT_SCOPE)
+      if ("${REPO_TAG}" MATCHES "-dirty")
+        if(WANTED_ALLOW_DIRTY)
+          message(WARNING "Dirty version of repository specifically allowed.")
+        else()
+          message(STATUS "... but the repository is dirty.")
+          set(${_name}_CORRECT_VERSION_FOUND false PARENT_SCOPE)
+          message(FATAL_ERROR "To use dirty repositories, don't specify a GIT_TAG, or toggle the ALLOW_DIRTY option.")
+        endif()
       endif()
+    else()
+      message(STATUS "... which is the wrong version.")
+      set(${_name}_CORRECT_VERSION_FOUND false PARENT_SCOPE)
     endif()
   else()
     set(${_name}_CORRECT_VERSION_FOUND true PARENT_SCOPE)
@@ -103,9 +110,10 @@ endfunction()
 #   GIT_REPOSITORY: The git address of the library
 #   GIT_TAG:        The tag or commit ID to get. If given, and a library is already found,
 #                   the downloaded library is checked against the tag/commit ID.
+#   ALLOW_DIRTY:    Downloads the GIT_TAG version if given, but allows the user to modify the repo.
 #   ...             Any other arguments are passed on to FetchContent_Declare unmodified.
 macro(gempic_FetchContent_Declare _name)
-  set(oneValueArgs GIT_REPOSITORY GIT_TAG SOURCE_DIR)
+  set(oneValueArgs GIT_REPOSITORY GIT_TAG SOURCE_DIR ALLOW_DIRTY)
   set(multiValueArgs FIND_PACKAGE_ARGS)
   cmake_parse_arguments(${_name} "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -128,8 +136,14 @@ macro(gempic_FetchContent_Declare _name)
     # Find the library
     if(DEFINED ${_name}_GIT_TAG)
       set(${_name}_GIT_TAG_LINE GIT_TAG ${${_name}_GIT_TAG})
+      if(${_name}_ALLOW_DIRTY)
+        set(${_name}_ALLOW_DIRTY_LINE ALLOW_DIRTY)
+      endif()
     endif()
-    confirm_tag(${_name} ${${_name}_SOURCE_DIR} ${${_name}_GIT_TAG_LINE})
+    confirm_tag(${_name}
+                ${${_name}_SOURCE_DIR}
+                ${${_name}_GIT_TAG_LINE}
+                ${${_name}_ALLOW_DIRTY_LINE})
     if(${${_name}_CORRECT_VERSION_FOUND})
       set(FETCHCONTENT_SOURCE_DIR_${${_name}_UPPERCASE} ${${_name}_SOURCE_DIR})
 
