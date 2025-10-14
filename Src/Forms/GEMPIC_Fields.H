@@ -30,7 +30,6 @@
 
 namespace Gempic
 {
-class DiscreteField;
 namespace Impl
 {
 enum class BoxStatus
@@ -39,13 +38,17 @@ enum class BoxStatus
     boxSelected
 };
 
-template <typename T>
-std::string copy_error_message (std::string const& label)
+// Boundary conditions are currently only implemented for number of components nComp==1
+// Multiple components are not allowed in an amrex::MultiFab
+struct BoundaryConditionConfiguration
 {
-    return "MultiFab of " + std::string{typeid(T).name()} + " with label " + label.data() +
-           " was accessed after copying.";
-}
-
+    Grid m_grid{};
+    int m_extrapolationDegree{};
+    // By default we use periodic boundary conditions
+    amrex::BCRec m_bcRec{
+        AMREX_D_DECL(amrex::BCType::int_dir, amrex::BCType::int_dir, amrex::BCType::int_dir),
+        AMREX_D_DECL(amrex::BCType::int_dir, amrex::BCType::int_dir, amrex::BCType::int_dir)};
+};
 } //namespace Impl
 
 // clang-format off
@@ -73,11 +76,11 @@ public:
     DiscreteField(std::string const& label,
                   Io::Parameters& params,
                   DiscreteGrid const& discreteGrid,
-                  // ToDo: externalize boundary conditions to be injected into the DiscreteFields
-                  Grid const& grid,
-                  int const& boundaryExtrapolationDegree);
+                  Impl::BoundaryConditionConfiguration const& boundaryConditionConfiguration =
+                      Impl::BoundaryConditionConfiguration{});
 
     //! Discretized domain which maps indexable degrees of freedom to a continuous domain
+    AMREX_GPU_HOST_DEVICE
     DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
     amrex::MultiFab const& multi_fab() const;
     amrex::MultiFab& multi_fab();
@@ -98,11 +101,21 @@ public:
     amrex::Box const& selected_box() const;
     // clang-format off
     /**
-     * @brief Resize and fill the ghost cells for all components of the vector field while preserving the data in the computational domain. 
-     *        If enough ghost cells are already available this call just fills the requested number of ghost cells.
+     * @brief Apply boundary conditions to the @p width ghost cells on all patches of the domain covered by the @ref DiscreteField.
+     *
+     * If the patches have fewer ghost cells than requested by @p width, they are automatically resized to have exactly @p width ghost cells.
+     *
+     * The boundary defined as follows:
+     * - Patches with neighbouring valid domain are filled using values from the corresponding neighbouring patches.
+     * - Boundaries outside the valid domain are filled according to the configured @ref gempic::BoundaryCondition.
+     *   Depending on the chosen boundary condition, this may also modify degrees of freedom inside the valid domain.
+     *
+     * @param width The number of ghost-cells of freedom to which the boundary condition should be applied.
      */
     // clang-format on
-    void set_ghost_size(std::array<size_t, AMREX_SPACEDIM> width);
+    void apply_boundary_conditions(std::array<size_t, AMREX_SPACEDIM> width);
+
+    amrex::Array4<amrex::Real> const& view () const { return m_view; }
 
 private:
     // std::string is not GPU capable.
@@ -120,8 +133,22 @@ private:
     // The indexType of the box in geometry does not coincide with the index type of the MultiFab
     DiscreteGrid m_discreteGrid;
 
-    amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> m_boundaryCondition;
+    std::shared_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>>
+        m_boundaryCondition;
 };
+
+namespace Impl
+{
+enum class GhostRegion
+{
+    low,
+    up
+};
+amrex::Box selected_ghost_box(DiscreteField const& df,
+                              std::array<size_t, AMREX_SPACEDIM> const& ghostSize,
+                              Direction const& dir,
+                              Impl::GhostRegion const region);
+} //namespace Impl
 
 // clang-format off
 /**
@@ -148,9 +175,8 @@ public:
         std::string const& label,
         Io::Parameters& params,
         std::array<DiscreteGrid, 3> const& discreteGrid,
-        // ToDo: externalize boundary conditions to be injected into the DiscreteFields
-        Grid const& grid,
-        int const& boundaryExtrapolationDegree);
+        std::array<Impl::BoundaryConditionConfiguration, 3> const& boundaryConditionConfiguration =
+            std::array<Impl::BoundaryConditionConfiguration, 3>{});
 
     DiscreteVectorField() = delete;
 
@@ -160,6 +186,7 @@ public:
      * @param dir @ref DiscreteGrid of the amrex::MultiFab in the corresponding direction
      */
     //clang-format on
+    AMREX_GPU_HOST_DEVICE
     DiscreteGrid const& discrete_grid(Direction dir) const;
     amrex::MultiFab const& multi_fab(Direction dir) const;
     amrex::MultiFab& multi_fab(Direction dir);
@@ -180,12 +207,21 @@ public:
     amrex::Box const& selected_box(Direction dir) const;
     // clang-format off
     /**
-     * @brief Resize and fill the ghost cells for all components of the vector field while preserving the data in the computational domain.
-     *        If enough ghost cells are already available this call just fills the requested number of ghost cells.
-     *        The number of ghost cells in a specific direction is the same for every component of the vector field
+     * @brief Apply boundary conditions to the @p width ghost cells on all patches of the domain covered by and all directions of the @ref DiscreteVectorField.
+     *
+     * If the patches have fewer ghost cells than requested by @p width, they are automatically resized to have exactly @p width ghost cells.
+     *
+     * The boundary defined as follows:
+     * - Patches with neighbouring valid domain are filled using values from the corresponding neighbouring patches.
+     * - Boundaries outside the valid domain are filled according to the configured @ref gempic::BoundaryCondition.
+     *   Depending on the chosen boundary condition, this may also modify degrees of freedom inside the valid domain.
+     *
+     * @param width The number of ghost-cells of freedom to which the boundary condition should be applied.
      */
     // clang-format on
-    void set_ghost_size(std::array<size_t, AMREX_SPACEDIM> width);
+    void apply_boundary_conditions(std::array<size_t, AMREX_SPACEDIM> width);
+
+    amrex::Array4<amrex::Real> const& view (Direction dir) const { return m_view[dir]; }
 
 private:
     // std::string is not GPU capable.
@@ -204,7 +240,8 @@ private:
     // The indexType of the box in geometry does not coincides with the index type of the MultiFab
     std::array<DiscreteGrid, 3> m_discreteGrid;
 
-    std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, 3>
+    std::shared_ptr<
+        std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, 3>>
         m_boundaryCondition;
 };
 
