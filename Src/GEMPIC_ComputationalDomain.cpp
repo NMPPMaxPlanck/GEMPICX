@@ -58,41 +58,44 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
         }
     }
     // In periodic directions domain is [0, 2pi / k]. Otherwise, we use domain_lo/_hi directly
-    // Probably needs to check that both are not provided for the same direction?
     std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    params.get_or_set("ComputationalDomain.domainLo", domainLo);
-    std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> k;
-    // Non-periodic directions exist
-    if (!(AMREX_D_TERM(periodicity[xDir], &&periodicity[yDir], &&periodicity[zDir])))
+    std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    params.get("ComputationalDomain.domainLo", domainLo);
+    if (params.exists("ComputationalDomain.domainHi") and params.exists("k"))
     {
-        params.get_or_set("ComputationalDomain.domainHi", domainHi);
+        throw std::invalid_argument (
+            "Parameters `ComputationalDomain.domainHi` and `k` are both provided in the parameter "
+            "file.");
     }
-    // Periodic directions exist
-    if (AMREX_D_TERM(periodicity[xDir], || periodicity[yDir], || periodicity[zDir]))
+    else if (params.exists("ComputationalDomain.domainHi"))
     {
-        // Attempt to use k first
-        if (params.exists("k"))
+        params.get("ComputationalDomain.domainHi", domainHi);
+        // ToDo: Try to externalize `k` and force existence of `ComputationalDomain.domainHi`
+    }
+    else if (params.exists("k"))
+    {
+        std::vector<amrex::Real> k;
+        params.get("k", k);
+        for (int i = 0; i < AMREX_SPACEDIM; i++)
         {
-            if (params.is_in_input_file("ComputationalDomain.domainHi"))
+            if (periodicity[i])
             {
-                std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
+                domainHi[i] = 2 * M_PI / k[i] + domainLo[i];
             }
-            params.get("k", k);
-            for (int i = 0; i < AMREX_SPACEDIM; i++)
+            else
             {
-                if (periodicity[i] == 1)
-                {
-                    domainHi[i] = 2 * M_PI / k[i] + domainLo[i];
-                }
+                throw std::invalid_argument (
+                    "Parameter `k` can only be used on a periodic domain. On a non-periodic domain "
+                    "use `ComputationalDomain.domainHi`");
             }
         }
-        else
-        {
-            params.get_or_set("ComputationalDomain.domainHi", domainHi);
-        }
     }
-
+    else
+    {
+        throw std::invalid_argument (
+            "One of the two parameters `ComputationalDomain.domainHi` or `k` has to be provided in "
+            "the parameter file.");
+    }
     *this = DiscreteGrid{domainLo, domainHi, nCells, idxPosition, periodicity};
 }
 
