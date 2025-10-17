@@ -291,6 +291,7 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
                     });
     }
 }
+void fill_zero(DiscreteField& field);
 
 // clang-format off
 /**
@@ -336,6 +337,7 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
         }
     }
 }
+void fill_zero(DiscreteVectorField& field);
 
 } //namespace Gempic
 

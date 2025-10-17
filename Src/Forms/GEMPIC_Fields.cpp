@@ -328,6 +328,21 @@ void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
     }
 }
 
+void fill_zero (DiscreteField& field)
+{
+    auto zero = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                                         int n) -> amrex::Real { return 0.0; };
+    Gempic::fill(field, zero);
+}
+
+void fill_zero (DiscreteVectorField& field)
+{
+    auto zero = [] AMREX_GPU_HOST_DEVICE(Direction dir,
+                                         AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                                         int n) -> amrex::Real { return 0.0; };
+    Gempic::fill(field, zero);
+}
+
 bool is_nan (DiscreteField& a)
 {
     auto ma = a.multi_fab().const_arrays();
@@ -360,12 +375,12 @@ amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
                                   int iz) noexcept -> amrex::GpuTuple<amrex::Real, int>
         {
             auto aa = ma[boxNo];
-            auto ba = ma[boxNo];
+            auto ba = mb[boxNo];
             amrex::Real ldiff{aa(ix, iy, iz) - ba(ix, iy, iz)};
             // NaN comparisons always evaluate to false, which is why we check on Nan manually.
             // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
             // https://rgambord.github.io/c99-doc/sections/7/12/14/index.html#id2
-            return {ldiff, static_cast<int>(std::isnan(ldiff))};
+            return {std::abs(ldiff), static_cast<int>(std::isnan(ldiff))};
         });
     int isNan{amrex::get<1>(res)};
     amrex::Real norm{amrex::get<0>(res)};
@@ -423,12 +438,12 @@ std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorFi
                                       int iz) noexcept -> amrex::GpuTuple<amrex::Real, int>
             {
                 auto aa = ma[boxNo];
-                auto ba = ma[boxNo];
+                auto ba = mb[boxNo];
                 amrex::Real ldiff{aa(ix, iy, iz) - ba(ix, iy, iz)};
                 // NaN comparisons always evaluate to false, which is why we check on Nan manually.
                 // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
                 // https://rgambord.github.io/c99-doc/sections/7/12/14/index.html#id2
-                return {ldiff, static_cast<int>(std::isnan(ldiff))};
+                return {std::abs(ldiff), static_cast<int>(std::isnan(ldiff))};
             });
         isNan[dir] = amrex::get<1>(res);
         maxError[dir] = amrex::get<0>(res);
