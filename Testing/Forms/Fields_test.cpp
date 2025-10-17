@@ -316,6 +316,24 @@ TEST_F(DiscreteFieldsTest, DiscreteFieldNan)
     EXPECT_FALSE(Gempic::is_nan(f));
 }
 
+TEST_F(DiscreteFieldsTest, DiscreteFieldLInfError)
+{
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
+    DiscreteGrid grid{m_parameters, position};
+    DiscreteField f{"f", m_parameters, grid};
+    DiscreteField g{"g", m_parameters, grid};
+    fill_zero(f);
+    fill_scalar_field_with_one(g);
+    EXPECT_EQ(l_inf_error(f, g), 1.0);
+    fill_scalar_field_with_one(f);
+    fill_scalar_field_with_one(g);
+    EXPECT_EQ(l_inf_error(f, g), 0.0);
+    fill_scalar_field_with_one(f);
+    fill_scalar_field_with_nan(g);
+    EXPECT_TRUE(std::isnan(l_inf_error(f, g)));
+}
+
 void fill_vector_field_with_nan (DiscreteVectorField& f)
 {
     auto nan = [] AMREX_GPU_HOST_DEVICE(Direction dir,
@@ -348,6 +366,30 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldIsNan)
     EXPECT_FALSE(Gempic::is_nan(f)[Direction::xDir]);
     EXPECT_FALSE(Gempic::is_nan(f)[Direction::yDir]);
     EXPECT_FALSE(Gempic::is_nan(f)[Direction::zDir]);
+}
+
+TEST_F(DiscreteFieldsTest, DiscreteVectorFieldLInfError)
+{
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
+    DiscreteGrid grid{m_parameters, position};
+    DiscreteVectorField f{"f", m_parameters, {grid, grid, grid}};
+    DiscreteVectorField g{"g", m_parameters, {grid, grid, grid}};
+    fill_zero(f);
+    fill_vector_field_with_one_two_three(g);
+    EXPECT_EQ(l_inf_error(f, g)[Direction::xDir], 1.0);
+    EXPECT_EQ(l_inf_error(f, g)[Direction::yDir], 2.0);
+    EXPECT_EQ(l_inf_error(f, g)[Direction::zDir], 3.0);
+    fill_vector_field_with_one_two_three(f);
+    fill_vector_field_with_one_two_three(g);
+    EXPECT_EQ(l_inf_error(f, g)[Direction::xDir], 0.0);
+    EXPECT_EQ(l_inf_error(f, g)[Direction::yDir], 0.0);
+    EXPECT_EQ(l_inf_error(f, g)[Direction::zDir], 0.0);
+    fill_vector_field_with_one_two_three(f);
+    fill_vector_field_with_nan(g);
+    EXPECT_TRUE(std::isnan(l_inf_error(f, g)[Direction::xDir]));
+    EXPECT_TRUE(std::isnan(l_inf_error(f, g)[Direction::yDir]));
+    EXPECT_TRUE(std::isnan(l_inf_error(f, g)[Direction::zDir]));
 }
 
 void compare_discrete_field_periodic_boundary (DiscreteField const& df)
