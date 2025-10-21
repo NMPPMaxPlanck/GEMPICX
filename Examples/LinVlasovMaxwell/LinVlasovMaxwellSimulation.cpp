@@ -131,13 +131,8 @@ int main (int argc, char* argv[])
                 for (auto& particleGrid : *particleSpecies)
                 {
                     long const np = particleGrid.numParticles();
-                    auto* const particles = particleGrid.GetArrayOfStructs()().data();
-                    auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                    auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                    auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
-                    auto* const weight = particleGrid.GetStructOfArrays().GetRealData(3).data();
-                    auto* const s0 = particleGrid.GetStructOfArrays().GetRealData(4).data();
-                    auto* const sqrtf0 = particleGrid.GetStructOfArrays().GetRealData(5).data();
+                    auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                    auto const ii = particleSpecies->get_data_indices();
 
                     amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
@@ -151,32 +146,36 @@ int main (int argc, char* argv[])
                         np,
                         [=] AMREX_GPU_DEVICE(long pp)
                         {
-                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                            std::array<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{
+                                AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                             ptd.rdata(ii.m_iposz)[pp])};
+                            std::array<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                              ptd.rdata(ii.m_ively)[pp],
+                                                              ptd.rdata(ii.m_ivelz)[pp]};
 
-                            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                            {
-                                pos[d] = particles[pp].pos(d);
-                            }
-
-                            sqrtf0[pp] = eval_sqrt_maxwellian(
+                            ptd.rdata(ii.m_isqrtf0)[pp] = eval_sqrt_maxwellian(
                                 vel,
-                                funcDensityBackground(AMREX_D_DECL(pos[xDir], pos[yDir], pos[zDir]),
+                                funcDensityBackground(AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
+                                                                   ptd.rdata(ii.m_iposy)[pp],
+                                                                   ptd.rdata(ii.m_iposz)[pp]),
                                                       0.),
                                 vThermalBackground);
 
                             // Rescale weights to remove f0 from energy computation
-                            weight[pp] /= sqrtf0[pp];
+                            ptd.rdata(ii.m_iweight)[pp] /= ptd.rdata(ii.m_isqrtf0)[pp];
 
                             SplineBase<degx, degy, degz> spline(pos, plo,
                                                                 infra.inv_cell_size_array());
 
-                            deposit_rho(rhoarr, spline, sqrtf0[pp] * charge * weight[pp]);
+                            deposit_rho(
+                                rhoarr, spline,
+                                ptd.rdata(ii.m_isqrtf0)[pp] * charge * ptd.rdata(ii.m_iweight)[pp]);
 
                             // Compute s0 multiplied by number of particles as needed for electric
                             // field update and particle energy
-                            s0[pp] = nPart / domainVolume *
-                                     eval_maxwellian(vel, 1.0, vThermalGPU, vMeanGPU);
+                            ptd.rdata(ii.m_is0)[pp] =
+                                nPart / domainVolume *
+                                eval_maxwellian(vel, 1.0, vThermalGPU, vMeanGPU);
                         });
                 }
             }
@@ -215,13 +214,8 @@ int main (int argc, char* argv[])
                     for (auto& pti : *particleSpecies)
                     {
                         long const np = pti.numParticles();
-                        auto const& particles = pti.GetArrayOfStructs()().data();
-                        auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                        auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                        auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto* const weight = pti.GetStructOfArrays().GetRealData(3).data();
-                        auto* const s0 = pti.GetStructOfArrays().GetRealData(4).data();
-                        auto* const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
+                        auto const ptd = pti.GetParticleTile().getParticleTileData();
+                        auto const ii = particleSpecies->get_data_indices();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
                         for (int cc = 0; cc < 3; cc++)
@@ -248,14 +242,12 @@ int main (int argc, char* argv[])
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
                                 // Local arrays for particle position and velocities
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                                amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
-                                                                       velz[pp]};
-
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    pos[d] = particles[pp].pos(d);
-                                }
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{AMREX_D_DECL(
+                                    ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                    ptd.rdata(ii.m_iposz)[pp])};
+                                amrex::GpuArray<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                       ptd.rdata(ii.m_ively)[pp],
+                                                                       ptd.rdata(ii.m_ivelz)[pp]};
 
                                 ParticleMeshCoupling::SplineWithPrimitive<degx, degy, degz> spline(
                                     pos, plo, infra.inv_cell_size_array());
@@ -263,25 +255,28 @@ int main (int argc, char* argv[])
                                 // He,particle
                                 amrex::GpuArray<amrex::Real, 3> efield =
                                     spline.template eval_spline_field<Field::PrimalOneForm>(eA);
-                                weight[pp] += 0.5 * dt * chargeMass / vThermalBackground2 *
-                                              sqrtf0[pp] *
-                                              (efield[xDir] * vel[xDir] + efield[yDir] * vel[yDir] +
-                                               efield[zDir] * vel[zDir]) /
-                                              s0[pp];
+                                ptd.rdata(ii.m_iweight)[pp] +=
+                                    0.5 * dt * chargeMass / vThermalBackground2 *
+                                    ptd.rdata(ii.m_isqrtf0)[pp] *
+                                    (efield[xDir] * vel[xDir] + efield[yDir] * vel[yDir] +
+                                     efield[zDir] * vel[zDir]) /
+                                    ptd.rdata(ii.m_is0)[pp];
 
                                 // Push particle and integrate current
-                                operatorHamilton.apply_h_p(
-                                    pos, vel, infra, spline, infra.cell_size_array(), jA, bA,
-                                    chargeMass, sqrtf0[pp] * charge * weight[pp], dt);
+                                operatorHamilton.apply_h_p(pos, vel, infra, spline,
+                                                           infra.cell_size_array(), jA, bA,
+                                                           chargeMass,
+                                                           ptd.rdata(ii.m_isqrtf0)[pp] * charge *
+                                                               ptd.rdata(ii.m_iweight)[pp],
+                                                           dt);
 
                                 // Write position and velocities
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    particles[pp].pos(d) = pos[d];
-                                }
-                                velx[pp] = vel[xDir];
-                                vely[pp] = vel[yDir];
-                                velz[pp] = vel[zDir];
+                                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = pos[xDir],
+                                             ptd.rdata(ii.m_iposy)[pp] = pos[yDir],
+                                             ptd.rdata(ii.m_iposz)[pp] = pos[zDir]);
+                                ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
+                                ptd.rdata(ii.m_ively)[pp] = vel[yDir];
+                                ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
                             });
                     }
                     particleSpecies->Redistribute();
@@ -302,13 +297,8 @@ int main (int argc, char* argv[])
                     for (auto& pti : *particleSpecies)
                     {
                         long const np = pti.numParticles();
-                        auto const& particles = pti.GetArrayOfStructs()().data();
-                        auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                        auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                        auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
-                        auto* const weight = pti.GetStructOfArrays().GetRealData(3).data();
-                        auto* const s0 = pti.GetStructOfArrays().GetRealData(4).data();
-                        auto* const sqrtf0 = pti.GetStructOfArrays().GetRealData(5).data();
+                        auto const ptd = pti.GetParticleTile().getParticleTileData();
+                        auto const ii = particleSpecies->get_data_indices();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
                         for (int cc = 0; cc < 3; cc++)
@@ -327,15 +317,14 @@ int main (int argc, char* argv[])
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
                                 // Local arrays for particle position and velocities
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                                std::array<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{AMREX_D_DECL(
+                                    ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                    ptd.rdata(ii.m_iposz)[pp])};
+                                std::array<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                  ptd.rdata(ii.m_ively)[pp],
+                                                                  ptd.rdata(ii.m_ivelz)[pp]};
 
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    pos[d] = particles[pp].pos(d);
-                                }
-
-                                sqrtf0[pp] = eval_sqrt_maxwellian(
+                                ptd.rdata(ii.m_isqrtf0)[pp] = eval_sqrt_maxwellian(
                                     vel,
                                     funcDensityBackground(
                                         AMREX_D_DECL(pos[xDir], pos[yDir], pos[zDir]), 0.),
@@ -347,11 +336,12 @@ int main (int argc, char* argv[])
                                 amrex::GpuArray<amrex::Real, 3> efield =
                                     spline.template eval_spline_field<Field::PrimalOneForm>(eA);
 
-                                weight[pp] += 0.5 * dt * chargeMass / vThermalBackground2 *
-                                              sqrtf0[pp] *
-                                              (efield[xDir] * vel[xDir] + efield[yDir] * vel[yDir] +
-                                               efield[zDir] * vel[zDir]) /
-                                              s0[pp];
+                                ptd.rdata(ii.m_iweight)[pp] +=
+                                    0.5 * dt * chargeMass / vThermalBackground2 *
+                                    ptd.rdata(ii.m_isqrtf0)[pp] *
+                                    (efield[xDir] * vel[xDir] + efield[yDir] * vel[yDir] +
+                                     efield[zDir] * vel[zDir]) /
+                                    ptd.rdata(ii.m_is0)[pp];
                             });
                     }
                     // no redistribute since particle positions do not change

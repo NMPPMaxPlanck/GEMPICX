@@ -24,16 +24,17 @@ namespace
 // execution on GPU and call that function from the unit test because of how GTest creates tests
 // within a TEST_F fixture.
 template <int vDim, int degX, int degY, int degZ>
-amrex::GpuArray<amrex::Real, vDim>* update_b_field_parallel_for (
-    amrex::ParIter<0, 0, vDim + 1, 0>& particleGrid,
+amrex::GpuArray<amrex::GpuArray<amrex::Real, vDim>, 2> update_b_field_parallel_for (
+    amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& particleGrid,
     DeRhamField<Grid::primal, Space::edge>& B,
     ComputationalDomain& infra)
 {
     long const np{particleGrid.numParticles()};
-    auto const& particles{particleGrid.GetArrayOfStructs()};
-    auto const partData{particles().data()};
+    // we cannot use particle indices because we have no access to a Gempic::ParticleGroups object
+    auto const partData = particleGrid.GetParticleTile().getParticleTileData();
     amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> bfieldsArr(2);
-    amrex::GpuArray<amrex::Real, vDim>* bfields = bfieldsArr.data();
+    // Device pointer
+    amrex::GpuArray<amrex::Real, vDim>* bfieldsDevice = bfieldsArr.data();
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> bArray;
     for (int cc{0}; cc < vDim; cc++) bArray[cc] = (B.m_data[cc])[particleGrid].array();
@@ -45,16 +46,19 @@ amrex::GpuArray<amrex::Real, vDim>* update_b_field_parallel_for (
                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
                            for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
                            {
-                               position[d] = partData[0].pos(d);
+                               position[d] = partData.pos(d, 0);
                            }
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
                                position, plo, infra.inv_cell_size_array());
 
-                           bfields[pp] =
+                           bfieldsDevice[pp] =
                                spline.template eval_spline_field<Field::PrimalTwoForm>(bArray);
                        });
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, vDim>, 2> bfieldsHost;
+    amrex::Gpu::Device::synchronize();
+    bfieldsArr.copyToHost(&bfieldsHost[0], 2);
 
-    return bfields;
+    return bfieldsHost;
 }
 
 ComputationalDomain get_compdom ()
@@ -149,17 +153,14 @@ TEST_F(EvaluateBFieldTest, NullTest)
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bArray;
         for (int cc{0}; cc < s_vDim; cc++) bArray[cc] = (B.m_data[cc])[particleGrid].array();
 
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
+            ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.inv_cell_size_array());
 
@@ -208,7 +209,7 @@ TEST_F(EvaluateBFieldTest, SingleParticleNode)
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        amrex::GpuArray<amrex::Real, s_vDim>* bfields =
+        auto bfields =
             update_b_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, B, m_infra);
 
         EXPECT_EQ(bfields[0][xDir], 1.0);
@@ -255,7 +256,7 @@ TEST_F(EvaluateBFieldTest, SingleParticleMiddle)
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        amrex::GpuArray<amrex::Real, s_vDim>* bfields =
+        auto bfields =
             update_b_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, B, m_infra);
 
         EXPECT_EQ(bfields[0][xDir], 1.0);
@@ -302,7 +303,7 @@ TEST_F(EvaluateBFieldTest, SingleParticleUnevenNodeSplit)
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        amrex::GpuArray<amrex::Real, s_vDim>* bfields =
+        auto bfields =
             update_b_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, B, m_infra);
 
         EXPECT_EQ(bfields[0][xDir], 1.0);
@@ -349,7 +350,7 @@ TEST_F(EvaluateBFieldTest, DoubleParticleSeparate)
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        amrex::GpuArray<amrex::Real, s_vDim>* bfields =
+        auto bfields =
             update_b_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, B, m_infra);
 
         EXPECT_EQ(bfields[0][xDir], 1.0);
@@ -400,7 +401,7 @@ TEST_F(EvaluateBFieldTest, DoubleParticleOverlap)
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
 
-        amrex::GpuArray<amrex::Real, s_vDim>* bfields =
+        auto bfields =
             update_b_field_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(particleGrid, B, m_infra);
 
         EXPECT_EQ(bfields[0][xDir], 1.0);

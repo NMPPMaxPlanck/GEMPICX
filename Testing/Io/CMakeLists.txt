@@ -19,3 +19,8 @@ add_test(NAME ParametersOutput_test
     -DINPUT_FILE=${CMAKE_SOURCE_DIR}/Testing/InputFiles/ParametersOutput_test.input
   -P ${CMAKE_CURRENT_SOURCE_DIR}/ParametersOutput_test.cmake
   )
+
+# add label to alow running independently from Google tests
+set_tests_properties(
+  ParametersOutput_test
+  PROPERTIES LABELS "non-Google")

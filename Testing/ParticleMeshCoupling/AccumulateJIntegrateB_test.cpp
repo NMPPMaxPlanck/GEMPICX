@@ -18,18 +18,18 @@ namespace
 // execution on GPU and call that function from the unit test because of how GTest creates tests
 // within a TEST_F fixture.
 template <Direction pDir, int degX, int degY, int degZ, unsigned int vDim>
-void accumulate_j_update_v_c2_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGrid,
-                                            DeRhamField<Grid::primal, Space::face>& B,
-                                            DeRhamField<Grid::dual, Space::face>& J,
-                                            ComputationalDomain& infra,
-                                            amrex::Real weight,
-                                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
-                                            amrex::GpuArray<amrex::Real, 2>& bfields)
+void accumulate_j_update_v_c2_parallel_for (
+    amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& particleGrid,
+    DeRhamField<Grid::primal, Space::face>& B,
+    DeRhamField<Grid::dual, Space::face>& J,
+    ComputationalDomain& infra,
+    amrex::Real weight,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
+    amrex::GpuArray<amrex::Real, 2>& bfields)
 {
     long const np{particleGrid.numParticles()};
 
-    auto const& particles{particleGrid.GetArrayOfStructs()};
-    auto const partData{particles().data()};
+    auto const partData = particleGrid.GetParticleTile().getParticleTileData();
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
     for (int cc = 0; cc < vDim; cc++) jA[cc] = (J.m_data[cc])[particleGrid].array();

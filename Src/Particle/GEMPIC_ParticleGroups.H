@@ -19,11 +19,10 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FunctionParse.H"
+#include "GEMPIC_ParticleDataIndices.H"
 
 namespace Gempic::Particle
 {
-using ParticleType = amrex::Particle<0, 0>; // SoA particle type
-
 template <unsigned int vDim, unsigned int nData = 1>
 class ParticleGroups;
 
@@ -33,7 +32,8 @@ namespace Impl
 template <unsigned int vDim, unsigned int nData>
 struct ParticleGroupIterator
 {
-    using ParIterType = amrex::ParIter<0, 0, vDim + nData, 0>;
+    // When using SoA particles, the number of reals must explicitly include AMREX_SPACEDIM
+    using ParIterType = amrex::ParIterSoA<vDim + nData + AMREX_SPACEDIM, 0>;
     std::unique_ptr<ParIterType> m_particleIter;
 
     // While references to pointers are normally dangerous, the iterators are only expected to last
@@ -78,7 +78,7 @@ private:
  * mass of the particle species are stored in a separate array.
  */
 template <unsigned int vDim, unsigned int nData>
-class ParticleGroups : public amrex::ParticleContainer<0, 0, vDim + nData, 0>
+class ParticleGroups : public amrex::ParticleContainerPureSoA<AMREX_SPACEDIM + vDim + nData, 0>
 {
 private:
     amrex::ParticleReal m_charge = 1;
@@ -91,7 +91,6 @@ public:
     amrex::ParticleReal get_mass () const { return m_mass; }
     std::string get_name () const { return m_name; }
     amrex::Vector<std::string> get_comp_names () const { return m_compNames; }
-
     /**
      * Default Constructor.
      */
@@ -99,7 +98,7 @@ public:
     ParticleGroups(amrex::Geometry const& geom,
                    amrex::DistributionMapping const& distriMap,
                    amrex::BoxArray const& grid) :
-        amrex::ParticleContainer<0, 0, vDim + nData, 0>(geom, distriMap, grid)
+        amrex::ParticleContainerPureSoA<AMREX_SPACEDIM + vDim + nData, 0>(geom, distriMap, grid)
     {
         m_compNames.resize(vDim + nData);
         if constexpr (vDim + nData > 0 && vDim + nData < 4)
@@ -160,32 +159,36 @@ public:
     void add_particle (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position,
                        amrex::GpuArray<amrex::Real, vDim> velocity,
                        amrex::Real weight,
-                       amrex::ParticleTile<ParticleType, vDim + nData, 0>& particles)
+                       amrex::ParticleTile<amrex::SoAParticle<AMREX_SPACEDIM + vDim + nData, 0>,
+                                           AMREX_SPACEDIM + vDim + nData,
+                                           0>& particles)
     {
-        // Array of Structures
-        // new particle:
-        ParticleType p;
-        p.id() = ParticleType::NextID();
-        p.cpu() = amrex::ParallelDescriptor::MyProc();
+        auto oldNumParticles = particles.numParticles();
+        particles.resize(oldNumParticles + 1);
+        particles.id(oldNumParticles) =
+            amrex::SoAParticle<AMREX_SPACEDIM + vDim + nData, 0>::NextID();
+        particles.cpu(oldNumParticles) = amrex::ParallelDescriptor::MyProc();
+        //auto ptd = particles.getParticleTileData();
 
+        // add new position
         for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
         {
-            p.pos(cc) = position[cc];
+            particles.GetStructOfArrays().GetRealData(cc)[oldNumParticles] = position[cc];
         }
-
-        // Creating attributes for Structure of Arrays container
-
+        // add new velocity
         for (int cc = 0; cc < vDim; cc++)
         {
-            // p.rdata(cc) = velocity[cc];
-            // particleAttributes[cc] = velocity[cc];
-            particles.push_back_real(cc, velocity[cc]);
+            particles.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + cc)[oldNumParticles] =
+                velocity[cc];
         }
-        // p.rdata(vDim) = weight; //weight
-        particles.push_back_real(vDim, weight);
-        for (int nd = 1; nd < nData; nd++) particles.push_back_real(vDim + nd, 0.0);
-
-        particles.push_back(p);
+        // add new weight
+        particles.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + vDim)[oldNumParticles] = weight;
+        for (int cc = 1; cc < nData; cc++)
+        {
+            particles.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + vDim + cc)[oldNumParticles] =
+                0.0;
+        }
+        amrex::Gpu::streamSynchronize();
     }
 
     void copy (ParticleGroups<vDim, nData>& source, bool local = false)
@@ -211,13 +214,15 @@ public:
 
         // Compute total weight of particle group
         amrex::ReduceOps<amrex::ReduceOpSum> reduceOps;
+        auto ii = this->get_data_indices();
+        using PTDType = typename amrex::ParticleContainerPureSoA<
+            AMREX_SPACEDIM + vDim + nData, 0>::ParticleTileType::ConstParticleTileDataType;
         auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real>>(
             *this,
-            [=] AMREX_GPU_HOST_DEVICE(
-                amrex::ConstParticleTileData<ParticleType, vDim + nData, 0> const& pt,
-                int const pp) -> amrex::GpuTuple<amrex::Real>
+            [=] AMREX_GPU_HOST_DEVICE(PTDType const& pt,
+                                      int const pp) -> amrex::GpuTuple<amrex::Real>
             {
-                auto weight = pt.m_rdata[vDim][pp];
+                auto const weight = pt.rdata(ii.m_iweight)[pp];
                 return weight;
             },
             reduceOps);
@@ -246,6 +251,84 @@ public:
     Impl::ParticleGroupIterator<vDim, nData> end ()
     {
         return Impl::ParticleGroupIterator<vDim, nData>();
+    }
+
+    /** \brief Provides named array indices for SoA list of arrays.
+     *
+     * This method shall hide verbose expressions such as
+     * `AMREX_SPACEDIM + vDim`, to help provide "clean physics code blocks".
+     *
+     * This method establishes the following convention for "physical quantity" --- "array of SoA":
+     *
+     *     * x component of position = rdata(0)
+     *     * y component of position = rdata(1)
+     *     * z component of position = rdata(2)
+     *     * x component of velocity = rdata(AMREX_SPACEDIM)
+     *     * y component of velocity = rdata(AMREX_SPACEDIM + 1)
+     *     * z component of velocity = rdata(AMREX_SPACEDIM + 2)
+     *     * particle weight         = rdata(AMREX_SPACEDIM + vDim)
+     *     * s0                      = rdata(AMREX_SPACEDIM + vDim + 1)
+     *     * sqrtf0                  = rdata(AMREX_SPACEDIM + vDim + 2)
+     *     * s2X                     = rdata(AMREX_SPACEDIM + vDim + 1)
+     *     * s2Y                     = rdata(AMREX_SPACEDIM + vDim + 2)
+     *     * s2Z                     = rdata(AMREX_SPACEDIM + vDim + 3)
+     *     * s2Vx                    = rdata(AMREX_SPACEDIM + vDim + 4)
+     *     * s2Vy                    = rdata(AMREX_SPACEDIM + vDim + 5)
+     *     * s2Vz                    = rdata(AMREX_SPACEDIM + vDim + 6)
+     *
+     * See also `GEMPIC_ParticleDataIndices.H`.
+     */
+
+    Gempic::Particle::ParticleDataIndices get_data_indices () const
+    {
+        Gempic::Particle::ParticleDataIndices dd;
+        // set position arrays
+        dd.m_iposx = 0;
+        if (AMREX_SPACEDIM > 1) dd.m_iposy = 1;
+        if (AMREX_SPACEDIM > 2) dd.m_iposz = 2;
+        // set velocity arrays
+        if (vDim > 0) dd.m_ivelx = AMREX_SPACEDIM;
+        if (vDim > 1)
+        {
+            dd.m_ively = AMREX_SPACEDIM + 1;
+        }
+        if (vDim > 2)
+        {
+            dd.m_ivelz = AMREX_SPACEDIM + 2;
+        }
+        // set weight
+        if (nData > 0)
+        {
+            dd.m_iweight = AMREX_SPACEDIM + vDim;
+        }
+        // set other
+        if (nData > 1)
+        {
+            dd.m_is0 = AMREX_SPACEDIM + vDim + 1;
+            dd.m_is2X = AMREX_SPACEDIM + vDim + 1;
+        }
+        if (nData > 2)
+        {
+            dd.m_isqrtf0 = AMREX_SPACEDIM + vDim + 2;
+            dd.m_is2Y = AMREX_SPACEDIM + vDim + 2;
+        }
+        if (nData > 3)
+        {
+            dd.m_is2Z = AMREX_SPACEDIM + vDim + 3;
+        }
+        if (nData > 4)
+        {
+            dd.m_is2Vx = AMREX_SPACEDIM + vDim + 4;
+        }
+        if (nData > 5)
+        {
+            dd.m_is2Vy = AMREX_SPACEDIM + vDim + 5;
+        }
+        if (nData > 6)
+        {
+            dd.m_is2Vz = AMREX_SPACEDIM + vDim + 6;
+        }
+        return dd;
     }
 };
 

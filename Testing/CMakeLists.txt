@@ -56,4 +56,5 @@ target_link_libraries(
 
 gtest_discover_tests(
   GtestTests
+  PROPERTIES DISCOVERY_TIMEOUT 15
   EXTRA_ARGS "--gtest_color=auto")

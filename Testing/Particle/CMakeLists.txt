@@ -6,7 +6,7 @@ if("${AMReX_SPACEDIM}" STREQUAL "3")
 endif()
 target_sources(GtestTests PRIVATE ${TMP_TEST_SOURCES})
 
-add_executable(ParticleAdd_test 
+add_executable(ParticleAdd_test
                ParticleAdd_test.cpp
                ${CMAKE_SOURCE_DIR}/Testing/TestUtils/GEMPIC_TestUtils.cpp
                )
@@ -26,3 +26,8 @@ add_test(NAME ParticlePlotFile_test
     -DPYTHON_TEST=${CMAKE_CURRENT_SOURCE_DIR}/ReadParticles.py
   -P ${CMAKE_CURRENT_SOURCE_DIR}/ParticleAdd_test.cmake
   )
+
+# add label to alow running independently from Google tests
+set_tests_properties(
+  ParticlePlotFile_test
+  PROPERTIES LABELS "non-Google")

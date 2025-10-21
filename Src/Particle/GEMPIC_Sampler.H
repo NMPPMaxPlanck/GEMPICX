@@ -330,8 +330,6 @@ public:
     }
 };
 
-using ParticleType = amrex::Particle<0, 0>; // For SoA attributes
-
 template <std::size_t vDim, std::size_t nData>
 class ParticleBuffer
 {
@@ -340,14 +338,12 @@ public:
                        std::array<amrex::Real, vDim> velocity,
                        amrex::Real weight)
     {
-        ParticleType p;
-        p.id() = ParticleType::NextID();
-        p.cpu() = amrex::ParallelDescriptor::MyProc();
+        m_id.push_back(amrex::SoAParticle<AMREX_SPACEDIM + vDim + nData, 0>::NextID());
+        m_cpu.push_back(amrex::ParallelDescriptor::MyProc());
         for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
         {
-            p.pos(cc) = position[cc];
+            m_pos[cc].push_back(position[cc]);
         }
-        m_aos.push_back(p);
 
         for (int cc = 0; cc < vDim; cc++)
         {
@@ -360,27 +356,74 @@ public:
         }
     }
 
-    void flush (amrex::ParticleTile<ParticleType, vDim + nData, 0>& particles)
+    // move our AoS particles to an outside SoA particle tile object.
+    void flush (amrex::ParticleTile<amrex::SoAParticle<AMREX_SPACEDIM + vDim + nData, 0>,
+                                    AMREX_SPACEDIM + vDim + nData,
+                                    0>& particles)
     {
-        auto oldSize = particles.GetArrayOfStructs().size();
-        auto newSize = oldSize + m_aos.size();
+        auto const oldSize = particles.numParticles();
+        auto const newSize = oldSize + m_id.size();
         particles.resize(newSize);
-
-        amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_aos.begin(), m_aos.end(),
-                              particles.GetArrayOfStructs().begin() + oldSize);
-
+        // the `ptd` object is necessary to write "cpu" and "id" information
+        auto ptd = particles.getParticleTileData();
+        // the `soa` object is necessary to write the rest of the data
+        // using ptd.rdata leads to failed tests.
         auto& soa = particles.GetStructOfArrays();
-        for (int comp = 0; comp < vDim + nData; ++comp)
+
+        // "buffer" objects to copy data to GPU
+        // The point of using "DeviceVector" is to avoid separate host and device code
+        // as of AMReX 041f225d declaring `bufferId(m_id)` leads to compilation errors,
+        // hence the manual calls to `copy` are necessary.
+        amrex::Gpu::DeviceVector<int> bufferId(m_id.size());
+        amrex::Gpu::copy(amrex::Gpu::hostToDevice, m_id.begin(), m_id.end(), bufferId.begin());
+        amrex::Gpu::DeviceVector<int> bufferCpu(m_cpu.size());
+        amrex::Gpu::copy(amrex::Gpu::hostToDevice, m_cpu.begin(), m_cpu.end(), bufferCpu.begin());
+
+        auto* const ptrId = bufferId.dataPtr();
+        auto* const ptrCpu = bufferCpu.dataPtr();
+
+        amrex::ParallelFor(m_id.size(),
+                           [=] AMREX_GPU_DEVICE(int ii)
+                           {
+                               int const iii = ii + oldSize;
+                               ptd.id(iii) = ptrId[ii];
+                               ptd.cpu(iii) = ptrCpu[ii];
+                           });
+
+        // position
+        for (int cc = 0; cc < AMREX_SPACEDIM; cc++)
         {
-            amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_rdata[comp].begin(),
-                                  m_rdata[comp].end(), soa.GetRealData(comp).begin() + oldSize);
+            amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_pos[cc].begin(), m_pos[cc].end(),
+                                  soa.GetRealData(cc).begin() + oldSize);
         }
+        // velocity
+        for (int cc = 0; cc < vDim; cc++)
+        {
+            amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_rdata[cc].begin(), m_rdata[cc].end(),
+                                  soa.GetRealData(cc + AMREX_SPACEDIM).begin() + oldSize);
+        }
+        // weight
+        amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_rdata[vDim].begin(), m_rdata[vDim].end(),
+                              soa.GetRealData(vDim + AMREX_SPACEDIM).begin() + oldSize);
+        // everything else
+        for (int cc = 1; cc < nData; cc++)
+        {
+            amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_rdata[cc + vDim].begin(),
+                                  m_rdata[cc + vDim].end(),
+                                  soa.GetRealData(cc + vDim + AMREX_SPACEDIM).begin() + oldSize);
+        }
+        amrex::Gpu::streamSynchronize();
         clear();
     }
 
     void reserve (int numParticles)
     {
-        m_aos.reserve(numParticles);
+        m_id.reserve(numParticles);
+        m_cpu.reserve(numParticles);
+        for (int comp = 0; comp < AMREX_SPACEDIM; comp++)
+        {
+            m_pos[comp].reserve(numParticles);
+        }
         for (int comp = 0; comp < vDim + nData; comp++)
         {
             m_rdata[comp].reserve(numParticles);
@@ -389,17 +432,24 @@ public:
 
     void clear ()
     {
-        m_aos.clear();
+        m_id.clear();
+        m_cpu.clear();
+        for (int comp = 0; comp < AMREX_SPACEDIM; comp++)
+        {
+            m_pos[comp].clear();
+        }
         for (int comp = 0; comp < vDim + nData; comp++)
         {
             m_rdata[comp].clear();
         }
     }
 
-    std::size_t size () const { return m_aos.size(); }
+    std::size_t size () const { return m_id.size(); }
 
 private:
-    amrex::Gpu::HostVector<ParticleType> m_aos;
+    amrex::Gpu::HostVector<int> m_id;
+    amrex::Gpu::HostVector<int> m_cpu;
+    std::array<amrex::Gpu::HostVector<amrex::Real>, AMREX_SPACEDIM> m_pos;
     std::array<amrex::Gpu::HostVector<amrex::Real>, vDim + nData> m_rdata;
 };
 
@@ -815,17 +865,17 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
         amrex::IntVect domainSize{infra.box().size()};
 
         // resize particles structure before launching on GPU
-        auto oldSize = particles.GetArrayOfStructs().size();
+        auto oldSize = particles.numParticles();
         auto newSize = oldSize + npart;
         particles.resize(newSize);
 
-        ParticleType* AMREX_RESTRICT pstruct = particles.GetArrayOfStructs()().data();
+        auto pstruct = particles.getParticleTileData();
+        auto pdi = ppg->get_data_indices();
         std::array<amrex::ParticleReal*, vDim> velArray;
-        for (int i = 0; i < vDim; i++)
-        {
-            velArray[i] = particles.GetStructOfArrays().realarray()[i];
-        }
-        amrex::ParticleReal* weightArray = particles.GetStructOfArrays().realarray()[vDim];
+        if (vDim > 0) velArray[0] = pstruct.rdata(pdi.m_ivelx);
+        if (vDim > 1) velArray[1] = pstruct.rdata(pdi.m_ively);
+        if (vDim > 2) velArray[2] = pstruct.rdata(pdi.m_ivelz);
+        amrex::ParticleReal* weightArray = pstruct.rdata(pdi.m_iweight);
         int procID = amrex::ParallelDescriptor::MyProc();
 
         int seed = rSeed + GEMPIC_D_ADD(lo[xDir], lo[yDir] * 10, lo[zDir] * 100) + species * 1000;
@@ -866,11 +916,11 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
                         AMREX_D_DECL(position[xDir], position[yDir], position[zDir]), t);
                     amrex::Real weight =
                         factor / nPartPerCell * GEMPIC_D_MULT(dx[xDir], dx[yDir], dx[zDir]);
-                    ParticleType& p = pstruct[localidx];
-                    p.id() = pidx;
-                    p.cpu() = procID;
-                    AMREX_D_TERM(p.pos(xDir) = position[xDir];, p.pos(yDir) = position[yDir];
-                                 , p.pos(zDir) = position[zDir];)
+                    pstruct.id(localidx) = pidx;
+                    pstruct.cpu(localidx) = procID;
+                    AMREX_D_TERM(pstruct.pos(xDir, localidx) = position[xDir];
+                                 , pstruct.pos(yDir, localidx) = position[yDir];
+                                 , pstruct.pos(zDir, localidx) = position[zDir];)
                     for (int i = 0; i < vDim; i++)
                     {
                         velArray[i][localidx] = velocity[i];
@@ -989,6 +1039,11 @@ void init_particles (std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& 
             std::make_shared<ParticleGroups<vDim, nData>>(speciesNames[species], infra);
 
         Impl::sample_species(particles[species], infra, species, globalSamplerName, rSeed);
+        GEMPIC_DEBUG("species " + std::to_string(species) + " has " +
+                     std::to_string(particles[species]->TotalNumberOfParticles()) + " particles");
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(particles[species]->OK(),
+                                          (std::string("Initialization of particle species ") +
+                                           std::to_string(species) + " failed.\n"));
     }
 }
 

@@ -244,11 +244,8 @@ int main (int argc, char* argv[])
                 for (auto& particleGrid : *particleSpecies)
                 {
                     long const np = particleGrid.numParticles();
-                    auto* const particles = particleGrid.GetArrayOfStructs()().data();
-                    auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vdim).data();
-                    auto* const vx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                    auto* const vy = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                    auto* const vz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+                    auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                    auto const ii = particleSpecies->get_data_indices();
 
                     amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
                     amrex::GpuArray<amrex::Array4<amrex::Real>, 3> jarr;
@@ -265,17 +262,19 @@ int main (int argc, char* argv[])
                             np,
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    positionParticle[d] = particles[pp].pos(d);
-                                }
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
+                                                 ptd.rdata(ii.m_iposy)[pp],
+                                                 ptd.rdata(ii.m_iposz)[pp])};
                                 SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                     infra.inv_cell_size_array());
-                                deposit_rho(rhoarr, spline, charge * weight[pp]);
-                                amrex::GpuArray<amrex::Real, 3> V{vx[pp], vy[pp], vz[pp]};
+                                deposit_rho(rhoarr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
+                                amrex::GpuArray<amrex::Real, 3> V{ptd.rdata(ii.m_ivelx)[pp],
+                                                                  ptd.rdata(ii.m_ively)[pp],
+                                                                  ptd.rdata(ii.m_ivelz)[pp]};
 
-                                deposit_twoform(jarr, spline, V, charge * weight[pp]);
+                                deposit_twoform(jarr, spline, V,
+                                                charge * ptd.rdata(ii.m_iweight)[pp]);
                             });
                     }
                     else if (simType == "DriftKinetic")
@@ -284,21 +283,20 @@ int main (int argc, char* argv[])
                             np,
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    positionParticle[d] = particles[pp].pos(d);
-                                }
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
+                                                 ptd.rdata(ii.m_iposy)[pp],
+                                                 ptd.rdata(ii.m_iposz)[pp])};
                                 SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                     infra.inv_cell_size_array());
-                                deposit_rho(rhoarr, spline, charge * weight[pp]);
+                                deposit_rho(rhoarr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
 
                                 // set Vx = Vy to 0, only Vz = Vpar is used
-                                vx[pp] = 0;
-                                vy[pp] = 0;
+                                ptd.rdata(ii.m_ivelx)[pp] = 0;
+                                ptd.rdata(ii.m_ively)[pp] = 0;
 
-                                deposit_twoform(jarr, spline, {0.0, 0.0, vz[pp]},
-                                                charge * weight[pp]);
+                                deposit_twoform(jarr, spline, {0.0, 0.0, ptd.rdata(ii.m_ivelz)[pp]},
+                                                charge * ptd.rdata(ii.m_iweight)[pp]);
                             });
                     }
                     else if (simType == "DeFi")
@@ -309,21 +307,22 @@ int main (int argc, char* argv[])
                                 np,
                                 [=] AMREX_GPU_DEVICE(long pp)
                                 {
-                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                    {
-                                        positionParticle[d] = particles[pp].pos(d);
-                                    }
+                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                        AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
+                                                     ptd.rdata(ii.m_iposy)[pp],
+                                                     ptd.rdata(ii.m_iposz)[pp])};
                                     SplineBase<degx, degy, degz> spline(
                                         positionParticle, plo, infra.inv_cell_size_array());
-                                    deposit_rho(rhoarr, spline, charge * weight[pp]);
+                                    deposit_rho(rhoarr, spline,
+                                                charge * ptd.rdata(ii.m_iweight)[pp]);
 
                                     // set Vx = Vy to 0, only Vz = Vpar is used
-                                    vx[pp] = 0;
-                                    vy[pp] = 0;
+                                    ptd.rdata(ii.m_ivelx)[pp] = 0;
+                                    ptd.rdata(ii.m_ively)[pp] = 0;
 
-                                    deposit_twoform(jarr, spline, {0.0, 0.0, vz[pp]},
-                                                    charge * weight[pp]);
+                                    deposit_twoform(jarr, spline,
+                                                    {0.0, 0.0, ptd.rdata(ii.m_ivelz)[pp]},
+                                                    charge * ptd.rdata(ii.m_iweight)[pp]);
                                 });
                         }
                         else
@@ -332,17 +331,20 @@ int main (int argc, char* argv[])
                                 np,
                                 [=] AMREX_GPU_DEVICE(long pp)
                                 {
-                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                    {
-                                        positionParticle[d] = particles[pp].pos(d);
-                                    }
+                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                        AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
+                                                     ptd.rdata(ii.m_iposy)[pp],
+                                                     ptd.rdata(ii.m_iposz)[pp])};
                                     SplineBase<degx, degy, degz> spline(
                                         positionParticle, plo, infra.inv_cell_size_array());
-                                    deposit_rho(rhoarr, spline, charge * weight[pp]);
-                                    amrex::GpuArray<amrex::Real, 3> V{vx[pp], vy[pp], vz[pp]};
+                                    deposit_rho(rhoarr, spline,
+                                                charge * ptd.rdata(ii.m_iweight)[pp]);
+                                    amrex::GpuArray<amrex::Real, 3> V{ptd.rdata(ii.m_ivelx)[pp],
+                                                                      ptd.rdata(ii.m_ively)[pp],
+                                                                      ptd.rdata(ii.m_ivelz)[pp]};
 
-                                    deposit_twoform(jarr, spline, V, charge * weight[pp]);
+                                    deposit_twoform(jarr, spline, V,
+                                                    charge * ptd.rdata(ii.m_iweight)[pp]);
                                 });
                         }
                     }

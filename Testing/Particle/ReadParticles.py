@@ -52,6 +52,8 @@ def AMReX_binary_format_int():
 def read_AMReX_particle_header(base_dir):
     fname = pathlib.PurePath(base_dir, 'Header')
     with open(fname, 'r') as header:
+        # header is written by `WriteBinaryParticleDataSync`
+        # from `AMReX_writeBinaryParticleData.H`
         # confirm version
         fversion = header.readline().strip()
         assert(fversion == 'Version_Two_Dot_Zero_double')
@@ -74,8 +76,11 @@ def read_AMReX_particle_header(base_dir):
 
         # ignore 2 more lines
         oo = int(header.readline())
-        # assert(oo == 38) --- As of 2025-06-18 the file reads "38" here,
-        #                      but I don't know why (number of particles is 37).
+        # As of 2025-06-18 the file ParticleAdd_test
+        # output has "38" on this line
+        # the value may be ParticleType::NextID(), but we can't know that value
+        # (in particular in the case of rejection sampling).
+        assert(oo > nparticles)
         zz = int(header.readline())
         assert(zz == 0)
 
@@ -135,7 +140,8 @@ def read_AMReX_binary_particles(base_dir):
 
         # start particle index at 0
         pp = 0
-        for n in info['nparticles_per_chunk']:
+        for cc in range(info['nchunks']):
+            n = info['nparticles_per_chunk'][cc]
             dint = np.fromfile(
                         fobject,
                         dtype = AMReX_binary_format_int(),
@@ -215,7 +221,18 @@ def compare_prescribed_and_binary():
                         - prescribed_data[kk][prescribed_index]) < 1e-10)
     print('SUCCESS: prescribed data agrees with binary data.')
 
+def test_sample():
+    base_dir = 'particle_test_CompareMoments_group0/particles'
+    info = read_AMReX_particle_header(base_dir)
+    print(info)
+    data = read_AMReX_binary_particles(base_dir)
+    print(data.dtype)
+    print(data[:4])
+    return None
+
 if __name__ == '__main__':
-    compare_ascii_and_binary()
+    #compare_ascii_and_binary() # **note**: there is no ASCII output possible
+                                #           for SoA particles
     compare_prescribed_and_binary()
+    #test_sample()
 

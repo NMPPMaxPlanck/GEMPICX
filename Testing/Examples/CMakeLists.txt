@@ -13,12 +13,16 @@ function(add_executable_input_to_tests DIR)
         )
       else()
         add_test(NAME RunTest.Example.${MODEL}.${INPUT}
-          COMMAND mpirun -np 2 --oversubscribe -wdir ${RUN_DIR} ${RUN_DIR}/${TGT} ${target_folder}/${INPUT}
+          COMMAND mpirun -np 2  -wdir ${RUN_DIR} ${RUN_DIR}/${TGT} ${target_folder}/${INPUT}
           TimeLoop.nSteps=1
           ReducedDiagnostics.saveFolder=ReducedDiagnostics/${INPUT} # ensure that parallel tests do not write to the same file
           FullDiagnostics.saveFolder=FullDiagnostics/${INPUT}
         )
       endif()
+      # add label to alow running independently from Google tests
+      set_tests_properties(
+        RunTest.Example.${MODEL}.${INPUT}
+        PROPERTIES LABELS "non-Google")
     endforeach()
   endforeach()
 

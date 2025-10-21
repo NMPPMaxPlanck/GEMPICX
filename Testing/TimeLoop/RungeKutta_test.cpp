@@ -285,18 +285,16 @@ TEST_F(RungeKuttaTest, KineticParticleGroup)
             rkSolver.template lsrk_stage_push_particle_deposit_j<s_degX, s_degY, s_degZ>(
                 m_particleGroup, E, B, J, h, coeffsAStageIndex, coeffsBStageIndex);
         }
-
-        for (auto& particleGrid : *m_particleGroup[0])
-        {
-            auto& particles = particleGrid.GetArrayOfStructs();
-            auto* partData = particles().data();
-
-            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-            {
-                rEnd[d] = partData[0].pos(d);
-            }
-        }
     } //end of time loop
+
+    for (auto& particleGrid : *m_particleGroup[0])
+    {
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[0]->get_data_indices();
+
+        AMREX_D_EXPR(rEnd[xDir] = ptd.rdata(ii.m_iposx)[0], rEnd[yDir] = ptd.rdata(ii.m_iposy)[0],
+                     rEnd[zDir] = ptd.rdata(ii.m_iposz)[0]);
+    }
     EXPECT_NEAR(rEnd[0], analysisPosition[nSteps - 1][0], 1e-3);
     EXPECT_NEAR(rEnd[1], analysisPosition[nSteps - 1][1], 1e-3);
     EXPECT_NEAR(rEnd[2], analysisPosition[nSteps - 1][2], 1e-3);
@@ -374,18 +372,13 @@ TEST_F(RungeKuttaTest, DriftKineticParticleGroup)
 
         for (auto& particleGrid : *m_particleGroup[0])
         {
-            auto& particles = particleGrid.GetArrayOfStructs();
-            auto* partData = particles().data();
+            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+            auto const ii = m_particleGroup[0]->get_data_indices();
 
-            auto& particleAttributes = particleGrid.GetStructOfArrays();
-            auto* vx = particleAttributes.GetRealData(0).data();
-            auto* vy = particleAttributes.GetRealData(1).data();
-            auto* vz = particleAttributes.GetRealData(2).data();
-            vEnd = {vx[0], vy[0], vz[0]};
-            for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-            {
-                rEnd[d] = partData[0].pos(d);
-            }
+            vEnd = {ptd.rdata(ii.m_ivelx)[0], ptd.rdata(ii.m_ively)[0], ptd.rdata(ii.m_ivelz)[0]};
+            AMREX_D_EXPR(rEnd[xDir] = ptd.rdata(ii.m_iposx)[0],
+                         rEnd[yDir] = ptd.rdata(ii.m_iposy)[0],
+                         rEnd[zDir] = ptd.rdata(ii.m_iposz)[0]);
         }
 
     } //end of time loop

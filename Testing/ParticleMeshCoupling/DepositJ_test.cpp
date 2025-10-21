@@ -164,12 +164,8 @@ public:
             for (auto& particleGrid : *particleSpecies)
             {
                 long const np = particleGrid.numParticles();
-                auto* const particles = particleGrid.GetArrayOfStructs()().data();
-                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(s_vdim).data();
-
-                auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+                auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                auto const ii = particleSpecies->get_data_indices();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> jA;
 
@@ -183,17 +179,17 @@ public:
                     np,
                     [=] AMREX_GPU_DEVICE(long pp)
                     {
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                        {
-                            positionParticle[d] = particles[pp].pos(d);
-                        }
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                            AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                         ptd.rdata(ii.m_iposz)[pp])};
 
                         SplineBase<s_degX, s_degY, s_degZ> spline(positionParticle, plo,
                                                                   infra.inv_cell_size_array());
 
-                        amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
-                        deposit_twoform(jA, spline, vel, charge * weight[pp]);
+                        amrex::GpuArray<amrex::Real, s_vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                 ptd.rdata(ii.m_ively)[pp],
+                                                                 ptd.rdata(ii.m_ivelz)[pp]};
+                        deposit_twoform(jA, spline, vel, charge * ptd.rdata(ii.m_iweight)[pp]);
                     });
             }
         }

@@ -153,12 +153,8 @@ int main (int argc, char* argv[])
                     for (auto& particleGrid : *particleSpecies)
                     {
                         long const np = particleGrid.numParticles();
-                        auto const& particles = particleGrid.GetArrayOfStructs()().data();
-                        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
-                        auto* const weight =
-                            particleGrid.GetStructOfArrays().GetRealData(vdim).data();
+                        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                        auto const ii = particleSpecies->get_data_indices();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
@@ -171,44 +167,45 @@ int main (int argc, char* argv[])
                                          .array(); // Filtered E for pushing
                             bA[cc] = (B.m_data[cc])[particleGrid].array();
                         }
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
                             infra.geometry().ProbLoArray()};
 
-                        amrex::ParallelFor(np,
-                                           [=] AMREX_GPU_DEVICE(long pp)
-                                           {
-                                               // Read out particle position and compute according
-                                               // splines
-                                               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                                               for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                               {
-                                                   pos[d] = particles[pp].pos(d);
-                                               }
-                                               SplineWithPrimitive<degx, degy, degz> spline(
-                                                   pos, plo, infra.inv_cell_size_array());
+                        amrex::ParallelFor(
+                            np,
+                            [=] AMREX_GPU_DEVICE(long pp)
+                            {
+                                // Read out particle position and compute according
+                                // splines
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
+                                AMREX_D_EXPR(pos[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                             pos[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                             pos[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
-                                               // Read out particle velocity
-                                               amrex::GpuArray<amrex::Real, vdim> vel{
-                                                   velx[pp], vely[pp], velz[pp]};
+                                SplineWithPrimitive<degx, degy, degz> spline(
+                                    pos, plo, infra.inv_cell_size_array());
 
-                                               operatorHamilton.apply_h_e_particle(
-                                                   vel, eA, spline, chargeOverMass, 0.5 * dt);
+                                // Read out particle velocity
+                                amrex::GpuArray<amrex::Real, vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                       ptd.rdata(ii.m_ively)[pp],
+                                                                       ptd.rdata(ii.m_ivelz)[pp]};
 
-                                               amrex::Real chargeWeight = charge * weight[pp];
+                                operatorHamilton.apply_h_e_particle(vel, eA, spline, chargeOverMass,
+                                                                    0.5 * dt);
 
-                                               operatorHamilton.apply_h_p(
-                                                   pos, vel, infra, spline, infra.cell_size_array(),
-                                                   jA, bA, chargeOverMass, chargeWeight, dt);
+                                amrex::Real chargeWeight = charge * ptd.rdata(ii.m_iweight)[pp];
 
-                                               for (int xd = 0; xd < AMREX_SPACEDIM; xd++)
-                                               {
-                                                   particles[pp].pos(xd) = pos[xd];
-                                               }
+                                operatorHamilton.apply_h_p(pos, vel, infra, spline,
+                                                           infra.cell_size_array(), jA, bA,
+                                                           chargeOverMass, chargeWeight, dt);
 
-                                               velx[pp] = vel[xDir];
-                                               vely[pp] = vel[yDir];
-                                               velz[pp] = vel[zDir];
-                                           });
+                                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = pos[0],
+                                             ptd.rdata(ii.m_iposy)[pp] = pos[1],
+                                             ptd.rdata(ii.m_iposz)[pp] = pos[2]);
+
+                                ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
+                                ptd.rdata(ii.m_ively)[pp] = vel[yDir];
+                                ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
+                            });
                     }
                     particleSpecies->Redistribute();
                 }
@@ -232,12 +229,8 @@ int main (int argc, char* argv[])
                     for (auto& particleGrid : *particleSpecies)
                     {
                         long const np = particleGrid.numParticles();
-                        auto const& particles = particleGrid.GetArrayOfStructs()().data();
-                        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
-                        auto* const weight =
-                            particleGrid.GetStructOfArrays().GetRealData(vdim).data();
+                        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                        auto const ii = particleSpecies->get_data_indices();
 
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
                         amrex::Array4<amrex::Real> rhoarr;
@@ -252,31 +245,31 @@ int main (int argc, char* argv[])
 
                         // loop over particles: add contribution of old particle position to J and
                         // push
-                        amrex::ParallelFor(np,
-                                           [=] AMREX_GPU_DEVICE(long pp)
-                                           {
-                                               amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                                               for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                               {
-                                                   pos[d] = particles[pp].pos(d);
-                                               }
+                        amrex::ParallelFor(
+                            np,
+                            [=] AMREX_GPU_DEVICE(long pp)
+                            {
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{AMREX_D_DECL(
+                                    ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                    ptd.rdata(ii.m_iposz)[pp])};
 
-                                               amrex::GpuArray<amrex::Real, vdim> vel{
-                                                   velx[pp], vely[pp], velz[pp]};
+                                amrex::GpuArray<amrex::Real, vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                       ptd.rdata(ii.m_ively)[pp],
+                                                                       ptd.rdata(ii.m_ivelz)[pp]};
 
-                                               SplineBase<degx, degy, degz> spline(
-                                                   pos, plo, infra.inv_cell_size_array());
+                                SplineBase<degx, degy, degz> spline(pos, plo,
+                                                                    infra.inv_cell_size_array());
 
-                                               operatorHamilton.apply_h_e_particle(
-                                                   vel, eA, spline, chargeOverMass, 0.5 * dt);
-                                               velx[pp] = vel[xDir];
-                                               vely[pp] = vel[yDir];
-                                               velz[pp] = vel[zDir];
-                                               // compute rho for Gauss error diagnostics
-                                               // in principle this should be computed only
-                                               // if the Gauss error diagnostic is performed
-                                               deposit_rho(rhoarr, spline, charge * weight[pp]);
-                                           });
+                                operatorHamilton.apply_h_e_particle(vel, eA, spline, chargeOverMass,
+                                                                    0.5 * dt);
+                                ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
+                                ptd.rdata(ii.m_ively)[pp] = vel[yDir];
+                                ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
+                                // compute rho for Gauss error diagnostics
+                                // in principle this should be computed only
+                                // if the Gauss error diagnostic is performed
+                                deposit_rho(rhoarr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
+                            });
                     }
                     particleSpecies->Redistribute();
                 }

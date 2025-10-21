@@ -174,12 +174,8 @@ public:
             for (auto& particleGrid : *particleSpecies)
             {
                 long const np = particleGrid.numParticles();
-                auto* const particles = particleGrid.GetArrayOfStructs()().data();
-                auto* const weight = particleGrid.GetStructOfArrays().GetRealData(s_vdim).data();
-
-                auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+                auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                auto const ii = particleSpecies->get_data_indices();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> bA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> jcrossbA;
@@ -195,16 +191,16 @@ public:
                     np,
                     [=] AMREX_GPU_DEVICE(long pp)
                     {
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                        {
-                            positionParticle[d] = particles[pp].pos(d);
-                        }
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                            AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                         ptd.rdata(ii.m_iposz)[pp])};
 
                         SplineBase<s_degX, s_degY, s_degZ> spline(positionParticle, plo,
                                                                   infra.inv_cell_size_array());
 
-                        amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
+                        amrex::GpuArray<amrex::Real, s_vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                 ptd.rdata(ii.m_ively)[pp],
+                                                                 ptd.rdata(ii.m_ivelz)[pp]};
 
                         amrex::GpuArray<amrex::Real, s_vdim> bfield =
                             spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
@@ -212,7 +208,8 @@ public:
                             (vel[yDir] * bfield[zDir] - vel[zDir] * bfield[yDir]),
                             (vel[zDir] * bfield[xDir] - vel[xDir] * bfield[zDir]),
                             (vel[xDir] * bfield[yDir] - vel[yDir] * bfield[xDir])};
-                        deposit_twoform(jcrossbA, spline, vcrossb, charge * weight[pp]);
+                        deposit_twoform(jcrossbA, spline, vcrossb,
+                                        charge * ptd.rdata(ii.m_iweight)[pp]);
                     });
             }
         }

@@ -98,20 +98,20 @@ public:
             amrex::ReduceOps<amrex::ReduceOpSum, amrex::ReduceOpSum, amrex::ReduceOpSum,
                              amrex::ReduceOpSum>
                 reduceOps;
+            using PTDType = typename Gempic::Particle::ParticleGroups<
+                vdim + ndata, 0>::ParticleTileType::ConstParticleTileDataType;
+            auto const ii = particleSpecies->get_data_indices();
             auto particleTmp = amrex::ParticleReduce<
                 amrex::ReduceData<amrex::Real, amrex::Real, amrex::Real, amrex::Real>>(
                 *particleSpecies,
-                [=] AMREX_GPU_HOST_DEVICE(
-                    amrex::ConstParticleTileData<Gempic::Particle::ParticleType, vdim + ndata,
-                                                 0> const& pt,
-                    int const pp)
+                [=] AMREX_GPU_HOST_DEVICE(PTDType const& pt, int const pp)
                     -> amrex::GpuTuple<amrex::Real, amrex::Real, amrex::Real, amrex::Real>
                 {
-                    auto weight = pt.m_rdata[vdim][pp];
-                    auto velx = pt.m_rdata[xDir][pp];
-                    auto vely = pt.m_rdata[yDir][pp];
-                    auto velz = pt.m_rdata[zDir][pp];
-                    auto energy = 0.5 * (velx * velx + vely * vely + velz * velz);
+                    auto const weight = pt.rdata(ii.m_iweight)[pp];
+                    auto const velx = pt.rdata(ii.m_ivelx)[pp];
+                    auto const vely = pt.rdata(ii.m_ively)[pp];
+                    auto const velz = pt.rdata(ii.m_ivelz)[pp];
+                    auto const energy = 0.5 * (velx * velx + vely * vely + velz * velz);
                     return {weight * velx, weight * vely, weight * velz, weight * energy};
                 },
                 reduceOps);
@@ -205,20 +205,21 @@ public:
                     partGr[spec]);
             amrex::Real vThermalBackground = partGrLinVlasov->get_v_thermal_background();
             amrex::ReduceOps<amrex::ReduceOpSum, amrex::ReduceOpSum> reduceOps;
+            using PTDType = typename Gempic::Particle::ParticleGroups<
+                vdim + ndata, 0>::ParticleTileType::ConstParticleTileDataType;
+            auto const ii = partGr[spec]->get_data_indices();
             auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real, amrex::Real>>(
                 *partGr[spec],
-                [=] AMREX_GPU_HOST_DEVICE(
-                    amrex::ConstParticleTileData<Gempic::Particle::ParticleType, vdim + ndata,
-                                                 0> const& pt,
-                    int const pp) -> amrex::GpuTuple<amrex::Real, amrex::Real>
+                [=] AMREX_GPU_HOST_DEVICE(PTDType const& pt,
+                                          int const pp) -> amrex::GpuTuple<amrex::Real, amrex::Real>
                 {
-                    auto weight = pt.m_rdata[vdim][pp];
-                    auto s0 = pt.m_rdata[vdim + 1][pp];
-                    auto velx = pt.m_rdata[xDir][pp];
-                    auto vely = pt.m_rdata[yDir][pp];
-                    auto velz = pt.m_rdata[zDir][pp];
-                    auto energyWeight = 0.5 * s0 * weight * weight;
-                    auto energyKin = 0.5 * (velx * velx + vely * vely + velz * velz);
+                    auto const weight = pt.rdata(ii.m_iweight)[pp];
+                    auto const velx = pt.rdata(ii.m_ivelx)[pp];
+                    auto const vely = pt.rdata(ii.m_ively)[pp];
+                    auto const velz = pt.rdata(ii.m_ivelz)[pp];
+                    auto const s0 = pt.rdata(ii.m_is0)[pp];
+                    auto const energyWeight = 0.5 * s0 * weight * weight;
+                    auto const energyKin = 0.5 * (velx * velx + vely * vely + velz * velz);
                     return {energyWeight, energyKin};
                 },
                 reduceOps);
