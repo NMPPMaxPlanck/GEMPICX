@@ -922,8 +922,8 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  */
 template <int degX, int degY, int degZ>
 AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const& rho,
-                                               SplineBase<degX, degY, degZ>& spline,
-                                               amrex::Real chargeWeight)
+                                               SplineBase<degX, degY, degZ> const& spline,
+                                               amrex::Real const chargeWeight)
 {
     BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_rho()");
     GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
@@ -1275,8 +1275,8 @@ void deposit_particle_density (
         for (auto& particleGrid : *particleSpecies)
         {
             long const np = particleGrid.numParticles();
-            auto* const particles = particleGrid.GetArrayOfStructs()().data();
-            auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vDim).data();
+            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
 
             amrex::Array4<amrex::Real> const& pdArr = particleDensity.m_data[particleGrid].array();
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> lowerCorner{
@@ -1286,14 +1286,13 @@ void deposit_particle_density (
                                [=] AMREX_GPU_DEVICE(long pp)
                                {
                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                   {
-                                       positionParticle[d] = particles[pp].pos(d);
-                                   }
+                                   AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                                positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                                positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
                                    SplineBase<degX, degY, degZ> spline(
                                        positionParticle, lowerCorner,
                                        compDom.inv_cell_size_array());
-                                   deposit_rho(pdArr, spline, charge * weight[pp]);
+                                   deposit_rho(pdArr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
                                });
         }
     }
@@ -1324,8 +1323,8 @@ void deposit_individual_particle_density (
         for (auto& pti : *particleSpecies)
         {
             long const np = pti.numParticles();
-            auto* const particles = pti.GetArrayOfStructs()().data();
-            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
+            auto const ptd = pti.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
 
             amrex::Array4<amrex::Real> rhoA;
             amrex::Array4<amrex::Real> rhoMassA;
@@ -1339,16 +1338,16 @@ void deposit_individual_particle_density (
                                [=] AMREX_GPU_DEVICE(long pp)
                                {
                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                   {
-                                       positionParticle[d] = particles[pp].pos(d);
-                                   }
+                                   AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                                positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                                positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
                                    SplineBase<degX, degY, degZ> spline(
                                        positionParticle, plo, compDom.inv_cell_size_array());
 
-                                   deposit_rho(rhoA, spline, charge * weight[pp]);
-                                   deposit_rho(rhoMassA, spline, mass * weight[pp]);
+                                   deposit_rho(rhoA, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
+                                   deposit_rho(rhoMassA, spline,
+                                               mass * ptd.rdata(ii.m_iweight)[pp]);
                                });
         }
         if (doSync)
@@ -1379,12 +1378,8 @@ void deposit_current_density (
         for (auto& pti : *particleSpecies)
         {
             long const np = pti.numParticles();
-            auto* const particles = pti.GetArrayOfStructs()().data();
-            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
-
-            auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-            auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-            auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+            auto const ptd = pti.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
 
@@ -1394,22 +1389,23 @@ void deposit_current_density (
             }
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
 
-            amrex::ParallelFor(np,
-                               [=] AMREX_GPU_DEVICE(long pp)
-                               {
-                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                   {
-                                       positionParticle[d] = particles[pp].pos(d);
-                                   }
+            amrex::ParallelFor(
+                np,
+                [=] AMREX_GPU_DEVICE(long pp)
+                {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                    AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                 positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                 positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
-                                   SplineBase<degX, degY, degZ> spline(
-                                       positionParticle, plo, compDom.inv_cell_size_array());
+                    SplineBase<degX, degY, degZ> spline(positionParticle, plo,
+                                                        compDom.inv_cell_size_array());
 
-                                   amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp],
-                                                                          velz[pp]};
-                                   deposit_twoform(jA, spline, vel, charge * weight[pp]);
-                               });
+                    amrex::GpuArray<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                           ptd.rdata(ii.m_ively)[pp],
+                                                           ptd.rdata(ii.m_ivelz)[pp]};
+                    deposit_twoform(jA, spline, vel, charge * ptd.rdata(ii.m_iweight)[pp]);
+                });
         }
     }
 
@@ -1442,8 +1438,8 @@ void deposit_rho_weighted_electric_field (
         for (auto& pti : *particleSpecies)
         {
             long const np = pti.numParticles();
-            auto* const particles = pti.GetArrayOfStructs()().data();
-            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
+            auto const ptd = pti.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> rhoeA;
@@ -1459,10 +1455,9 @@ void deposit_rho_weighted_electric_field (
                                [=] AMREX_GPU_DEVICE(long pp)
                                {
                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                   for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                   {
-                                       positionParticle[d] = particles[pp].pos(d);
-                                   }
+                                   AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                                positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                                positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
                                    SplineBase<degX, degY, degZ> spline(
                                        positionParticle, plo, compDom.inv_cell_size_array());
@@ -1470,7 +1465,7 @@ void deposit_rho_weighted_electric_field (
                                    amrex::GpuArray<amrex::Real, vDim> efield =
                                        spline.template eval_spline_field<Field::PrimalOneForm>(eA);
                                    deposit_twoform(rhoeA, spline, efield,
-                                                   chargeSqrByMass * weight[pp]);
+                                                   chargeSqrByMass * ptd.rdata(ii.m_iweight)[pp]);
                                });
         }
     }
@@ -1511,12 +1506,8 @@ void deposit_rho_j_jcrossb_deldots (
         for (auto& pti : *particleSpecies)
         {
             long const np = pti.numParticles();
-            auto* const particles = pti.GetArrayOfStructs()().data();
-            auto* const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
-
-            auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-            auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-            auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+            auto const ptd = pti.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
 
             amrex::Array4<amrex::Real> rhoA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
@@ -1539,10 +1530,9 @@ void deposit_rho_j_jcrossb_deldots (
                 [=] AMREX_GPU_DEVICE(long pp)
                 {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                    {
-                        positionParticle[d] = particles[pp].pos(d);
-                    }
+                    AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                 positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                 positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
                     SplineBase<degX, degY, degZ> spline(positionParticle, plo,
                                                         compDom.inv_cell_size_array());
@@ -1550,10 +1540,12 @@ void deposit_rho_j_jcrossb_deldots (
                         positionParticle, plo, compDom.inv_cell_size_array(),
                         compDom.cell_size_array());
 
-                    amrex::GpuArray<amrex::Real, vDim> vel{velx[pp], vely[pp], velz[pp]};
+                    amrex::GpuArray<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                           ptd.rdata(ii.m_ively)[pp],
+                                                           ptd.rdata(ii.m_ivelz)[pp]};
 
-                    deposit_rho(rhoA, splineWithDeriv, charge * weight[pp]);
-                    deposit_twoform(jA, splineWithDeriv, vel, charge * weight[pp]);
+                    deposit_rho(rhoA, splineWithDeriv, charge * ptd.rdata(ii.m_iweight)[pp]);
+                    deposit_twoform(jA, splineWithDeriv, vel, charge * ptd.rdata(ii.m_iweight)[pp]);
 
                     amrex::GpuArray<amrex::Real, vDim> bfield =
                         spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
@@ -1562,9 +1554,10 @@ void deposit_rho_j_jcrossb_deldots (
                         (vel[zDir] * bfield[xDir] - vel[xDir] * bfield[zDir]),
                         (vel[xDir] * bfield[yDir] - vel[yDir] * bfield[xDir])};
                     deposit_twoform(jcrossbA, splineWithDeriv, vcrossb,
-                                    chargeByMass * charge * weight[pp]);
+                                    chargeByMass * charge * ptd.rdata(ii.m_iweight)[pp]);
 
-                    deposit_deldot_s(deldotsA, splineWithDeriv, vel, charge * weight[pp]);
+                    deposit_deldot_s(deldotsA, splineWithDeriv, vel,
+                                     charge * ptd.rdata(ii.m_iweight)[pp]);
                 });
         }
     }

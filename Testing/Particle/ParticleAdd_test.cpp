@@ -75,7 +75,7 @@ TEST(ParticleAddTest, AddAndWriteParticles)
     for (auto& pti : *particles)
     {
         auto const ptd = pti.GetParticleTile().getParticleTileData();
-        auto* const ww = ptd.rdata(idxw);
+        auto* const ww = ptd.rdata(idxw + AMREX_SPACEDIM);
         double const tol = 1e-10;
         long const npt = pti.numParticles();
 
@@ -108,5 +108,4 @@ TEST(ParticleAddTest, AddAndWriteParticles)
     amrex::Vector<std::string> const& realCompNames = {"weight"};
     particles->WritePlotFile("ParticleAddOutput", "particles", writeRealComp, writeIntComp,
                              realCompNames, intCompNames);
-    particles->WriteAsciiFile("ParticleAddASCII.txt"); // doesn't work for SoA particles
 }

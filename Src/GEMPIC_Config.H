@@ -177,6 +177,24 @@
 #define GEMPIC_D_PAD_Z(a) a
 #endif
 
+/**
+ * A simple "print debug message" function.
+ *
+ * TODO:
+ * If anyone needs to use this for a multi-process run, please note:
+ *
+ *      * It's very useful to concatenate everything into a single
+ *      string before feeding it to "std::cerr", and also to use "std::endl"
+ *      to ensure that the buffer is flushed as soon as possible.
+ *      Otherwise messages of different processes are likely to be merged.
+ *      * It is useful to prepand the MPI rank to the message.
+ */
+#ifdef GEMPIC_DEBUG_MESSAGES
+#define GEMPIC_DEBUG(MSG) std::cerr << std::string(MSG) << std::endl;
+#else
+#define GEMPIC_DEBUG(MSG)
+#endif
+
 //! Directions available in GEMPIC
 enum Direction : unsigned int
 {

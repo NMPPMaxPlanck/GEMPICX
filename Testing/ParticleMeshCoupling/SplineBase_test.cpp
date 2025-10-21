@@ -155,14 +155,11 @@ TEST_F(SplineBaseTest, SplineConstructorTest)
     {
         particleLoopRun = true;
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
+            ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
 
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
         AMREX_D_TERM(EXPECT_EQ(1., spline.m_cellSplineVals[xDir][0]);
@@ -209,14 +206,10 @@ TEST_F(SplineBaseTestCustomInfrastructure, SplineConstructorScalingTest)
     {
         particleLoopRun = true;
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
-
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
+            ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi = infra.geometry().InvCellSizeArray();
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
@@ -256,14 +249,10 @@ TEST_F(SplineBaseTest, SplineInitBSplinesAtPositionsTest)
     {
         particleLoopRun = true;
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
-
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
+            ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
@@ -305,14 +294,10 @@ TEST_F(SplineBaseTest, SplineUpdate1DSplinesTest)
     {
         particleLoopRun = true;
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
-
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
+            ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
         MockSpline<s_degX, s_degY, s_degZ> spline(position, m_infra.geometry().ProbLoArray(),
                                                   m_infra.geometry().InvCellSizeArray());
 
@@ -350,14 +335,10 @@ TEST_F(SplineBaseTest, SplineEvalBSplineTest)
     {
         particleLoopRun = true;
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
-
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
+            ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
@@ -401,14 +382,10 @@ TEST_F(SplineBaseTest, SplineSplineEvalTest)
     {
         particleLoopRun = true;
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
-
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
+            ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 

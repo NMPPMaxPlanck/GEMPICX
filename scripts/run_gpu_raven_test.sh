@@ -3,6 +3,8 @@
 # Slurm job script for a brief gpu test run on Raven
 # using one A100 GPU and an OpenMPI-based build of GEMPIC.
 # Job submission:  sbatch --wait run_gpu_raven_test.sh
+# **Before submission**: you must update the REPOSITORY and DIMENSION variables
+# given below.
 #
 #SBATCH -o ./testSim.out
 #SBATCH -D ./
@@ -22,14 +24,24 @@
 
 # exit immediately at any error
 set -e
-source ./mpcdf_modules.inc
+
+#######################################
+# FIXME: please adapt to your own setup
+export REPOSITORY=${HOME}/repos/sonnendruecker/gempic
+export DIMENSION="3D"
+#######################################
+
+source ${REPOSITORY}/scripts/mpcdf_modules.inc
 
 # put TMPDIR onto a RAMDISK for fast builds and cleanup, moreover the
 # default /tmp would be too small to hold all temporary files
 export TMPDIR=$JOB_SHMTMPDIR
 # keep the default build dir relative to the source for the moment
-export BUILD_DIR=$(pwd)/../build/mpcdf-gpu-3D
+export BUILD_DIR=${REPOSITORY}/build/mpcdf-raven-${DIMENSION}
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 # Run the program:
-srun $BUILD_DIR/Testing/GtestTests
+srun ${BUILD_DIR}/Testing/GtestTests
+cd ${BUILD_DIR}
+ctest --output-on-failure -L non-Google
 

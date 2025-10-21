@@ -24,14 +24,15 @@ namespace
 // execution on GPU and call that function from the unit test because of how GTest creates tests
 // within a TEST_F fixture.
 template <int vDim, int degX, int degY, int degZ>
-void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGrid,
+void update_e_field_parallel_for (amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& particleGrid,
                                   DeRhamField<Grid::primal, Space::edge>& E,
                                   ComputationalDomain& infra)
 {
     long const np{particleGrid.numParticles()};
-    auto const& particles{particleGrid.GetArrayOfStructs()};
-    auto const partData{particles().data()};
+    // we cannot use particle indices because we have no access to a Gempic::ParticleGroups object
+    auto const partData = particleGrid.GetParticleTile().getParticleTileData();
     amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> efieldsPtr(2);
+    // Device pointer
     amrex::GpuArray<amrex::Real, vDim>* efields = efieldsPtr.data();
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eArray;
@@ -52,18 +53,19 @@ void update_e_field_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGri
                            efields[pp] =
                                spline.template eval_spline_field<Field::PrimalOneForm>(eArray);
                        });
+    amrex::GpuArray<amrex::GpuArray<amrex::Real, vDim>, 2> efieldsHost;
+    amrex::Gpu::Device::synchronize();
+    efieldsPtr.copyToHost(&efieldsHost[0], 2);
 
-    amrex::Gpu::streamSynchronize();
-
-    EXPECT_NEAR(efields[0][xDir], 1.0, 1e-12);
-    EXPECT_NEAR(efields[0][yDir], 1.0, 1e-12);
-    EXPECT_NEAR(efields[0][zDir], 1.0, 1e-12);
+    EXPECT_NEAR(efieldsHost[0][xDir], 1.0, 1e-12);
+    EXPECT_NEAR(efieldsHost[0][yDir], 1.0, 1e-12);
+    EXPECT_NEAR(efieldsHost[0][zDir], 1.0, 1e-12);
 
     if (np == 2)
     {
-        EXPECT_NEAR(efields[1][xDir], 1.0, 1e-12);
-        EXPECT_NEAR(efields[1][yDir], 1.0, 1e-12);
-        EXPECT_NEAR(efields[1][zDir], 1.0, 1e-12);
+        EXPECT_NEAR(efieldsHost[1][xDir], 1.0, 1e-12);
+        EXPECT_NEAR(efieldsHost[1][yDir], 1.0, 1e-12);
+        EXPECT_NEAR(efieldsHost[1][zDir], 1.0, 1e-12);
     }
 }
 
@@ -165,8 +167,8 @@ TEST_F(EvaluateEFieldTest, NullTest)
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
+        auto& tile = particleGrid.GetParticleTile();
+        auto const partData = tile.getParticleTileData();
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> eArray;
         for (int cc{0}; cc < s_vDim; cc++) eArray[cc] = (E.m_data[cc])[particleGrid].array();

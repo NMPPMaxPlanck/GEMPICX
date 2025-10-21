@@ -108,11 +108,11 @@ void mult_and_add (amrex::Real const dstVal,
         auto const& dstfa = dst.arrays();
         auto const& srcfa = src.const_arrays();
         amrex::ParallelFor(dst, nghost, numcomp,
-                           [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k, int n) noexcept
+                           [=] AMREX_GPU_DEVICE(int boxNo, int i, int j, int k, int n) noexcept
                            {
-                               dstfa[box_no](i, j, k, n + dstcomp) =
-                                   dstVal * dstfa[box_no](i, j, k, n + dstcomp) +
-                                   srcVal * srcfa[box_no](i, j, k, n + srccomp);
+                               dstfa[boxNo](i, j, k, n + dstcomp) =
+                                   dstVal * dstfa[boxNo](i, j, k, n + dstcomp) +
+                                   srcVal * srcfa[boxNo](i, j, k, n + srccomp);
                            });
         if (!amrex::Gpu::inNoSyncRegion())
         {
@@ -158,11 +158,11 @@ void mult_and_add (amrex::MultiFab& dst,
         auto const& dstfa = dst.arrays();
         auto const& srcfa = src.const_arrays();
         amrex::ParallelFor(dst, nghost, numcomp,
-                           [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k, int n) noexcept
+                           [=] AMREX_GPU_DEVICE(int boxNo, int i, int j, int k, int n) noexcept
                            {
-                               dstfa[box_no](i, j, k, n + dstcomp) =
-                                   dstfa[box_no](i, j, k, n + dstcomp) +
-                                   srcVal * srcfa[box_no](i, j, k, n + srccomp);
+                               dstfa[boxNo](i, j, k, n + dstcomp) =
+                                   dstfa[boxNo](i, j, k, n + dstcomp) +
+                                   srcVal * srcfa[boxNo](i, j, k, n + srccomp);
                            });
         if (!amrex::Gpu::inNoSyncRegion())
         {
@@ -237,12 +237,12 @@ typename FAB::value_type wgt_dot (amrex::FabArray<FAB> const& wgt,
         auto const& wgtma = wgt.const_arrays();
         sm = ParReduce(
             amrex::TypeList<amrex::ReduceOpSum>{}, amrex::TypeList<T>{}, x, nghost,
-            [=] AMREX_GPU_DEVICE(int box_no, int i, int j, int k) noexcept -> amrex::GpuTuple<T>
+            [=] AMREX_GPU_DEVICE(int boxNo, int i, int j, int k) noexcept -> amrex::GpuTuple<T>
             {
                 auto t = T(0.0);
-                auto const& xfab = xma[box_no];
-                auto const& yfab = yma[box_no];
-                auto const& wgtfab = wgtma[box_no];
+                auto const& xfab = xma[boxNo];
+                auto const& yfab = yma[boxNo];
+                auto const& wgtfab = wgtma[boxNo];
                 for (int n = 0; n < ncomp; ++n)
                 {
                     t += wgtfab(i, j, k, xcomp + n) * xfab(i, j, k, xcomp + n) *
@@ -314,12 +314,12 @@ amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
         auto const& wgtma = wgt.const_arrays();
         sm = amrex::ParReduce(amrex::TypeList<amrex::ReduceOpSum>{}, amrex::TypeList<amrex::Real>{},
                               x, amrex::IntVect (nghost),
-                              [=] AMREX_GPU_DEVICE(int box_no, int i, int j,
+                              [=] AMREX_GPU_DEVICE(int boxNo, int i, int j,
                                                    int k) noexcept -> amrex::GpuTuple<amrex::Real>
                               {
-                                  amrex::Real t = amrex::Real(0.0);
-                                  auto const& xfab = xma[box_no];
-                                  auto const& wgtfab = wgtma[box_no];
+                                  auto t = amrex::Real(0.0);
+                                  auto const& xfab = xma[boxNo];
+                                  auto const& wgtfab = wgtma[boxNo];
                                   for (int n = 0; n < numcomp; ++n)
                                   {
                                       t += wgtfab(i, j, k, n) * xfab(i, j, k, xcomp + n) *

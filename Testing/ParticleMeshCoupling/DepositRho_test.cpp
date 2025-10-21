@@ -23,15 +23,30 @@ namespace
 // execution on GPU and call that function from the unit test because of how GTest creates tests
 // within a TEST_F fixture.
 template <int vDim, int degX, int degY, int degZ>
-void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGrid,
+void update_rho_parallel_for (amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& particleGrid,
                               ComputationalDomain& infra,
                               amrex::MultiFab& rho,
                               amrex::Real charge)
 {
     long const np{particleGrid.numParticles()};
-    auto const& particles{particleGrid.GetArrayOfStructs()};
-    auto const partData{particles().data()};
-    auto const weight{particleGrid.GetStructOfArrays().GetRealData(vDim).data()};
+    auto& tile = particleGrid.GetParticleTile();
+    // note 2025-10-01:
+    // Ideally we would use the ParticleGroups->get_data_indices method,
+    // but we don't have access to a ParticleGroups object.
+    auto const partData = tile.getParticleTileData();
+    amrex::Real* xx = nullptr;
+    amrex::Real* yy = nullptr;
+    amrex::Real* zz = nullptr;
+    xx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+    if (AMREX_SPACEDIM > 1)
+    {
+        yy = particleGrid.GetStructOfArrays().GetRealData(1).data();
+    }
+    if (AMREX_SPACEDIM > 2)
+    {
+        zz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+    }
+    auto const weight{particleGrid.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + vDim).data()};
     amrex::Array4<amrex::Real> const& rhoarr{rho[particleGrid].array()};
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
 
@@ -39,15 +54,14 @@ void update_rho_parallel_for (amrex::ParIter<0, 0, vDim + 1, 0>& particleGrid,
                        [=] AMREX_GPU_DEVICE(long pp)
                        {
                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-                           for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-                           {
-                               position[d] = partData[pp].pos(d);
-                           }
+                           AMREX_D_EXPR(position[xDir] = xx[pp], position[yDir] = yy[pp],
+                                        position[zDir] = zz[pp]);
                            ParticleMeshCoupling::SplineBase<degX, degY, degZ> spline(
                                position, plo, infra.inv_cell_size_array());
                            // Needs at least max(degX, degY, degZ) ghost cells
                            ParticleMeshCoupling::deposit_rho(rhoarr, spline, charge * weight[pp]);
                        });
+    amrex::Gpu::Device::synchronize();
 }
 
 ComputationalDomain get_compdom ()
@@ -141,6 +155,7 @@ TEST_F(DepositRhoTest, NullTest)
     EXPECT_EQ(0, m_rhoPtr->m_data.norm2(0, m_infra.m_geom.periodicity()));
 
     m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    amrex::Gpu::Device::synchronize();
     // Particle iteration ... over one particle.
     bool particleLoopRun{false};
     for (auto& particleGrid : *m_particleGroup[0])
@@ -151,18 +166,15 @@ TEST_F(DepositRhoTest, NullTest)
         EXPECT_EQ(numParticles,
                   np); // Only one particle added by Gempic::Test::Utils::addSingleParticles
 
-        auto const& particles{particleGrid.GetArrayOfStructs()};
-        auto const* const partData{particles().data()};
-        auto* const weight{particleGrid.GetStructOfArrays().GetRealData(s_vDim).data()};
-        // weight correctly transferred from Gempic::Test::Utils::addSingleParticles
-        EXPECT_EQ(1, weight[0]);
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[0]->get_data_indices();
+        EXPECT_EQ(1, ptd.rdata(ii.m_iweight)[0]);
 
         amrex::Array4<amrex::Real> const& rhoarr{m_rhoPtr->m_data[particleGrid].array()};
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position;
-        for (unsigned int d{0}; d < AMREX_SPACEDIM; ++d)
-        {
-            position[d] = partData[0].pos(d);
-        }
+        AMREX_D_EXPR(position[xDir] = ptd.rdata(ii.m_iposx)[0],
+                     position[yDir] = ptd.rdata(ii.m_iposy)[0],
+                     position[zDir] = ptd.rdata(ii.m_iposz)[0]);
 
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
@@ -194,7 +206,7 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particleGroup[0]->WritePlotFile("ptest", "particles");
     // Particle iteration ... over one particle.
     for (auto& particleGrid : *m_particleGroup[0])
     {
@@ -239,7 +251,6 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
 
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle.
     for (auto& particleGrid : *m_particleGroup[0])
     {
@@ -294,7 +305,6 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over two distant particles.
     for (auto& particleGrid : *m_particleGroup[0])
     {
@@ -344,7 +354,6 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
     Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
                                               positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over two close particles.
     for (auto& particleGrid : *m_particleGroup[0])
     {
@@ -397,6 +406,7 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
     for (int spec{0}; spec < s_numSpec; spec++)
     {
         m_particleGroup[spec]->Redistribute(); // assign particles to the tile they are in
+        amrex::Gpu::Device::synchronize();
         auto const charge{m_particleGroup[spec]->get_charge()};
         // Particle iteration
         for (auto& particleGrid : *m_particleGroup[spec])

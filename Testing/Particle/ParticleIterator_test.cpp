@@ -68,7 +68,7 @@ TEST_F(ParticleIteratorTest, NotNullTest)
     {
         particleLoopRun = true;
         numberOfParticles += particleGrid.numParticles();
-        auto* const weight = particleGrid.GetStructOfArrays().GetRealData(0).data();
+        auto* const weight = particleGrid.GetStructOfArrays().GetRealData(AMREX_SPACEDIM).data();
         EXPECT_TRUE(weight[0] == weights[0] || weight[0] == weights[1]);
         numberOfBoxes++;
     }

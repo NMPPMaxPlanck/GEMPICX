@@ -160,15 +160,11 @@ int main (int argc, char* argv[])
                     for (auto& particleGrid : *particleSpecies)
                     {
                         long const np = particleGrid.numParticles();
-                        auto const& particles = particleGrid.GetArrayOfStructs()().data();
-                        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
-                        auto* const weight =
-                            particleGrid.GetStructOfArrays().GetRealData(vdim).data();
+                        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                        auto const ii = particleSpecies->get_data_indices();
 
                         amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
                             infra.geometry().ProbLoArray()};
 
                         amrex::ParallelFor(
@@ -176,20 +172,21 @@ int main (int argc, char* argv[])
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
                                 // Local arrays for particle position and velocities
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
-                                                                       velz[pp]};
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    // positionParticle data structure needed for spline
-                                    positionParticle[d] = particles[pp].pos(d) + 0.5 * dt * vel[d];
-                                    particles[pp].pos(d) = positionParticle[d];
-                                }
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp] +
+                                                     0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
+                                                 ptd.rdata(ii.m_iposy)[pp] +
+                                                     0.5 * dt * ptd.rdata(ii.m_ively)[pp],
+                                                 ptd.rdata(ii.m_iposz)[pp] +
+                                                     0.5 * dt * ptd.rdata(ii.m_ivelz)[pp])};
+                                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = positionParticle[xDir],
+                                             ptd.rdata(ii.m_iposy)[pp] = positionParticle[yDir],
+                                             ptd.rdata(ii.m_iposz)[pp] = positionParticle[zDir]);
 
                                 SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                     infra.inv_cell_size_array());
 
-                                deposit_rho(rhoarr, spline, charge * weight[pp]);
+                                deposit_rho(rhoarr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
                             });
                     }
 
@@ -228,12 +225,8 @@ int main (int argc, char* argv[])
                     for (auto& particleGrid : *particleSpecies)
                     {
                         long const np = particleGrid.numParticles();
-                        auto const& particles = particleGrid.GetArrayOfStructs()().data();
-                        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-                        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-                        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
-                        auto* const weight =
-                            particleGrid.GetStructOfArrays().GetRealData(vdim).data();
+                        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                        auto const ii = particleSpecies->get_data_indices();
 
                         amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
                         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
@@ -243,7 +236,7 @@ int main (int argc, char* argv[])
                         {
                             eA[cc] = (E.m_data[cc])[particleGrid].array();
                         }
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
                             infra.geometry().ProbLoArray()};
 
                         amrex::ParallelFor(
@@ -251,14 +244,13 @@ int main (int argc, char* argv[])
                             [=] AMREX_GPU_DEVICE(long pp)
                             {
                                 // Read out particle position
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    positionParticle[d] = particles[pp].pos(d);
-                                }
-
-                                amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp],
-                                                                       velz[pp]};
+                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
+                                                 ptd.rdata(ii.m_iposy)[pp],
+                                                 ptd.rdata(ii.m_iposz)[pp])};
+                                amrex::GpuArray<amrex::Real, vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                       ptd.rdata(ii.m_ively)[pp],
+                                                                       ptd.rdata(ii.m_ivelz)[pp]};
 
                                 SplineBase<degx, degy, degz> spline(positionParticle, plo,
                                                                     infra.inv_cell_size_array());
@@ -287,20 +279,25 @@ int main (int argc, char* argv[])
                                 }
 
                                 // update global particle velocities arrays
-                                velx[pp] = vel[xDir];
-                                vely[pp] = vel[yDir];
-                                velz[pp] = vel[zDir];
+                                ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
+                                ptd.rdata(ii.m_ively)[pp] = vel[yDir];
+                                ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
 
-                                for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                                {
-                                    positionParticle[d] = particles[pp].pos(d) + 0.5 * dt * vel[d];
-                                    particles[pp].pos(d) = positionParticle[d];
-                                }
+                                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] +=
+                                             0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
+                                             ptd.rdata(ii.m_iposy)[pp] +=
+                                             0.5 * dt * ptd.rdata(ii.m_ively)[pp],
+                                             ptd.rdata(ii.m_iposz)[pp] +=
+                                             0.5 * dt * ptd.rdata(ii.m_ivelz)[pp]);
+                                AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                             positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                             positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
                                 SplineBase<degx, degy, degz> splineNew(positionParticle, plo,
                                                                        infra.inv_cell_size_array());
 
-                                deposit_rho(rhoarr, splineNew, charge * weight[pp]);
+                                deposit_rho(rhoarr, splineNew,
+                                            charge * ptd.rdata(ii.m_iweight)[pp]);
                             });
                     }
                     particleSpecies->Redistribute();

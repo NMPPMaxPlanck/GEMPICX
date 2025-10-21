@@ -20,13 +20,14 @@ namespace
 template <unsigned int vDim>
 amrex::Real compute_v_moment_0 (ParticleGroups<vDim> const* partGr)
 {
-    amrex::Real vMomentTmp = amrex::ReduceSum(
-        *partGr,
-        [=] AMREX_GPU_HOST_DEVICE(amrex::Particle<vDim + 1, 0> const& p) -> amrex::Real
-        {
-            auto w = p.rdata(vDim); // particle weight
-            return (w);
-        });
+    auto const indices = partGr->get_data_indices();
+    using PTDType = typename ParticleGroups<vDim>::ParticleTileType::ConstParticleTileDataType;
+    amrex::Real vMomentTmp =
+        amrex::ReduceSum(*partGr,
+                         [=] AMREX_GPU_HOST_DEVICE(PTDType const& ptd, int const pp) -> amrex::Real
+                         {
+                             return ptd.rdata(indices.m_iweight)[pp]; // particle weight
+                         });
     // reduce sum over MPI ranks
     amrex::ParallelDescriptor::ReduceRealSum(vMomentTmp,
                                              amrex::ParallelDescriptor::IOProcessorNumber());
@@ -38,15 +39,19 @@ template <unsigned int vDim>
 void compute_v_moments_1 (ParticleGroups<vDim> const* partGr,
                           amrex::GpuArray<amrex::Real, vDim>& vMoments)
 {
+    using PTDType = typename ParticleGroups<vDim>::ParticleTileType::ConstParticleTileDataType;
+    auto const indices = partGr->get_data_indices();
+    auto const idxw = indices.m_iweight;
+    auto const idxv = indices.m_ivelx;
     for (int cmp = 0; cmp < vDim; cmp++)
     {
         // reduce sum over one MPI rank
         amrex::Real vMomentTmp = amrex::ReduceSum(
             *partGr,
-            [=] AMREX_GPU_HOST_DEVICE(amrex::Particle<vDim + 1, 0> const& p) -> amrex::Real
+            [=] AMREX_GPU_HOST_DEVICE(PTDType const& ptd, int const pp) -> amrex::Real
             {
-                auto w = p.rdata(vDim);  // particle weight
-                auto vel = p.rdata(cmp); // velocity component
+                auto const w = ptd.rdata(idxw)[pp];         // weight
+                auto const vel = ptd.rdata(idxv + cmp)[pp]; // velocity component
                 return (w * vel);
             });
         // reduced sum over MPI ranks
@@ -61,18 +66,22 @@ template <unsigned int vDim>
 amrex::Real compute_v_moment_2 (ParticleGroups<vDim> const* partGr)
 {
     // reduce sum over one MPI rank
-    amrex::Real vMomentTmp = amrex::ReduceSum(
-        *partGr,
-        [=] AMREX_GPU_HOST_DEVICE(amrex::Particle<vDim + 1, 0> const& p) -> amrex::Real
-        {
-            auto w = p.rdata(vDim); // particle weight
-            amrex::Real v2{0};
-            for (int cmp{0}; cmp < vDim; ++cmp)
-            {
-                v2 += p.rdata(cmp) * p.rdata(cmp);
-            }
-            return (w * v2);
-        });
+    using PTDType = typename ParticleGroups<vDim>::ParticleTileType::ConstParticleTileDataType;
+    auto const indices = partGr->get_data_indices();
+    auto const idxw = indices.m_iweight;
+    auto const idxv = indices.m_ivelx;
+    amrex::Real vMomentTmp =
+        amrex::ReduceSum(*partGr,
+                         [=] AMREX_GPU_HOST_DEVICE(PTDType const& ptd, int const pp) -> amrex::Real
+                         {
+                             auto const w = ptd.rdata(idxw)[pp]; // particle weight
+                             amrex::Real v2{0};
+                             for (int cmp{0}; cmp < vDim; ++cmp)
+                             {
+                                 v2 += ptd.rdata(idxv + cmp)[pp] * ptd.rdata(idxv + cmp)[pp];
+                             }
+                             return (w * v2);
+                         });
     // reduced sum over MPI ranks
     amrex::ParallelDescriptor::ReduceRealSum(vMomentTmp,
                                              amrex::ParallelDescriptor::IOProcessorNumber());
@@ -261,6 +270,24 @@ TYPED_TEST(SamplerTest, CompareMoments)
     constexpr int vDim{3};
     std::vector<std::shared_ptr<ParticleGroups<vDim>>> partGr;
     init_particles(partGr, this->m_infra);
+
+    amrex::Vector<int> const writeRealComp(vDim + 1, 1);
+    amrex::Vector<int> const& writeIntComp = {};
+    amrex::Vector<std::string> const& intCompNames = {};
+    amrex::Vector<std::string> const& realCompNames = {"vx", "vy", "vz", "weight"};
+
+    testing::TestInfo const* const testInfo = testing::UnitTest::GetInstance()->current_test_info();
+    amrex::ignore_unused(testInfo);
+#ifndef NDEBUG
+    GEMPIC_DEBUG("Writing particles from test " + testInfo->name() + " of test suite " +
+                 testInfo->test_suite_name() + ".");
+    for (int gg = 0; gg < partGr.size(); gg++)
+    {
+        partGr[gg]->WritePlotFile(
+            ("particle_test_" + std::string(testInfo->name()) + "_group" + std::to_string(gg)),
+            "particles", writeRealComp, writeIntComp, realCompNames, intCompNames);
+    }
+#endif
 
     // in case of rejection sampling, use first particle group (dummy) to compute analytic moments
     // of distribution function

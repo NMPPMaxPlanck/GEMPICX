@@ -362,21 +362,8 @@ public:
         for (auto& particleGrid : *particleSpecies)
         {
             long const np = particleGrid.numParticles();
-
-            auto& particles = particleGrid.GetArrayOfStructs();
-            auto partData = particles().data();
-            auto& particleAttributes = particleGrid.GetStructOfArrays();
-            auto vx = particleAttributes.GetRealData(0).data();
-            auto vy = particleAttributes.GetRealData(1).data();
-            auto vz = particleAttributes.GetRealData(2).data();
-            auto weight = particleAttributes.GetRealData(3).data();
-
-            auto s2X = particleAttributes.GetRealData(4).data();
-            auto s2Y = particleAttributes.GetRealData(5).data();
-            auto s2Z = particleAttributes.GetRealData(6).data();
-            auto s2Vx = particleAttributes.GetRealData(7).data();
-            auto s2Vy = particleAttributes.GetRealData(8).data();
-            auto s2Vz = particleAttributes.GetRealData(9).data();
+            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> bA;
@@ -396,18 +383,21 @@ public:
                 np,
                 [=] AMREX_GPU_DEVICE(long pp)
                 {
-                    // Read out particle position
+                    // Read out particle data
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> R;
-
-                    amrex::GpuArray<amrex::Real, 3> V{vx[pp], vy[pp], vz[pp]};
-
-                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                    {
-                        R[d] = partData[pp].pos(d);
-                    }
+                    AMREX_D_EXPR(R[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                 R[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                 R[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+                    amrex::GpuArray<amrex::Real, 3> V{ptd.rdata(ii.m_ivelx)[pp],
+                                                      ptd.rdata(ii.m_ively)[pp],
+                                                      ptd.rdata(ii.m_ivelz)[pp]};
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> s2R{
-                        AMREX_D_DECL(s2X[pp], s2Y[pp], s2Z[pp])};
-                    amrex::GpuArray<amrex::Real, 3> s2V{s2Vx[pp], s2Vy[pp], s2Vz[pp]};
+                        AMREX_D_DECL(ptd.rdata(ii.m_is2X)[pp], ptd.rdata(ii.m_is2Y)[pp],
+                                     ptd.rdata(ii.m_is2Z)[pp])};
+                    amrex::GpuArray<amrex::Real, 3> s2V{ptd.rdata(ii.m_is2Vx)[pp],
+                                                        ptd.rdata(ii.m_is2Vy)[pp],
+                                                        ptd.rdata(ii.m_is2Vz)[pp]};
+
                     // evaluate the splines at particle position R
                     Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(R, plo,
                                                                                       dxInverse);
@@ -420,26 +410,26 @@ public:
                     Impl::lsrk_stage_kinetic_particle(R, V, s2R, s2V, efield, bfield, chargeMass,
                                                       dt, coeffsAStageIndex, coeffsBStageIndex);
 
-                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                    {
-                        partData[pp].pos(d) = R[d];
-                    }
-                    vx[pp] = V[0];
-                    vy[pp] = V[1];
-                    vz[pp] = V[2];
-
-                    AMREX_D_EXPR(s2X[pp] = s2R[0], s2Y[pp] = s2R[1], s2Z[pp] = s2R[2]);
-
-                    s2Vx[pp] = s2V[0];
-                    s2Vy[pp] = s2V[1];
-                    s2Vz[pp] = s2V[2];
+                    // Update particle data
+                    AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = R[xDir],
+                                 ptd.rdata(ii.m_iposy)[pp] = R[yDir],
+                                 ptd.rdata(ii.m_iposz)[pp] = R[zDir]);
+                    ptd.rdata(ii.m_ivelx)[pp] = V[0];
+                    ptd.rdata(ii.m_ively)[pp] = V[1];
+                    ptd.rdata(ii.m_ivelz)[pp] = V[2];
+                    AMREX_D_EXPR(ptd.rdata(ii.m_is2X)[pp] = s2R[0],
+                                 ptd.rdata(ii.m_is2Y)[pp] = s2R[1],
+                                 ptd.rdata(ii.m_is2Z)[pp] = s2R[2]);
+                    ptd.rdata(ii.m_is2Vx)[pp] = s2V[0];
+                    ptd.rdata(ii.m_is2Vy)[pp] = s2V[1];
+                    ptd.rdata(ii.m_is2Vz)[pp] = s2V[2];
 
                     // call deposit J
                     // evaluate the splines at particle position R
                     // get the spline at the particle's new position
                     Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> newSpline(R, plo,
                                                                                          dxInverse);
-                    deposit_twoform(jarr, newSpline, V, charge * weight[pp]);
+                    deposit_twoform(jarr, newSpline, V, charge * ptd.rdata(ii.m_iweight)[pp]);
                 }); // end of parallel_for
         } //end of loop over particles
         particleSpecies->Redistribute();
@@ -462,21 +452,8 @@ public:
         for (auto& particleGrid : *particleSpecies)
         {
             long const np = particleGrid.numParticles();
-
-            auto& particles = particleGrid.GetArrayOfStructs();
-            auto partData = particles().data();
-            auto& particleAttributes = particleGrid.GetStructOfArrays();
-            auto vx = particleAttributes.GetRealData(0).data();
-            auto vy = particleAttributes.GetRealData(1).data();
-            auto vz = particleAttributes.GetRealData(2).data(); //v_//
-            auto weight = particleAttributes.GetRealData(3).data();
-
-            auto s2X = particleAttributes.GetRealData(4).data();
-            auto s2Y = particleAttributes.GetRealData(5).data();
-            auto s2Z = particleAttributes.GetRealData(6).data();
-            auto s2Vx = particleAttributes.GetRealData(7).data();
-            auto s2Vy = particleAttributes.GetRealData(8).data();
-            auto s2Vz = particleAttributes.GetRealData(9).data();
+            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> eA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, 3> bA;
@@ -497,17 +474,18 @@ public:
                 [=] AMREX_GPU_DEVICE(long pp)
                 {
                     // Read out particle position
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> R;
-
-                    amrex::GpuArray<amrex::Real, 3> V{vx[pp], vy[pp], vz[pp]};
-
-                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                    {
-                        R[d] = partData[pp].pos(d);
-                    }
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> R{
+                        AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                     ptd.rdata(ii.m_iposz)[pp])};
+                    amrex::GpuArray<amrex::Real, 3> V{ptd.rdata(ii.m_ivelx)[pp],
+                                                      ptd.rdata(ii.m_ively)[pp],
+                                                      ptd.rdata(ii.m_ivelz)[pp]};
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> s2R{
-                        AMREX_D_DECL(s2X[pp], s2Y[pp], s2Z[pp])};
-                    amrex::GpuArray<amrex::Real, 3> s2V{s2Vx[pp], s2Vy[pp], s2Vz[pp]};
+                        AMREX_D_DECL(ptd.rdata(ii.m_is2X)[pp], ptd.rdata(ii.m_is2Y)[pp],
+                                     ptd.rdata(ii.m_is2Z)[pp])};
+                    amrex::GpuArray<amrex::Real, 3> s2V{ptd.rdata(ii.m_is2Vx)[pp],
+                                                        ptd.rdata(ii.m_is2Vy)[pp],
+                                                        ptd.rdata(ii.m_is2Vz)[pp]};
                     // evaluate the splines at particle position R
                     Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(R, plo,
                                                                                       dxInverse);
@@ -520,19 +498,19 @@ public:
                     Impl::lsrk_stage_dk_particle(R, V, s2R, s2V, velGC, accGC, dt,
                                                  coeffsAStageIndex, coeffsBStageIndex);
 
-                    for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                    {
-                        partData[pp].pos(d) = R[d];
-                    }
-                    vx[pp] = V[0];
-                    vy[pp] = V[1];
-                    vz[pp] = V[2];
-
-                    AMREX_D_EXPR(s2X[pp] = s2R[0], s2Y[pp] = s2R[1], s2Z[pp] = s2R[2]);
-
-                    s2Vx[pp] = s2V[0];
-                    s2Vy[pp] = s2V[1];
-                    s2Vz[pp] = s2V[2];
+                    // Update particle data
+                    AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = R[xDir],
+                                 ptd.rdata(ii.m_iposy)[pp] = R[yDir],
+                                 ptd.rdata(ii.m_iposz)[pp] = R[zDir]);
+                    ptd.rdata(ii.m_ivelx)[pp] = V[0];
+                    ptd.rdata(ii.m_ively)[pp] = V[1];
+                    ptd.rdata(ii.m_ivelz)[pp] = V[2];
+                    AMREX_D_EXPR(ptd.rdata(ii.m_is2X)[pp] = s2R[0],
+                                 ptd.rdata(ii.m_is2Y)[pp] = s2R[1],
+                                 ptd.rdata(ii.m_is2Z)[pp] = s2R[2]);
+                    ptd.rdata(ii.m_is2Vx)[pp] = s2V[0];
+                    ptd.rdata(ii.m_is2Vy)[pp] = s2V[1];
+                    ptd.rdata(ii.m_is2Vz)[pp] = s2V[2];
 
                     // call deposit J
                     // evaluate the splines at particle position R
@@ -540,7 +518,7 @@ public:
                     Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> newSpline(R, plo,
                                                                                          dxInverse);
                     // Only j_// !!!
-                    deposit_twoform(jarr, newSpline, velGC, charge * weight[pp]);
+                    deposit_twoform(jarr, newSpline, velGC, charge * ptd.rdata(ii.m_iweight)[pp]);
                 }); // end of parallel_for
         } //end of loop over particles
         //redistribute particles

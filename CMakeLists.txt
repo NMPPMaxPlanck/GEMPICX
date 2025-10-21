@@ -38,6 +38,7 @@ option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build." OFF)
 
 option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions when executed on host." OFF)
 option(USE_DIRTY_AMREX_REPO "Allow building from dirty AMReX git repositories" OFF)
+option(GEMPIC_DEBUG_MESSAGES "Turns on GEMPIC-specific debug messages." OFF)
 
 include(FetchContent)
 include(cmake/gempic_FetchContent_Declare.cmake)
@@ -79,6 +80,9 @@ if(GEMPIC_PROFILE_KERNELS)
     message(WARNING "GEMPIC_PROFILE_KERNELS does nothing if AMReX_TINY_PROFILE is not turned on")
   endif()
   target_compile_definitions(GEMPICX PRIVATE GEMPIC_PROFILE_KERNELS)
+endif()
+if(GEMPIC_DEBUG_MESSAGES)
+  target_compile_definitions(GEMPICX PRIVATE GEMPIC_DEBUG_MESSAGES)
 endif()
 
 target_include_directories(GEMPICX PUBLIC "${CMAKE_SOURCE_DIR}/Src")
@@ -132,7 +136,7 @@ gempic_FetchContent_Declare(
   SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/cmake_git_version_tracking-src
   )
   FetchContent_MakeAvailable(cmake_git_version_tracking)
-  
+
 # Preparations necessary for clang-tidy
 include(cmake/clang_tidy.cmake)
 

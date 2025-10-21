@@ -207,17 +207,13 @@ public:
         // Deposit initial charge
         for (auto& particleSpecies : ions)
         {
-            amrex::Real mass = particleSpecies->get_mass();
+            amrex::Real const mass = particleSpecies->get_mass();
 
             for (auto& pti : *particleSpecies)
             {
                 long const np = pti.numParticles();
-                auto* const particles = pti.GetArrayOfStructs()().data();
-                auto* const weight = pti.GetStructOfArrays().GetRealData(s_vdim).data();
-
-                auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-                auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-                auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
+                auto const ptd = pti.GetParticleTile().getParticleTileData();
+                auto const ii = particleSpecies->get_data_indices();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, s_vdim> deldotsA;
 
@@ -232,16 +228,18 @@ public:
                     [=] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                        for (unsigned int d = 0; d < AMREX_SPACEDIM; ++d)
-                        {
-                            positionParticle[d] = particles[pp].pos(d);
-                        }
+                        AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                     positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                     positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
                         SplineWithFirstDerivative<s_degX, s_degY, s_degZ> splineDeriv(
                             positionParticle, plo, infra.inv_cell_size_array(), dx);
 
-                        amrex::GpuArray<amrex::Real, s_vdim> vel{velx[pp], vely[pp], velz[pp]};
-                        deposit_deldot_s(deldotsA, splineDeriv, vel, mass * weight[pp]);
+                        amrex::GpuArray<amrex::Real, s_vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                                 ptd.rdata(ii.m_ively)[pp],
+                                                                 ptd.rdata(ii.m_ivelz)[pp]};
+                        deposit_deldot_s(deldotsA, splineDeriv, vel,
+                                         mass * ptd.rdata(ii.m_iweight)[pp]);
                     });
             }
         }

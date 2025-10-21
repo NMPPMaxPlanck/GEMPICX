@@ -951,16 +951,16 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
 
-        auto* const velx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-        auto* const vely = particleGrid.GetStructOfArrays().GetRealData(1).data();
-        auto* const velz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particleGroup[s_spec]->get_data_indices();
         long pp = 0;
 
-        velx[0] = v[0] * m_infra.geometry().CellSize(xDir);
-        vely[0] = v[1] * m_infra.geometry().CellSize(yDir);
-        velz[0] = v[2] * m_infra.geometry().CellSize(zDir);
+        ptd.rdata(ii.m_ivelx)[0] = v[0] * m_infra.geometry().CellSize(xDir);
+        ptd.rdata(ii.m_ively)[0] = v[1] * m_infra.geometry().CellSize(yDir);
+        ptd.rdata(ii.m_ivelz)[0] = v[2] * m_infra.geometry().CellSize(zDir);
 
-        amrex::GpuArray<amrex::Real, s_vDim> vel{velx[pp], vely[pp], velz[pp]};
+        amrex::GpuArray<amrex::Real, s_vDim> vel{
+            ptd.rdata(ii.m_ivelx)[pp], ptd.rdata(ii.m_ively)[pp], ptd.rdata(ii.m_ivelz)[pp]};
 
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
@@ -971,9 +971,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
         }
         operatorHamilton.apply_h_e_particle(vel, eA, spline, chargeOverMass, dt);
 
-        EXPECT_NEAR(velx[0] + dt * chargeOverMass * Ex, vel[0], 1e-12);
-        EXPECT_NEAR(vely[0] + dt * chargeOverMass * Ey, vel[1], 1e-12);
-        EXPECT_NEAR(velz[0] + dt * chargeOverMass * Ez, vel[2], 1e-12);
+        EXPECT_NEAR(ptd.rdata(ii.m_ivelx)[0] + dt * chargeOverMass * Ex, vel[0], 1e-12);
+        EXPECT_NEAR(ptd.rdata(ii.m_ively)[0] + dt * chargeOverMass * Ey, vel[1], 1e-12);
+        EXPECT_NEAR(ptd.rdata(ii.m_ivelz)[0] + dt * chargeOverMass * Ez, vel[2], 1e-12);
     }
 }
 

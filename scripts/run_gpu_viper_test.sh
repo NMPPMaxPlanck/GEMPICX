@@ -1,8 +1,10 @@
 #!/bin/bash -l
 #
 # Slurm job script for a brief gpu test run
-# using one A100 GPU and an OpenMPI-based build of GEMPIC.
-# Job submission:  sbatch --wait run_gpu_raven_test.sh
+# using one MI300 APU on viper.
+# Job submission:  sbatch --wait run_gpu_viper_test.sh
+# **Before submission**: you must update the REPOSITORY and DIMENSION variables
+# given below.
 #
 #SBATCH -o ./testSim.out
 #SBATCH -D ./
@@ -37,7 +39,9 @@ export BUILD_DIR=${REPOSITORY}/build/mpcdf-viper-${DIMENSION}
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 
 # Run the program:
-#srun $BUILD_DIR/Testing/GtestTests
+#srun ${BUILD_DIR}/Testing/GtestTests
+#cd ${BUILD_DIR}
+#ctest --output-on-failure -L non-Google
 
 # works, 90 GB GPU mem occupancy in debug mode
 #export EXECUTABLE=$BUILD_DIR/Examples/Electrostatic/electrostatic

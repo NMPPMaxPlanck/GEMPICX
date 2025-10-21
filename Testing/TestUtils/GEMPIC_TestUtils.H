@@ -58,8 +58,10 @@ void add_single_particles (
             lower[d] = geom.ProbLo(d) + bx.smallEnd(d) * geom.CellSize(d);
             upper[d] = geom.ProbLo(d) + (bx.bigEnd(d) + 1) * geom.CellSize(d);
         }
+        using PTType = typename amrex::ParticleContainerPureSoA<AMREX_SPACEDIM + vDim + nData,
+                                                                0>::ParticleTileType;
 
-        amrex::ParticleTile<Gempic::Particle::ParticleType, vDim + nData, 0>& particles{
+        PTType& particles{
             particleGroup->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
         for (int i{0}; i < numParticles; i++)
         {
@@ -88,6 +90,7 @@ void add_single_particles (
                       << "\nUpper: " << string_array(geom.ProbHi(), AMREX_SPACEDIM);
         }
     }
+    particleGroup->Redistribute(); // assign particles to the tile they are in
 }
 
 /** Helper function to check entries of a field given a series of conditions and a default
