@@ -251,6 +251,12 @@ GENERATE_XML           = YES
 
 XML_OUTPUT             = ./
 
+# Ensure all generated files are encoded in UTF-8
+# This prevents errors in Sphinx when parsing non-ASCII characters
+# such as accented letters, smart quotes, or other symbols.
+
+UTF8_ENCODING = YES
+
 #---------------------------------------------------------------------------
 # Configuration options related to the preprocessor
 #---------------------------------------------------------------------------
