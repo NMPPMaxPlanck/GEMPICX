@@ -15,7 +15,7 @@ r"""_summary_
 
 def convert(file):
 
-    with open(file,'r') as f:
+    with open(file,'r', encoding="utf-8") as f:
         flines = f.readlines()
 
     # replace \label{*} by :label:* and switch empty line from above to below
@@ -69,7 +69,7 @@ def convert(file):
     flines = ''.join(flines)
     flines = re.sub(r"(.. container::\n)( *:name: tab:.*\n)(\n *.. table.*\n)", r"\1\3   \2", flines)
 
-    with open(file,'w') as fout:
+    with open(file,'w', encoding='utf-8', newline='\n') as fout:
         fout.writelines(flines)
 
 if __name__ == '__main__':

@@ -27,11 +27,17 @@ set(GEMPIC_DOXYGEN_WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(GEMPIC_DOXYGEN_OUTPUT_DIR ${CMAKE_BINARY_DIR}/doxygen)
 set(GEMPIC_DOXYGEN_INDEX_FILE ${GEMPIC_DOXYGEN_OUTPUT_DIR}/index.xml)
 
-add_custom_command(OUTPUT ${GEMPIC_DOXYGEN_INDEX_FILE}
-  COMMAND DOXYGEN_OUTPUT_DIR=${GEMPIC_DOXYGEN_OUTPUT_DIR} ${DOXYGEN_EXECUTABLE} Doxyfile
+add_custom_command(
+  OUTPUT ${GEMPIC_DOXYGEN_INDEX_FILE}
+  # For further information consult CMake documentation on env
+  # https://cmake.org/cmake/help/latest/manual/cmake.1.html#cmdoption-cmake-E-arg-env
+  COMMAND ${CMAKE_COMMAND} -E env 
+          --modify DOXYGEN_OUTPUT_DIR=set:${GEMPIC_DOXYGEN_OUTPUT_DIR} --
+          ${DOXYGEN_EXECUTABLE} Doxyfile
   WORKING_DIRECTORY ${GEMPIC_DOXYGEN_WORKING_DIR}
   DEPENDS ${GEMPIC_PUBLIC_HEADERS} ${GEMPIC_EXTERNAL_DOC_DATA}
   MAIN_DEPENDENCY Doxyfile
+  COMMENT "Generating Doxygen documentation..."
 )
 
 execute_process(
@@ -52,14 +58,19 @@ endif()
 set(GEMPIC_LATEX_INPUT ${GEMPIC_DOC_SOURCE}/latex)
 foreach(RSTF ${GEMPIC_RST_TEX_FILES})
   string(REGEX REPLACE "[.]rst$" ".tex" LATEXF ${RSTF})
-  add_custom_command(OUTPUT ${GEMPIC_LATEX_INPUT}/${RSTF}
-    COMMAND pandoc ${LATEXF} --mathjax --columns=120 --wrap=preserve --bibliography GempicReferences.bib --citeproc -o ${RSTF}
+  add_custom_command(
+    OUTPUT ${GEMPIC_LATEX_INPUT}/${RSTF}
+    # Step 1: Convert the .tex file to .rst using Pandoc
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONIOENCODING=utf-8 PANDOC_CHARSET=utf-8
+            pandoc ${LATEXF} --from=latex+smart --to=rst --mathjax --columns=120 --wrap=preserve --bibliography GempicReferences.bib --citeproc --metadata=encoding:utf-8 -o ${RSTF}
+    # Step 2: Post-process the .rst file with convertEq.py
     COMMAND ${Python3_EXECUTABLE} convertEq.py ${RSTF}
     WORKING_DIRECTORY ${GEMPIC_LATEX_INPUT}
     DEPENDS ${GEMPIC_LATEX_INPUT}/${LATEXF} ${GEMPIC_EXTERNAL_DOC_DATA}
     VERBATIM
   )
 endforeach()
+
 list(TRANSFORM GEMPIC_RST_TEX_FILES PREPEND ${GEMPIC_LATEX_INPUT}/)
 
 set(GEMPIC_SPHINX_BUILD ${CMAKE_BINARY_DIR}/sphinx)

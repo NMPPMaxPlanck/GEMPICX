@@ -12,6 +12,15 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import io
+
+# Ensure source files are read as UTF-8
+source_encoding = 'utf-8-sig'
+
+# force UTF-8 in HTML output
+# html_title = "GEMPIC Documentation"
+html_file_encoding = 'utf-8'
+
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
@@ -19,13 +28,13 @@ sys.path.insert(-1, os.path.abspath('..'))
 import subprocess
 
 def configureDoxyfile(input_dir, output_dir):
-    with open('Doxyfile.in', 'r') as file :
+    with open('Doxyfile.in', 'r', encoding="utf-8") as file :
         filedata = file.read()
 
     filedata = filedata.replace('./../../Src', input_dir)
     filedata = filedata.replace('_build', output_dir)
 
-    with open('Doxyfile', 'w') as file:
+    with open('Doxyfile', 'w', encoding="utf-8") as file:
         file.write(filedata)
 
 # Doxygen
