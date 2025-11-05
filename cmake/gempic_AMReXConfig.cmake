@@ -38,8 +38,8 @@ endif()
 gempic_FetchContent_Declare(AMReX
              SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/amrex-src
              GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
-             GIT_TAG 041f225 # newest AMReX commit
-             #GIT_TAG 25.01
+             #GIT_TAG 5686ee3 # AMReX commit Nov 4, 2025
+             GIT_TAG 25.11
              ALLOW_DIRTY ${USE_DIRTY_AMREX_REPO}
              GIT_PROGRESS ON # AMReX takes long enough that this is nice instead of noise.
              )
