@@ -608,7 +608,7 @@ void eval_form_component (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab const& data,
     amrex::MultiFab& values,
-    amrex::RealVect const& dr,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dr,
     amrex::Geometry const& geom)
 {
     static_assert(space == Space::cell || space == Space::node,
@@ -713,7 +713,7 @@ void eval_form_component (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab const& data,
     amrex::MultiFab& values,
-    amrex::RealVect const& dr,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dr,
     amrex::Geometry const& geom)
 {
     static_assert(space == Space::face || space == Space::edge,

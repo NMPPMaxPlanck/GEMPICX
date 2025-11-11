@@ -15,6 +15,7 @@
 #include <string>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_ParticleGroups.H"
@@ -119,12 +120,12 @@ public:
                 update_data(*m_rho, *m_constDivD, infra);
                 break;
             case ComputeMethod::missingD:
-                this->m_deRham->hodge(*m_D, *m_constE);
-                this->m_deRham->div(*m_divD, *m_D);
+                hodge(*m_D, *m_constE);
+                div(*m_divD, *m_D);
                 update_data(*m_rho, *m_divD, infra);
                 break;
             case ComputeMethod::missingDivD:
-                this->m_deRham->div(*m_divD, *m_constD);
+                div(*m_divD, *m_constD);
                 update_data(*m_rho, *m_divD, infra);
                 break;
         }

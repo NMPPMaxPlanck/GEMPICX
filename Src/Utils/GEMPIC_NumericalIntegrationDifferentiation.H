@@ -32,7 +32,7 @@ public:
      * \f[
      *      \int_{m - hw}^{m + hw} f(x) \mathrm{d}x
      * \f]
-     * with Gauss quadrature
+     * with Gauss-Legendre quadrature
      * 
      * @details Example on how to integrate a 1D subset of a 4D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} f(x_0,y,z_0,t_0) \mathrm{d}y \f$
      * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussLegendreQuadratureExample.LineIntegral
@@ -60,7 +60,7 @@ public:
      * \f[
      *      \int_{m[0] - hw[0]}^{m[0] + hw[0]} \int_{m[1] - hw[1]}^{m[1] + hw[1]} f(x,y) \mathrm{d}y \mathrm{d}x
      * \f]
-     * with Gauss quadrature
+     * with Gauss-Legendre quadrature
      * 
      * @details Example on how to integrate a 2D subset of a 4D function \f$ \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z_0,t_0) \mathrm{d}x\mathrm{d}y \f$
      * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussLegendreQuadratureExample.SurfaceIntegral
@@ -92,7 +92,7 @@ public:
      * \f[
      *      \int_{m[0] - hw[0]}^{m[0] + hw[0]} \int_{m[1] - hw[1]}^{m[1] + hw[1]} \int_{m[2] - hw[2]}^{m[2] + hw[2]} f(x,y,z) \mathrm{d}z \mathrm{d}y \mathrm{d}x
      * \f]
-     * with Gauss quadrature
+     * with Gauss-Legendre quadrature
      * 
      * @details Example on how to integrate a 3D subset of a 4D function \f$ \int_{z_0-\Delta z/2}^{z_0+\Delta z/2} \int_{y_0-\Delta y/2}^{y_0+\Delta y/2} \int_{x_0-\Delta x/2}^{x_0+\Delta x/2} f(x,y,z, t_0) \mathrm{d}x\mathrm{d}y\mathrm{d}z \f$
      * @snippet Utils/GEMPIC_TestNumericalIntegrationDifferentiation.cpp GaussLegendreQuadratureExample.VolumeIntegral

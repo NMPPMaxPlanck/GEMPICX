@@ -97,7 +97,7 @@ TEST_F(FieldMultiplyByMatrixTest, ConstField)
         tensor.m_data[comp].setVal(1.0);
     }
 
-    deRham->hodge_dk(eOut, D, tensor);
+    hodge_dk(eOut, D, tensor);
     bool loopRun{false};
 
     for (int comp = 0; comp < 3; ++comp)
@@ -192,7 +192,7 @@ TEST_F(FieldMultiplyByMatrixTest, LinearFieldDiagTensor)
         initialize_tensor(mfi, tensor.m_data[zDir], val);
     }
 
-    deRham->hodge_dk(cOut, C, tensor);
+    hodge_dk(cOut, C, tensor);
 
     bool loopRun{false};
 

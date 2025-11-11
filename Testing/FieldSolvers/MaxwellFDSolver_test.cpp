@@ -145,20 +145,20 @@ void maxwellstrang_error (double& bError, double& dError, int const n)
     for (int i = 0; i < nt; ++i)
     {
         // solve Faraday equation for a half step
-        deRham->hodge(E, D);
-        deRham->curl(curlE, E);
+        hodge(E, D);
+        curl(curlE, E);
         curlE *= dt / 2;
         B -= curlE;
 
         // solve Ampère equation for a full step
-        deRham->hodge(H, B);
-        deRham->curl(curlH, H);
+        hodge(H, B);
+        curl(curlH, H);
         curlH *= dt;
         D += curlH;
 
         // solve Faraday's equation again for a half step
-        deRham->hodge(E, D);
-        deRham->curl(curlE, E);
+        hodge(E, D);
+        curl(curlE, E);
         curlE *= dt / 2;
         B -= curlE;
     }

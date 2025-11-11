@@ -14,6 +14,8 @@
 #include <string>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_FunctionParse.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_ParticleGroups.H"
@@ -112,12 +114,12 @@ public:
                 update_data(*m_constJField, *m_constJFieldT, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingJFieldT:
-                this->m_deRham->hodge(*m_jFieldT, *m_constJField);
+                hodge(*m_jFieldT, *m_constJField);
                 *m_jFieldT *= m_weightFunc;
                 update_data(*m_constJField, *m_jFieldT, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingJField:
-                this->m_deRham->hodge(*m_jField, *m_constJFieldT);
+                hodge(*m_jField, *m_constJFieldT);
                 *m_jField *= m_weightFunc;
                 update_data(*m_jField, *m_constJFieldT, infra.m_geom.periodicity());
                 return;

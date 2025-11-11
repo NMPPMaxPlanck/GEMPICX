@@ -1,6 +1,7 @@
 #ifndef GEMPIC_MAXWELLPDE_H_
 #define GEMPIC_MAXWELLPDE_H_
 
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_MaxwellInit.H"
 #include "GEMPIC_MaxwellStructDefinitions.H"
 #include "GEMPIC_NumTools.H"
@@ -43,9 +44,9 @@ public:
         //  M1 E  - dt curlT M2 B = M1 Eold
         //  M1 E + dt^2 curlT M2 curl E = M1 Eold +dt curlT M2 Bold
         amrex::Real const dt{dtin};
-        m_drc->hodge(m_bstar, B);
-        m_drc->hodge(rhs, E); // ... todo
-        m_drc->add_dt_curl(rhs, m_bstar, dt);
+        hodge(m_bstar, B);
+        hodge(rhs, E); // ... todo
+        add_dt_curl(rhs, m_bstar, dt);
     }
 
     /**
@@ -60,7 +61,7 @@ public:
     void update_b (V1field& E, V2field& B, amrex::Real dtin)
     {
         amrex::Real const mdt{-dtin};
-        m_drc->add_dt_curl(B, E, mdt);
+        add_dt_curl(B, E, mdt);
     }
 
     /**
@@ -86,14 +87,14 @@ public:
         //  M1 E + dt^2 curlT M2 curl E = M1 Eold + dt curlT M2 Bold
         // curl E
         amrex::Real dt{m_dtLocal};
-        m_drc->curl(m_v2fieldTmp, x);
+        curl(m_v2fieldTmp, x);
 
         // hodge M2 curl E
-        m_drc->hodge(m_bstar, m_v2fieldTmp);
+        hodge(m_bstar, m_v2fieldTmp);
         amrex::Real alpha{dt * dt};
         // hodge M1 E = M1*x ... todo
-        m_drc->hodge(Ax, x); // ... todo
-        m_drc->add_dt_curl(Ax, m_bstar, alpha);
+        hodge(Ax, x); // ... todo
+        add_dt_curl(Ax, m_bstar, alpha);
     }
 
     /**

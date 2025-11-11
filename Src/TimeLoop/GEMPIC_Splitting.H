@@ -331,8 +331,8 @@ public:
         BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
         // Operator H_B for dt/2
         // Solve Ampere-Maxwell with no current
-        deRham->hodge(H, B, deRham->scaling_bto_h());
-        deRham->add_dt_curl(D, H, dt);
+        hodge(H, B, deRham->scaling_bto_h());
+        add_dt_curl(D, H, dt);
     }
 
     /**
@@ -352,9 +352,9 @@ public:
                                  amrex::Real const dt)
     {
         BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
-        deRham->hodge(E, D, deRham->scaling_dto_e());
+        hodge(E, D, deRham->scaling_dto_e());
         // Operator H_E for dt (-dt for the Faraday equation)
-        deRham->add_dt_curl(B, E, -dt);
+        add_dt_curl(B, E, -dt);
     }
 };
 

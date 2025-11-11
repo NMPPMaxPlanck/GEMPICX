@@ -72,7 +72,7 @@ void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face>& D,
         initialize_tensor(mfi, tensor.m_data[zDir], val);
     }
     // Compute D
-    deRham->hodge_dk(D, E, tensor, deRham->scaling_eto_d()); //get D from E
+    hodge_dk(D, E, tensor, deRham->scaling_eto_d()); //get D from E
 }
 
 int main (int argc, char* argv[])
@@ -357,7 +357,7 @@ int main (int argc, char* argv[])
             // Apply filter and compute phi with filtered rho
             biFilter->apply_stencil(rhoFiltered, rho);
             poisson->solve(phi, rhoFiltered);
-            deRham->grad(E, phi);
+            grad(E, phi);
             E *= -1.0;
             E += einit; // add initial value of E (needs to be divergence free)
 
@@ -365,7 +365,7 @@ int main (int argc, char* argv[])
             // get D from E
             if (simType == "FullyKinetic")
             {
-                deRham->hodge(D, E); // get D from E
+                hodge(D, E); // get D from E
             }
             else if (simType == "DriftKinetic")
             {
@@ -377,7 +377,7 @@ int main (int argc, char* argv[])
             }
 
             // // Compute initial divB divD
-            deRham->div(divD, D);
+            div(divD, D);
 
             // Write initial time step
             amrex::Real simTime{0.0};
@@ -402,7 +402,7 @@ int main (int argc, char* argv[])
                 }
 
                 // // Compute divB divD at each time step
-                deRham->div(divD, D);
+                div(divD, D);
 
                 // Write diagnostics
                 simTime = dt * (tStep + 1);

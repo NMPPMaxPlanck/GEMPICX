@@ -135,12 +135,12 @@ int main (int argc, char* argv[])
                 amrex::Print() << "Obtain B(" << tStep << ") -> ";
                 // Calculate B and add Bmean
                 hypreQNLinearSystem.solve_negative_poisson_equation(J, A);
-                deRham->hodge(aPrimal, A, deRham->scaling_dto_e());
+                hodge(aPrimal, A, deRham->scaling_dto_e());
                 copy(bOld, B);
-                deRham->curl(B, aPrimal);
+                curl(B, aPrimal);
                 B += bmean;
                 if (tStep != 0) check_b_calculation(E, bOld, B, deRham, dt, infra);
-                deRham->hodge(H, B, deRham->scaling_bto_h());
+                hodge(H, B, deRham->scaling_bto_h());
 
                 // B-related error checks
                 check_b_related_norms(J, divJ, A, divA, B, divB, H, curlH, jMinusCurlH, deRham,
@@ -158,7 +158,7 @@ int main (int argc, char* argv[])
 
                 hypreQNLinearSystem.solve_curlcurl_plus_particle_charge_e(rhs, E, partGr);
 
-                deRham->hodge(D, E, deRham->scaling_eto_d());
+                hodge(D, E, deRham->scaling_eto_d());
 
                 // E-related error checks
                 check_e_related_norms<vdim, ndata, degx, degy, degz>(E, B, H, J, rho, rhoIdeal,

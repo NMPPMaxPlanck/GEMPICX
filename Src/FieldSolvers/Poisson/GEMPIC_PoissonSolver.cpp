@@ -1,6 +1,8 @@
 #include <memory>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_FieldMethods.H"
+#include "GEMPIC_Fields.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Solvers.H"
@@ -244,10 +246,10 @@ void PoissonApply::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
                               DeRhamField<Grid::primal, Space::node>& phi)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonApply::operator()()");
-    m_deRham->grad(m_primalEdge, phi);
+    grad(m_primalEdge, phi);
     m_primalEdge *= -1; // E = -grad phi
-    m_deRham->hodge(m_dualFace, m_primalEdge);
-    m_deRham->div(rho, m_dualFace);
+    hodge(m_dualFace, m_primalEdge);
+    div(rho, m_dualFace);
     // add penalty term to avoid nullspace
     // amrex::Real penalty = 1.0e-8;
     // rho += penalty;
@@ -260,7 +262,7 @@ PoissonApplyInverseHodge::PoissonApplyInverseHodge(std::shared_ptr<DeRhamComplex
     m_deRham{deRham},
     m_infra{infra},
     m_cgHodge{make_conjugate_gradient_unique_ptr<CGRhs, CGSol>(
-        deRham, [=] (CGRhs& primalEdge, CGSol& dualFace) { deRham->hodge(primalEdge, dualFace); })},
+        deRham, [=] (CGRhs& primalEdge, CGSol& dualFace) { hodge(primalEdge, dualFace); })},
     m_primalEdge(deRham),
     m_dualFace(deRham)
 {
@@ -280,10 +282,10 @@ void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>&
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonApplyInverseHodge::operator()()");
     // Conjugate gradient to compute inverse Hodge
-    m_deRham->grad(m_primalEdge, phi);
+    grad(m_primalEdge, phi);
     m_primalEdge *= -1; // E = -grad phi
     m_cgHodge->solve(m_dualFace, m_primalEdge);
-    m_deRham->div(rho, m_dualFace);
+    div(rho, m_dualFace);
 
     // Sum of rhs needs to be 0 if domain is periodic in all directions
     subtract_constant_part(rho, m_infra);

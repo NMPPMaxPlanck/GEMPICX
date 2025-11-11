@@ -111,11 +111,11 @@ int main (int argc, char* argv[])
 
             // solve Poisson
             poisson->solve(phi, rhoFiltered);
-            deRham->a_times_grad(ephi, phi, -1);
+            a_times_grad(ephi, phi, -1);
             E += ephi;
-            deRham->hodge(D, E, deRham->scaling_eto_d());
+            hodge(D, E, deRham->scaling_eto_d());
             // compute div D for diagnostics
-            deRham->div(divD, D);
+            div(divD, D);
 
             amrex::Real simTime{0.0};
             diagnostics.compute_and_write_to_file(0, simTime);
@@ -125,14 +125,14 @@ int main (int argc, char* argv[])
                 // Solve Ampere-Maxwell with no current
                 // This step is equivalent to the apply_h_B step
                 // in the Hamiltonian Splitting scheme
-                deRham->hodge(H, B, deRham->scaling_bto_h());
-                deRham->add_dt_curl(D, H, 0.5 * dt);
+                hodge(H, B, deRham->scaling_bto_h());
+                add_dt_curl(D, H, 0.5 * dt);
 
                 // Solve the Faraday equation
                 // This step is equivalent to the apply_h_e_field step
                 // in the Hamiltonian Splitting scheme
-                deRham->hodge(E, D, deRham->scaling_dto_e());
-                deRham->add_dt_curl(B, E, -0.5 * dt);
+                hodge(E, D, deRham->scaling_dto_e());
+                add_dt_curl(B, E, -0.5 * dt);
 
                 // Filtered E needed for pushing the particles (for symmetry with J filtering
                 // needed for energy conservation)
@@ -217,7 +217,7 @@ int main (int argc, char* argv[])
                 D -= jFiltered;
 
                 // Filtered E needed for pushing the particles
-                deRham->hodge(E, D, deRham->scaling_dto_e());
+                hodge(E, D, deRham->scaling_dto_e());
                 biFilter->apply_stencil(eFiltered, E);
 
                 // Second particle loop for particle part from H_E
@@ -286,16 +286,16 @@ int main (int argc, char* argv[])
                 // The hodge does not have to be computed again
                 // since it does not change from the last function
                 // call
-                deRham->add_dt_curl(B, E, -0.5 * dt);
+                add_dt_curl(B, E, -0.5 * dt);
 
                 // Solve Ampere-Maxwell with no current
                 // This step is equivalent to the apply_h_B step
                 // in the Hamiltonian Splitting scheme
-                deRham->hodge(H, B, deRham->scaling_bto_h());
-                deRham->add_dt_curl(D, H, 0.5 * dt);
+                hodge(H, B, deRham->scaling_bto_h());
+                add_dt_curl(D, H, 0.5 * dt);
 
                 // compute div D for diagnostics
-                deRham->div(divD, D);
+                div(divD, D);
                 simTime = dt * (tStep + 1);
                 diagnostics.compute_and_write_to_file(tStep + 1, simTime);
 

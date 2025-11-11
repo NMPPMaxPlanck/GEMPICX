@@ -102,12 +102,12 @@ public:
         hyprePoissonA.solve_negative_poisson_equation(
             J, A); // divJ and Javg must be zero for any meaningful results
 
-        deRham->hodge(aPrimal, A, deRham->scaling_dto_e());
-        deRham->curl(B, aPrimal);
-        deRham->hodge(H, B, deRham->scaling_bto_h());
-        deRham->curl(curlH, H);
+        hodge(aPrimal, A, deRham->scaling_dto_e());
+        curl(B, aPrimal);
+        hodge(H, B, deRham->scaling_bto_h());
+        curl(curlH, H);
 
-        deRham->div(divA, A);
+        div(divA, A);
 
         divANorm = Utils::gempic_norm(divA.m_data, infra, 2);
 

@@ -196,9 +196,9 @@ public:
             lsrk_stage_faraday(B, E, dt, stageIndex);
 
             //update H
-            m_deRham->hodge(H, B, m_deRham->scaling_bto_h());
+            hodge(H, B, m_deRham->scaling_bto_h());
             //update E
-            m_deRham->hodge(E, D, m_deRham->scaling_dto_e());
+            hodge(E, D, m_deRham->scaling_dto_e());
 
         } // end of loop over m_stages
     } // lsrk_vlasov_maxwell
@@ -227,9 +227,9 @@ public:
             lsrk_stage_faraday(B, E, dt, stageIndex);
 
             //update H
-            m_deRham->hodge(H, B, m_deRham->scaling_bto_h());
+            hodge(H, B, m_deRham->scaling_bto_h());
             //update E
-            m_deRham->hodge_dk(E, D, tensor, m_deRham->scaling_dto_e());
+            hodge_dk(E, D, tensor, m_deRham->scaling_dto_e());
 
         } // end of loop over m_stages
     } //lsrk_dk_vlasov_maxwell
@@ -258,9 +258,9 @@ public:
             lsrk_stage_faraday(B, E, dt, stageIndex);
 
             //update H
-            m_deRham->hodge(H, B, m_deRham->scaling_bto_h());
+            hodge(H, B, m_deRham->scaling_bto_h());
             //update E
-            m_deRham->hodge_dk(E, D, tensor, m_deRham->scaling_dto_e());
+            hodge_dk(E, D, tensor, m_deRham->scaling_dto_e());
 
         } // end of loop over m_stages
     } //lsrk_DeFi_vlasov_maxwell

@@ -14,6 +14,7 @@
 #include <string>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_ParticleGroups.H"
 #include "GEMPIC_Profiling.H"
@@ -112,11 +113,11 @@ public:
                 update_data(*m_constE, *m_constD, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingD:
-                this->m_deRham->hodge(*m_D, *m_constE);
+                hodge(*m_D, *m_constE);
                 update_data(*m_constE, *m_D, infra.m_geom.periodicity());
                 return;
             case ComputeMethod::missingE:
-                this->m_deRham->hodge(*m_E, *m_constD);
+                hodge(*m_E, *m_constD);
                 update_data(*m_E, *m_constD, infra.m_geom.periodicity());
                 return;
         }

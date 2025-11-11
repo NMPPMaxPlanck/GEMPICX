@@ -189,7 +189,7 @@ public:
         amrex::Vector<amrex::IndexType> idxTypeVector;
         amrex::Vector<amrex::MultiFab*> xPointerVector;
         amrex::Vector<amrex::MultiFab const*> rhsPointerVector;
-        if constexpr (isOneOrTwoForm<space>)
+        if constexpr (is_one_or_two_form<space>())
         {
             idxTypeVector = {x.m_data[xDir].boxArray().ixType(), x.m_data[yDir].boxArray().ixType(),
                              x.m_data[zDir].boxArray().ixType()};
@@ -1342,12 +1342,12 @@ public:
         // Calculate original J and divJ
         Gempic::ParticleMeshCoupling::deposit_current_density<degx, degy, degz, vdim, ndata>(
             J, partGr, m_infra);
-        phi.m_deRham->div(divJ, J);
+        div(divJ, J);
 
         // Calculate phi
         solve_particle_div_grad_phi(divJ, phi, partGr, dt);
 
-        phi.m_deRham->grad(eCorr, phi);
+        grad(eCorr, phi);
         eCorr *= -1.0;
 
         // push particles using E and calculate final J
