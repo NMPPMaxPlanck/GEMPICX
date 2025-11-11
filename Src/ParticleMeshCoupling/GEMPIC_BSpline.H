@@ -88,6 +88,8 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines (a
             res[5] = -res[5] * res[5] * res[5] * res[5] * res[5] * inv120;
             return res;
         }
+        default:
+            return res; // never happen, but silences warning
     }
 }
 
@@ -175,6 +177,8 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines_pr
                      inv720;
             return res;
         }
+        default:
+            return res; // never happen, but silences warning
     }
 }
 
@@ -249,6 +253,8 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> cardinal_b_spline
             res[5] = -res[5] * res[5] * res[5] * res[5] * inv24;
             return res;
         }
+        default:
+            return res; // never happen, but silences warning
     }
 }
 
@@ -315,6 +321,8 @@ cardinal_b_splines_second_derivative (amrex::Real x)
             res[5] = -res[5] * res[5] * res[5] * inv6;
             return res;
         }
+        default:
+            return res; // never happen, but silences warning
     }
 }
 // NOLINTEND(readability-magic-numbers)

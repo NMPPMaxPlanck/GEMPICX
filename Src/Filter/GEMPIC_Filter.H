@@ -35,7 +35,8 @@ public:
                    int ncomp);
 
     /// @cond EXCLUDE_API_DOC
-    template <Grid grid, Space space, std::enable_if_t<Forms::isZeroOrThreeForm<space>, int> = 0>
+    template <Grid grid, Space space>
+        requires ZeroOrThreeFormSpaceC<space>
     void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
                         Gempic::Forms::DeRhamField<grid, space> const& srcField,
                         int scomp = 0,
@@ -62,7 +63,8 @@ public:
     }
     /// @endcond
 
-    template <Grid grid, Space space, std::enable_if_t<Forms::isOneOrTwoForm<space>, int> = 0>
+    template <Grid grid, Space space>
+        requires OneOrTwoFormSpaceC<space>
     void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
                         Gempic::Forms::DeRhamField<grid, space> const& srcField,
                         int scomp = 0,

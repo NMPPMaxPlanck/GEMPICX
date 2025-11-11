@@ -8,6 +8,7 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_Config.H"
+#include "GEMPIC_DeRhamComplex.H"
 #include "GEMPIC_Parameters.H"
 
 namespace Gempic::Forms

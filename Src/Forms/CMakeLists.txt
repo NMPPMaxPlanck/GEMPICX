@@ -1,4 +1,4 @@
 target_sources(GEMPICX PRIVATE
-                    GEMPIC_ExtDerivatives.cpp
-                    GEMPIC_Fields.cpp)
+                    GEMPIC_Fields.cpp
+                    GEMPIC_FieldMethods.cpp)
 add_subdirectory(FDDeRhamComplex)

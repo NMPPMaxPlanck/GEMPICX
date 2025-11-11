@@ -4,6 +4,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
@@ -67,7 +68,7 @@ void update_vector_form_error_parallel_for (amrex::MFIter& mfi,
                                             DeRhamField<grid, space>& error,
                                             int comp)
 {
-    static_assert(isOneOrTwoForm<space>);
+    static_assert(is_one_or_two_form<space>());
     amrex::Box const& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& projectionMF = (field.m_data[comp])[mfi].array();
     amrex::Array4<amrex::Real> const& analyticalMF = (lineIntegral.m_data[comp])[mfi].array();
@@ -229,7 +230,7 @@ void update_scalar_form_error_parallel_for (amrex::MFIter& mfi,
                                             DeRhamField<grid, space>& field,
                                             DeRhamField<grid, space>& error)
 {
-    static_assert(isZeroOrThreeForm<space>);
+    static_assert(is_zero_or_three_form<space>());
     amrex::Box const& bx = mfi.validbox();
     amrex::Array4<amrex::Real> const& projectionMF = (field.m_data)[mfi].array();
     amrex::Array4<amrex::Real> const& analyticalMF = (lineIntegral.m_data)[mfi].array();
@@ -387,7 +388,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     lineIntegral.fill_boundary();
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, E, m_gaussNodes);
+    projection(func, 0.0, E, m_gaussNodes);
 
     DeRhamField<Grid::primal, Space::edge> errorE(deRham);
     for (int comp = 0; comp < 3; ++comp)
@@ -453,7 +454,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     faceIntegral.fill_boundary();
 
     // Compute the projection of B
-    deRham->projection(func, 0.0, B, m_gaussNodes);
+    projection(func, 0.0, B, m_gaussNodes);
 
     DeRhamField<Grid::primal, Space::face> errorB(deRham);
     for (int comp = 0; comp < 3; ++comp)
@@ -505,7 +506,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     }
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, H, m_gaussNodes);
+    projection(func, 0.0, H, m_gaussNodes);
 
     // Compute the analytical solution
     DeRhamField<Grid::dual, Space::edge> lineIntegralDual(deRham);
@@ -568,7 +569,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionOneTwoForms)
     }
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, D, m_gaussNodes);
+    projection(func, 0.0, D, m_gaussNodes);
 
     // Compute the analytical solution
     DeRhamField<Grid::dual, Space::face> faceIntegralDual(deRham);
@@ -629,7 +630,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     func = parser.compile<nVar>();
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, Q);
+    projection(func, 0.0, Q);
 
     // Compute the analytical result of the field
     DeRhamField<Grid::primal, Space::node> pointVals(deRham);
@@ -670,7 +671,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     func = parser.compile<nVar>();
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, qDual);
+    projection(func, 0.0, qDual);
 
     // Compute the analytical result of the field
     DeRhamField<Grid::dual, Space::node> pointValsDual(deRham);
@@ -711,7 +712,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     func = parser.compile<nVar>();
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, rho, m_gaussNodes);
+    projection(func, 0.0, rho, m_gaussNodes);
 
     // Compute the analytical result of the field
     DeRhamField<Grid::primal, Space::cell> rhoAn(deRham);
@@ -752,7 +753,7 @@ TEST_F(FDDeRhamComplexProjectionTest, TestProjectionZeroThreeForms)
     func = parser.compile<nVar>();
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, rhoDual, m_gaussNodes);
+    projection(func, 0.0, rhoDual, m_gaussNodes);
 
     // Compute the analytical result of the field
     DeRhamField<Grid::dual, Space::cell> rhoAnDual(deRham);

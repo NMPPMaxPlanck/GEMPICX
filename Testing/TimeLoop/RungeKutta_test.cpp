@@ -7,6 +7,7 @@
 #include <AMReX_SPACE.H>
 
 #include "GEMPIC_Diagnostics.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Interpolation.H"
@@ -440,16 +441,16 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell)
 
     auto nGhost = m_deRham->get_n_ghost();
 
-    m_deRham->projection(funcE, 0, eSolution, 6);
-    m_deRham->projection(funcB, 0, bSolution, 6);
+    projection(funcE, 0, eSolution, 6);
+    projection(funcB, 0, bSolution, 6);
 
     for (int i = 0; i < nSteps; i++)
     {
         rkSolver.template lsrk_vlasov_maxwell<s_degX, s_degY, s_degZ>(m_particleGroup, E, D, B, H,
                                                                       J, dt);
-        m_deRham->projection(funcE, dt * (i + 1), eSolution, 6);
-        m_deRham->projection(funcB, dt * (i + 1), bSolution, 6);
-        m_deRham->hodge(eError, D); //get eError from D
+        projection(funcE, dt * (i + 1), eSolution, 6);
+        projection(funcB, dt * (i + 1), bSolution, 6);
+        hodge(eError, D); //get eError from D
         eError -= eSolution;
     }
 
@@ -551,16 +552,16 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell_hodgeDK)
 
     auto nGhost = m_deRham->get_n_ghost();
 
-    m_deRham->projection(funcE, 0, eSolution, 6);
-    m_deRham->projection(funcB, 0, bSolution, 6);
+    projection(funcE, 0, eSolution, 6);
+    projection(funcB, 0, bSolution, 6);
 
     for (int i = 0; i < nSteps; i++)
     {
         rkSolver.template lsrk_dk_vlasov_maxwell<s_degX, s_degY, s_degZ>(m_particleGroup, E, D, B,
                                                                          H, J, tensor, dt);
-        m_deRham->projection(funcE, dt * (i + 1), eSolution, 6);
-        m_deRham->projection(funcB, dt * (i + 1), bSolution, 6);
-        m_deRham->hodge_dk(eError, D, tensor); // get eError from D
+        projection(funcE, dt * (i + 1), eSolution, 6);
+        projection(funcB, dt * (i + 1), bSolution, 6);
+        hodge_dk(eError, D, tensor); // get eError from D
         eError -= eSolution;
     }
 

@@ -202,7 +202,7 @@ public:
 
         hypreParticleDivGradV.push_particles_and_correct_div_j(J, phiCorr, ions, dt);
 
-        deRham->div(divJ, J);
+        div(divJ, J);
         divJFinalNorm = Utils::gempic_norm(divJ.m_data, infra, 2);
 
         phiCorr -= phiCorrAn;

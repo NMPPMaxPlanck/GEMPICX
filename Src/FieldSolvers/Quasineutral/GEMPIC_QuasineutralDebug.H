@@ -100,9 +100,9 @@ void check_e_related_norms (
     Gempic::Forms::DeRhamField<Grid::dual, Space::cell> divLhs(drc);
     Gempic::Forms::DeRhamField<Grid::dual, Space::cell> divRhs(drc);
 
-    drc->curl(curlE, E);
-    drc->hodge(curlEProj, curlE, drc->scaling_bto_h());
-    drc->curl(curlCurlE, curlEProj);
+    curl(curlE, E);
+    hodge(curlEProj, curlE, drc->scaling_bto_h());
+    curl(curlCurlE, curlEProj);
 
     Gempic::ParticleMeshCoupling::deposit_rho_weighted_electric_field<degx, degy, degz, vdim,
                                                                       ndata>(rhoE, E, partGr,
@@ -110,9 +110,9 @@ void check_e_related_norms (
 
     linear_combination(lhs, 1.0, curlCurlE, 1.0, rhoE);
 
-    drc->div(divRhoE, rhoE);
-    drc->div(divLhs, lhs);
-    drc->div(divRhs, rhs);
+    div(divRhoE, rhoE);
+    div(divLhs, lhs);
+    div(divRhs, rhs);
 
     amrex::Print() << "\nlhs_norm: (" << Utils::gempic_norm(lhs.m_data[xDir], mInfra, 1) << ","
                    << Utils::gempic_norm (lhs.m_data[yDir], mInfra, 1) << ","

@@ -18,7 +18,7 @@ void check_b_calculation (DeRhamField<Grid::primal, Space::edge>& E,
                           amrex::Real dt,
                           ComputationalDomain& mInfra)
 {
-    drc->add_dt_curl(bOld, E, -dt);
+    add_dt_curl(bOld, E, -dt);
 
     DeRhamField<Grid::primal, Space::face> dB(drc);
     linear_combination(dB, 1.0, bOld, -1.0, B);
@@ -50,10 +50,10 @@ void check_b_related_norms (DeRhamField<Grid::dual, Space::face>& J,
 {
     amrex::Print() << "\nError checks for B-related computations:";
 
-    drc->div(divJ, J);
-    drc->div(divA, A);
-    drc->div(divB, B);
-    drc->curl(curlH, H);
+    div(divJ, J);
+    div(divA, A);
+    div(divB, B);
+    curl(curlH, H);
 
     linear_combination(jMinusCurlH, 1.0, J, -1.0, curlH);
 

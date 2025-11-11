@@ -213,7 +213,7 @@ public:
         hypreParticleDivJCurlB.push_particles_and_correct_div_j(J, phiCorr, ions, dt);
 
         // Calculate final divJ
-        deRham->div(divJ, J);
+        div(divJ, J);
         divJFinalNorm = Utils::gempic_norm(divJ.m_data, infra, 2);
 
         // Correction of Javg
@@ -224,7 +224,7 @@ public:
         DeRhamField<Grid::dual, Space::cell> divA(deRham);
         hypreParticleDivJCurlB.solve_negative_poisson_equation(J, A);
 
-        deRham->div(divA, A);
+        div(divA, A);
         divANorm = Utils::gempic_norm(divA.m_data, infra, 2);
         // Calculation of non-divergencefree A using divergence-free J ends here
 
@@ -236,12 +236,12 @@ public:
         DeRhamField<Grid::dual, Space::face> curlH(deRham);
         DeRhamField<Grid::dual, Space::face> jMinusCurlH(deRham);
 
-        deRham->hodge(aPrimal, A, deRham->scaling_dto_e());
-        deRham->curl(B, aPrimal);
-        deRham->div(divB, B);
+        hodge(aPrimal, A, deRham->scaling_dto_e());
+        curl(B, aPrimal);
+        div(divB, B);
         divBNorm = Utils::gempic_norm(divB.m_data, infra, 2);
-        deRham->hodge(H, B, deRham->scaling_bto_h());
-        deRham->curl(curlH, H);
+        hodge(H, B, deRham->scaling_bto_h());
+        curl(curlH, H);
 
         linear_combination(jMinusCurlH, 1.0, J, -1.0, curlH);
         jMinusCurlHNorm = Utils::gempic_norm(jMinusCurlH.m_data[xDir], infra, 1) +

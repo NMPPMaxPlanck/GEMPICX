@@ -122,10 +122,10 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
     using CGRhs = DeRhamField<Grid::dual, Space::cell>;
     using CGSol = DeRhamField<Grid::primal, Space::node>;
 
-    deRham->hodge(rho, phiIn);
+    hodge(rho, phiIn);
 
     auto cgHodge{make_conjugate_gradient<CGRhs, CGSol>(
-        deRham, [=] (CGRhs& rhs, CGSol& sol) { deRham->hodge(rhs, sol); })};
+        deRham, [=] (CGRhs& rhs, CGSol& sol) { hodge(rhs, sol); })};
     cgHodge.solve(phi, rho);
 
     amrex::Real tol = 1e-12;

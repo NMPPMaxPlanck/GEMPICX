@@ -364,9 +364,9 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
     auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
     poisson->solve(phi, rho);
-    deRham->grad(E, phi);
+    grad(E, phi);
     E *= -1.0;
-    deRham->hodge(D, E);
+    hodge(D, E);
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
 
@@ -470,7 +470,7 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 
     auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
     poisson->solve(phi, rho);
-    deRham->grad(E, phi);
+    grad(E, phi);
     E *= -1.0;
 
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);

@@ -131,20 +131,20 @@ int main (int argc, char* argv[])
             biFilter->apply_stencil(rhoFiltered, rho);
             if (simType == "QuasiNeutral")
             {
-                deRham->hodge(phi, rhoFiltered);
-                deRham->grad(E, phi);
+                hodge(phi, rhoFiltered);
+                grad(E, phi);
                 E *= -te;
             }
             else if (simType == "VlasovPoisson")
             {
                 //poisson->solve_amrex(rhoFiltered, phi);
                 poisson->solve(phi, rhoFiltered);
-                deRham->grad(E, phi);
+                grad(E, phi);
                 E *= -1.0;
             }
 
             // D is also needed to compute energy
-            deRham->hodge(D, E);
+            hodge(D, E);
 
             // Write initial time step
             amrex::Real simTime{0.0};
@@ -199,8 +199,8 @@ int main (int argc, char* argv[])
                 biFilter->apply_stencil(rhoFiltered, rho);
                 if (simType == "QuasiNeutral")
                 {
-                    deRham->hodge(phi, rhoFiltered);
-                    deRham->grad(E, phi);
+                    hodge(phi, rhoFiltered);
+                    grad(E, phi);
                     E *= -te;
                 }
                 else if (simType == "VlasovPoisson")
@@ -208,11 +208,11 @@ int main (int argc, char* argv[])
                     // set initial guess phi to 0
                     phi.m_data.setVal(0.0);
                     poisson->solve(phi, rhoFiltered);
-                    deRham->grad(E, phi);
+                    grad(E, phi);
                     E *= -1.0;
                 }
                 // D is also needed to compute energy
-                deRham->hodge(D, E);
+                hodge(D, E);
 
                 rho.m_data.setVal(0.0);
 

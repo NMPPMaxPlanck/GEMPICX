@@ -20,6 +20,7 @@ error_32)
 #include <AMReX.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
 #include "GEMPIC_Parameters.H"
@@ -94,11 +95,11 @@ void hodge_one_two_error (double& e1, double& e2, int const n, int maxSplineDegr
     DeRhamField<Grid::dual, oppositeSpace<space>> dualOppositeForm(deRham);
     DeRhamField<Grid::primal, oppositeSpace<space>> primalOppositeForm(deRham);
 
-    deRham->projection(funcP, 0.0, dualOppositeForm);
-    deRham->hodge(primalForm, dualOppositeForm, weight);
+    projection(funcP, 0.0, dualOppositeForm);
+    hodge(primalForm, dualOppositeForm, weight);
 
-    deRham->projection(funcP, 0.0, primalOppositeForm);
-    deRham->hodge(dualForm, primalOppositeForm, weight);
+    projection(funcP, 0.0, primalOppositeForm);
+    hodge(dualForm, primalOppositeForm, weight);
 
     for (int i = 0; i < 3; ++i)
     {
@@ -160,11 +161,11 @@ void hodge_zero_three_error (double& e1, double& e2, int const n, int maxSplineD
     DeRhamField<Grid::dual, oppositeSpace<space>> dualOppositeForm(deRham);
     DeRhamField<Grid::primal, oppositeSpace<space>> primalOppositeForm(deRham);
 
-    deRham->projection(funcP, 0.0, dualOppositeForm);
-    deRham->hodge(primalForm, dualOppositeForm, weight);
+    projection(funcP, 0.0, dualOppositeForm);
+    hodge(primalForm, dualOppositeForm, weight);
 
-    deRham->projection(funcP, 0.0, primalOppositeForm);
-    deRham->hodge(dualForm, primalOppositeForm, weight);
+    projection(funcP, 0.0, primalOppositeForm);
+    hodge(dualForm, primalOppositeForm, weight);
 
     parser.define(func);
     parser.setConstant("w", weight);

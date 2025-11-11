@@ -194,6 +194,13 @@
 #else
 #define GEMPIC_DEBUG(MSG)
 #endif
+// Useful for static_assert, because without a layer of indirection a false condition triggers
+// even in code that's never supposed to be reached
+template <typename>
+constexpr bool gempic_always_false ()
+{
+    return false;
+}
 
 //! Directions available in GEMPIC
 enum Direction : unsigned int
@@ -204,55 +211,22 @@ enum Direction : unsigned int
     noDir = 3,
 };
 
-enum class Grid
+// deRham enum
+enum class Sequence
 {
     primal,
     dual
 };
 
-enum class Space
+enum class Form
 {
-    node,
-    edge,
-    face,
-    cell
+    zero,
+    one,
+    two,
+    three
 };
 
-enum class Field
-{
-    PrimalZeroForm,
-    PrimalOneForm,
-    PrimalTwoForm,
-    PrimalThreeForm,
-
-    DualZeroForm,
-    DualOneForm,
-    DualTwoForm,
-    DualThreeForm,
-};
-
-template <Field field>
-constexpr Field complement_form ()
-{
-    switch (field)
-    {
-        case Field::PrimalZeroForm:
-            return Field::DualThreeForm;
-        case Field::PrimalOneForm:
-            return Field::DualTwoForm;
-        case Field::PrimalTwoForm:
-            return Field::DualOneForm;
-        case Field::PrimalThreeForm:
-            return Field::DualZeroForm;
-        case Field::DualZeroForm:
-            return Field::DualThreeForm;
-        case Field::DualOneForm:
-            return Field::DualTwoForm;
-        case Field::DualTwoForm:
-            return Field::DualOneForm;
-        case Field::DualThreeForm:
-            return Field::DualZeroForm;
-    }
-}
+template <typename T>
+using canonical_t = std::remove_cvref_t<T>;
 
 #endif

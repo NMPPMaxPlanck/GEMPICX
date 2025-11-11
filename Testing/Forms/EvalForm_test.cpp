@@ -4,6 +4,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
@@ -13,6 +14,8 @@
 // rho = three form
 // phi = zero form
 
+namespace
+{
 using namespace Gempic;
 using namespace Forms;
 
@@ -207,12 +210,12 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     // Compute the projection of the field
     if constexpr (TestFixture::s_space == Space::node)
     {
-        deRham->projection(func, 0.0, form); // Projection of func to the discrete 0-form
+        projection(func, 0.0, form); // Projection of func to the discrete 0-form
     }
     else
     {
-        deRham->projection(func, 0.0, form,
-                           this->m_gaussNodes); // Projection of func to the discrete 3-form
+        projection(func, 0.0, form,
+                   this->m_gaussNodes); // Projection of func to the discrete 3-form
     }
 
     amrex::BoxArray const& ba = form.m_data.boxArray();
@@ -230,7 +233,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormZeroThreeForm)
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShift = {evalShiftArray1,
                                                                              evalShiftArray2};
 
-    deRham->eval_form(form, evalShift, pointValues);
+    eval_form(form, evalShift, pointValues);
 
     // Copy evalShift to GPU array
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
@@ -300,12 +303,12 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     // Compute the projection of the field
     if constexpr (TestFixture::s_space == Space::node)
     {
-        deRham->projection(funcs, 0.0, form); // Projection of func to the discrete 0-form
+        projection(funcs, 0.0, form); // Projection of func to the discrete 0-form
     }
     else
     {
-        deRham->projection(funcs, 0.0, form,
-                           this->m_gaussNodes); // Projection of func to the discrete 3-form
+        projection(funcs, 0.0, form,
+                   this->m_gaussNodes); // Projection of func to the discrete 3-form
     }
 
     amrex::BoxArray const& ba = form.m_data.boxArray();
@@ -323,7 +326,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShift = {evalShiftArray1,
                                                                              evalShiftArray2};
 
-    deRham->eval_form(form, evalShift, pointValues);
+    eval_form(form, evalShift, pointValues);
 
     // Copy evalShift to GPU array
     amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nValues};
@@ -407,8 +410,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
     }
 
     // Compute the projection of the field
-    deRham->projection(func, 0.0, form,
-                       this->m_gaussNodes); // Projection of func to the discrete form
+    projection(func, 0.0, form,
+               this->m_gaussNodes); // Projection of func to the discrete form
 
     amrex::BoxArray const& ba =
         amrex::convert(form.m_data[xDir].boxArray(), amrex::IntVect(AMREX_D_DECL(0, 0, 0)));
@@ -452,9 +455,9 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
         }
     }
 
-    deRham->eval_form(form, evalShift, *pointValues[xDir], xDir);
-    deRham->eval_form(form, evalShift, *pointValues[yDir], yDir);
-    deRham->eval_form(form, evalShift, *pointValues[zDir], zDir);
+    eval_form(form, evalShift, *pointValues[xDir], xDir);
+    eval_form(form, evalShift, *pointValues[yDir], yDir);
+    eval_form(form, evalShift, *pointValues[zDir], zDir);
 
     bool loopRun{false};
 
@@ -474,7 +477,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormOneTwoForm)
         pointValues[comp]->setVal(0.0);
     }
 
-    deRham->eval_forms(form, evalShift, pointValues); // Check that this version conforms as well
+    eval_form(form, evalShift, pointValues); // Check that this version conforms as well
 
     for (int comp{0}; comp < 3; ++comp)
     {
@@ -531,8 +534,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
     }
 
     // Compute the projection of the field
-    deRham->projection(funcs, 0.0, form,
-                       this->m_gaussNodes); // Projection of func to the discrete form
+    projection(funcs, 0.0, form,
+               this->m_gaussNodes); // Projection of func to the discrete form
 
     amrex::BoxArray const& ba =
         amrex::convert(form.m_data[xDir].boxArray(), amrex::IntVect(AMREX_D_DECL(0, 0, 0)));
@@ -587,9 +590,9 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
         }
     }
 
-    deRham->eval_form(form, evalShift, *pointValues[xDir], xDir);
-    deRham->eval_form(form, evalShift, *pointValues[yDir], yDir);
-    deRham->eval_form(form, evalShift, *pointValues[zDir], zDir);
+    eval_form(form, evalShift, *pointValues[xDir], xDir);
+    eval_form(form, evalShift, *pointValues[yDir], yDir);
+    eval_form(form, evalShift, *pointValues[zDir], zDir);
 
     bool loopRun{false};
 
@@ -609,7 +612,7 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
         pointValues[comp]->setVal(0.0);
     }
 
-    deRham->eval_forms(form, evalShift, pointValues); // Check that this version conforms as well
+    eval_form(form, evalShift, pointValues); // Check that this version conforms as well
 
     for (int comp{0}; comp < 3; ++comp)
     {
@@ -624,3 +627,5 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest2, EvalFormMultiValuedOneTwoForm)
 /// @todo: Add multiple value multifab fields tests
 ///        (using compute_analytical_vector_function_parallel_for)
 } // namespace
+
+} //namespace

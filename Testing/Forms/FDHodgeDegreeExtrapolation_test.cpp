@@ -20,6 +20,7 @@ by log_2 (error_coarse / error_fine)
 #include <AMReX.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
 #include "GEMPIC_Parameters.H"
@@ -91,11 +92,11 @@ double hodge_one_two_error (int const n, int maxSplineDegree = 3)
     DeRhamField<Grid::primal, space> primalForm(deRham);
     DeRhamField<Grid::dual, oppositeSpace<space>> dualForm(deRham);
 
-    deRham->projection(funcP, 0.0, primalForm);
+    projection(funcP, 0.0, primalForm);
     primalForm.apply_bc();
-    deRham->hodge(dualForm, primalForm);
+    hodge(dualForm, primalForm);
     dualForm.apply_bc();
-    deRham->hodge(primalForm, dualForm);
+    hodge(primalForm, dualForm);
     primalForm.apply_bc();
 
     auto dr{infra.cell_size_array()};
@@ -143,11 +144,11 @@ double hodge_zero_three_error (int const n, int maxSplineDegree = 3)
     DeRhamField<Grid::primal, space> primalForm(deRham);
     DeRhamField<Grid::dual, oppositeSpace<space>> dualForm(deRham);
 
-    deRham->projection(funcP, 0.0, primalForm);
+    projection(funcP, 0.0, primalForm);
     primalForm.apply_bc();
-    deRham->hodge(dualForm, primalForm);
+    hodge(dualForm, primalForm);
     dualForm.apply_bc();
-    deRham->hodge(primalForm, dualForm);
+    hodge(primalForm, dualForm);
     primalForm.apply_bc();
 
     auto dr{infra.cell_size_array()};
