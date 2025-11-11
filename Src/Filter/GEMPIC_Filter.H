@@ -34,7 +34,7 @@ public:
                    int dcomp,
                    int ncomp);
 
-    /// @cond DOXYGEN_IGNORE
+    /// @cond EXCLUDE_API_DOC
     template <Grid grid, Space space, std::enable_if_t<Forms::isZeroOrThreeForm<space>, int> = 0>
     void apply_stencil (Gempic::Forms::DeRhamField<grid, space>& dstField,
                         Gempic::Forms::DeRhamField<grid, space> const& srcField,

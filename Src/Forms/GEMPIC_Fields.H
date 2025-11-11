@@ -11,6 +11,7 @@
 #include <AMReX_DistributionMapping.H>
 #include <AMReX_FillPatchUtil.H>
 #include <AMReX_Geometry.H>
+#include <AMReX_GpuContainers.H>
 #include <AMReX_IndexType.H>
 #include <AMReX_IntVect.H>
 #include <AMReX_MFIter.H>
@@ -66,24 +67,29 @@ struct BoundaryConditionConfiguration
  *          @snippet Forms/Fields_test.cpp DiscreteFieldExample.DiscreteDerivative
  * 
  *          List of concepts to be handled by the developer of an operation:
- *          - Ghost cells using @ref set_ghost_size
+ *          - Ghost cells using @ref apply_boundary_conditions
  */
 // clang-format on
 class DiscreteField
 {
 public:
+    //!@cond EXCLUDE_API_DOC
     DiscreteField() = delete;
     DiscreteField(std::string const& label,
                   Io::Parameters& params,
                   DiscreteGrid const& discreteGrid,
                   Impl::BoundaryConditionConfiguration const& boundaryConditionConfiguration =
                       Impl::BoundaryConditionConfiguration{});
+    //!@endcond
 
     //! Discretized domain which maps indexable degrees of freedom to a continuous domain
     AMREX_GPU_HOST_DEVICE
     DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
+    //! @cond EXCLUDE_API_DOC
     amrex::MultiFab const& multi_fab() const;
     amrex::MultiFab& multi_fab();
+    amrex::Array4<amrex::Real> const& view () const { return m_view; }
+    //! @endcond
 
     //! Access indexable degrees of freedom stored in the @ref DiscreteVectorField
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1,
@@ -114,8 +120,6 @@ public:
      */
     // clang-format on
     void apply_boundary_conditions(std::array<size_t, AMREX_SPACEDIM> width);
-
-    amrex::Array4<amrex::Real> const& view () const { return m_view; }
 
 private:
     // std::string is not GPU capable.
@@ -165,20 +169,21 @@ amrex::Box selected_ghost_box(DiscreteField const& df,
  *          @snippet Forms/Fields_test.cpp DiscreteVectorFieldExample.DiscreteDivergence
  * 
  *          List of concepts to be handled by the developer of an operation:
- *          - Ghost cells using @ref set_ghost_size
+ *          - Ghost cells using @ref apply_boundary_conditions
  */
 // clang-format on
 class DiscreteVectorField
 {
 public:
+    //!@cond EXCLUDE_API_DOC
     DiscreteVectorField(
         std::string const& label,
         Io::Parameters& params,
         std::array<DiscreteGrid, 3> const& discreteGrid,
         std::array<Impl::BoundaryConditionConfiguration, 3> const& boundaryConditionConfiguration =
             std::array<Impl::BoundaryConditionConfiguration, 3>{});
-
     DiscreteVectorField() = delete;
+    //!@endcond
 
     //clang-format off
     /**
@@ -188,8 +193,11 @@ public:
     //clang-format on
     AMREX_GPU_HOST_DEVICE
     DiscreteGrid const& discrete_grid(Direction dir) const;
+    //! @cond EXCLUDE_API_DOC
     amrex::MultiFab const& multi_fab(Direction dir) const;
     amrex::MultiFab& multi_fab(Direction dir);
+    amrex::Array4<amrex::Real> const& view (Direction dir) const { return m_view[dir]; }
+    //! @endcond
 
     //! Access indexable degrees of freedom stored in the @ref DiscreteVectorField
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
@@ -221,8 +229,6 @@ public:
     // clang-format on
     void apply_boundary_conditions(std::array<size_t, AMREX_SPACEDIM> width);
 
-    amrex::Array4<amrex::Real> const& view (Direction dir) const { return m_view[dir]; }
-
 private:
     // std::string is not GPU capable.
     // For now wrap into a shared pointer to allow copying the data to GPU
@@ -248,37 +254,53 @@ private:
 void operator*=(DiscreteVectorField&, amrex::Real const&);
 void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
 
-bool is_nan(DiscreteField&);
-amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
-std::array<bool, 3> is_nan(DiscreteVectorField&);
-std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
-
+template <typename F>
+concept ScalarAnalyticalExpressionSpace =
+    std::is_invocable_r_v<amrex::Real, F, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real)>;
+template <typename F>
+concept ScalarAnalyticalExpressionSpaceTime =
+    std::is_invocable_r_v<amrex::Real,
+                          F,
+                          AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real),
+                          amrex::Real>;
+template <typename F>
+concept VectorAnalyticalExpressionSpace =
+    std::is_invocable_r_v<amrex::Real,
+                          F,
+                          Direction,
+                          AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real)>;
+template <typename F>
+concept VectorAnalyticalExpressionSpaceTime =
+    std::is_invocable_r_v<amrex::Real,
+                          F,
+                          Direction,
+                          AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real),
+                          amrex::Real>;
 /**
- * @brief Fill a @ref DiscreteField with values from an analytical expression at the
- *        location of each cell (or grid point).
+ * @brief Fill a @ref DiscreteField with values from @p f at the location of
+ *        each cell (or grid point) on the computational domain.
  *
- * @details An example to fill the discrete field with a purely constant value is
- *          @snippet Forms/Fields_test.cpp DiscreteFieldExample.Fill
+ *        Assuming `AMREX_SPACEDIM=3D` the following code is equivalent to
+ *        \f[
+ *        f(x,y,z) = sin(k_{0,x} x)sin(k_{0,y} y)sin(k_{0,z} z) \quad \text{with} \quad k_{0,i} =
+ * \frac{2\pi}{L_i} \f] where \f$f(x,y,z)\f$ corresponds to a @ref DiscreteField
+ *        @snippet Forms/Fields_test.cpp DiscreteFieldExample.Fill
  *
- * @tparam AnalyticalExpression A callable object or function-like entity with a signature
- *         compatible with the field's dimensionality, such as:
+ * @tparam F A callable type or function with a signature compatible with the dimensionality
+ *         of @p field , such as:
  *         @code{.cpp}
- *         amrex::Real(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int component);
+ *         amrex::Real(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z));
  *         @endcode
  */
-template <typename AnalyticalExpression>
-void fill (DiscreteField& field, AnalyticalExpression const& f)
+template <ScalarAnalyticalExpressionSpace F>
+void fill (DiscreteField& field, F const& f)
 {
-    static_assert(std::is_invocable_r_v<amrex::Real, AnalyticalExpression,
-                                        AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
-                  "'AnalyticalExpression const &f' has no callable interface matching "
-                  "amrex::Real(AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int)");
     for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
     {
         field.select_box(mfi);
         DiscreteGrid const& dg = field.discrete_grid();
-        ParallelFor(mfi.growntilebox(), field.multi_fab().nComp(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
+        ParallelFor(mfi.validbox(),
+                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
                     {
                         amrex::Real x = dg.location_1d(xDir, ix);
 #if AMREX_SPACEDIM > 1
@@ -287,43 +309,70 @@ void fill (DiscreteField& field, AnalyticalExpression const& f)
 #if AMREX_SPACEDIM == 3
                         amrex::Real z = dg.location_1d(zDir, iz);
 #endif
-                        field(ix, iy, iz, n) = f(AMREX_D_DECL(x, y, z), n);
+                        field(ix, iy, iz) = f(AMREX_D_DECL(x, y, z));
                     });
     }
 }
-void fill_zero(DiscreteField& field);
+template <ScalarAnalyticalExpressionSpaceTime F>
+void fill (DiscreteField& field, F const& f, double time)
+{
+    for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        field.select_box(mfi);
+        DiscreteGrid const& dg = field.discrete_grid();
+        ParallelFor(mfi.validbox(),
+                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
+                    {
+                        amrex::Real x = dg.location_1d(xDir, ix);
+#if AMREX_SPACEDIM > 1
+                        amrex::Real y = dg.location_1d(yDir, iy);
+#endif
+#if AMREX_SPACEDIM == 3
+                        amrex::Real z = dg.location_1d(zDir, iz);
+#endif
+                        field(ix, iy, iz) = f(AMREX_D_DECL(x, y, z), time);
+                    });
+    }
+}
+void fill_zero(DiscreteField&);
 
 // clang-format off
 /**
- * @brief Fill a @ref DiscreteVectorField with values from an analytical expression at the
- *        location of each cell (or grid point) for every direction @ref Direction of the
- *        vector.
+ * @brief Fill a @ref DiscreteVectorField with values from @p f at the
+ *        location of each cell (or grid point) in the computational domain for 
+ *        every direction @ref Direction of the vector.
  *
- * @details An example to fill the discrete field with a constant value in all directions
- *          @snippet Forms/Fields_test.cpp DiscreteVectorFieldExample.Fill
+ *        Assuming `AMREX_SPACEDIM=3D` the following code is equivalent to
+ *        \f[
+ *        \vec f(x,y,z) = 
+ *        \begin{pmatrix}
+ *          sin(k_{0,x} x)sin(k_{0,y} y)sin(k_{0,z} z)\\
+ *          cos(k_{0,x} x)cos(k_{0,y} y)sin(k_{0,z} z)\\
+ *          sin(k_{0,x} x)cos(k_{0,y} y)sin(k_{0,z} z)\\
+ *        \end{pmatrix}\quad
+ *        \text{with}\quad k_{0,i} = \frac{2\pi}{L_i}
+ *        \f]
+ *        where \f$\vec f(x,y,z)\f$ corresponds to a @ref DiscreteVectorField
+ *        @snippet Forms/Fields_test.cpp DiscreteVectorFieldExample.Fill
  *
- * @tparam AnalyticalExpression A callable object or function-like entity with a signature
- *         compatible with the field's dimensionality, such as:
+ * @tparam F A callable type or function with a signature compatible with the dimensionality of
+ *         @p field , such as:
  *         @code{.cpp}
- *         amrex::Real(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int component);
+ *         amrex::Real(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z));
  *         @endcode
  */
 // clang-format on
-template <typename AnalyticalExpression>
-void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
+template <VectorAnalyticalExpressionSpace F>
+void fill (DiscreteVectorField& field, F const& f)
 {
-    static_assert(std::is_invocable_r_v<amrex::Real, AnalyticalExpression, Direction,
-                                        AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real), int>,
-                  "'AnalyticalExpression const &f' has no callable interface matching "
-                  "amrex::Real(Direction, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real, int");
     for (Direction dir : {xDir, yDir, zDir})
     {
         for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
         {
             field.select_box(mfi);
             DiscreteGrid const& dg = field.discrete_grid(dir);
-            ParallelFor(mfi.growntilebox(), field.multi_fab(dir).nComp(),
-                        [=] AMREX_GPU_DEVICE(int ix, int iy, int iz, int n)
+            ParallelFor(mfi.validbox(),
+                        [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
                         {
                             amrex::Real x = dg.location_1d(xDir, ix);
 #if AMREX_SPACEDIM > 1
@@ -332,12 +381,97 @@ void fill (DiscreteVectorField& field, AnalyticalExpression const& f)
 #if AMREX_SPACEDIM == 3
                             amrex::Real z = dg.location_1d(zDir, iz);
 #endif
-                            field(dir, ix, iy, iz, n) = f(dir, AMREX_D_DECL(x, y, z), n);
+                            field(dir, ix, iy, iz) = f(dir, AMREX_D_DECL(x, y, z));
                         });
         }
     }
 }
-void fill_zero(DiscreteVectorField& field);
+template <VectorAnalyticalExpressionSpaceTime F>
+void fill (DiscreteVectorField& field, F const& f, double time)
+{
+    for (Direction dir : {xDir, yDir, zDir})
+    {
+        for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
+        {
+            field.select_box(mfi);
+            DiscreteGrid const& dg = field.discrete_grid(dir);
+            ParallelFor(mfi.validbox(),
+                        [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
+                        {
+                            amrex::Real x = dg.location_1d(xDir, ix);
+#if AMREX_SPACEDIM > 1
+                            amrex::Real y = dg.location_1d(yDir, iy);
+#endif
+#if AMREX_SPACEDIM == 3
+                            amrex::Real z = dg.location_1d(zDir, iz);
+#endif
+                            field(dir, ix, iy, iz) = f(dir, AMREX_D_DECL(x, y, z), time);
+                        });
+        }
+    }
+}
+void fill_zero(DiscreteVectorField&);
+
+/**
+ * @brief Provide an interface for functions parsed from the input file to
+ *        @ref fill(DiscreteField&, F const&) and @ref fill(DiscreteVectorField&, F const&)
+ */
+class DiscreteFieldsFunctionParser
+{
+public:
+    //!@cond EXCLUDE_API_DOC
+    DiscreteFieldsFunctionParser() = delete;
+    //!@endcond
+    /**
+     * @brief Create a function parser to fill a @ref DiscreteField
+     *
+     * @param label The identifier of a function in the parameter file parsed through
+     *        `Io::Parameters`
+     */
+    DiscreteFieldsFunctionParser(std::string const& label, Io::Parameters& params);
+    /**
+     * @brief Create a function parser to fill a @ref DiscreteVectorField
+     *
+     * @param label The identifier of three functions in the parameter file parsed through
+     *              `Io::Parameters.` where the position of the string in the array
+     *              corresponds to @ref Direction of the @ref DiscreteVectorField
+     */
+    DiscreteFieldsFunctionParser(std::array<std::string, 3> const& label, Io::Parameters& params);
+    /**
+     * @brief Provide an interface for functions parsed from the input file to
+     *        @ref fill(DiscreteField&, F const&)
+     */
+    AMREX_GPU_DEVICE amrex::Real operator()(
+        AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), amrex::Real t) const
+    {
+        return m_dFunctionPtr[0](AMREX_D_DECL(x, y, z), t);
+    }
+    /**
+     * @brief Provide an interface for functions parsed from the input file to
+     *        @ref fill(DiscreteVectorField&, F const&)
+     */
+    AMREX_GPU_DEVICE amrex::Real operator()(Direction dir,
+                                            AMREX_D_DECL(amrex::Real x,
+                                                         amrex::Real y,
+                                                         amrex::Real z),
+                                            amrex::Real t) const
+    {
+        return m_dFunctionPtr[dir](AMREX_D_DECL(x, y, z), t);
+    }
+
+private:
+    std::vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> m_hFunction{};
+    amrex::Gpu::DeviceVector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> m_dFunction{};
+    // amrex::Gpu::DeviceVector has no __host__ __device__ annotations
+    // so the pointer needs to be used to access the function
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1>* m_dFunctionPtr{};
+    std::vector<amrex::Parser> m_parser{};
+};
+
+bool is_nan(DiscreteField&);
+amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
+std::array<bool, 3> is_nan(DiscreteVectorField&);
+std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
 
 } //namespace Gempic
 
@@ -936,7 +1070,7 @@ public:
         field.m_data[zDir].FillBoundary(m_geom.periodicity());
     }
 
-    /// @cond DOXYGEN_IGNORE
+    /// @cond EXCLUDE_API_DOC
     // fillBoundary for Zero- or Three-forms
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void fill_boundary (DeRhamField<grid, space>& field)
@@ -957,7 +1091,7 @@ public:
         field.m_data[zDir].FillBoundary_nowait(m_geom.periodicity());
     }
 
-    /// @cond DOXYGEN_IGNORE
+    /// @cond EXCLUDE_API_DOC
     // fillBoundary_nowait for Zero- or Three-forms
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void fill_boundary_nowait (DeRhamField<grid, space>& field)
@@ -977,7 +1111,7 @@ public:
         field.m_data[zDir].FillBoundary_finish();
     }
 
-    /// @cond DOXYGEN_IGNORE
+    /// @cond EXCLUDE_API_DOC
     // fillBoundary_nowait for Zero- or Three-forms
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void fill_boundary_finish (DeRhamField<grid, space>& field)
@@ -1015,7 +1149,7 @@ public:
         }
     }
 
-    /// @cond DOXYGEN_IGNORE
+    /// @cond EXCLUDE_API_DOC
     // applyBC for Zero- or Three-forms
     template <Grid grid, Space space, typename std::enable_if_t<isZeroOrThreeForm<space>, int> = 0>
     void apply_bc (DeRhamField<grid, space>& field)
@@ -1584,7 +1718,7 @@ inline DeRhamField<grid, space, typename std::enable_if_t<isZeroOrThreeForm<spac
     m_deRham->projection(funcs, 0.0, *this);
 }
 
-/// @cond DOXYGEN_IGNORE
+/// @cond EXCLUDE_API_DOC
 template <Grid grid, Space space>
 DeRhamField<grid, space, typename std::enable_if_t<isOneOrTwoForm<space>>>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,

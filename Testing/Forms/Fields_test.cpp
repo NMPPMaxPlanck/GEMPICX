@@ -36,33 +36,30 @@ public:
 
 void fill_scalar_field_with_one (DiscreteField& sf)
 {
-    //! [DiscreteFieldExample.Fill]
-    auto fillFunc =
-        [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int n)
-    { return 1.0; };
+    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(
+                        AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z)) { return 1.0; };
     Gempic::fill(sf, fillFunc);
-    //! [DiscreteFieldExample.Fill]
 }
-void fill_scalar_field_with_sin (DiscreteField& sf)
+void fill_scalar_field_with_sin (DiscreteField& f)
 {
+    //! [DiscreteFieldExample.Fill]
     std::array<amrex::Real, AMREX_SPACEDIM> k0{};
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        k0[dir] = 2 * M_PI / sf.discrete_grid().length(dir);
+        k0[dir] = 2 * M_PI / f.discrete_grid().length(dir);
     }
-    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(double x, double y, double z), int n)
+    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(double x, double y, double z))
     {
         return GEMPIC_D_MULT(std::sin(k0[Direction::xDir] * x), std::sin(k0[Direction::yDir] * y),
                              std::sin(k0[Direction::zDir] * z));
     };
-    Gempic::fill(sf, fillFunc);
+    Gempic::fill(f, fillFunc);
+    //! [DiscreteFieldExample.Fill]
 }
 void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
 {
-    //! [DiscreteVectorFieldExample.Fill]
-    auto fillFunc =
-        [=] AMREX_GPU_HOST_DEVICE(Direction dir,
-                                  AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), int n)
+    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(
+                        Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         switch (dir)
         {
@@ -72,33 +69,50 @@ void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
                 return 2.0;
             case Direction::zDir:
                 return 3.0;
-            default:
-                return 0.0;
         };
+        AMREX_ALWAYS_ASSERT(false);
+        return 0.0;
     };
     Gempic::fill(vf, fillFunc);
-    //! [DiscreteVectorFieldExample.Fill]
 }
 
-void fill_vector_field_with_sin (DiscreteVectorField& vf)
+void fill_vector_field_with_sin (DiscreteVectorField& f)
 {
-    std::array<std::array<amrex::Real, AMREX_SPACEDIM>, 3> k0{};
+    //! [DiscreteVectorFieldExample.Fill]
+    std::array<amrex::Real, AMREX_SPACEDIM> k0{};
     for (auto gridDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        for (auto fieldDir : {Direction::xDir, Direction::yDir, Direction::zDir})
-        {
-            k0[fieldDir][gridDir] = 2 * M_PI / vf.discrete_grid(fieldDir).length(gridDir);
-        }
+        k0[gridDir] = 2 * M_PI / f.discrete_grid(Direction::xDir).length(gridDir);
     }
     auto fillFunc =
-        [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(double x, double y, double z), int n)
+        [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(double x, double y, double z))
     {
-        return GEMPIC_D_MULT(std::sin(k0[dir][Direction::xDir] * x),
-                             std::sin(k0[dir][Direction::yDir] * y),
-                             std::sin(k0[dir][Direction::zDir] * z)) *
-               (dir + 1);
+        switch (dir)
+        {
+            case Direction::xDir:
+            {
+                return GEMPIC_D_MULT(std::sin(k0[Direction::xDir] * x),
+                                     std::sin(k0[Direction::yDir] * y),
+                                     std::sin(k0[Direction::zDir] * z));
+            }
+            case Direction::yDir:
+            {
+                return GEMPIC_D_MULT(std::cos(k0[Direction::xDir] * x),
+                                     std::cos(k0[Direction::yDir] * y),
+                                     std::sin(k0[Direction::zDir] * z));
+            }
+            case Direction::zDir:
+            {
+                return GEMPIC_D_MULT(std::sin(k0[Direction::xDir] * x),
+                                     std::cos(k0[Direction::yDir] * y),
+                                     std::sin(k0[Direction::zDir] * z));
+            }
+        }
+        AMREX_ALWAYS_ASSERT(false);
+        return 0.0;
     };
-    Gempic::fill(vf, fillFunc);
+    Gempic::fill(f, fillFunc);
+    //! [DiscreteVectorFieldExample.Fill]
 }
 
 TEST_F(DiscreteFieldsTest, fillScalarField)
@@ -287,10 +301,116 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
     EXPECT_EQ(f.multi_fab().norm0(), 0);
 }
 
+void fill_reference_scalar_field (DiscreteField& sf, double t)
+{
+    fill(
+        sf,
+        [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                                  amrex::Real t)
+        { return t * AMREX_D_PICK(x, (x - y), (x - y - z)); },
+        t);
+}
+void fill_scalar_field_with_parse (DiscreteField& f,
+                                   DiscreteFieldsFunctionParser const& parser,
+                                   double t)
+{
+    fill(f, parser, t);
+}
+TEST(FunctionParser, fillDiscreteFieldWithParsedFunction)
+{
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(-1.0, -0.6, -2.4)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(4.0, 4.5, 5.0)};
+    std::array<int, AMREX_SPACEDIM> const nCell{AMREX_D_DECL(9, 8, 7)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    DiscreteGrid grid{domainLo,
+                      domainHi,
+                      nCell,
+                      {AMREX_D_DECL(DiscreteGrid::Position::Cell, DiscreteGrid::Position::Cell,
+                                    DiscreteGrid::Node)}};
+    Gempic::Io::Parameters parameters;
+    double t{0.5};
+    // AMReX `ParamParse::add()` requires a reference for a string
+    // Trying to directly pass the string to `Parameters::set()` on clang converts implicitly and
+    // calls ParamParse::add(bool);
+    std::string sfFunction{AMREX_D_PICK("t*x", "t*(x-y)", "t*(x-y-z)")};
+    parameters.set("FunctionParser.sf", sfFunction);
+    parameters.set("ComputationalDomain.maxGridSize", amrex::Vector<int>{9, 8, 7});
+
+    DiscreteField sf{"sf", parameters, grid};
+    DiscreteField sfRef{"sf", parameters, grid};
+
+    DiscreteFieldsFunctionParser parseSf{"sf", parameters};
+    fill_scalar_field_with_parse(sf, parseSf, t);
+    fill_reference_scalar_field(sfRef, t);
+    EXPECT_EQ(l_inf_error(sf, sfRef), 0.0);
+}
+
+void fill_reference_vector_field (DiscreteVectorField& vf, double t)
+{
+    fill(
+        vf,
+        [=] AMREX_GPU_HOST_DEVICE(
+            Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), amrex::Real t)
+        {
+            switch (dir)
+            {
+                case Direction::xDir:
+                    return t * AMREX_D_PICK(x, (x + y), (x + y + z));
+                case Direction::yDir:
+                    return t * AMREX_D_PICK(x, (x - y), (x - y + z));
+                case Direction::zDir:
+                    return t * AMREX_D_PICK(x, (x + y), (x + y - z));
+            }
+            AMREX_ALWAYS_ASSERT(false);
+            return 0.0;
+        },
+        t);
+}
+void fill_vector_field_with_parse (DiscreteVectorField& f,
+                                   DiscreteFieldsFunctionParser const& parser,
+                                   double t)
+{
+    fill(f, parser, t);
+}
+TEST(FunctionParser, fillDiscreteVectorFieldWithParsedFunction)
+{
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(-1.0, -0.6, -2.4)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(4.0, 4.5, 5.0)};
+    std::array<int, AMREX_SPACEDIM> const nCell{AMREX_D_DECL(9, 8, 7)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    DiscreteGrid grid{domainLo,
+                      domainHi,
+                      nCell,
+                      {AMREX_D_DECL(DiscreteGrid::Position::Cell, DiscreteGrid::Position::Cell,
+                                    DiscreteGrid::Node)}};
+    Gempic::Io::Parameters parameters;
+    double t{0.5};
+    // AMReX `ParamParse::add()` requires a reference for a string
+    // Trying to directly pass the string to `Parameters::set()` on clang converts implicitly and
+    // calls ParamParse::add(bool);
+    std::string vfxFunction{AMREX_D_PICK("t*x", "t*(x+y)", "t*(x+y+z)")};
+    std::string vfyFunction{AMREX_D_PICK("t*x", "t*(x-y)", "t*(x-y+z)")};
+    std::string vfzFunction{AMREX_D_PICK("t*x", "t*(x+y)", "t*(x+y-z)")};
+    parameters.set("FunctionParser.vfx", vfxFunction);
+    parameters.set("FunctionParser.vfy", vfyFunction);
+    parameters.set("FunctionParser.vfz", vfzFunction);
+    parameters.set("ComputationalDomain.maxGridSize", amrex::Vector<int>{9, 8, 7});
+
+    DiscreteVectorField vf{"vf", parameters, {grid, grid, grid}};
+    DiscreteVectorField vfRef{"vf", parameters, {grid, grid, grid}};
+
+    DiscreteFieldsFunctionParser parseVf{{"vfx", "vfy", "vfz"}, parameters};
+    fill_vector_field_with_parse(vf, parseVf, t);
+    fill_reference_vector_field(vfRef, t);
+    EXPECT_EQ(l_inf_error(vf, vfRef)[Direction::xDir], 0.0);
+    EXPECT_EQ(l_inf_error(vf, vfRef)[Direction::yDir], 0.0);
+    EXPECT_EQ(l_inf_error(vf, vfRef)[Direction::zDir], 0.0);
+}
+
 void fill_scalar_field_with_nan (DiscreteField f)
 {
-    auto nan = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
-                                        int n) -> amrex::Real
+    auto nan = [] AMREX_GPU_HOST_DEVICE(
+                   AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z)) -> amrex::Real
     {
         if (x < 1.0)
         {
@@ -336,9 +456,8 @@ TEST_F(DiscreteFieldsTest, DiscreteFieldLInfError)
 
 void fill_vector_field_with_nan (DiscreteVectorField& f)
 {
-    auto nan = [] AMREX_GPU_HOST_DEVICE(Direction dir,
-                                        AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
-                                        int n) -> amrex::Real
+    auto nan = [] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y,
+                                                                    amrex::Real z)) -> amrex::Real
     {
         if (x < 1.0)
         {

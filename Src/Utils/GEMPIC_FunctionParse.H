@@ -1,6 +1,7 @@
 #ifndef GEMPIC_FUNCTION_PARSE_H_
 #define GEMPIC_FUNCTION_PARSE_H_
 
+#include <AMReX_GpuContainers.H>
 #include <AMReX_Parser.H>
 
 #include "GEMPIC_Parameters.H"
