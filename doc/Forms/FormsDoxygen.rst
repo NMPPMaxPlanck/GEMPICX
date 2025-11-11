@@ -10,15 +10,17 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
 .. doxygenclass:: Gempic::DiscreteGrid
    :members:
 
-.. doxygenfunction:: Gempic::fill(DiscreteField&, AnalyticalExpression const&)
+.. doxygenfunction:: Gempic::fill(DiscreteField&, F const&)
 
 .. doxygenclass:: Gempic::DiscreteField
    :members:
 
-.. doxygenfunction:: Gempic::fill(DiscreteVectorField&, AnalyticalExpression const&)
+.. doxygenfunction:: Gempic::fill(DiscreteVectorField&, F const&)
 
 .. doxygenclass:: Gempic::DiscreteVectorField
    :members:
+
+.. doxygenclass:: Gempic::FunctionParser
 
 .. doxygenfile:: GEMPIC_FDDeRhamComplex.H
 .. doxygenfile:: GEMPIC_ExtDerivatives.cpp
