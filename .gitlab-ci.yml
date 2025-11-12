@@ -162,8 +162,15 @@ build-test_mac_3D:
     - .remove-duplicate-pipelines
   script:
     - configure_build_test cpu-release-3D
+  after_script:
+    - rm -rf $_JOB_PATH
   tags: [macos]
   needs: ["build-test_gcc_3D"]
+  variables:
+    # Job ID changes for each job, so reusing the directory becomes impossible,
+    # therefore, the fetch strategy also becomes unusable
+    _JOB_PATH: $CI_BUILDS_DIR/$CI_PROJECT_NAME/job-$CI_JOB_ID
+    GIT_CLONE_PATH: $_JOB_PATH/$CI_CONCURRENT_PROJECT_ID
 
 # Test that merge requests are "clean", i.e. with the proper style
 style-test_cpu_3D:
@@ -188,8 +195,9 @@ pages:
   tags:
     - cloud
   stage: deploy
-  only:
-    - master
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_PURPOSE =~ /doc/
+    - if: $CI_COMMIT_BRANCH == "master"
   before_script:
     - !reference [default,before_script]
     - apt-get update
@@ -213,3 +221,11 @@ pages:
   artifacts:
     paths:
       - public
+
+cleanup-macos:
+  tags: [macos]
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_PURPOSE =~ /clean-mac/
+  script:
+    - rm -rf $CI_BUILDS_DIR/$CI_PROJECT_NAME/job-*
