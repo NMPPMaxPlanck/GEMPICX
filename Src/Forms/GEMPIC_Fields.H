@@ -442,22 +442,31 @@ public:
      * @brief Provide an interface for functions parsed from the input file to
      *        @ref fill(DiscreteField&, F const&)
      */
-    AMREX_GPU_DEVICE amrex::Real operator()(
+    // **NOTE** 2025-11-17 Chichi Lalescu
+    // We would prefer to only use AMREX_GPU_DEVICE here, but
+    // doing that would complicate the definition of "Analytical Expression"
+    // concepts when compiling with LLVM-based compilers (see
+    // https://github.com/llvm/llvm-project/issues/69956).
+    // To make things work I rely on AMREX_IF_ON_DEVICE/AMREX_IF_ON_HOST, and
+    // I think this describes what we want (but it's a fairly blunt workaround)
+    AMREX_GPU_HOST_DEVICE amrex::Real operator()(
         AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), amrex::Real t) const
     {
-        return m_dFunctionPtr[0](AMREX_D_DECL(x, y, z), t);
+        AMREX_IF_ON_DEVICE(return m_dFunctionPtr[0](AMREX_D_DECL(x, y, z), t););
+        AMREX_IF_ON_HOST(return m_hFunction[0](AMREX_D_DECL(x, y, z), t););
     }
     /**
      * @brief Provide an interface for functions parsed from the input file to
      *        @ref fill(DiscreteVectorField&, F const&)
      */
-    AMREX_GPU_DEVICE amrex::Real operator()(Direction dir,
-                                            AMREX_D_DECL(amrex::Real x,
-                                                         amrex::Real y,
-                                                         amrex::Real z),
-                                            amrex::Real t) const
+    AMREX_GPU_HOST_DEVICE amrex::Real operator()(Direction dir,
+                                                 AMREX_D_DECL(amrex::Real x,
+                                                              amrex::Real y,
+                                                              amrex::Real z),
+                                                 amrex::Real t) const
     {
-        return m_dFunctionPtr[dir](AMREX_D_DECL(x, y, z), t);
+        AMREX_IF_ON_DEVICE(return m_dFunctionPtr[dir](AMREX_D_DECL(x, y, z), t););
+        AMREX_IF_ON_HOST(return m_hFunction[dir](AMREX_D_DECL(x, y, z), t););
     }
 
 private:
