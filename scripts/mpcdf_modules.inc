@@ -12,9 +12,9 @@ load_viper_gpu () {
     # rocm contains hipBLAS and similar.
     # it is important for amd-llvm to be loaded **after** rocm, such that
     # the amd-llvm compilers are used.
-    module load rocm/6.4
-    module load amd-llvm/6.2
-    module load openmpi/5.0
+    module load rocm/7.0
+    module load amd-llvm/7.1
+    module load openmpi/5.0 openmpi_gpu/5.0
     module load mkl/2025.2
     export GEMPIC_VIPER_LOADED="true"
 }

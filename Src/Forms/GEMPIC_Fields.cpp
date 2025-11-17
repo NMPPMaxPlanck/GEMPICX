@@ -212,6 +212,7 @@ DiscreteVectorField::DiscreteVectorField(
         boundaryCondition);
 }
 
+AMREX_GPU_HOST_DEVICE
 DiscreteGrid const& DiscreteVectorField::discrete_grid(Direction dir) const
 {
     return m_discreteGrid[dir];
