@@ -16,13 +16,10 @@ amrex::Box selected_ghost_box (DiscreteField const& df,
                                Direction const& dir,
                                Impl::GhostRegion const region)
 {
-    for (auto gridDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    if (df.multi_fab().nGrow(dir) < ghostSize[dir])
     {
-        if (df.multi_fab().nGrow(dir) < ghostSize[dir])
-        {
-            throw std::runtime_error (
-                "Selected number of ghost cells are smaller than available number of ghost cells");
-        }
+        throw std::runtime_error (
+            "Selected number of ghost cells are smaller than available number of ghost cells");
     }
     amrex::Box box{df.selected_box()};
     amrex::IntVect low{amrex::lbound(box)};

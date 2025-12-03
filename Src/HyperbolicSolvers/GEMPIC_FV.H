@@ -2866,8 +2866,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v3_reconstruction_charva
     varArray2D<nVarFv> iR;
     varArray<nVarFv> qcGpu;
     amrex::GpuArray<amrex::Real, 3> nx{1.0, 0.0, 0.0};
-    amrex::GpuArray<amrex::Real, 3> ny{0.0, 1.0, 0.0};
-    amrex::GpuArray<amrex::Real, 3> nz{0.0, 0.0, 1.0};
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
         qcGpu[iVar] = w0(i, j, k, iVar);
@@ -2906,6 +2904,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v3_reconstruction_charva
         }
     }
 #if AMREX_SPACEDIM > 1
+    amrex::GpuArray<amrex::Real, 3> ny{0.0, 1.0, 0.0};
     pde_get_eigenvectors<nVarFv, ParamsClass, PdeTagType>(qcGpu, ny, R, L, iR, myparams);
     // y-polynomial reconstruction
     for (int iz = v3_stencil_lo_z(); iz < v3_stencil_hi_z() + 1; ++iz)
@@ -2957,6 +2956,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v3_reconstruction_charva
 #endif
 
 #if AMREX_SPACEDIM > 2
+    amrex::GpuArray<amrex::Real, 3> nz{0.0, 0.0, 1.0};
     pde_get_eigenvectors<nVarFv, ParamsClass, PdeTagType>(qcGpu, nz, R, L, iR, myparams);
     // z-polynomial reconstruction
     for (int iDofy = 0; iDofy < v3_n_dof_y(); ++iDofy)

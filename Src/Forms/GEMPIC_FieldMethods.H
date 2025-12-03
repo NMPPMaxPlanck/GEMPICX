@@ -1231,7 +1231,6 @@ compute_v0_weighted_mass_matrix_1d_stencil_gdec ()
     static constexpr int massStencilLength{2 * intDegree + 1};
     static constexpr int nQuadraturePoints{intDegree + 1};
     static constexpr int leftStencilIdx{-intDegree};
-    static constexpr int rightStencilIdx{intDegree};
     static constexpr int nShift{
         (intDegree - 1) /
         2}; // polyIndexes goes from {-n,...,0,...,n+1}, in total 2n+2 values.  intDegree +1
@@ -1369,7 +1368,6 @@ compute_v1_weighted_mass_matrix_1d_stencil_gdec ()
     constexpr int massStencilLength{2 * intDegree - 1};
     constexpr int nQuadraturePoints{intDegree + 1};
     constexpr int leftStencilIdx{-degree};
-    constexpr int rightStencilIdx{degree};
     constexpr int nShift{degree /
                          2}; // polyIndexes goes from {-n,...,0,...,n}, in total 2n+1 values.
 
@@ -1818,7 +1816,9 @@ void hodge_operator (DeRhamComplex::Primal0Form& zeroForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{threeForm.m_deRham->get_dx()};
     amrex::Geometry const geom = threeForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::MultiFab& tempPrimalZeroForm = zeroForm.m_deRham->get_temp_primal_zero_form();
+#endif
 
     AMREX_D_TERM(
         (apply_1d_hodge<xDir, hodgeDegree>(
@@ -1865,7 +1865,9 @@ void hodge_operator (DeRhamComplex::Dual0Form& zeroForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{threeForm.m_deRham->get_dx()};
     amrex::Geometry const geom = threeForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::MultiFab& tempDualZeroForm = zeroForm.m_deRham->get_temp_dual_zero_form();
+#endif
 
     AMREX_D_TERM(
         (apply_1d_hodge<xDir, hodgeDegree>(
@@ -1912,8 +1914,10 @@ void hodge_operator (DeRhamComplex::Primal1Form& oneForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{twoForm.m_deRham->get_dx()};
     amrex::Geometry const geom = twoForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::Array<amrex::MultiFab, 3>& tempPrimalOneForm =
         oneForm.m_deRham->get_temp_primal_one_form();
+#endif
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1978,7 +1982,9 @@ void hodge_operator (DeRhamComplex::Dual1Form& oneForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{twoForm.m_deRham->get_dx()};
     amrex::Geometry const geom = twoForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::Array<amrex::MultiFab, 3>& tempDualOneForm = oneForm.m_deRham->get_temp_dual_one_form();
+#endif
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -2042,8 +2048,10 @@ void hodge_operator (DeRhamComplex::Primal2Form& twoForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{oneForm.m_deRham->get_dx()};
     amrex::Geometry const geom = oneForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::Array<amrex::MultiFab, 3>& tempPrimalTwoForm =
         twoForm.m_deRham->get_temp_primal_two_form();
+#endif
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -2109,7 +2117,9 @@ void hodge_operator (DeRhamComplex::Dual2Form& twoForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{oneForm.m_deRham->get_dx()};
     amrex::Geometry const geom = oneForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::Array<amrex::MultiFab, 3>& tempDualTwoForm = twoForm.m_deRham->get_temp_dual_two_form();
+#endif
 
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -2175,7 +2185,9 @@ void hodge_operator (DeRhamComplex::Primal3Form& threeForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{zeroForm.m_deRham->get_dx()};
     amrex::Geometry const geom = zeroForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::MultiFab& tempPrimalThreeForm = threeForm.m_deRham->get_temp_primal_three_form();
+#endif
 
     AMREX_D_TERM(
         (apply_1d_hodge<xDir, hodgeDegree>(
@@ -2223,7 +2235,9 @@ void hodge_operator (DeRhamComplex::Dual3Form& threeForm,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dr{zeroForm.m_deRham->get_dx()};
     amrex::Geometry const geom = zeroForm.m_deRham->m_geom;
 
+#if AMREX_SPACEDIM > 1
     amrex::MultiFab& tempDualThreeForm = threeForm.m_deRham->get_temp_dual_three_form();
+#endif
 
     AMREX_D_TERM(
         (apply_1d_hodge<xDir, hodgeDegree>(

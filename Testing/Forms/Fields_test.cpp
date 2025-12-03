@@ -69,9 +69,10 @@ void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
                 return 2.0;
             case Direction::zDir:
                 return 3.0;
+            default:
+                AMREX_ALWAYS_ASSERT(false);
+                return 0.0;
         };
-        AMREX_ALWAYS_ASSERT(false);
-        return 0.0;
     };
     Gempic::fill(vf, fillFunc);
 }
@@ -107,9 +108,10 @@ void fill_vector_field_with_sin (DiscreteVectorField& f)
                                      std::cos(k0[Direction::yDir] * y),
                                      std::sin(k0[Direction::zDir] * z));
             }
+            default:
+                AMREX_ALWAYS_ASSERT(false);
+                return 0.0;
         }
-        AMREX_ALWAYS_ASSERT(false);
-        return 0.0;
     };
     Gempic::fill(f, fillFunc);
     //! [DiscreteVectorFieldExample.Fill]
@@ -321,7 +323,6 @@ TEST(FunctionParser, fillDiscreteFieldWithParsedFunction)
     std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(-1.0, -0.6, -2.4)};
     std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(4.0, 4.5, 5.0)};
     std::array<int, AMREX_SPACEDIM> const nCell{AMREX_D_DECL(9, 8, 7)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
     DiscreteGrid grid{domainLo,
                       domainHi,
                       nCell,
@@ -360,9 +361,10 @@ void fill_reference_vector_field (DiscreteVectorField& vf, double t)
                     return t * AMREX_D_PICK(x, (x - y), (x - y + z));
                 case Direction::zDir:
                     return t * AMREX_D_PICK(x, (x + y), (x + y - z));
+                default:
+                    AMREX_ALWAYS_ASSERT(false);
+                    return 0.0;
             }
-            AMREX_ALWAYS_ASSERT(false);
-            return 0.0;
         },
         t);
 }
@@ -377,7 +379,6 @@ TEST(FunctionParser, fillDiscreteVectorFieldWithParsedFunction)
     std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(-1.0, -0.6, -2.4)};
     std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(4.0, 4.5, 5.0)};
     std::array<int, AMREX_SPACEDIM> const nCell{AMREX_D_DECL(9, 8, 7)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
     DiscreteGrid grid{domainLo,
                       domainHi,
                       nCell,

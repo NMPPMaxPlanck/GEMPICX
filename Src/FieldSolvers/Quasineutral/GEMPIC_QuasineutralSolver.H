@@ -298,7 +298,8 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -307,9 +308,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
             ncols = 0; // initialize to 0 and then increment it through filler functions
@@ -460,7 +461,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=] AMREX_GPU_DEVICE(long pp)
+                    [=, this] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
@@ -490,7 +491,8 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -499,9 +501,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
             ncols = 0; // initialize to 0 and then increment it through filler functions
@@ -654,7 +656,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=] AMREX_GPU_DEVICE(long pp)
+                    [=, this] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
@@ -700,7 +702,8 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -709,9 +712,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
             ncols = 0; // initialize to 0 and then increment it through filler functions
@@ -963,7 +966,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=] AMREX_GPU_DEVICE(long pp)
+                    [=, this] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
@@ -1006,7 +1009,8 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1015,9 +1019,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
             ncols = 0; // initialize to 0 and then increment it through filler functions
@@ -1069,7 +1073,7 @@ public:
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
                 amrex::ParallelFor(
                     np,
-                    [=] AMREX_GPU_DEVICE(long pp)
+                    [=, this] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
@@ -1118,7 +1122,8 @@ public:
             static_cast<HYPRE_Real>(GEMPIC_D_MULT(dx[xDir], dx[yDir], dxi[zDir]))};
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
         // the matrix.
@@ -1126,9 +1131,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
             ncols = 0; // initialize to 0 and then increment it through filler functions
@@ -1171,7 +1176,8 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1180,9 +1186,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             //
             if (i == 0 && j == 0 && k == 0)
@@ -1266,7 +1272,8 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1275,9 +1282,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int n,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int n,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             ncols = 0;
 
@@ -1381,7 +1388,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=] AMREX_GPU_DEVICE(long pp)
+                    [=, this] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
@@ -1405,7 +1412,8 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
+                                                 int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1414,9 +1422,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int n,
-                                           amrex::Array4<HYPRE_Int const> const* gid,
-                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int n,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             std::map<int, int> mapCols;
             ncols = 0; // initialize to 0 and then increment it through filler functions
@@ -1608,7 +1616,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=] AMREX_GPU_DEVICE(long pp)
+                    [=, this] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
                             AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
@@ -1732,7 +1740,7 @@ public:
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
                 amrex::ParallelFor(np,
-                                   [=] AMREX_GPU_DEVICE(long pp)
+                                   [=, this] AMREX_GPU_DEVICE(long pp)
                                    {
                                        amrex::GpuArray<amrex::Real, vdim> vel{
                                            ptd.rdata(ii.m_ivelx)[pp], ptd.rdata(ii.m_ively)[pp],
@@ -1787,7 +1795,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=] AMREX_GPU_DEVICE(long pp)
+                    [=, this] AMREX_GPU_DEVICE(long pp)
                     {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{
                             AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
