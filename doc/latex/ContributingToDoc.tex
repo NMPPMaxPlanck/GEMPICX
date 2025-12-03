@@ -63,9 +63,9 @@ Documentation sections may be added using rst or LaTeX files (which are converte
 If a developer needs to extend the existing documentation and check their changes, the documentation can be built locally on the computer following the steps below. 
 \begin{enumerate}
    \item Install the required packages: \verb|sphinx|, \verb|breathe|, \verb|sphinx_rtd_theme|, \verb|pandoc| (2.19 <= version < 3 or version > 3.1.6), \verb|doxygen|, \verb|curl|
-   \item Configure with cmake if you haven't done so already\footnote{If you use a virtual environment or a conda environment for Python, remember to activate it \emph{before} configuring.} -- \emph{e.g.} using one of the presets
-   \item In your build directory, use the command \verb|cmake --build . --target doc| to build the documentation (or simply \verb|make doc|/\verb|ninja doc| if you're using GNU Makefiles/Ninja)
-   \item The generated HTML files can be found in the \verb|/PATH/TO/GEMPIC/BUILD/DIR/documentation/| folder. Open \verb|index.html| in your browser to view the documentation
+   \item Configure with cmake if you haven't done so already\footnote{If you use a virtual environment or a conda environment for Python, remember to activate it \emph{before} configuring.} by using the \emph{documentation} preset
+   \item In your \emph{documentation} build directory, use the command \verb|cmake --build . --target doc| to build the documentation (or simply \verb|make doc|/\verb|ninja doc| if you're using GNU Makefiles/Ninja)
+   \item The generated HTML files can be found in the \verb|/PATH/TO/GEMPIC/BUILD/DIR/documentation/| folder. Open \verb|sphinx/index.html| in your browser to view the documentation
 \end{enumerate}
 
 \subsection{Using Doxygen}
