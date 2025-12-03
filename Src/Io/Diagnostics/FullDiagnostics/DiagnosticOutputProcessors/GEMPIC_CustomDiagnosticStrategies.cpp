@@ -117,8 +117,6 @@ HighResSubcellOutputProcessor::HighResSubcellOutputProcessor(amrex::MultiFab con
     params.get("maxGridSize", maxGridSizeTmp);
     // first create a coarse multifab
 
-    int nGhost = 0;
-    int nComp = mfSrc.nComp();
     amrex::IndexType t = mfSrc.boxArray().ixType();
     amrex::BoxArray ba = get_box_array(t);
     amrex::DistributionMapping const dm = mfSrc.DistributionMap();

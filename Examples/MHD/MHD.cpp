@@ -66,7 +66,6 @@ int main_new_mhdpde ()
     amrex::Print() << "Initialization step 03" << std::endl;
 
     auto const strtTotal = amrex::second();
-    amrex::Real dtUpdateScale = 1.0;
 
     // compute initial norms and dt
     myMHDscheme.print_now();
@@ -131,13 +130,14 @@ int main_new_mhdpde ()
 
 int main (int argc, char* argv[])
 {
+    int runNewMHDPDE;
     amrex::Initialize(argc, argv);
     {
         BL_PROFILE_VAR("main()", pmain);
-        int runNewMHDPDE{main_new_mhdpde()};
+        runNewMHDPDE = main_new_mhdpde();
 
         BL_PROFILE_VAR_STOP(pmain);
     } // namespace amrex
     amrex::Finalize();
-    return 0;
+    return runNewMHDPDE;
 }

@@ -92,7 +92,7 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void pde_get_fluxes<nVarMHD, MhdPdePar
     varArray<nVarMHD> const& Q, fluxArray<nVarMHD>& f, MhdPdeParameters const& params)
 {
     amrex::Real rho{Q[rhoIdx]}, u, v, w, p, Bx, By, Bz, b2, vB, b28P, rhok, iPi4,
-        gamma{params.m_gamma}, en{Q[4]};
+        gamma{params.m_gamma};
     rho = Q[rhoIdx];
     u = Q[mxIdx] / rho;
     v = Q[myIdx] / rho;
@@ -151,7 +151,7 @@ pde_get_jacobian<nVarMHD, MhdPdeParameters, MhdPdeTag>(varArray<nVarMHD> const& 
                                                        MhdPdeParameters const& params)
 {
     amrex::Real rho{Q[rhoIdx]}, u, v, w, p, Bx, By, Bz, b2, vB, b28P, rhok, iPi4,
-        gamma{params.m_gamma}, en{Q[4]};
+        gamma{params.m_gamma};
     rho = Q[rhoIdx];
     u = Q[mxIdx] / rho;
     v = Q[myIdx] / rho;
@@ -629,7 +629,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::compute_norms_reduc
         {
             varArray<nVarPde> qGpu;
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> lmax{AMREX_D_DECL(0.0, 0.0, 0.0)};
-            amrex::GpuArray<amrex::Real, 3> nx{1.0, 0.0, 0.0}, ny{0.0, 1.0, 0.0}, nz{0.0, 0.0, 1.0};
+            amrex::GpuArray<amrex::Real, 3> nx{1.0, 0.0, 0.0};
 
             for (int iVar = 0; iVar < nVarPde; iVar++)
             {
@@ -643,6 +643,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::compute_norms_reduc
                 lmax[0] = std::max(lmax[0], std::abs(lLx[iVar]));
             }
 #if AMREX_SPACEDIM > 1
+            amrex::GpuArray<amrex::Real, 3> ny{0.0, 1.0, 0.0};
             varArray<nVarPde> lLy;
             pde_get_eigenvalues<nVarPde, ParamsClass, PdeTagType>(qGpu, ny, mask, lLy, myparams);
             for (int iVar = 0; iVar < nVarPde; iVar++)
@@ -651,6 +652,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::compute_norms_reduc
             }
 #endif
 #if AMREX_SPACEDIM > 2
+            amrex::GpuArray<amrex::Real, 3> nz{0.0, 0.0, 1.0};
             varArray<nVarPde> lLz;
             pde_get_eigenvalues<nVarPde, ParamsClass, PdeTagType>(qGpu, nz, mask, lLz, myparams);
             for (int iVar = 0; iVar < nVarPde; iVar++)
@@ -936,8 +938,8 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
 #endif
             });
     }
-    using dataStruct = amrex::GpuArray<amrex::Real, faceDof>;
 #ifdef AMREX_USE_GPU
+    using dataStruct = amrex::GpuArray<amrex::Real, faceDof>;
     aos2soa_fab<dataStruct, AMREX_SPACEDIM>(m_disc.m_qlRecFab2mfab, m_disc.m_qlRecFab);
     aos2soa_fab<dataStruct, AMREX_SPACEDIM>(m_disc.m_qrRecFab2mfab, m_disc.m_qrRecFab);
     sum_boundary_sync(m_disc.m_qrRecFab2mfab[xDir], m_disc.m_compDom.m_geom.periodicity());
