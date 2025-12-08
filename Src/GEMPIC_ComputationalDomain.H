@@ -47,6 +47,7 @@ public:
         Cell,
         Node
     };
+    //!@cond EXCLUDE_API_DOC
     DiscreteGrid() = default;
     DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
                  std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
@@ -55,6 +56,7 @@ public:
                  std::array<bool, AMREX_SPACEDIM> periodic = {AMREX_D_DECL(true, true, true)});
     DiscreteGrid(Io::Parameters& params,
                  std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition);
+    //!@endcond
     /**
      * @brief Calculate the location of the given index in the interval
      *        [@ref DiscreteGrid::min, @ref DiscreteGrid::max] of the physical domain
@@ -120,16 +122,25 @@ public:
     AMREX_GPU_HOST_DEVICE
     bool is_periodic (Direction dir) const { return m_periodicity[dir]; }
     std::array<bool, AMREX_SPACEDIM> is_periodic () const { return m_periodicity; }
+    bool operator==(DiscreteGrid const&) const = default;
+
+    friend DiscreteGrid convert_dof_position(
+        DiscreteGrid const&, std::array<DiscreteGrid::Position, AMREX_SPACEDIM> const&);
 
 private:
     std::array<amrex::Real, AMREX_SPACEDIM> m_domainLo{};
     std::array<amrex::Real, AMREX_SPACEDIM> m_domainHi{};
+    std::array<int, AMREX_SPACEDIM> m_nCells{};
     std::array<amrex::Real, AMREX_SPACEDIM> m_dx{};
     std::array<DiscreteGrid::Position, AMREX_SPACEDIM> m_idxPosition{};
     std::array<amrex::Real, AMREX_SPACEDIM> m_offset{};
     std::array<int, AMREX_SPACEDIM> m_degreesOfFreedom{};
     std::array<bool, AMREX_SPACEDIM> m_periodicity{};
 };
+DiscreteGrid dof_on_node(DiscreteGrid const& grid);
+DiscreteGrid dof_on_cell_center(DiscreteGrid const& grid);
+std::array<DiscreteGrid, 3> dof_on_edge(DiscreteGrid const& grid);
+std::array<DiscreteGrid, 3> dof_on_face(DiscreteGrid const& grid);
 
 namespace Impl
 {

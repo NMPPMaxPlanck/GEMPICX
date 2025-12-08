@@ -14,6 +14,22 @@ namespace
 using namespace Gempic;
 using namespace Forms;
 
+namespace Impl
+{
+std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM> scalar_field_dof_category ()
+{
+    using Category = DiscreteField::DOFCategory;
+    return {AMREX_D_DECL(Category::CenteredLineIntegral, Category::CenteredLineIntegral,
+                         Category::CenteredLineIntegral)};
+}
+std::array<std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM>, 3> vector_field_dof_category ()
+{
+    using Category = DiscreteField::DOFCategory;
+    return {AMREX_D_DECL(Category::CenteredLineIntegral, Category::CenteredLineIntegral,
+                         Category::CenteredLineIntegral)};
+}
+} //namespace Impl
+
 class DiscreteFieldsTest : public ::testing::Test
 {
 public:
@@ -123,7 +139,8 @@ TEST_F(DiscreteFieldsTest, fillScalarField)
     DiscreteField df{
         "df", parameters,
         DiscreteGrid{parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}}};
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
 
     df.multi_fab().setVal(0.0);
     fill_scalar_field_with_one(df);
@@ -142,7 +159,7 @@ TEST_F(DiscreteFieldsTest, fillVectorField)
     {
         grids[dir] = DiscreteGrid{m_parameters, position};
     }
-    DiscreteVectorField df{"df", m_parameters, grids};
+    DiscreteVectorField df{"df", m_parameters, grids, Impl::vector_field_dof_category()};
 
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
@@ -166,11 +183,13 @@ TEST_F(DiscreteFieldsTest, setGhostCellsScalarField)
     DiscreteField df{
         "df", m_parameters,
         DiscreteGrid{m_parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}}};
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
     DiscreteField res{
         "df", m_parameters,
         DiscreteGrid{m_parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}}};
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
 
     fill_scalar_field_with_sin(df);
     fill_scalar_field_with_sin(res);
@@ -200,8 +219,8 @@ TEST_F(DiscreteFieldsTest, setGhostCellsVectorField)
     {
         grids[dir] = DiscreteGrid{m_parameters, position};
     }
-    DiscreteVectorField df{"df", m_parameters, grids};
-    DiscreteVectorField res{"df", m_parameters, grids};
+    DiscreteVectorField df{"df", m_parameters, grids, Impl::vector_field_dof_category()};
+    DiscreteVectorField res{"df", m_parameters, grids, Impl::vector_field_dof_category()};
 
     fill_vector_field_with_sin(df);
     fill_vector_field_with_sin(res);
@@ -253,11 +272,13 @@ TEST_F(DiscreteFieldsTest, discreteFieldKernelExample)
     DiscreteField f{
         "f", m_parameters,
         DiscreteGrid{m_parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}}};
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
     DiscreteField g{
         "g", m_parameters,
         DiscreteGrid{m_parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}}};
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
     g.multi_fab().setVal(1);
     discrete_field_example_kernel(f, g);
     EXPECT_EQ(f.multi_fab().norm0(), 0);
@@ -293,8 +314,8 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
     {
         grids[dir] = DiscreteGrid{m_parameters, position};
     }
-    DiscreteField f{"df", m_parameters, grids[Direction::xDir]};
-    DiscreteVectorField g{"df", m_parameters, grids};
+    DiscreteField f{"df", m_parameters, grids[Direction::xDir], Impl::scalar_field_dof_category()};
+    DiscreteVectorField g{"df", m_parameters, grids, Impl::vector_field_dof_category()};
     fill_vector_field_with_one_two_three(g);
     g.multi_fab(Direction::xDir).setVal(1.0);
     g.multi_fab(Direction::yDir).setVal(2.0);
@@ -337,8 +358,8 @@ TEST(FunctionParser, fillDiscreteFieldWithParsedFunction)
     parameters.set("FunctionParser.sf", sfFunction);
     parameters.set("ComputationalDomain.maxGridSize", amrex::Vector<int>{9, 8, 7});
 
-    DiscreteField sf{"sf", parameters, grid};
-    DiscreteField sfRef{"sf", parameters, grid};
+    DiscreteField sf{"sf", parameters, grid, Impl::scalar_field_dof_category()};
+    DiscreteField sfRef{"sf", parameters, grid, Impl::scalar_field_dof_category()};
 
     DiscreteFieldsFunctionParser parseSf{"sf", parameters};
     fill_scalar_field_with_parse(sf, parseSf, t);
@@ -397,8 +418,9 @@ TEST(FunctionParser, fillDiscreteVectorFieldWithParsedFunction)
     parameters.set("FunctionParser.vfz", vfzFunction);
     parameters.set("ComputationalDomain.maxGridSize", amrex::Vector<int>{9, 8, 7});
 
-    DiscreteVectorField vf{"vf", parameters, {grid, grid, grid}};
-    DiscreteVectorField vfRef{"vf", parameters, {grid, grid, grid}};
+    DiscreteVectorField vf{"vf", parameters, {grid, grid, grid}, Impl::vector_field_dof_category()};
+    DiscreteVectorField vfRef{
+        "vf", parameters, {grid, grid, grid}, Impl::vector_field_dof_category()};
 
     DiscreteFieldsFunctionParser parseVf{{"vfx", "vfy", "vfz"}, parameters};
     fill_vector_field_with_parse(vf, parseVf, t);
@@ -430,7 +452,7 @@ TEST_F(DiscreteFieldsTest, DiscreteFieldNan)
     std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
         {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
     DiscreteGrid grid{m_parameters, position};
-    DiscreteField f{"f", m_parameters, grid};
+    DiscreteField f{"f", m_parameters, grid, Impl::scalar_field_dof_category()};
     fill_scalar_field_with_nan(f);
     EXPECT_TRUE(Gempic::is_nan(f));
     fill_scalar_field_with_one(f);
@@ -442,8 +464,8 @@ TEST_F(DiscreteFieldsTest, DiscreteFieldLInfError)
     std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
         {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
     DiscreteGrid grid{m_parameters, position};
-    DiscreteField f{"f", m_parameters, grid};
-    DiscreteField g{"g", m_parameters, grid};
+    DiscreteField f{"f", m_parameters, grid, Impl::scalar_field_dof_category()};
+    DiscreteField g{"g", m_parameters, grid, Impl::scalar_field_dof_category()};
     fill_zero(f);
     fill_scalar_field_with_one(g);
     EXPECT_EQ(l_inf_error(f, g), 1.0);
@@ -477,7 +499,7 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldIsNan)
     std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
         {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
     DiscreteGrid grid{m_parameters, position};
-    DiscreteVectorField f{"f", m_parameters, {grid, grid, grid}};
+    DiscreteVectorField f{"f", m_parameters, {grid, grid, grid}, Impl::vector_field_dof_category()};
     fill_vector_field_with_nan(f);
     EXPECT_TRUE(Gempic::is_nan(f)[Direction::xDir]);
     EXPECT_TRUE(Gempic::is_nan(f)[Direction::yDir]);
@@ -493,8 +515,8 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldLInfError)
     std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
         {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
     DiscreteGrid grid{m_parameters, position};
-    DiscreteVectorField f{"f", m_parameters, {grid, grid, grid}};
-    DiscreteVectorField g{"g", m_parameters, {grid, grid, grid}};
+    DiscreteVectorField f{"f", m_parameters, {grid, grid, grid}, Impl::vector_field_dof_category()};
+    DiscreteVectorField g{"g", m_parameters, {grid, grid, grid}, Impl::vector_field_dof_category()};
     fill_zero(f);
     fill_vector_field_with_one_two_three(g);
     EXPECT_EQ(l_inf_error(f, g)[Direction::xDir], 1.0);
@@ -607,7 +629,8 @@ TEST(DiscreteFieldBoundaryConditionsTest, periodic)
     DiscreteField df{
         "df", parameters,
         DiscreteGrid{parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}}};
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
     ASSERT_EQ(df.multi_fab().boxArray().size(), 1);
     fill_scalar_field_with_sin(df);
     df.apply_boundary_conditions({AMREX_D_DECL(1, 2, 3)});
@@ -652,8 +675,8 @@ TEST_F(LinearAlgebraTest, AddAssignDiscreteVectorFieldVectorField)
     {
         grids[dir] = DiscreteGrid{m_parameters, position};
     }
-    DiscreteVectorField df{"df", m_parameters, grids};
-    DiscreteVectorField res{"df", m_parameters, grids};
+    DiscreteVectorField df{"df", m_parameters, grids, Impl::vector_field_dof_category()};
+    DiscreteVectorField res{"df", m_parameters, grids, Impl::vector_field_dof_category()};
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
         df.multi_fab(dir).setVal(1);
@@ -680,8 +703,8 @@ TEST_F(LinearAlgebraTest, MultiplyAssignScalarVectorField)
     {
         grids[dir] = DiscreteGrid{m_parameters, position};
     }
-    DiscreteVectorField df{"df", m_parameters, grids};
-    DiscreteVectorField res{"df", m_parameters, grids};
+    DiscreteVectorField df{"df", m_parameters, grids, Impl::vector_field_dof_category()};
+    DiscreteVectorField res{"df", m_parameters, grids, Impl::vector_field_dof_category()};
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
         res.multi_fab(dir).setVal(1);
@@ -696,6 +719,41 @@ TEST_F(LinearAlgebraTest, MultiplyAssignScalarVectorField)
                                     res.discrete_grid(dir).size(Direction::yDir),
                                     res.discrete_grid(dir).size(Direction::zDir)));
     }
+}
+
+TEST_F(LinearAlgebraTest, DotProductScalarField)
+{
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}};
+    DiscreteGrid grid{m_parameters, position};
+    DiscreteField a{"df", m_parameters, grid, Impl::scalar_field_dof_category()};
+
+    a.multi_fab().setVal(1);
+    amrex::Real dotProduct = Gempic::Impl::dot(a, a);
+
+    // result in periodic domain should be the number of cells independent of index type
+    EXPECT_EQ(dotProduct, Gempic::Impl::to_amrex_geometry(grid).Domain().numPts());
+}
+
+TEST_F(LinearAlgebraTest, DotProductVectorField)
+{
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}};
+    std::array<DiscreteGrid, 3> grids{};
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        grids[dir] = DiscreteGrid{m_parameters, position};
+    }
+    DiscreteVectorField a{"df", m_parameters, grids, Impl::vector_field_dof_category()};
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        a.multi_fab(dir).setVal(1);
+    }
+    amrex::Real dotProduct = Gempic::Impl::dot(a, a);
+
+    // result in periodic domain should be 3 times (3 field directions) the number of cells
+    // independent of index type
+    EXPECT_EQ(dotProduct, 3 * Gempic::Impl::to_amrex_geometry(grids[xDir]).Domain().numPts());
 }
 
 // Test fixture. Sets up clean environment before each test.

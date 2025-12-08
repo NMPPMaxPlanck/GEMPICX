@@ -396,7 +396,7 @@ public:
     void get (std::string const& variableName, T& variable)
     {
         BL_PROFILE("Gempic::Io::Parameters::get()");
-        using namespace Impl; // utility functions for this class
+        using namespace Impl; // Necessary to access operator<<() nicely;
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -457,7 +457,7 @@ public:
     void set (std::string const& variableName, T const& variable)
     {
         BL_PROFILE("Gempic::Io::Parameters::set()");
-        using namespace Impl; // utility functions for this class
+        using namespace Impl; // Necessary to access operator<<() nicely;
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -779,7 +779,7 @@ private:
     void print_shared_parameter (std::ofstream& ofs, std::string const& variableName, T& variable)
     {
         BL_PROFILE("Gempic::Io::Parameters::print_shared_parameter()");
-        using namespace Impl; // utility functions for this class
+        using namespace Impl; // Necessary to access operator<<() nicely;
         if (s_sharedParams.at(variableName).get()->m_isSet)
         {
             ofs << variableName << " " << convertToParam(variable) << " # "

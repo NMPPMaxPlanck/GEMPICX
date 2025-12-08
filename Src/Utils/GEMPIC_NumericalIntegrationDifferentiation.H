@@ -136,8 +136,8 @@ public:
 private:
     int m_points{};
     static constexpr int s_nGaussFormulas{s_maxPoints - s_minPoints + 1};
-    std::array<amrex::Real, s_maxPoints> const m_location;
-    std::array<amrex::Real, s_maxPoints> const m_weights;
+    std::array<amrex::Real, s_maxPoints> m_location;
+    std::array<amrex::Real, s_maxPoints> m_weights;
     static std::array<amrex::Real, s_maxPoints> location(int points);
     static std::array<amrex::Real, s_maxPoints> weights(int points);
 };

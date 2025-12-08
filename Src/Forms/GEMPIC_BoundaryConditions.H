@@ -76,6 +76,7 @@ inline amrex::Vector<amrex::BCRec> load_boundary_condition (amrex::Geometry geom
 
     // Initialize boundary condition record
     amrex::Vector<amrex::BCRec> bcRec(1);
+    // Needs to be generalized to all components of a MultiFab
     int bcIdx = 0;
     for (int n = 0; n < 1; ++n)
     {

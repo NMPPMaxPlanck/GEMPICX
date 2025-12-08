@@ -5,4 +5,3 @@ if(GEMPIC_USE_CUDA)
 endif()
 
 target_link_libraries(maxwell GEMPICX)
-
