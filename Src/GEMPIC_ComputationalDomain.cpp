@@ -13,6 +13,7 @@ DiscreteGrid::DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
                            std::array<bool, AMREX_SPACEDIM> periodicity) :
     m_domainLo{domainLo},
     m_domainHi{domainHi},
+    m_nCells{nCells},
     m_idxPosition{idxPosition},
     m_periodicity{periodicity}
 {
@@ -98,6 +99,53 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
     }
     *this = DiscreteGrid{domainLo, domainHi, nCells, idxPosition, periodicity};
 }
+
+DiscreteGrid convert_dof_position (
+    DiscreteGrid const& grid, std::array<DiscreteGrid::Position, AMREX_SPACEDIM> const& position)
+{
+    return DiscreteGrid{grid.m_domainLo, grid.m_domainHi, grid.m_nCells, position,
+                        grid.m_periodicity};
+}
+DiscreteGrid dof_on_node (DiscreteGrid const& grid)
+{
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> positions{AMREX_D_DECL(
+        DiscreteGrid::Position::Node, DiscreteGrid::Position::Node, DiscreteGrid::Position::Node)};
+    return convert_dof_position(grid, positions);
+}
+DiscreteGrid dof_on_cell_center (DiscreteGrid const& grid)
+{
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> positions{AMREX_D_DECL(
+        DiscreteGrid::Position::Cell, DiscreteGrid::Position::Cell, DiscreteGrid::Position::Cell)};
+    return convert_dof_position(grid, positions);
+}
+std::array<DiscreteGrid, 3> dof_on_edge (DiscreteGrid const& grid)
+{
+    std::array<std::array<DiscreteGrid::Position, AMREX_SPACEDIM>, 3> positions{};
+    for (int fieldDir = 0; fieldDir < 3; fieldDir++)
+    {
+        for (int gridDir = 0; gridDir < AMREX_SPACEDIM; gridDir++)
+        {
+            positions[fieldDir][gridDir] = DiscreteGrid::Position::Node;
+        }
+    }
+    for (int i = 0; i < AMREX_SPACEDIM; i++) positions[i][i] = DiscreteGrid::Position::Cell;
+    return {convert_dof_position(grid, positions[0]), convert_dof_position(grid, positions[1]),
+            convert_dof_position(grid, positions[2])};
+};
+std::array<DiscreteGrid, 3> dof_on_face (DiscreteGrid const& grid)
+{
+    std::array<std::array<DiscreteGrid::Position, AMREX_SPACEDIM>, 3> positions{};
+    for (int fieldDir = 0; fieldDir < 3; fieldDir++)
+    {
+        for (int gridDir = 0; gridDir < AMREX_SPACEDIM; gridDir++)
+        {
+            positions[fieldDir][gridDir] = DiscreteGrid::Position::Cell;
+        }
+    }
+    for (int i = 0; i < AMREX_SPACEDIM; i++) positions[i][i] = DiscreteGrid::Position::Node;
+    return {convert_dof_position(grid, positions[0]), convert_dof_position(grid, positions[1]),
+            convert_dof_position(grid, positions[2])};
+};
 
 namespace Impl
 {

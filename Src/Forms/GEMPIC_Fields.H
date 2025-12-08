@@ -74,11 +74,49 @@ struct BoundaryConditionConfiguration
 class DiscreteField
 {
 public:
+    // clang-format off
+    /**
+     *  @brief The degree of freedom (DoF) stored in the DiscreteField can be a pointwise or a 1-D
+     *         integral centered at the position associated through @ref DiscreteGrid. Currently this is
+     *         only required for the DeRhamFields of the finite-difference de Rham complex.
+     * @todo In the future, the DOFCategory could be expressed as a type trait that
+     *       e.g. contains the integration rule used for each DoF.
+     */
+    // clang-format on
+    enum class DOFCategory
+    {
+        // clang-format off
+        /**
+         * @brief Assume \f$x_i\f$ is a location on @ref DiscreteGrid::location_1d
+         *        Then a pointwise DoF stored in @ref DiscreteField::operator()(int, int, int, int) const
+         *        is given by \f$f(x_i)\f$
+         */
+        // clang-format on
+        PointValue,
+        // clang-format off
+        /**
+         * @brief Assume \f$x_i\f$ is a location on @ref DiscreteGrid::location_1d
+         *        and \f$\Delta x\f$ is the width of a cell given by @ref DiscreteGrid::dx.
+         *        Then a centered integral DoF stored in @ref DiscreteField::operator()(int, int, int, int) const
+         *        is given by \f$\int_{x_i-\Delta x/2}^{x_i+\Delta x/2}f(x) \mathrm{d}x\f$
+         */
+        // clang-format on
+        CenteredLineIntegral
+    };
+
     //!@cond EXCLUDE_API_DOC
     DiscreteField() = delete;
     DiscreteField(std::string const& label,
                   Io::Parameters& params,
                   DiscreteGrid const& discreteGrid,
+                  std::array<DOFCategory, AMREX_SPACEDIM> const& dofCategory,
+                  Impl::BoundaryConditionConfiguration const& boundaryConditionConfiguration =
+                      Impl::BoundaryConditionConfiguration{});
+    DiscreteField(std::string const& label,
+                  DiscreteGrid const& discreteGrid,
+                  std::array<DOFCategory, AMREX_SPACEDIM> const& dofCategory,
+                  amrex::BoxArray ba,
+                  amrex::DistributionMapping dm,
                   Impl::BoundaryConditionConfiguration const& boundaryConditionConfiguration =
                       Impl::BoundaryConditionConfiguration{});
     //!@endcond
@@ -92,7 +130,7 @@ public:
     amrex::Array4<amrex::Real> const& view () const { return m_view; }
     //! @endcond
 
-    //! Access indexable degrees of freedom stored in the @ref DiscreteVectorField
+    //! Access indexable degrees of freedom stored in the @ref DiscreteField
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1,
                                                   int ix2,
                                                   int ix3,
@@ -100,10 +138,13 @@ public:
     {
         return m_view(ix1, ix2, ix3, component);
     }
+    //! Describes the degree of freedom stored by the @ref DiscreteField
+    DOFCategory const& dof_category (Direction dir) { return m_dofCategory[dir]; };
     // clang-format off
     //! Select a box from an amrex::MultiFab to use in the @ref DiscreteField::operator()(int, int, int, int) const
     // clang-format on
     amrex::Box const& select_box(amrex::MFIter const& mfi);
+    amrex::Box const& select_box(int index);
     //! Currently selected box of the amrex::MultiFab.
     amrex::Box const& selected_box() const;
     // clang-format off
@@ -135,8 +176,8 @@ private:
     int m_selectedBoxIdx;
     std::array<int, AMREX_SPACEDIM> m_haloWidth{AMREX_D_DECL(0, 0, 0)};
 
-    // The indexType of the box in geometry does not coincide with the index type of the MultiFab
     DiscreteGrid m_discreteGrid;
+    std::array<DOFCategory, AMREX_SPACEDIM> m_dofCategory{};
 
     std::shared_ptr<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>>
         m_boundaryCondition;
@@ -181,8 +222,18 @@ public:
         std::string const& label,
         Io::Parameters& params,
         std::array<DiscreteGrid, 3> const& discreteGrid,
+        std::array<std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM>, 3> const& dofCategory,
         std::array<Impl::BoundaryConditionConfiguration, 3> const& boundaryConditionConfiguration =
             std::array<Impl::BoundaryConditionConfiguration, 3>{});
+    DiscreteVectorField(
+        std::string const& label,
+        std::array<DiscreteGrid, 3> const discreteGrid,
+        std::array<std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM>, 3> const& dofCategory,
+        amrex::BoxArray ba,
+        amrex::DistributionMapping dm,
+        std::array<Impl::BoundaryConditionConfiguration, 3> const& boundaryConditionConfiguration =
+            std::array<Impl::BoundaryConditionConfiguration, 3>{});
+
     DiscreteVectorField() = delete;
     //!@endcond
 
@@ -193,7 +244,7 @@ public:
      */
     //clang-format on
     AMREX_GPU_HOST_DEVICE
-    DiscreteGrid const& discrete_grid(Direction dir) const;
+    DiscreteGrid const& discrete_grid (Direction dir) const { return m_discreteGrid[dir]; };
     //! @cond EXCLUDE_API_DOC
     amrex::MultiFab const& multi_fab(Direction dir) const;
     amrex::MultiFab& multi_fab(Direction dir);
@@ -207,11 +258,16 @@ public:
         AMREX_ASSERT(m_boxStatus == Impl::BoxStatus::boxSelected);
         return m_view[dir](ix1, ix2, ix3, component);
     }
+    DiscreteField::DOFCategory const& dof_category (Direction field, Direction grid) const
+    {
+        return m_dofCategory[field][grid];
+    };
 
     // clang-format off
     //! Select a box for all amrex::MultiFab in all directions to use in the @ref DiscreteVectorField::operator()(Direction, int, int, int, int) const
     // clang-format on
     std::array<amrex::Box, 3> const select_box(amrex::MFIter const& mfi);
+    std::array<amrex::Box, 3> const select_box(int index);
     //! Currently selected boxes of amrex::MultiFabs in given direction.
     amrex::Box const& selected_box(Direction dir) const;
     // clang-format off
@@ -244,7 +300,7 @@ private:
     int m_selectedBoxIdx;
     std::array<int, AMREX_SPACEDIM> m_haloWidth{AMREX_D_DECL(0, 0, 0)};
 
-    // The indexType of the box in geometry does not coincides with the index type of the MultiFab
+    std::array<std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM>, 3> m_dofCategory;
     std::array<DiscreteGrid, 3> m_discreteGrid;
 
     std::shared_ptr<
@@ -317,23 +373,10 @@ void fill (DiscreteField& field, F const& f)
 template <ScalarAnalyticalExpressionSpaceTime F>
 void fill (DiscreteField& field, F const& f, double time)
 {
-    for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
-    {
-        field.select_box(mfi);
-        DiscreteGrid const& dg = field.discrete_grid();
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
-                        amrex::Real x = dg.location_1d(xDir, ix);
-#if AMREX_SPACEDIM > 1
-                        amrex::Real y = dg.location_1d(yDir, iy);
-#endif
-#if AMREX_SPACEDIM == 3
-                        amrex::Real z = dg.location_1d(zDir, iz);
-#endif
-                        field(ix, iy, iz) = f(AMREX_D_DECL(x, y, z), time);
-                    });
-    }
+    auto timeIndependent = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y,
+                                                                  amrex::Real z)) -> amrex::Real
+    { return f(AMREX_D_DECL(x, y, z), time); };
+    fill(field, timeIndependent);
 }
 void fill_zero(DiscreteField&);
 
@@ -390,26 +433,11 @@ void fill (DiscreteVectorField& field, F const& f)
 template <VectorAnalyticalExpressionSpaceTime F>
 void fill (DiscreteVectorField& field, F const& f, double time)
 {
-    for (Direction dir : {xDir, yDir, zDir})
-    {
-        for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
-        {
-            field.select_box(mfi);
-            DiscreteGrid const& dg = field.discrete_grid(dir);
-            ParallelFor(mfi.validbox(),
-                        [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                        {
-                            amrex::Real x = dg.location_1d(xDir, ix);
-#if AMREX_SPACEDIM > 1
-                            amrex::Real y = dg.location_1d(yDir, iy);
-#endif
-#if AMREX_SPACEDIM == 3
-                            amrex::Real z = dg.location_1d(zDir, iz);
-#endif
-                            field(dir, ix, iy, iz) = f(dir, AMREX_D_DECL(x, y, z), time);
-                        });
-        }
-    }
+    auto timeIndependent =
+        [=] AMREX_GPU_HOST_DEVICE(
+            Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z)) -> amrex::Real
+    { return f(dir, AMREX_D_DECL(x, y, z), time); };
+    fill(field, timeIndependent);
 }
 void fill_zero(DiscreteVectorField&);
 
@@ -482,6 +510,13 @@ bool is_nan(DiscreteField&);
 amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
 std::array<bool, 3> is_nan(DiscreteVectorField&);
 std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
+
+namespace Impl
+{
+amrex::Real dot(DiscreteField& a, DiscreteField& b);
+amrex::Real dot(DiscreteVectorField& a, DiscreteVectorField& b);
+amrex::Real dot(DiscreteVectorField& a, DiscreteVectorField& b, Direction dir);
+} // namespace Impl
 
 } //namespace Gempic
 
@@ -771,7 +806,7 @@ public:
             {
                 amrex::Warning(
                     "Number of ghost cells should only be influenced by specifying the number of "
-                    "extra ghost cells.\n");
+                    "extra ghost cells!\n");
             }
         }
         params.get_or_set("nGhost", nGhostVector);
