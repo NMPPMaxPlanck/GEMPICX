@@ -15,7 +15,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_RungeKutta.H"
@@ -177,9 +177,9 @@ int main (int argc, char* argv[])
         DeRhamField<Grid::primal, Space::edge> tensor(deRham, 3);
         amrex::Real vAlfven;
 
-        // Initialize particle groups
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>> particleGroup;
-        init_particles(particleGroup, infra);
+        // Initialize particles
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>> particles;
+        init_particles(particles, infra);
 
         // Initializing filter
         std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
@@ -194,7 +194,7 @@ int main (int argc, char* argv[])
             params.get("nSteps", nSteps);
 
             // Initialize diagnostics and write initial time step
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particleGroup);
+            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
 
             if (simType == "DriftKinetic" || simType == "DeFi")
             {
@@ -202,7 +202,7 @@ int main (int argc, char* argv[])
                 vAlfven = 1.0 / scalingOmega;
                 if (simType == "DriftKinetic")
                 {
-                    for (auto& particleSpecies : particleGroup)
+                    for (auto& particleSpecies : particles)
                     {
                         if (particleSpecies->get_name() == "ions")
                         {
@@ -237,7 +237,7 @@ int main (int argc, char* argv[])
             {
                 J.m_data[cc].setVal(0.0);
             }
-            for (auto& particleSpecies : particleGroup)
+            for (auto& particleSpecies : particles)
             {
                 amrex::Real charge = particleSpecies->get_charge();
 
@@ -387,18 +387,18 @@ int main (int argc, char* argv[])
             {
                 if (simType == "FullyKinetic")
                 {
-                    rkSolver.template lsrk_vlasov_maxwell<degx, degy, degz>(particleGroup, E, D, B,
-                                                                            H, J, dt);
+                    rkSolver.template lsrk_vlasov_maxwell<degx, degy, degz>(particles, E, D, B, H,
+                                                                            J, dt);
                 }
                 else if (simType == "DriftKinetic")
                 {
-                    rkSolver.template lsrk_dk_vlasov_maxwell<degx, degy, degz>(particleGroup, E, D,
-                                                                               B, H, J, tensor, dt);
+                    rkSolver.template lsrk_dk_vlasov_maxwell<degx, degy, degz>(particles, E, D, B,
+                                                                               H, J, tensor, dt);
                 }
                 else if (simType == "DeFi")
                 {
                     rkSolver.template lsrk_de_fi_vlasov_maxwell<degx, degy, degz>(
-                        particleGroup, E, D, B, H, J, tensor, dt);
+                        particles, E, D, B, H, J, tensor, dt);
                 }
 
                 // // Compute divB divD at each time step

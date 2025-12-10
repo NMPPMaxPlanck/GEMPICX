@@ -3,7 +3,7 @@
 API: Particle
 =============
 
-.. doxygenfile:: GEMPIC_ParticleGroups.H
+.. doxygenfile:: GEMPIC_Particle.H
 .. doxygenfile:: GEMPIC_Sampler.H
 
 .. toctree::

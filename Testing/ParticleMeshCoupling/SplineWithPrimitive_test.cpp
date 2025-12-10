@@ -6,7 +6,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
@@ -63,7 +63,7 @@ protected:
     static int const s_spec{0};
 
     ComputationalDomain m_infra;
-    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleSpecies<s_vDim>>> m_particles;
 
     SplineWithPrimitiveTest() : m_infra{get_compdom()}
     {
@@ -78,10 +78,10 @@ protected:
         parameters.set("Particle.species0.mass", mass);
 
         // particles
-        m_particleGroup.resize(s_numSpec);
+        m_particles.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
-            m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);
+            m_particles[spec] = std::make_unique<ParticleSpecies<s_vDim>>(spec, m_infra);
         }
     }
 };
@@ -97,18 +97,17 @@ TEST_F(SplineWithPrimitiveTest, SplineConstructorTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         particleLoopRun = true;
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        auto const ii = m_particles[s_spec]->get_data_indices();
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
             ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
@@ -146,18 +145,17 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         particleLoopRun = true;
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        auto const ii = m_particles[s_spec]->get_data_indices();
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
             ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
@@ -197,18 +195,17 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         particleLoopRun = true;
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        auto const ii = m_particles[s_spec]->get_data_indices();
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
             ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
@@ -256,18 +253,17 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         particleLoopRun = true;
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        auto const ii = m_particles[s_spec]->get_data_indices();
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
             ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
@@ -316,18 +312,17 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         particleLoopRun = true;
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        auto const ii = m_particles[s_spec]->get_data_indices();
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
             ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};
@@ -381,18 +376,17 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         particleLoopRun = true;
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        auto const ii = m_particles[s_spec]->get_data_indices();
 
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{AMREX_D_DECL(
             ptd.rdata(ii.m_iposx)[0], ptd.rdata(ii.m_iposy)[0], ptd.rdata(ii.m_iposz)[0])};

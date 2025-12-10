@@ -8,7 +8,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 
 #ifndef AMREX_USE_HYPRE
@@ -22,7 +22,7 @@ template <unsigned int vdim, unsigned int ndata>
 void check_energies (
     Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
     Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>>& particles,
     std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
     ComputationalDomain& mInfra)
 {
@@ -37,7 +37,7 @@ void check_energies (
     amrex::GpuArray<amrex::Real, 1> ke{0.0};
     auto* kePtr = ke.data();
 
-    for (auto& particleSpecies : partGr)
+    for (auto& particleSpecies : particles)
     {
         amrex::Real mass = particleSpecies->get_mass();
 
@@ -83,7 +83,7 @@ void check_e_related_norms (
     Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& rhoIdeal,
     std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
     Gempic::Forms::DeRhamField<Grid::dual, Space::face> const& rhs,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>>& partGr,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>>& particles,
     ComputationalDomain& mInfra)
 {
     amrex::Print() << "\nError checks for E-related computations:";
@@ -105,7 +105,7 @@ void check_e_related_norms (
     curl(curlCurlE, curlEProj);
 
     Gempic::ParticleMeshCoupling::deposit_rho_weighted_electric_field<degx, degy, degz, vdim,
-                                                                      ndata>(rhoE, E, partGr,
+                                                                      ndata>(rhoE, E, particles,
                                                                              mInfra);
 
     linear_combination(lhs, 1.0, curlCurlE, 1.0, rhoE);

@@ -21,52 +21,58 @@
 \begin{document}
 
 \section{Particle Structure}\label{sec:ParticleStructure}
-Particles in GEMPICX are divided into vectors of shared pointers to species, or groups, based on the AMReX particle structure (see \href{https://amrex-codes.github.io/amrex/docs_html/Particle.html}{the AMReX particle documentation} for more details).
-Each group contains the properties
+Particles in GEMPICX are grouped into a vector of shared pointers to species based on the AMReX pure Struct-of-Array (SoA) particle structure (see \href{https://amrex-codes.github.io/amrex/docs_html/Particle.html}{the AMReX particle documentation} for more details). A species is a collection of particles with the same properties and does not have to be a physical species, e.g., multiple electron species with different treatments can coexist in one simulation.
+Each species contains the global properties
 \begin{itemize}
     \item charge
     \item mass
     \item name
     \item \lstinline{vDim}: The number of velocity dimensions
     \item \lstinline{nData}: The number of additional real data members (typically just weight)
+    \item \lstinline{ParticleDataIndices}: Mapping from physical quantities to the data arrays
 \end{itemize}
 Individual particles then have further properties
 \begin{itemize}
     \item \lstinline{id} and \lstinline{cpu}: Constant AMReX-generated identifiers, the combination of which is unique to each particle
-    \item \lstinline{pos}: arrays of particle positions
+    \item positions
     \item velocities
     \item weight
     \item possibly others, depending on the simulation
 \end{itemize}
-Particles are accessed and manipulated through the \lstinline{amrex::ParIter} construct, where a special for-loop such as, \emph{e.g.},
+Particles are accessed and manipulated through range-based for loop, \emph{e.g.},
 \begin{lstlisting}
-for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid(); ++pti)
+for (auto& particleGrid : particleSpecies) {...}
 \end{lstlisting}
-creates accessors for particle data and distributes work across the different processes available to the simulation. Pointers to particle data are then obtained via this particle iterator.
-
-In GEMPICX, we currently have positions as arrays of structs and velocities and other extra data as struct of arrays.
-We do not currently provide the ability to have extra integer components.
-Since particle all data is stored on the GPU, the procedure is then first to obtain the pointers, launch a \lstinline{ParallelFor} loop, and access the data inside, \emph{e.g.}
+creates accessors for particle data and distributes work across the different processes available to the simulation. Pointers to particle data are then obtained via this particle iterator. For multi level particle containers a helper struct is used to select individual levels:
 \begin{lstlisting}
-for (amrex::ParIter<0, 0, vDim + nData, 0> pti(*particleSpecies, 0); pti.isValid(); ++pti)
+for (auto& particleGrid : SelectLevel(particleSpecies, lev)) {...}
+\end{lstlisting}
+
+In GEMPICX, we use structs of arrays for all particle data. We do not currently provide the ability to have extra integer components.
+Since the number of arrays depends on phase space dimension and number of additional variables, the indexing to retrieve a specific quantity is not always the same. \lstinline{ParticleDataIndices} provide a mapping between physical quantities and the corresponding array. Usage is shown in the example below and a full list can be found in \verb|Src/Particle/GEMPIC_Particle.H|.
+
+Since for GPU runs all particle data is stored on the device, the procedure is then first to obtain the pointers, launch a \lstinline{ParallelFor} loop, and access the data inside, \emph{e.g.}
+\begin{lstlisting}
+// particles is a vector of shared pointers to species
+for (auto const& particleSpecies : particles)
 {
-    // Getting particle data pointers
-    const long np = pti.numParticles();
-    const auto &particles = pti.GetArrayOfStructs()().data();
-    auto *const velx = pti.GetStructOfArrays().GetRealData(0).data();
-    auto *const vely = pti.GetStructOfArrays().GetRealData(1).data();
-    auto *const velz = pti.GetStructOfArrays().GetRealData(2).data();
-    auto *const weight = pti.GetStructOfArrays().GetRealData(vDim).data();
-
-    // other possible prepwork
-    ...
-
-    // launch GPU loop over all particles in current tile
-    amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
+    for (auto& particleGrid : *particleSpecies)
     {
-        // do stuff with particles
-        particles[pp].pos(xDir) = weight[pp] + 0.5 * velx[pp];
-    });
+        // Getting particle number, tile, and index information
+        long const np = particleGrid.numParticles();
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = particleSpecies->get_data_indices();
+
+        // other possible prepwork
+        ...
+
+        // launch GPU loop over all particles in current tile
+        amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp)
+        {
+            // do stuff with particles
+            ptd.rdata(ii.m_iposx)[pp] = ptd.rdata(ii.m_iweight)[pp] + 0.5 * ptd.rdata(ii.m_ivelx)[pp];
+        });
+    }
 }
 \end{lstlisting}
 

@@ -6,7 +6,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_SplineClass.H"
 #include "GEMPIC_Splitting.H"
@@ -53,7 +53,7 @@ protected:
     Gempic::Io::Parameters m_parameters{};
 
     ComputationalDomain m_infra;
-    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleSpecies<s_vDim>>> m_particles;
 
     HamiltonianSplittingTest() : m_infra{get_compdom()}
     {
@@ -65,10 +65,10 @@ protected:
         m_parameters.set("Particle.species0.mass", mass);
 
         // particles
-        m_particleGroup.resize(s_numSpec);
+        m_particles.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
-            m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);
+            m_particles[spec] = std::make_unique<ParticleSpecies<s_vDim>>(spec, m_infra);
         }
     }
 };
@@ -80,10 +80,9 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Setting testing parameters in the field far away from the border to ignore boundary
     // conditions
@@ -103,7 +102,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     DeRhamField<Grid::dual, Space::face> J(deRham);
 
     // TEST FOR X DIRECTION
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -152,7 +151,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     // TEST FOR Y DIRECTION
 #if AMREX_SPACEDIM > 1
     amrex::Real xNodeVal = 0;
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -198,7 +197,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
     // TEST FOR Z DIRECTION
 #if AMREX_SPACEDIM > 2
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -254,10 +253,9 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Setting testing parameters in the field far away from the border to ignore boundary
     // conditions
@@ -281,7 +279,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     DeRhamField<Grid::dual, Space::face> J(deRham);
 
     // TEST FOR X DIRECTION
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -338,10 +336,9 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 1.0;
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
@@ -378,9 +375,9 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 
     // Particle iteration ... over one particle.
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
-        // set random positions (positions of particles in particle group never used here)
+        // set random positions (positions of particles never used here)
         // Check if this is OK especially when there are several particle tiles
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
@@ -444,10 +441,9 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 2.0;
 
@@ -488,7 +484,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     B.m_data[zDir].setVal(Bz * dxdy[2]);
 
     // TEST FOR X DIRECTION
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random initial positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionOld{
@@ -548,10 +544,9 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.001;
@@ -604,7 +599,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     amrex::Real Bz{valBz};
     B.m_data[zDir].setVal(Bz * dxdy[2]);
 
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random initial positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionOld{
@@ -689,10 +684,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.1; // set time step to 1.0 for testing purposes
@@ -734,7 +728,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     B.m_data[zDir].setVal(Bz * dxdy[2]);
 
     // TEST FOR ALL DIRECTIONS
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random positions and velocities
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
@@ -903,10 +897,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real dt = 0.1; // set time step to 0.1 for testing purposes
     amrex::Real chargeOverMass = 0.6;
@@ -945,14 +938,14 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     E.m_data[zDir].setVal(Ez * dx[2]);
 
     // TEST FOR ALL DIRECTIONS
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[s_spec]->get_data_indices();
+        auto const ii = m_particles[s_spec]->get_data_indices();
         long pp = 0;
 
         ptd.rdata(ii.m_ivelx)[0] = v[0] * m_infra.geometry().CellSize(xDir);

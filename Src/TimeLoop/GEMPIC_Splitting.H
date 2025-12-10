@@ -17,7 +17,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Profiling.H"
@@ -378,7 +378,7 @@ public:
         DeRhamField<Grid::dual, Space::face>& J,
         ComputationalDomain infra,
         amrex::Real const dt,
-        std::vector<std::unique_ptr<Particle::ParticleGroups<vdim, ndata>>>& partGr,
+        std::vector<std::unique_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         int const nSteps,
         int strangOrder,
         OperatorHamilton<vdim, degx, degy, degz> operatorHamilton) = 0;

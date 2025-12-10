@@ -7,7 +7,7 @@
 #include <AMReX.H>
 
 #include "GEMPIC_ComputationalDomain.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 
 namespace Gempic::Test::Utils
 {
@@ -37,7 +37,7 @@ std::string string_array (T const& valArray, int length)
 // of all particles to be added.
 template <unsigned int vDim, unsigned nData, size_t numParticles>
 void add_single_particles (
-    Gempic::Particle::ParticleGroups<vDim, nData>* particleGroup,
+    Gempic::Particle::ParticleSpecies<vDim, nData>* particleSpecies,
     Gempic::ComputationalDomain const& compDom,
     amrex::Array<amrex::Real, numParticles> const& weights,
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> const& positions,
@@ -47,7 +47,7 @@ void add_single_particles (
     checklist.fill(false);
     amrex::Geometry const& geom{compDom.geometry()};
 
-    for (amrex::MFIter mfi{particleGroup->MakeMFIter(0)}; mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi{particleSpecies->MakeMFIter(0)}; mfi.isValid(); ++mfi)
     {
         std::array<amrex::Real, AMREX_SPACEDIM> lower;
         std::array<amrex::Real, AMREX_SPACEDIM> upper;
@@ -62,7 +62,7 @@ void add_single_particles (
                                                                 0>::ParticleTileType;
 
         PTType& particles{
-            particleGroup->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
+            particleSpecies->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
         for (int i{0}; i < numParticles; i++)
         {
             // make sure particle is within box (and not previously added? Why?)
@@ -71,7 +71,7 @@ void add_single_particles (
                     &&(lower[yDir] <= positions[i][yDir]) && (positions[i][yDir] < upper[yDir]),
                     &&(lower[zDir] <= positions[i][zDir]) && (positions[i][zDir] < upper[zDir])))
             {
-                particleGroup->add_particle(positions[i], velocities[i], weights[i], particles);
+                particleSpecies->add_particle(positions[i], velocities[i], weights[i], particles);
                 checklist[i] = true;
             }
         }
@@ -90,7 +90,7 @@ void add_single_particles (
                       << "\nUpper: " << string_array(geom.ProbHi(), AMREX_SPACEDIM);
         }
     }
-    particleGroup->Redistribute(); // assign particles to the tile they are in
+    particleSpecies->Redistribute(); // assign particles to the tile they are in
 }
 
 /** Helper function to check entries of a field given a series of conditions and a default
@@ -149,6 +149,9 @@ double l_inf_error(amrex::Array4<amrex::Real const> const& a,
 ComputationalDomain get_default_compdom();
 ComputationalDomain get_compdom(int gSize);
 ComputationalDomain get_compdom(amrex::IntVect const& nCell);
+void init_multilevel_domain(amrex::Vector<amrex::Geometry>& geom,
+                            amrex::Vector<amrex::BoxArray>& ba,
+                            amrex::Vector<amrex::DistributionMapping>& dm);
 } // namespace Gempic::Test::Utils
 
 /** @brief Helper macro for the @ref Gempic::Test::Utils::check_field function */

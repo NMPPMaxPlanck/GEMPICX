@@ -14,7 +14,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_ParticleUtils.H"
 #include "GEMPIC_PoissonSolver.H"
@@ -77,14 +77,14 @@ int main (int argc, char* argv[])
         auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, infra)};
         TimeLoop::OperatorHamilton<vDim, degx, degy, degz> operatorHamilton;
 
-        // Initialize particle groups
+        // Initialize particles
         Io::Parameters params("Particle");
         amrex::Vector<std::string> speciesNames;
         params.get("speciesNames", speciesNames);
 
-        std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vDim, nData>>> partGrLinVlasov;
-        std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>> partGr;
-        init_particles(partGrLinVlasov, partGr, infra);
+        std::vector<std::shared_ptr<ParticleSpeciesLinVlasov<vDim, nData>>> particlesLinVlasov;
+        std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>> particles;
+        init_particles(particlesLinVlasov, particles, infra);
 
         // Domain volume and number of cells to normalize s0
         amrex::Real domainVolume = infra.geometry().ProbDomain().volume();
@@ -97,10 +97,10 @@ int main (int argc, char* argv[])
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, partGr);
+            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
 
             // Deposit initial charge and compute s0
-            for (auto& particleSpecies : partGrLinVlasov)
+            for (auto& particleSpecies : particlesLinVlasov)
             {
                 amrex::Real charge = particleSpecies->get_charge();
 
@@ -204,7 +204,7 @@ int main (int argc, char* argv[])
                     J.m_data[comp].setVal(0.0);
                 }
 
-                for (auto& particleSpecies : partGrLinVlasov)
+                for (auto& particleSpecies : particlesLinVlasov)
                 {
                     amrex::Real charge = particleSpecies->get_charge();
                     amrex::Real chargeMass = charge / particleSpecies->get_mass();
@@ -287,7 +287,7 @@ int main (int argc, char* argv[])
                 hodge(E, D);
 
                 // He,particle
-                for (auto& particleSpecies : partGrLinVlasov)
+                for (auto& particleSpecies : particlesLinVlasov)
                 {
                     amrex::Real charge = particleSpecies->get_charge();
                     amrex::Real chargeMass = charge / particleSpecies->get_mass();

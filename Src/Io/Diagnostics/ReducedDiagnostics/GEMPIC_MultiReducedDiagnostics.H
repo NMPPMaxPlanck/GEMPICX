@@ -111,7 +111,8 @@ public:
     /** Loop over all ReducedDiagnostics and call their ComputeDiags */
     void compute_diags (
         ComputationalDomain const& infra,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr)
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
+            particles)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::compute_diags()");
         if (!m_plotRd)
@@ -124,7 +125,7 @@ public:
         {
             for (size_t iType{0}; iType < m_multiRds[iRd].size(); ++iType)
             {
-                m_multiRds[iRd][iType]->compute_diags(infra, partGr);
+                m_multiRds[iRd][iType]->compute_diags(infra, particles);
             }
         }
     }
@@ -156,7 +157,8 @@ public:
         int step,
         amrex::Real simTime,
         ComputationalDomain const& infra,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
+            particles,
         bool forceWrite = false)
     {
         BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::update_and_write_to_file()");
@@ -171,7 +173,7 @@ public:
             {
                 for (size_t iType{0}; iType < m_multiRds[iRd].size(); ++iType)
                 {
-                    m_multiRds[iRd][iType]->compute_diags(infra, partGr);
+                    m_multiRds[iRd][iType]->compute_diags(infra, particles);
                     m_multiRds[iRd][iType]->write_to_file(step, simTime);
                 }
             }

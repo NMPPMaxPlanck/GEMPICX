@@ -98,7 +98,7 @@ protected:
     amrex::GpuArray<amrex::Array4<amrex::Real>, int(s_vDim / 2.5) * 2 + 1> m_bA;
 
     ComputationalDomain m_infra;
-    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleSpecies<s_vDim>>> m_particles;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
     static Direction const s_pDim{yDir};
@@ -122,10 +122,10 @@ protected:
                                                      HodgeScheme::FDHodge);
 
         // particles
-        m_particleGroup.resize(s_numSpec);
+        m_particles.resize(s_numSpec);
         for (int species{0}; species < s_numSpec; species++)
         {
-            m_particleGroup[species] = std::make_unique<ParticleGroups<s_vDim>>(species, m_infra);
+            m_particles[species] = std::make_unique<ParticleSpecies<s_vDim>>(species, m_infra);
         }
     }
 
@@ -145,11 +145,10 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // (default) charge correctly transferred from addSingleParticles
-    EXPECT_EQ(1, m_particleGroup[0]->get_charge());
+    EXPECT_EQ(1, m_particles[0]->get_charge());
 
     amrex::Array<std::string, 3> const analyticalFuncB = {"0.0", "0.0", "0.0"};
 
@@ -178,10 +177,10 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
@@ -211,11 +210,10 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
                        m_infra.m_geom.ProbHi(yDir) - 5.5 * dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 5.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // (default) charge correctly transferred from addSingleParticles
-    EXPECT_EQ(1, m_particleGroup[0]->get_charge());
+    EXPECT_EQ(1, m_particles[0]->get_charge());
 
     amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
@@ -244,10 +242,10 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
@@ -288,11 +286,10 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
                        m_infra.m_geom.ProbHi(yDir) - 5.25 * dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 5.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // (default) charge correctly transferred from addSingleParticles
-    EXPECT_EQ(1, m_particleGroup[0]->get_charge());
+    EXPECT_EQ(1, m_particles[0]->get_charge());
 
     amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
@@ -321,10 +318,10 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(1, np); // Only one particle added by addSingleParticles
@@ -377,11 +374,10 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
                        m_infra.m_geom.ProbLo(yDir) + 5.5 * dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 5.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // (default) charge correctly transferred from addSingleParticles
-    EXPECT_EQ(1, m_particleGroup[0]->get_charge());
+    EXPECT_EQ(1, m_particles[0]->get_charge());
 
     amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
@@ -410,10 +406,10 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(2, np); // Only one particle added by addSingleParticles
@@ -446,11 +442,10 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
                        m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // (default) charge correctly transferred from addSingleParticles
-    EXPECT_EQ(1, m_particleGroup[0]->get_charge());
+    EXPECT_EQ(1, m_particles[0]->get_charge());
 
     amrex::Array<std::string, 3> const analyticalFuncB = {"1.0", "1.0", "1.0"};
 
@@ -479,10 +474,10 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
 
     DeRhamField<Grid::dual, Space::face> J(m_deRham, funcJ);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(2, np); // Only one particle added by addSingleParticles

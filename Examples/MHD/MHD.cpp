@@ -20,7 +20,7 @@
 #include "GEMPIC_MultiFullDiagnostics.H"
 #include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H" // necessary only for the output... (the plotters depends still on the particles)
+#include "GEMPIC_Particle.H" // necessary only for the output... (the plotters depends still on the particles)
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_RungeKutta.H"
 

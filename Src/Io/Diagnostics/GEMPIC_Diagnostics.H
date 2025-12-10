@@ -6,7 +6,7 @@
 #include "GEMPIC_MultiFullDiagnostics.H"
 #include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 
 namespace Gempic::Io
 {
@@ -20,13 +20,13 @@ private:
     MultiDiagnostics<vDim, nData> m_fullDiagn;
     MultiReducedDiagnostics<vDim, xDeg, yDeg, zDeg, nData> m_redDiagn;
 
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> m_particles;
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> m_particles;
     ComputationalDomain m_compDom;
 
 public:
     Diagnostics(ComputationalDomain const& compDom,
                 std::shared_ptr<Forms::DeRhamComplex> const drc,
-                std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const&
+                std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const&
                     particles) :
         m_fullDiagn{compDom, drc->m_fieldsDiagnostics, drc->m_fieldsScaling, particles},
         m_redDiagn{drc},
@@ -58,7 +58,7 @@ template <int xDeg, int yDeg, int zDeg, unsigned int vDim, unsigned int nData>
 Diagnostics<xDeg, yDeg, zDeg, vDim, nData> make_diagnostics (
     ComputationalDomain const& compDom,
     std::shared_ptr<Forms::DeRhamComplex> const drc,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles)
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles)
 {
     return Diagnostics<xDeg, yDeg, zDeg, vDim, nData>(compDom, drc, particles);
 }

@@ -15,7 +15,7 @@
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Sampler.H"
@@ -69,8 +69,8 @@ int main (int argc, char* argv[])
         DeRhamField<Grid::primal, Space::edge> ephi(deRham);
         DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
 
-        std::vector<std::shared_ptr<ParticleGroups<vdim>>> partGr;
-        init_particles(partGr, infra);
+        std::vector<std::shared_ptr<ParticleSpecies<vdim>>> particles;
+        init_particles(particles, infra);
         amrex::Real rhoBackground{0.0};
         parameters.get_or_set("rhoBackground", rhoBackground);
 
@@ -88,12 +88,12 @@ int main (int argc, char* argv[])
             int nSteps;
             params.get("nSteps", nSteps);
 
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, partGr);
+            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
 
             // Deposit initial charge
             rho.m_data.setVal(0.0);
 
-            deposit_particle_density<degx, degy, degx>(rho, partGr, infra);
+            deposit_particle_density<degx, degy, degx>(rho, particles, infra);
 
             // Add background charge (needs to be done after post_particle_loop_sync)
             rho += rhoBackground * infra.cell_volume();
@@ -145,7 +145,7 @@ int main (int argc, char* argv[])
                     J.m_data[comp].setVal(0.0);
                 }
 
-                for (auto const& particleSpecies : partGr)
+                for (auto const& particleSpecies : particles)
                 {
                     amrex::Real charge = particleSpecies->get_charge();
                     amrex::Real chargeOverMass = charge / particleSpecies->get_mass();
@@ -221,7 +221,7 @@ int main (int argc, char* argv[])
                 biFilter->apply_stencil(eFiltered, E);
 
                 // Second particle loop for particle part from H_E
-                for (auto const& particleSpecies : partGr)
+                for (auto const& particleSpecies : particles)
                 {
                     amrex::Real charge = particleSpecies->get_charge();
                     amrex::Real chargeOverMass = charge / particleSpecies->get_mass();

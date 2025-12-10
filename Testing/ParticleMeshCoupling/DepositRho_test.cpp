@@ -9,7 +9,7 @@
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
@@ -31,8 +31,8 @@ void update_rho_parallel_for (amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& p
     long const np{particleGrid.numParticles()};
     auto& tile = particleGrid.GetParticleTile();
     // note 2025-10-01:
-    // Ideally we would use the ParticleGroups->get_data_indices method,
-    // but we don't have access to a ParticleGroups object.
+    // Ideally we would use the ParticleSpecies->get_data_indices method,
+    // but we don't have access to a ParticleSpecies object.
     auto const partData = tile.getParticleTileData();
     amrex::Real* xx = nullptr;
     amrex::Real* yy = nullptr;
@@ -101,7 +101,7 @@ protected:
     amrex::Array<amrex::Real, s_numSpec> m_mass{1, 0.1};
 
     ComputationalDomain m_infra;
-    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleSpecies<s_vDim>>> m_particles;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
     std::unique_ptr<DeRhamField<Grid::dual, Space::cell>> m_rhoPtr;
 
@@ -121,10 +121,10 @@ protected:
         m_rhoPtr = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(m_deRham);
 
         // particles
-        m_particleGroup.resize(s_numSpec);
+        m_particles.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
-            m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);
+            m_particles[spec] = std::make_unique<ParticleSpecies<s_vDim>>(spec, m_infra);
         }
     }
 };
@@ -145,20 +145,19 @@ TEST_F(DepositRhoTest, NullTest)
         {{*m_infra.m_geom.ProbLo()}}};
 
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // (default) charge correctly transferred from Gempic::TestUtils::addSingleParticles
-    EXPECT_EQ(1, m_particleGroup[0]->get_charge());
+    EXPECT_EQ(1, m_particles[0]->get_charge());
 
     // rho_ptr->data unchanged by Gempic::Test::Utils::addSingleParticles
     EXPECT_EQ(0, m_rhoPtr->m_data.norm2(0, m_infra.m_geom.periodicity()));
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
     amrex::Gpu::Device::synchronize();
     // Particle iteration ... over one particle.
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         particleLoopRun = true;
 
@@ -167,7 +166,7 @@ TEST_F(DepositRhoTest, NullTest)
                   np); // Only one particle added by Gempic::Test::Utils::addSingleParticles
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[0]->get_data_indices();
+        auto const ii = m_particles[0]->get_data_indices();
         EXPECT_EQ(1, ptd.rdata(ii.m_iweight)[0]);
 
         amrex::Array4<amrex::Real> const& rhoarr{m_rhoPtr->m_data[particleGrid].array()};
@@ -201,20 +200,19 @@ TEST_F(DepositRhoTest, SingleParticleMiddle)
     amrex::Array<amrex::Real, numParticles> weights{3};
     // Expect the 2^AMREX_SPACEDIM nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be
     // non-zero and receiving 1/2^AMREX_SPACEDIM the weight of the particle (3)
-    auto const charge{m_particleGroup[0]->get_charge()};
+    auto const charge{m_particles[0]->get_charge()};
     amrex::Real expectedVal{charge * weights[0] / m_infra.cell_volume() * pow(0.5, AMREX_SPACEDIM)};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
-    m_particleGroup[0]->WritePlotFile("ptest", "particles");
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
+    m_particles[0]->WritePlotFile("ptest", "particles");
     // Particle iteration ... over one particle.
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np); // Only one particle added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
-            particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
+            particleGrid, m_infra, m_rhoPtr->m_data, m_particles[0]->get_charge());
 
         amrex::Gpu::streamSynchronize();
         // Expect the eight nearest nodes of rho_ptr->dataarr (9/10, 9/10, 9/10) to be non-zero and
@@ -249,16 +247,15 @@ TEST_F(DepositRhoTest, SingleParticleUnevenNodeSplit)
                        m_infra.m_geom.ProbLo(zDir) + 0.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
     // Particle iteration ... over one particle.
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np); // Only one particle added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
-            particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
+            particleGrid, m_infra, m_rhoPtr->m_data, m_particles[0]->get_charge());
 
         amrex::Gpu::streamSynchronize();
         // Expect the 2^AMREX_SPACEDIM nearest nodes of rho_ptr->dataarr (0/1, 0/1, 0/1) to be
@@ -302,17 +299,16 @@ TEST_F(DepositRhoTest, DoubleParticleSeparate)
     amrex::Array<amrex::Real, numParticles> weights{1, 3};
     amrex::Real expectedValA{1}, expectedValB{3 * pow(0.5, AMREX_SPACEDIM)};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // Particle iteration ... over two distant particles.
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np); // Two particles added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
-            particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
+            particleGrid, m_infra, m_rhoPtr->m_data, m_particles[0]->get_charge());
 
         amrex::Gpu::streamSynchronize();
         // See SingleParticle test for explanation of expectations
@@ -351,17 +347,16 @@ TEST_F(DepositRhoTest, DoubleParticleOverlap)
     amrex::Real expectedValA{1 + 3 * pow(0.5, AMREX_SPACEDIM)};
     amrex::Real expectedValB{3 * pow(0.5, AMREX_SPACEDIM)};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // Particle iteration ... over two close particles.
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np); // Two particles added
 
         update_rho_parallel_for<s_vDim, s_degX, s_degY, s_degZ>(
-            particleGrid, m_infra, m_rhoPtr->m_data, m_particleGroup[0]->get_charge());
+            particleGrid, m_infra, m_rhoPtr->m_data, m_particles[0]->get_charge());
 
         amrex::Gpu::streamSynchronize();
         // See SingleParticle test for explanation of expectations
@@ -392,24 +387,22 @@ TEST_F(DepositRhoTest, DoubleParticleMultipleSpecies)
     amrex::Array<amrex::Real, numParticles> eWeights{3};
     int pSpec{0}, eSpec{1};
 
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[pSpec].get(), m_infra, pWeights,
-                                              pPos);
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[eSpec].get(), m_infra, eWeights,
-                                              ePos);
+    Gempic::Test::Utils::add_single_particles(m_particles[pSpec].get(), m_infra, pWeights, pPos);
+    Gempic::Test::Utils::add_single_particles(m_particles[eSpec].get(), m_infra, eWeights, ePos);
 
-    auto const pCharge{m_particleGroup[pSpec]->get_charge()};
-    auto const eCharge{m_particleGroup[eSpec]->get_charge()};
+    auto const pCharge{m_particles[pSpec]->get_charge()};
+    auto const eCharge{m_particles[eSpec]->get_charge()};
 
     amrex::Real expectedValA{pCharge + eCharge * 3 * pow(0.5, AMREX_SPACEDIM)};
     amrex::Real expectedValB{eCharge * 3 * pow(0.5, AMREX_SPACEDIM)};
 
     for (int spec{0}; spec < s_numSpec; spec++)
     {
-        m_particleGroup[spec]->Redistribute(); // assign particles to the tile they are in
+        m_particles[spec]->Redistribute(); // assign particles to the tile they are in
         amrex::Gpu::Device::synchronize();
-        auto const charge{m_particleGroup[spec]->get_charge()};
+        auto const charge{m_particles[spec]->get_charge()};
         // Particle iteration
-        for (auto& particleGrid : *m_particleGroup[spec])
+        for (auto& particleGrid : *m_particles[spec])
         {
             long const np{particleGrid.numParticles()};
             EXPECT_EQ(numParticles, np); // Two particles added

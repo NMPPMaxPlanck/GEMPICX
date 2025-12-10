@@ -141,4 +141,29 @@ ComputationalDomain get_compdom (amrex::IntVect const& nCell)
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic,
                                amrex::CoordSys::cartesian);
 }
+
+void init_multilevel_domain (amrex::Vector<amrex::Geometry>& geom,
+                             amrex::Vector<amrex::BoxArray>& ba,
+                             amrex::Vector<amrex::DistributionMapping>& dm)
+{
+    // manually creating a simple two level setup
+    // should later be replaced by AmrCore based routine when the field refinement gets merged
+    amrex::RealBox realBox({AMREX_D_DECL(-M_PI + 0.3, -M_PI + 0.6, -M_PI + 0.4)},
+                           {AMREX_D_DECL(M_PI + 0.3, M_PI + 0.6, M_PI + 0.4)});
+    amrex::Box domain(amrex::IntVect{AMREX_D_DECL(0, 0, 0)},
+                      amrex::IntVect{AMREX_D_DECL(8, 10, 6)});
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
+    geom.push_back(amrex::Geometry(domain, realBox, 0, isPeriodic));
+    geom.push_back(amrex::Geometry(amrex::refine(domain, 2), realBox, 0, isPeriodic));
+    ba.push_back(amrex::BoxArray(domain));
+    ba.push_back(amrex::BoxArray(amrex::refine(
+        amrex::Box(amrex::IntVect{AMREX_D_DECL(3, 3, 2)}, amrex::IntVect{AMREX_D_DECL(5, 7, 3)}),
+        2)));
+
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(3, 4, 5)};
+    ba[0].maxSize(maxGridSize);
+    ba[1].maxSize(maxGridSize);
+    dm.push_back(amrex::DistributionMapping(ba[0]));
+    dm.push_back(amrex::DistributionMapping(ba[1]));
+}
 } // namespace Gempic::Test::Utils

@@ -24,13 +24,13 @@
 namespace Gempic::Particle
 {
 template <unsigned int vDim, unsigned int nData = 1>
-class ParticleGroups;
+class ParticleSpecies;
 
 namespace Impl
 {
-// Convenience iterators for ParticleGroups. Allows for range-based for loops.
+// Convenience iterators for ParticleSpecies. Allows for range-based for loops.
 template <unsigned int vDim, unsigned int nData>
-struct ParticleGroupIterator
+struct ParticleSpeciesIterator
 {
     // When using SoA particles, the number of reals must explicitly include AMREX_SPACEDIM
     using ParIterType = amrex::ParIterSoA<vDim + nData + AMREX_SPACEDIM, 0>;
@@ -42,7 +42,7 @@ struct ParticleGroupIterator
 
     void operator++() { m_particleIter->operator++(); }
 
-    bool operator==(ParticleGroupIterator const& other) const
+    bool operator==(ParticleSpeciesIterator const& other) const
     {
         if (m_particleIter && m_particleIter->isValid())
         {
@@ -57,17 +57,17 @@ struct ParticleGroupIterator
         }
     }
 
-    bool operator!=(ParticleGroupIterator const& other) const { return not(*this == other); }
+    bool operator!=(ParticleSpeciesIterator const& other) const { return not(*this == other); }
 
 private:
-    // ParticleGroupIterator should only be constructed by the ParticleGroups class
-    friend class ParticleGroups<vDim, nData>;
-    ParticleGroupIterator(ParticleGroups<vDim, nData>& particles)
+    // ParticleSpeciesIterator should only be constructed by the ParticleSpecies class
+    friend class ParticleSpecies<vDim, nData>;
+    ParticleSpeciesIterator(ParticleSpecies<vDim, nData>& particles, int level)
     {
-        m_particleIter = std::make_unique<ParIterType>(particles, 0);
+        m_particleIter = std::make_unique<ParIterType>(particles, level);
     }
 
-    ParticleGroupIterator() {}
+    ParticleSpeciesIterator() {}
 };
 } // namespace Impl
 
@@ -78,7 +78,7 @@ private:
  * mass of the particle species are stored in a separate array.
  */
 template <unsigned int vDim, unsigned int nData>
-class ParticleGroups : public amrex::ParticleContainerPureSoA<AMREX_SPACEDIM + vDim + nData, 0>
+class ParticleSpecies : public amrex::ParticleContainerPureSoA<AMREX_SPACEDIM + vDim + nData, 0>
 {
 private:
     amrex::ParticleReal m_charge = 1;
@@ -94,11 +94,24 @@ public:
     /**
      * Default Constructor.
      */
-    ParticleGroups() {}
-    ParticleGroups(amrex::Geometry const& geom,
-                   amrex::DistributionMapping const& distriMap,
-                   amrex::BoxArray const& grid) :
+    ParticleSpecies() {}
+    ParticleSpecies(amrex::Geometry const& geom,
+                    amrex::DistributionMapping const& distriMap,
+                    amrex::BoxArray const& grid) :
         amrex::ParticleContainerPureSoA<AMREX_SPACEDIM + vDim + nData, 0>(geom, distriMap, grid)
+    {
+        m_compNames.resize(vDim + nData);
+        if constexpr (vDim + nData > 0 && vDim + nData < 4)
+        {
+            m_compNames[vDim + nData - 1] = "weight";
+        }
+    }
+    ParticleSpecies(amrex::Vector<amrex::Geometry> const& geom,
+                    amrex::Vector<amrex::DistributionMapping> const& distriMap,
+                    amrex::Vector<amrex::BoxArray> const& grid,
+                    amrex::Vector<int> refinementRatio) :
+        amrex::ParticleContainerPureSoA<AMREX_SPACEDIM + vDim + nData, 0>(
+            geom, distriMap, grid, refinementRatio)
     {
         m_compNames.resize(vDim + nData);
         if constexpr (vDim + nData > 0 && vDim + nData < 4)
@@ -110,28 +123,28 @@ public:
      * Explicit Constructors: set up the empty particle object.
      * The particles themselves need to be added separately. This can be done one by one (see
      * method add_particle) or with the particle samplers
-     * \ref init_particles(std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>&
+     * \ref init_particles(std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>&
        particles, ComputationalDomain infra)
      */
-    ParticleGroups(amrex::Real charge,
-                   amrex::Real mass,
-                   std::string const& name,
-                   ComputationalDomain const& ifr) :
-        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
+    ParticleSpecies(amrex::Real charge,
+                    amrex::Real mass,
+                    std::string const& name,
+                    ComputationalDomain const& ifr) :
+        ParticleSpecies(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_charge = charge;
         m_mass = mass;
         m_name = name;
     }
-    ParticleGroups(amrex::Real charge, amrex::Real mass, ComputationalDomain const& ifr) :
-        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
+    ParticleSpecies(amrex::Real charge, amrex::Real mass, ComputationalDomain const& ifr) :
+        ParticleSpecies(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_charge = charge;
         m_mass = mass;
     }
 
-    ParticleGroups(int species, ComputationalDomain const& ifr) :
-        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
+    ParticleSpecies(int species, ComputationalDomain const& ifr) :
+        ParticleSpecies(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         std::string specString = "Particle.species" + std::to_string(species);
         Io::Parameters params(specString);
@@ -140,12 +153,42 @@ public:
         params.get_or_set("name", m_name);
     }
 
-    ParticleGroups(std::string const& speciesName, ComputationalDomain const& ifr) :
-        ParticleGroups(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
+    ParticleSpecies(std::string const& speciesName, ComputationalDomain const& ifr) :
+        ParticleSpecies(ifr.m_geom, ifr.m_distriMap, ifr.m_grid)
     {
         m_name = speciesName;
         std::string specString = "Particle." + speciesName;
-        Io::Parameters params(specString, "class ParticleGroups (" + speciesName + ')');
+        Io::Parameters params(specString, "class ParticleSpecies (" + speciesName + ')');
+        params.get_or_set("charge", m_charge);
+        params.get_or_set("mass", m_mass);
+        params.get_or_set("compNames", m_compNames);
+    }
+
+    // constructors for multi level simulations
+    ParticleSpecies(amrex::Real charge,
+                    amrex::Real mass,
+                    std::string const& name,
+                    amrex::Vector<amrex::Geometry> const& geom,
+                    amrex::Vector<amrex::DistributionMapping> const& dm,
+                    amrex::Vector<amrex::BoxArray> const& ba,
+                    amrex::Vector<int> rr) :
+        ParticleSpecies(geom, dm, ba, rr)
+    {
+        m_charge = charge;
+        m_mass = mass;
+        m_name = name;
+    }
+
+    ParticleSpecies(std::string const& speciesName,
+                    amrex::Vector<amrex::Geometry> const& geom,
+                    amrex::Vector<amrex::DistributionMapping> const& dm,
+                    amrex::Vector<amrex::BoxArray> const& ba,
+                    amrex::Vector<int> rr) :
+        ParticleSpecies(geom, dm, ba, rr)
+    {
+        m_name = speciesName;
+        std::string specString = "Particle." + speciesName;
+        Io::Parameters params(specString, "class ParticleSpecies (" + speciesName + ')');
         params.get_or_set("charge", m_charge);
         params.get_or_set("mass", m_mass);
         params.get_or_set("compNames", m_compNames);
@@ -191,9 +234,9 @@ public:
         amrex::Gpu::streamSynchronize();
     }
 
-    void copy (ParticleGroups<vDim, nData>& source, bool local = false)
+    void copy (ParticleSpecies<vDim, nData>& source, bool local = false)
     {
-        BL_PROFILE("Gempic::Particle::ParticleGroups::copy()");
+        BL_PROFILE("Gempic::Particle::ParticleSpecies::copy()");
         this->m_charge = source.get_charge();
         this->m_mass = source.get_mass();
         this->m_name = source.get_name();
@@ -202,17 +245,17 @@ public:
     }
 
     /**
-     * Resets the total weight of the particle group to the specified target weight.
+     * Resets the total weight of the particle species to the specified target weight.
      * This is needed to correct sampling errors for low particle counts and non-symmetric velocity
      * distributions.
      *
-     * @param targetWeight the new total weight of the particle group
+     * @param targetWeight the new total weight of the particle species
      */
     void reset_total_weight (amrex::Real targetWeight)
     {
-        BL_PROFILE("Gempic::Particle::ParticleGroups::reset_total_weight(totalWeight)");
+        BL_PROFILE("Gempic::Particle::ParticleSpecies::reset_total_weight(totalWeight)");
 
-        // Compute total weight of particle group
+        // Compute total weight of particle species
         amrex::ReduceOps<amrex::ReduceOpSum> reduceOps;
         auto ii = this->get_data_indices();
         using PTDType = typename amrex::ParticleContainerPureSoA<
@@ -243,14 +286,14 @@ public:
         }
     }
 
-    Impl::ParticleGroupIterator<vDim, nData> begin ()
+    Impl::ParticleSpeciesIterator<vDim, nData> begin (int level = 0)
     {
-        return Impl::ParticleGroupIterator<vDim, nData>(*this);
+        return Impl::ParticleSpeciesIterator<vDim, nData>(*this, level);
     }
 
-    Impl::ParticleGroupIterator<vDim, nData> end ()
+    Impl::ParticleSpeciesIterator<vDim, nData> end ()
     {
-        return Impl::ParticleGroupIterator<vDim, nData>();
+        return Impl::ParticleSpeciesIterator<vDim, nData>();
     }
 
     /** \brief Provides named array indices for SoA list of arrays.
@@ -332,12 +375,37 @@ public:
     }
 };
 
+/** \brief Helper struct for range-based for loops on multi-level particle containers
+ *
+ * For a given level `lev` the for loop can be written like
+ * `for (auto& particleGrid : SelectLevel(particleSpecies, lev)) {...}`
+ */
+template <unsigned int vDim, unsigned int nData>
+struct SelectLevel
+{
+    SelectLevel(std::shared_ptr<ParticleSpecies<vDim, nData>> particles, int level) :
+        m_particles{particles}, m_level{level}
+    {
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(0 <= m_level && m_level <= m_particles->finestLevel(),
+                                          "Trying to iterate over level " +
+                                              std::to_string(m_level) +
+                                              " of particle container which does not exist.");
+    }
+
+    auto begin () { return m_particles->begin(m_level); }
+    auto end () { return m_particles->end(); }
+
+private:
+    std::shared_ptr<ParticleSpecies<vDim, nData>> m_particles;
+    int m_level{0};
+};
+
 /**
  * Subclass for linearized Vlasov simulation. Every species needs density and thermal velocity of
  * the equilibrium distribution function around which linearization was performed.
  */
 template <unsigned int vDim, unsigned int nData = 1>
-class ParticleGroupsLinVlasov : public ParticleGroups<vDim, nData>
+class ParticleSpeciesLinVlasov : public ParticleSpecies<vDim, nData>
 {
 private:
     amrex::Parser m_densityBackground;
@@ -347,11 +415,11 @@ public:
     amrex::Parser get_density_background () { return m_densityBackground; }
     amrex::ParticleReal get_v_thermal_background () { return m_vThermalBackground; }
 
-    ParticleGroupsLinVlasov(std::string const& speciesName, ComputationalDomain ifr) :
-        ParticleGroups<vDim, nData>(speciesName, ifr)
+    ParticleSpeciesLinVlasov(std::string const& speciesName, ComputationalDomain ifr) :
+        ParticleSpecies<vDim, nData>(speciesName, ifr)
     {
         std::string specString = "Particle." + speciesName;
-        Io::Parameters params(specString, "class ParticleGroups (" + speciesName + ')');
+        Io::Parameters params(specString, "class ParticleSpecies (" + speciesName + ')');
         auto [parser, eval] = Gempic::Utils::parse_function("densityBackground", params);
         m_densityBackground = parser;
         params.get_or_set("vThermalBackground", m_vThermalBackground);

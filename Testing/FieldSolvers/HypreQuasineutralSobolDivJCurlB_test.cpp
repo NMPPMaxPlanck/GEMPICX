@@ -13,7 +13,7 @@
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_QuasineutralSolver.H"
 #include "GEMPIC_Sampler.H"
@@ -191,8 +191,8 @@ public:
 
         amrex::Real dt = 0.05;
 
-        // Initialize particle groups
-        std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> ions;
+        // Initialize particles
+        std::vector<std::shared_ptr<ParticleSpecies<s_vdim>>> ions;
 
         init_particles(ions, infra); // if adding large number of particles randomly
 

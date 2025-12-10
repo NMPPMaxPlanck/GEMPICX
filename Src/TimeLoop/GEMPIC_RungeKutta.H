@@ -20,7 +20,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 
 namespace Gempic::TimeLoop
@@ -174,7 +174,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_vlasov_maxwell (
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>& particleGroup,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
@@ -191,7 +191,7 @@ public:
             // compute RHS for Ampere and do LSRK stage to update D
             lsrk_stage_ampere(D, H, J, dt, stageIndex);
             lsrk_stage_push_particle_deposit_j<degx, degy, degz>(
-                particleGroup, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
+                particles, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
             // compute RHS for Faraday and do LSRK stage to update B
             lsrk_stage_faraday(B, E, dt, stageIndex);
 
@@ -205,7 +205,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_dk_vlasov_maxwell (
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>& particleGroup,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
@@ -222,7 +222,7 @@ public:
             // compute RHS for Ampere and do LSRK stage to update D
             lsrk_stage_ampere(D, H, J, dt, stageIndex);
             lsrk_stage_dk_push_particle_deposit_j<degx, degy, degz>(
-                particleGroup, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
+                particles, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
             // compute RHS for Faraday and do LSRK stage to update B
             lsrk_stage_faraday(B, E, dt, stageIndex);
 
@@ -236,7 +236,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_de_fi_vlasov_maxwell (
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>& particleGroup,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
@@ -253,7 +253,7 @@ public:
             // compute RHS for Ampere and do LSRK stage to update D
             lsrk_stage_ampere(D, H, J, dt, stageIndex);
             lsrk_stage_de_fi_push_particle_deposit_j<degx, degy, degz>(
-                particleGroup, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
+                particles, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
             // compute RHS for Faraday and do LSRK stage to update B
             lsrk_stage_faraday(B, E, dt, stageIndex);
 
@@ -267,7 +267,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_push_particle_deposit_j (
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>& particleGroup,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
@@ -281,7 +281,7 @@ public:
         {
             J.m_data[i].setVal(0.0);
         }
-        for (auto& particleSpecies : particleGroup)
+        for (auto& particleSpecies : particles)
         {
             lsrk_stage_push_particle_deposit_j_fully_kinetic<degx, degy, degz>(
                 particleSpecies, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
@@ -291,7 +291,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_dk_push_particle_deposit_j (
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>& particleGroup,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
@@ -305,7 +305,7 @@ public:
         {
             J.m_data[i].setVal(0.0);
         }
-        for (auto& particleSpecies : particleGroup)
+        for (auto& particleSpecies : particles)
         {
             lsrk_stage_push_particle_deposit_j_drift_kinetic<degx, degy, degz>(
                 particleSpecies, E, B, J, dt, coeffsAStageIndex, coeffsBStageIndex);
@@ -315,7 +315,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_de_fi_push_particle_deposit_j (
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>>& particleGroup,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
@@ -329,7 +329,7 @@ public:
         {
             J.m_data[i].setVal(0.0);
         }
-        for (auto& particleSpecies : particleGroup)
+        for (auto& particleSpecies : particles)
         {
             if (particleSpecies->get_name() == "electrons")
             {
@@ -347,7 +347,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_push_particle_deposit_j_fully_kinetic (
-        std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>& particleSpecies,
+        std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>& particleSpecies,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
@@ -437,7 +437,7 @@ public:
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_push_particle_deposit_j_drift_kinetic (
-        std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>& particleSpecies,
+        std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>& particleSpecies,
         Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
         Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,

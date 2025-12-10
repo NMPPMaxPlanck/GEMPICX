@@ -6,8 +6,6 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
-#include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_SplineClass.H"
 #include "GEMPIC_Splitting.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
