@@ -14,7 +14,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Sampler.H"
 #include "GEMPIC_SplineClass.H"
@@ -70,8 +70,8 @@ int main (int argc, char* argv[])
         // Initialize needed propagators
         TimeLoop::OperatorHamilton<vdim, degx, degy, degz> operatorHamilton;
 
-        // Initialize particle groups
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>> partGr;
+        // Initialize particles
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>> particles;
 
         {
             // Initialize diagnostics and write initial time step
@@ -80,7 +80,7 @@ int main (int argc, char* argv[])
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, partGr);
+            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
 
             // Initialize noisy electric field
             std::mt19937 gen(123);

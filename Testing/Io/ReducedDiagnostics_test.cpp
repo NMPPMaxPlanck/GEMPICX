@@ -105,7 +105,7 @@ protected:
 
     //
     ComputationalDomain m_infra;
-    std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
+    std::vector<std::shared_ptr<ParticleSpecies<s_vdim>>> m_particles;
     //
     Io::Parameters m_parameters{};
     //
@@ -241,7 +241,7 @@ protected:
     static int const s_vdim{3};
 
     ComputationalDomain m_infra;
-    std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
+    std::vector<std::shared_ptr<ParticleSpecies<s_vdim>>> m_particles;
     Io::Parameters m_parameters{};
     amrex::Real const m_backgroundDensity{-1.0}; // so that \int rho dx = 0
 

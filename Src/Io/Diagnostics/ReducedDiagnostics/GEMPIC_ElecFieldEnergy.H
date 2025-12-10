@@ -16,7 +16,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_GempicNorm.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_Profiling.H"
 #include "GEMPIC_ReducedDiagnostics.H"
 
@@ -103,7 +103,7 @@ public:
      */
     void compute_diags (
         ComputationalDomain const& infra,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const&) final
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const&) final
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::compute_diags()");
 

@@ -54,7 +54,7 @@ protected:
     amrex::Array<amrex::Real, s_numSpec> m_mass{1};
 
     ComputationalDomain m_infra;
-    std::vector<std::shared_ptr<ParticleGroups<s_vDim, s_ndata>>> m_particleGroup;
+    std::vector<std::shared_ptr<ParticleSpecies<s_vDim, s_ndata>>> m_particles;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
     amrex::Geometry const m_geom = m_infra.m_geom;
 
@@ -85,11 +85,10 @@ protected:
         m_deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, maxSplineDegree);
 
         // particles
-        m_particleGroup.resize(s_numSpec);
+        m_particles.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
-            m_particleGroup[spec] =
-                std::make_unique<ParticleGroups<s_vDim, s_ndata>>(spec, m_infra);
+            m_particles[spec] = std::make_unique<ParticleSpecies<s_vDim, s_ndata>>(spec, m_infra);
         }
     }
 };
@@ -218,7 +217,7 @@ TEST_F(RungeKuttaTest, OneKineticParticle)
     EXPECT_NEAR(velocityElec[nSteps - 1][2], analysisVelocity[nSteps - 1][2], 1e-3);
 #endif
 }
-TEST_F(RungeKuttaTest, KineticParticleGroup)
+TEST_F(RungeKuttaTest, KineticParticleSpecies)
 {
 #if AMREX_SPACEDIM != 3
     GTEST_SKIP();
@@ -274,7 +273,7 @@ TEST_F(RungeKuttaTest, KineticParticleGroup)
     E.m_data[zDir].setVal(0.0);
 
     // Adding particle to one cell
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights, positions,
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions,
                                               velocities);
 
     for (int i = 0; i < nSteps - 1; i++)
@@ -284,14 +283,14 @@ TEST_F(RungeKuttaTest, KineticParticleGroup)
             amrex::Real const coeffsAStageIndex = rkSolver.get_coeff_a(stageIndex);
             amrex::Real const coeffsBStageIndex = rkSolver.get_coeff_b(stageIndex);
             rkSolver.template lsrk_stage_push_particle_deposit_j<s_degX, s_degY, s_degZ>(
-                m_particleGroup, E, B, J, h, coeffsAStageIndex, coeffsBStageIndex);
+                m_particles, E, B, J, h, coeffsAStageIndex, coeffsBStageIndex);
         }
     } //end of time loop
 
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-        auto const ii = m_particleGroup[0]->get_data_indices();
+        auto const ii = m_particles[0]->get_data_indices();
 
         AMREX_D_EXPR(rEnd[xDir] = ptd.rdata(ii.m_iposx)[0], rEnd[yDir] = ptd.rdata(ii.m_iposy)[0],
                      rEnd[zDir] = ptd.rdata(ii.m_iposz)[0]);
@@ -302,7 +301,7 @@ TEST_F(RungeKuttaTest, KineticParticleGroup)
 #endif
 }
 
-TEST_F(RungeKuttaTest, DriftKineticParticleGroup)
+TEST_F(RungeKuttaTest, DriftKineticParticleSpecies)
 {
 #if AMREX_SPACEDIM != 3
     GTEST_SKIP();
@@ -358,7 +357,7 @@ TEST_F(RungeKuttaTest, DriftKineticParticleGroup)
     E.m_data[zDir].setVal(0.0);
 
     // Adding particle to one cell
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights, positions,
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions,
                                               velocities);
 
     for (int i = 0; i < nSteps - 1; i++)
@@ -368,13 +367,13 @@ TEST_F(RungeKuttaTest, DriftKineticParticleGroup)
             amrex::Real const coeffsAStageIndex = rkSolver.get_coeff_a(stageIndex);
             amrex::Real const coeffsBStageIndex = rkSolver.get_coeff_b(stageIndex);
             rkSolver.template lsrk_stage_dk_push_particle_deposit_j<s_degX, s_degY, s_degZ>(
-                m_particleGroup, E, B, J, h, coeffsAStageIndex, coeffsBStageIndex);
+                m_particles, E, B, J, h, coeffsAStageIndex, coeffsBStageIndex);
         }
 
-        for (auto& particleGrid : *m_particleGroup[0])
+        for (auto& particleGrid : *m_particles[0])
         {
             auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-            auto const ii = m_particleGroup[0]->get_data_indices();
+            auto const ii = m_particles[0]->get_data_indices();
 
             vEnd = {ptd.rdata(ii.m_ivelx)[0], ptd.rdata(ii.m_ively)[0], ptd.rdata(ii.m_ivelz)[0]};
             AMREX_D_EXPR(rEnd[xDir] = ptd.rdata(ii.m_iposx)[0],
@@ -446,8 +445,8 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell)
 
     for (int i = 0; i < nSteps; i++)
     {
-        rkSolver.template lsrk_vlasov_maxwell<s_degX, s_degY, s_degZ>(m_particleGroup, E, D, B, H,
-                                                                      J, dt);
+        rkSolver.template lsrk_vlasov_maxwell<s_degX, s_degY, s_degZ>(m_particles, E, D, B, H, J,
+                                                                      dt);
         projection(funcE, dt * (i + 1), eSolution, 6);
         projection(funcB, dt * (i + 1), bSolution, 6);
         hodge(eError, D); //get eError from D
@@ -557,8 +556,8 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell_hodgeDK)
 
     for (int i = 0; i < nSteps; i++)
     {
-        rkSolver.template lsrk_dk_vlasov_maxwell<s_degX, s_degY, s_degZ>(m_particleGroup, E, D, B,
-                                                                         H, J, tensor, dt);
+        rkSolver.template lsrk_dk_vlasov_maxwell<s_degX, s_degY, s_degZ>(m_particles, E, D, B, H, J,
+                                                                         tensor, dt);
         projection(funcE, dt * (i + 1), eSolution, 6);
         projection(funcB, dt * (i + 1), bSolution, 6);
         hodge_dk(eError, D, tensor); // get eError from D

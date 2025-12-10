@@ -19,7 +19,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FunctionParse.H"
 #include "GEMPIC_GempicNorm.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleUtils.H"
 #include "GEMPIC_Profiling.H"
 #include "GEMPIC_ReducedDiagnostics.H"
@@ -86,24 +86,24 @@ public:
      */
     void compute_diags (
         ComputationalDomain const& infra,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr)
-        final
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
+            particles) final
     {
         BL_PROFILE("Gempic::Io::Particle::compute_diags()");
         constexpr int noutputs = 4;
         this->m_data.assign(noutputs, 0.0);
 
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::ReduceOps<amrex::ReduceOpSum, amrex::ReduceOpSum, amrex::ReduceOpSum,
                              amrex::ReduceOpSum>
                 reduceOps;
-            using PTDType = typename Gempic::Particle::ParticleGroups<
-                vdim + ndata, 0>::ParticleTileType::ConstParticleTileDataType;
+            using PTDType = typename Gempic::Particle::ParticleSpecies<
+                vdim, ndata>::ParticleTileType::ConstParticleTileDataType;
             auto const ii = particleSpecies->get_data_indices();
             auto particleTmp = amrex::ParticleReduce<
                 amrex::ReduceData<amrex::Real, amrex::Real, amrex::Real, amrex::Real>>(
-                *particleSpecies,
+                *particleSpecies, 0, particleSpecies->finestLevel(),
                 [=] AMREX_GPU_HOST_DEVICE(PTDType const& pt, int const pp)
                     -> amrex::GpuTuple<amrex::Real, amrex::Real, amrex::Real, amrex::Real>
                 {
@@ -190,26 +190,26 @@ public:
      */
     void compute_diags (
         ComputationalDomain const& infra,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const& partGr)
-        final
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
+            particles) final
     {
         constexpr int noutputs = 2;
         this->m_data.assign(noutputs, 0.0);
 
-        std::shared_ptr<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>> partGrLinVlasov;
+        std::shared_ptr<Gempic::Particle::ParticleSpeciesLinVlasov<vdim, ndata>> particlesLinVlasov;
 
-        for (int spec = 0; spec < partGr.size(); spec++)
+        for (int spec = 0; spec < particles.size(); spec++)
         {
-            partGrLinVlasov =
-                std::dynamic_pointer_cast<Gempic::Particle::ParticleGroupsLinVlasov<vdim, ndata>>(
-                    partGr[spec]);
-            amrex::Real vThermalBackground = partGrLinVlasov->get_v_thermal_background();
+            particlesLinVlasov =
+                std::dynamic_pointer_cast<Gempic::Particle::ParticleSpeciesLinVlasov<vdim, ndata>>(
+                    particles[spec]);
+            amrex::Real vThermalBackground = particlesLinVlasov->get_v_thermal_background();
             amrex::ReduceOps<amrex::ReduceOpSum, amrex::ReduceOpSum> reduceOps;
-            using PTDType = typename Gempic::Particle::ParticleGroups<
-                vdim + ndata, 0>::ParticleTileType::ConstParticleTileDataType;
-            auto const ii = partGr[spec]->get_data_indices();
+            using PTDType = typename Gempic::Particle::ParticleSpecies<
+                vdim, ndata>::ParticleTileType::ConstParticleTileDataType;
+            auto const ii = particles[spec]->get_data_indices();
             auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real, amrex::Real>>(
-                *partGr[spec],
+                *particles[spec], 0, particles[spec]->finestLevel(),
                 [=] AMREX_GPU_HOST_DEVICE(PTDType const& pt,
                                           int const pp) -> amrex::GpuTuple<amrex::Real, amrex::Real>
                 {
@@ -233,8 +233,8 @@ public:
 
             // save results for this species i_s into m_data
             this->m_data[0] +=
-                partGr[spec]->get_mass() * vThermalBackground * vThermalBackground * ew;
-            this->m_data[1] += partGr[spec]->get_mass() * ekin;
+                particles[spec]->get_mass() * vThermalBackground * vThermalBackground * ew;
+            this->m_data[1] += particles[spec]->get_mass() * ekin;
         }
     }
     // end void Particle::ComputeDiags

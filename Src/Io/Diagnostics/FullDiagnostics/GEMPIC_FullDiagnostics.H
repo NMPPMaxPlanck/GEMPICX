@@ -20,7 +20,7 @@
 #include "GEMPIC_FlushFormat.H"
 #include "GEMPIC_FlushFormatPlotfile.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 
 namespace Gempic::Io
 {
@@ -70,10 +70,11 @@ public:
     }
 
     /** Initialize pointers to main fields and allocate output multifab m_mf_outputs. */
-    void init_data (ComputationalDomain const& compDom,
-                    std::map<std::string, amrex::MultiFab const> const& fieldMap,
-                    std::map<std::string, amrex::Real const> const& fieldsScaling,
-                    std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& ions)
+    void init_data (
+        ComputationalDomain const& compDom,
+        std::map<std::string, amrex::MultiFab const> const& fieldMap,
+        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& ions)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::init_data()");
         // initialize member variables and arrays in base class::Diagnostics
@@ -236,7 +237,7 @@ private:
      */
     amrex::Geometry m_geomOutput;
 
-    std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> m_particles;
+    std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> m_particles;
 
     /** Coarsening ratio such that fields are averaged to the coarsened grid.
      * The ratio should render the grid to be coarsenable (as defined by AMReX). */
@@ -293,12 +294,12 @@ private:
         noType
     };
     /**
-     * Figure out if particles or fields are being plotted. Breaks if particle groups and fields
+     * Figure out if particles or fields are being plotted. Breaks if particle species and fields
      * have the identical names.
      */
     DiagnosticType get_diag_type (
         std::map<std::string, amrex::MultiFab const> const& fieldMap,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::get_diag_type()");
         bool particleType{false};
@@ -359,7 +360,7 @@ private:
         ComputationalDomain const& compDom,
         std::map<std::string, amrex::MultiFab const> const& fieldMap,
         std::map<std::string, amrex::Real const> const& fieldsScaling,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::initialize_field_operators_and_buffer_data()");
         using namespace Impl;
@@ -373,7 +374,7 @@ private:
             {
                 amrex::Warning("outputProcessor argument has no effect for particle diagnostics\n");
             }
-            if (!m_plotParticles) // needs only to be performed once for all particle groups
+            if (!m_plotParticles) // needs only to be performed once for all particle species
             {
                 m_plotParticles = true;
                 m_particles = particles;

@@ -11,7 +11,7 @@
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_QuasineutralSolver.H"
 #include "GEMPIC_Sampler.H"
@@ -102,8 +102,8 @@ public:
         // Initialize computational_domain
         auto infra = Gempic::Test::Utils::get_compdom(nCell);
 
-        // Initialize particle groups
-        std::vector<std::shared_ptr<ParticleGroups<s_vdim>>>
+        // Initialize particles
+        std::vector<std::shared_ptr<ParticleSpecies<s_vdim>>>
             ions; // Use 'init_particles(infra, ions);' if adding large number of particles
                   // randomly
 
@@ -115,7 +115,7 @@ public:
         ions.resize(1);
         for (int spec{0}; spec < 1; spec++)
         {
-            ions[0] = std::make_shared<ParticleGroups<s_vdim>>(0, infra);
+            ions[0] = std::make_shared<ParticleSpecies<s_vdim>>(0, infra);
         }
 
         int const numParticles{AMREX_SPACEDIM * GEMPIC_D_MULT(n, n, n)};

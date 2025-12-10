@@ -75,7 +75,7 @@ protected:
 
     Io::Parameters m_parameters{set_parameters()};
     ComputationalDomain m_infra;
-    std::vector<std::shared_ptr<ParticleGroups<s_vdim>>> m_particles;
+    std::vector<std::shared_ptr<ParticleSpecies<s_vdim>>> m_particles;
 
     // Setup all the tests in the TestSuite
     FullDiagnosticsTest()
@@ -84,7 +84,7 @@ protected:
         // simulation
         amrex::Vector<amrex::Real> k{AMREX_D_DECL(2 * M_PI, 2 * M_PI, 2 * M_PI)};
         m_parameters.set("k", k);
-        // particles (data read by particleGroups constructor)
+        // particles (data read by ParticleSpecies constructor)
         std::string speciesNames{"ions"};
         m_parameters.set("Particle.speciesNames", speciesNames);
         std::string samplerName{"PseudoRandom"};

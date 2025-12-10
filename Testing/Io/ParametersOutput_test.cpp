@@ -14,7 +14,7 @@
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_FunctionParse.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Sampler.H"
@@ -56,8 +56,8 @@ int main (int argc, char* argv[])
         // Initialize fields that we'll definitely use, pinky swear
         [[maybe_unused]] DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
 
-        // Initialize particle groups
-        std::vector<std::shared_ptr<ParticleGroups<vdim>>> ions;
+        // Initialize particles
+        std::vector<std::shared_ptr<ParticleSpecies<vdim>>> ions;
         init_particles(ions, infra);
 
         { // "Time Loop" scope. Should be a separate function

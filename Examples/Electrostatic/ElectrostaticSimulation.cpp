@@ -15,7 +15,7 @@
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Sampler.H"
@@ -91,8 +91,8 @@ int main (int argc, char* argv[])
         DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham);
         DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
 
-        // Initialize particle groups
-        std::vector<std::shared_ptr<ParticleGroups<vdim>>> ions;
+        // Initialize particles
+        std::vector<std::shared_ptr<ParticleSpecies<vdim>>> ions;
         init_particles(ions, infra);
 
         // Initializing filter

@@ -4,7 +4,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "TestUtils/GEMPIC_AmrexTestEnv.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
@@ -32,7 +32,7 @@ TEST(ParticleAddTest, AddAndWriteParticles)
     amrex::Real mass{1};
 
     ComputationalDomain infra{Gempic::Test::Utils::get_default_compdom()};
-    auto particles = std::make_unique<ParticleGroups<vDim, nData>>(charge, mass, infra);
+    auto particles = std::make_unique<ParticleSpecies<vDim, nData>>(charge, mass, infra);
 
     int constexpr numParticles{37};
     double constexpr baseFraction = 1.0 / numParticles;

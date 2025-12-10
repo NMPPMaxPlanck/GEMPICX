@@ -15,7 +15,7 @@ namespace Gempic::Particle
  *
  * The purpose of the struct is to provide useful names for the different arrays,
  * (e.g. `posx`, `velx` etc) within `amrex::ParallelFor` or `amrex::ParticleReduce` blocks. By
- * default all indices are MAX_INT, you should use the GEMPIC_ParticleGroups::get_data_indices
+ * default all indices are MAX_INT, you should use the GEMPIC_ParticleSpecies::get_data_indices
  * method for initialization.
  * Please see `compute_diags` from `Io/Diagnostics/ReducedDiagnostics/GEMPIC_ParticleDiags.H` for
  * example usage.

@@ -18,7 +18,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumTools.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_RungeKutta.H"
 
 /**
@@ -66,7 +66,7 @@ struct StructDefinitions
     Gempic::ComputationalDomain m_compDom;
 
     // still needed for diagnostic?
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<s_vdim>>> m_particles;
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<s_vdim>>> m_particles;
 };
 
 /**

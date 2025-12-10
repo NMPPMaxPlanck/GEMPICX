@@ -16,7 +16,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_QuasineutralDebug.H"
 #include "GEMPIC_Verbosity.H"
@@ -433,14 +433,15 @@ public:
     // Functions relating to the curlcurl matrix end
 
     // Functions relating to the particle charge matrix begin
-    void solve_particle_charge_e (DeRhamField<Grid::dual, Space::face>& b,
-                                  DeRhamField<Grid::primal, Space::edge>& x,
-                                  std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr)
+    void solve_particle_charge_e (
+        DeRhamField<Grid::dual, Space::face>& b,
+        DeRhamField<Grid::primal, Space::edge>& x,
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
     {
         DeRhamField<Grid::dual, Space::face> eCoeffsRho(b.m_deRham, s_nRhoCoeffs);
 
         // Fill up E_coeffs
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::Real const charge = particleSpecies->get_charge();
             amrex::Real const mass = particleSpecies->get_mass();
@@ -626,14 +627,14 @@ public:
     void solve_jcrosscurl_plus_field_charge_e (
         DeRhamField<Grid::dual, Space::face>& b,
         DeRhamField<Grid::primal, Space::edge>& x,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr,
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
         DeRhamField<Grid::dual, Space::cell> const& rho)
     {
         DeRhamField<Grid::dual, Space::face> eCoeffsJcrosscurl(b.m_deRham,
                                                                s_nJcrosscurlCoeffsTotal);
 
         // Fill up E_coeffs
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::Real charge = particleSpecies->get_charge();
             amrex::Real mass = particleSpecies->get_mass();
@@ -939,13 +940,13 @@ public:
     void solve_curlcurl_plus_particle_charge_e (
         DeRhamField<Grid::dual, Space::face>& b,
         DeRhamField<Grid::primal, Space::edge>& x,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr)
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
     {
         BL_PROFILE("solve_curlcurl_plus_particle_charge_e()");
         DeRhamField<Grid::dual, Space::face> eCoeffsRho(b.m_deRham, s_nRhoCoeffs);
 
         // Fill up E_coeffs
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::Real charge = particleSpecies->get_charge();
             amrex::Real mass = particleSpecies->get_mass();
@@ -1043,14 +1044,14 @@ public:
     void solve_curlcurl_plus_particle_charge_plus_jcrosscurl_e (
         DeRhamField<Grid::dual, Space::face>& b,
         DeRhamField<Grid::primal, Space::edge>& x,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr,
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real jcrosscurlCoeff)
     {
         DeRhamField<Grid::dual, Space::face> eCoeffsRho(b.m_deRham, s_nRhoCoeffs);
         DeRhamField<Grid::dual, Space::face> eCoeffsJcrosscurl(b.m_deRham,
                                                                s_nJcrosscurlCoeffsTotal);
         // Fill up E_coeffs
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::Real charge = particleSpecies->get_charge();
             amrex::Real mass = particleSpecies->get_mass();
@@ -1339,7 +1340,7 @@ public:
     void push_particles_and_correct_div_j (
         DeRhamField<Grid::dual, Space::face>& J,
         DeRhamField<Grid::primal, Space::node>& phi,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr,
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt)
     {
         BL_PROFILE("push_particles_and_correct_div_j()");
@@ -1348,29 +1349,29 @@ public:
 
         // Calculate original J and divJ
         Gempic::ParticleMeshCoupling::deposit_current_density<degx, degy, degz, vdim, ndata>(
-            J, partGr, m_infra);
+            J, particles, m_infra);
         div(divJ, J);
 
         // Calculate phi
-        solve_particle_div_grad_phi(divJ, phi, partGr, dt);
+        solve_particle_div_grad_phi(divJ, phi, particles, dt);
 
         grad(eCorr, phi);
         eCorr *= -1.0;
 
         // push particles using E and calculate final J
-        update_velocities_using_e_and_calculate_deposit_j(J, eCorr, partGr, dt);
+        update_velocities_using_e_and_calculate_deposit_j(J, eCorr, particles, dt);
     }
 
     void solve_particle_div_grad_phi (
         DeRhamField<Grid::dual, Space::cell>& b,
         DeRhamField<Grid::primal, Space::node>& x,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr,
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt)
     {
         DeRhamField<Grid::dual, Space::cell> phiCoeffsDivGrad(b.m_deRham, s_ndivgradphiCoeffs);
 
         // Fill up phi_coeffs
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::Real charge = particleSpecies->get_charge();
             amrex::Real mass = particleSpecies->get_mass();
@@ -1584,14 +1585,14 @@ public:
     void update_velocities_using_e_and_calculate_deposit_j (
         DeRhamField<Grid::dual, Space::face>& J,
         DeRhamField<Grid::primal, Space::edge>& E,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr,
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt)
     {
         for (int comp = 0; comp < vdim; ++comp)
         {
             J.m_data[comp].setVal(0.0);
         }
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::Real charge = particleSpecies->get_charge();
             amrex::Real mass = particleSpecies->get_mass();
@@ -1651,24 +1652,24 @@ public:
     void push_particles_and_correct_javg (
         DeRhamField<Grid::dual, Space::face>& J,
         DeRhamField<Grid::dual, Space::cell>& rho,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr)
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
     {
         BL_PROFILE("push_particles_and_correct_javg()");
         std::vector<DeRhamField<Grid::dual, Space::cell>> rhoVec;
         std::vector<DeRhamField<Grid::dual, Space::cell>> rhoMassVec;
 
-        for (int i = 0; i < partGr.size(); i++)
+        for (int i = 0; i < particles.size(); i++)
         {
             rhoVec.emplace_back(rho.m_deRham);
             rhoMassVec.emplace_back(rho.m_deRham);
         }
 
         Gempic::ParticleMeshCoupling::deposit_individual_particle_density<degx, degy, degz, vdim,
-                                                                          ndata>(rhoVec, rhoMassVec,
-                                                                                 partGr, m_infra);
+                                                                          ndata>(
+            rhoVec, rhoMassVec, particles, m_infra);
 
         std::vector<amrex::GpuArray<amrex::Real, vdim>> vAvg;
-        vAvg.resize(partGr.size());
+        vAvg.resize(particles.size());
 
         amrex::GpuArray<amrex::Real, 3> dx{GEMPIC_D_PAD_ONE(m_infra.geometry().CellSize(xDir),
                                                             m_infra.geometry().CellSize(yDir),
@@ -1677,13 +1678,13 @@ public:
         if (m_infra.geometry().isAllPeriodic())
         {
             std::vector<amrex::Real> rhoSum, rhoMassSum;
-            rhoSum.resize(partGr.size());
-            rhoMassSum.resize(partGr.size());
+            rhoSum.resize(particles.size());
+            rhoMassSum.resize(particles.size());
 
             amrex::Real ninv = 1.0 / GEMPIC_D_MULT(m_infra.m_nCell[xDir], m_infra.m_nCell[yDir],
                                                    m_infra.m_nCell[zDir]);
 
-            for (int i = 0; i < partGr.size(); i++)
+            for (int i = 0; i < particles.size(); i++)
             {
                 rhoSum[i] = rhoVec[i].m_data.sum_unique(0, false, m_infra.geometry().periodicity());
                 rhoMassSum[i] =
@@ -1698,11 +1699,11 @@ public:
                 amrex::Real jSumNinv = jSum * ninv;
                 J.m_data[ndir].plus(-jSumNinv, nGhost[xDir]);
 
-                if (partGr.size() == 1)
+                if (particles.size() == 1)
                 {
                     vAvg[0][ndir] = jSum * dx[ndir] / rhoSum[0];
                 }
-                else if (partGr.size() == 2)
+                else if (particles.size() == 2)
                 {
                     vAvg[0][ndir] = jSum * dx[ndir] * rhoMassSum[1] /
                                     (rhoSum[0] * rhoMassSum[1] - rhoSum[1] * rhoMassSum[0]);
@@ -1711,7 +1712,8 @@ public:
                 }
                 else
                 {
-                    GEMPIC_ERROR("Unknown particle group size: " + std::to_string(partGr.size()));
+                    GEMPIC_ERROR("Only implemented for single and two species simulations, not " +
+                                 std::to_string(particles.size()));
                 }
             }
         }
@@ -1722,14 +1724,14 @@ public:
                 "implemented yet.");
         }
 
-        push_back_by_v_avg(vAvg, partGr);
+        push_back_by_v_avg(vAvg, particles);
     }
 
     void push_back_by_v_avg (std::vector<amrex::GpuArray<amrex::Real, vdim>> const& vAvg,
-                             std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr)
+                             std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
     {
         int index = 0;
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             for (auto& pti : *particleSpecies)
             {
@@ -1766,11 +1768,11 @@ public:
     void update_particle_positions_and_velocities (
         DeRhamField<Grid::primal, Space::edge>& E,
         DeRhamField<Grid::primal, Space::face>& B,
-        std::vector<std::shared_ptr<ParticleGroups<vdim, ndata>>>& partGr,
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt,
         RotatePushOrder order)
     {
-        for (auto& particleSpecies : partGr)
+        for (auto& particleSpecies : particles)
         {
             amrex::Real charge = particleSpecies->get_charge();
             amrex::Real mass = particleSpecies->get_mass();

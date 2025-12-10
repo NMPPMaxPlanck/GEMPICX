@@ -9,7 +9,7 @@
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
@@ -29,7 +29,7 @@ void update_e_field_parallel_for (amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0
                                   ComputationalDomain& infra)
 {
     long const np{particleGrid.numParticles()};
-    // we cannot use particle indices because we have no access to a Gempic::ParticleGroups object
+    // we cannot use particle indices because we have no access to a Gempic::ParticleSpecies object
     auto const partData = particleGrid.GetParticleTile().getParticleTileData();
     amrex::AsyncArray<amrex::GpuArray<amrex::Real, vDim>> efieldsPtr(2);
     // Device pointer
@@ -97,7 +97,7 @@ protected:
     static int const s_spec{0};
 
     ComputationalDomain m_infra;
-    std::vector<std::unique_ptr<ParticleGroups<s_vDim>>> m_particleGroup;
+    std::vector<std::unique_ptr<ParticleSpecies<s_vDim>>> m_particles;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
 
     EvaluateEFieldTest() :
@@ -118,10 +118,10 @@ protected:
                                                      HodgeScheme::FDHodge);
 
         // particles
-        m_particleGroup.resize(s_numSpec);
+        m_particles.resize(s_numSpec);
         for (int spec{0}; spec < s_numSpec; spec++)
         {
-            m_particleGroup[spec] = std::make_unique<ParticleGroups<s_vDim>>(spec, m_infra);
+            m_particles[spec] = std::make_unique<ParticleSpecies<s_vDim>>(spec, m_infra);
         }
     }
 };
@@ -133,11 +133,10 @@ TEST_F(EvaluateEFieldTest, NullTest)
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
         {{*m_infra.m_geom.ProbLo()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // (default) charge correctly transferred from addSingleParticles
-    EXPECT_EQ(1, m_particleGroup[0]->get_charge());
+    EXPECT_EQ(1, m_particles[0]->get_charge());
 
     // Parse analytical fields and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
@@ -156,11 +155,11 @@ TEST_F(EvaluateEFieldTest, NullTest)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
     // Particle iteration ... over one particle. Hopefully.
 
     bool particleLoopRun{false};
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         particleLoopRun = true;
 
@@ -200,10 +199,9 @@ TEST_F(EvaluateEFieldTest, SingleParticleNode)
         {{AMREX_D_DECL(0, 0, 0)}}};
     EXPECT_EQ(*m_infra.m_geom.ProbLo(), 0.0);
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
@@ -222,7 +220,7 @@ TEST_F(EvaluateEFieldTest, SingleParticleNode)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (auto& particleGrid : *m_particleGroup[s_spec])
+    for (auto& particleGrid : *m_particles[s_spec])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
@@ -242,10 +240,9 @@ TEST_F(EvaluateEFieldTest, SingleParticleMiddle)
                        m_infra.m_geom.ProbHi(yDir) - 1.5 * dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 1.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
@@ -264,7 +261,7 @@ TEST_F(EvaluateEFieldTest, SingleParticleMiddle)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
@@ -284,10 +281,9 @@ TEST_F(EvaluateEFieldTest, SingleParticleUnevenNodeSplit)
                        m_infra.m_geom.ProbHi(yDir) - 1.25 * dx[yDir],
                        m_infra.m_geom.ProbHi(zDir) - 1.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
@@ -306,7 +302,7 @@ TEST_F(EvaluateEFieldTest, SingleParticleUnevenNodeSplit)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
@@ -326,10 +322,9 @@ TEST_F(EvaluateEFieldTest, DoubleParticleSeparate)
                        m_infra.m_geom.ProbLo(yDir) + 5.5 * dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 5.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
@@ -348,7 +343,7 @@ TEST_F(EvaluateEFieldTest, DoubleParticleSeparate)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
@@ -368,10 +363,9 @@ TEST_F(EvaluateEFieldTest, DoubleParticleOverlap)
                        m_infra.m_geom.ProbLo(yDir) + 0.5 * dx[yDir],
                        m_infra.m_geom.ProbLo(zDir) + 0.5 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1, 1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), m_infra, weights,
-                                              positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
@@ -390,7 +384,7 @@ TEST_F(EvaluateEFieldTest, DoubleParticleOverlap)
 
     DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE);
 
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);
@@ -419,9 +413,9 @@ TEST_F(EvaluateEFieldTest, Scaling)
     auto deRham{std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, s_maxSplineDegree,
                                                   HodgeScheme::FDHodge)};
 
-    // particle groups
-    m_particleGroup.resize(s_numSpec);
-    m_particleGroup[0] = std::make_unique<ParticleGroups<s_vDim>>(0, infra);
+    // particless
+    m_particles.resize(s_numSpec);
+    m_particles[0] = std::make_unique<ParticleSpecies<s_vDim>>(0, infra);
 
     // Adding particle to one cell
     int const numParticles{1};
@@ -432,9 +426,9 @@ TEST_F(EvaluateEFieldTest, Scaling)
                        infra.geometry().ProbHi(yDir) - 1.25 * dx[yDir],
                        infra.geometry().ProbHi(zDir) - 1.25 * dx[zDir])}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particleGroup[0].get(), infra, weights, positions);
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), infra, weights, positions);
 
-    m_particleGroup[0]->Redistribute(); // assign particles to the tile they are in
+    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Parse analytical fields and and initialize parserEval. Has to be the same as Bx,By,Bz and Ex,
     // Ey, Ez
@@ -453,7 +447,7 @@ TEST_F(EvaluateEFieldTest, Scaling)
 
     DeRhamField<Grid::primal, Space::edge> E(deRham, funcE);
 
-    for (auto& particleGrid : *m_particleGroup[0])
+    for (auto& particleGrid : *m_particles[0])
     {
         long const np{particleGrid.numParticles()};
         EXPECT_EQ(numParticles, np);

@@ -18,12 +18,12 @@ namespace
 {
 // Calculate 0th order velocity moment \int f(x,v) dx dv
 template <unsigned int vDim>
-amrex::Real compute_v_moment_0 (ParticleGroups<vDim> const* partGr)
+amrex::Real compute_v_moment_0 (ParticleSpecies<vDim> const* particles)
 {
-    auto const indices = partGr->get_data_indices();
-    using PTDType = typename ParticleGroups<vDim>::ParticleTileType::ConstParticleTileDataType;
+    auto const indices = particles->get_data_indices();
+    using PTDType = typename ParticleSpecies<vDim>::ParticleTileType::ConstParticleTileDataType;
     amrex::Real vMomentTmp =
-        amrex::ReduceSum(*partGr,
+        amrex::ReduceSum(*particles, 0, particles->finestLevel(),
                          [=] AMREX_GPU_HOST_DEVICE(PTDType const& ptd, int const pp) -> amrex::Real
                          {
                              return ptd.rdata(indices.m_iweight)[pp]; // particle weight
@@ -36,18 +36,18 @@ amrex::Real compute_v_moment_0 (ParticleGroups<vDim> const* partGr)
 
 // Calculate 1th order velocity moment \int v f(x,v) dx dv
 template <unsigned int vDim>
-void compute_v_moments_1 (ParticleGroups<vDim> const* partGr,
+void compute_v_moments_1 (ParticleSpecies<vDim> const* particles,
                           amrex::GpuArray<amrex::Real, vDim>& vMoments)
 {
-    using PTDType = typename ParticleGroups<vDim>::ParticleTileType::ConstParticleTileDataType;
-    auto const indices = partGr->get_data_indices();
+    using PTDType = typename ParticleSpecies<vDim>::ParticleTileType::ConstParticleTileDataType;
+    auto const indices = particles->get_data_indices();
     auto const idxw = indices.m_iweight;
     auto const idxv = indices.m_ivelx;
     for (int cmp = 0; cmp < vDim; cmp++)
     {
         // reduce sum over one MPI rank
         amrex::Real vMomentTmp = amrex::ReduceSum(
-            *partGr,
+            *particles, 0, particles->finestLevel(),
             [=] AMREX_GPU_HOST_DEVICE(PTDType const& ptd, int const pp) -> amrex::Real
             {
                 auto const w = ptd.rdata(idxw)[pp];         // weight
@@ -63,15 +63,15 @@ void compute_v_moments_1 (ParticleGroups<vDim> const* partGr,
 
 // Calculate 2nd order velocity moment \int v^2 f(x,v) dx dv
 template <unsigned int vDim>
-amrex::Real compute_v_moment_2 (ParticleGroups<vDim> const* partGr)
+amrex::Real compute_v_moment_2 (ParticleSpecies<vDim> const* particles)
 {
     // reduce sum over one MPI rank
-    using PTDType = typename ParticleGroups<vDim>::ParticleTileType::ConstParticleTileDataType;
-    auto const indices = partGr->get_data_indices();
+    using PTDType = typename ParticleSpecies<vDim>::ParticleTileType::ConstParticleTileDataType;
+    auto const indices = particles->get_data_indices();
     auto const idxw = indices.m_iweight;
     auto const idxv = indices.m_ivelx;
     amrex::Real vMomentTmp =
-        amrex::ReduceSum(*partGr,
+        amrex::ReduceSum(*particles, 0, particles->finestLevel(),
                          [=] AMREX_GPU_HOST_DEVICE(PTDType const& ptd, int const pp) -> amrex::Real
                          {
                              auto const w = ptd.rdata(idxw)[pp]; // particle weight
@@ -128,7 +128,7 @@ void add_particle_parameters (std::string const& sampler)
     else if (sampler == "Rejection" || sampler == "RejectionSobol")
     {
         Gempic::Io::Parameters parameters{};
-        // dummy particle group to calculate the exact moments
+        // dummy particle species to calculate the exact moments
         std::vector<std::string> const speciesNames = {"dummy", "real"};
         parameters.set("Particle.speciesNames", speciesNames);
         std::string const particleInputScopeDummy{"Particle.dummy"};
@@ -161,7 +161,7 @@ void add_particle_parameters (std::string const& sampler)
         amrex::Real const g1vWeight = 0.25;
         partparamsDummy.set("G1.vWeight", g1vWeight);
 
-        // Actual particle group for the rejection sampler
+        // Actual particle species for the rejection sampler
         // Trying to replicate the same distribution by rejection sampling
         std::string const particleInputScope{"Particle.real"};
         Gempic::Io::Parameters partparams{particleInputScope};
@@ -266,10 +266,10 @@ TYPED_TEST(SamplerTest, CompareMoments)
 {
     using namespace Gempic::Particle::Impl;
 
-    // Initialize Particle Groups
+    // Initialize particles
     constexpr int vDim{3};
-    std::vector<std::shared_ptr<ParticleGroups<vDim>>> partGr;
-    init_particles(partGr, this->m_infra);
+    std::vector<std::shared_ptr<ParticleSpecies<vDim>>> particles;
+    init_particles(particles, this->m_infra);
 
     amrex::Vector<int> const writeRealComp(vDim + 1, 1);
     amrex::Vector<int> const& writeIntComp = {};
@@ -281,17 +281,17 @@ TYPED_TEST(SamplerTest, CompareMoments)
 #ifndef NDEBUG
     GEMPIC_DEBUG("Writing particles from test " + testInfo->name() + " of test suite " +
                  testInfo->test_suite_name() + ".");
-    for (int gg = 0; gg < partGr.size(); gg++)
+    for (int gg = 0; gg < particles.size(); gg++)
     {
-        partGr[gg]->WritePlotFile(
+        particles[gg]->WritePlotFile(
             ("particle_test_" + std::string(testInfo->name()) + "_group" + std::to_string(gg)),
             "particles", writeRealComp, writeIntComp, realCompNames, intCompNames);
     }
 #endif
 
-    // in case of rejection sampling, use first particle group (dummy) to compute analytic moments
+    // in case of rejection sampling, use first particle species (dummy) to compute analytic moments
     // of distribution function
-    Io::Parameters params("Particle." + partGr[0]->get_name());
+    Io::Parameters params("Particle." + particles[0]->get_name());
     VelocityInitializer<vDim> vInit(params);
 
     std::array<amrex::Real, vDim> mom1;
@@ -319,18 +319,107 @@ TYPED_TEST(SamplerTest, CompareMoments)
 
     amrex::Real tol{this->m_tol * volumeFactor};
 
-    // In case of rejection sampling, use second/last particle group (real) to compute actual
+    // In case of rejection sampling, use second/last particle species (real) to compute actual
     // moments of sampled particles
-    EXPECT_NEAR(compute_v_moment_0(partGr.back().get()), volumeFactor, tol)
+    EXPECT_NEAR(compute_v_moment_0(particles.back().get()), volumeFactor, tol)
         << "0th order velocity moment false!";
 
     amrex::GpuArray<amrex::Real, vDim> vMoments1;
-    compute_v_moments_1(partGr.back().get(), vMoments1);
+    compute_v_moments_1(particles.back().get(), vMoments1);
     EXPECT_NEAR(vMoments1[xDir], mom1[xDir], tol) << "1st order velocity moment x-dir false!";
     EXPECT_NEAR(vMoments1[yDir], mom1[yDir], tol) << "1st order velocity moment y-dir false!";
     EXPECT_NEAR(vMoments1[zDir], mom1[zDir], tol) << "1st order velocity moment z-dir false!";
 
-    EXPECT_NEAR(compute_v_moment_2(partGr.back().get()), mom2, tol)
+    EXPECT_NEAR(compute_v_moment_2(particles.back().get()), mom2, tol)
+        << "2nd order velocity moment false!";
+}
+
+class SamplerTestMultiLevel : public testing::Test
+{
+protected:
+    Io::Parameters m_parameters{};
+    amrex::Vector<amrex::Geometry> m_geom;
+    amrex::Vector<amrex::BoxArray> m_ba;
+    amrex::Vector<amrex::DistributionMapping> m_dm;
+    amrex::Real m_tol{1e-1};
+
+    SamplerTestMultiLevel()
+    {
+        Gempic::Test::Utils::init_multilevel_domain(m_geom, m_ba, m_dm);
+        // 2pi(domainHi - domainLo) = k
+        std::array<amrex::Real, AMREX_SPACEDIM> domainSize = {AMREX_D_DECL(
+            m_geom[0].ProbLength(xDir), m_geom[0].ProbLength(yDir), m_geom[0].ProbLength(zDir))};
+        amrex::Vector<amrex::Real> k{AMREX_D_DECL(
+            2 * M_PI * domainSize[xDir], 2 * M_PI * domainSize[yDir], 2 * M_PI * domainSize[zDir])};
+        m_parameters.set("k", k);
+
+        // Special case by case parameters
+        add_particle_parameters("PseudoRandom");
+    }
+};
+
+TEST_F(SamplerTestMultiLevel, CompareMoments)
+{
+    using namespace Gempic::Particle::Impl;
+
+    // Initialize particles
+    constexpr int vDim{3};
+    amrex::Vector<int> rr{2, 1};
+    auto particles = std::make_shared<Particle::ParticleSpecies<vDim, 1>>(
+        "species0", this->m_geom, this->m_dm, this->m_ba, rr);
+    EXPECT_EQ(particles->finestLevel(), 1) << "ParticleSpecies does not have two levels!";
+
+    Particle::Impl::sample_species(particles, this->m_geom[0], 0, "PseudoRandom", 123);
+    // sampling done on level 0 needs to be followed by redistribute
+    EXPECT_EQ(particles->NumberOfParticlesAtLevel(1), 0)
+        << "Particles on fine level before Redistribute!";
+    particles->Redistribute();
+    EXPECT_GT(particles->NumberOfParticlesAtLevel(1), 0)
+        << "No particles on fine level after Redistribute!";
+
+    amrex::Vector<int> const writeRealComp(vDim + 1, 1);
+    amrex::Vector<int> const& writeIntComp = {};
+    amrex::Vector<std::string> const& intCompNames = {};
+    amrex::Vector<std::string> const& realCompNames = {"vx", "vy", "vz", "weight"};
+
+    Io::Parameters params("Particle." + particles->get_name());
+    VelocityInitializer<vDim> vInit(params);
+
+    std::array<amrex::Real, vDim> mom1;
+    amrex::Real mom2 = 0;
+
+    double volumeFactor = this->m_geom[0].ProbSize();
+    // assuming constant vThermal functions (if they even exist);
+    std::array<amrex::Real, AMREX_SPACEDIM> const location{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Real vWeight;
+    for (int i = 0; i < vDim; i++)
+    {
+        mom1[i] = 0;
+        for (int j = 0; j < vInit.m_numGauss; j++)
+        {
+            params.get("G" + std::to_string(j) + ".vWeight", vWeight);
+            amrex::Real vMean = vInit.m_vMeanPtr[j][i];
+            // Extracting vDev is not a use case outside testing, so here we creatively run
+            // vThermal = (0.5 * vThermal + vMean) - (-0.5 * vThermal + vMean)
+            amrex::Real vThermal = get_gaussian_velocity(vInit, j, 0.5, i, location) -
+                                   get_gaussian_velocity(vInit, j, -0.5, i, location);
+            mom1[i] += vWeight * vMean * volumeFactor;
+            mom2 += vWeight * (vThermal * vThermal + vMean * vMean) * volumeFactor;
+        }
+    }
+
+    amrex::Real tol{this->m_tol * volumeFactor};
+
+    EXPECT_NEAR(compute_v_moment_0(particles.get()), volumeFactor, tol)
+        << "0th order velocity moment false!";
+
+    amrex::GpuArray<amrex::Real, vDim> vMoments1;
+    compute_v_moments_1(particles.get(), vMoments1);
+    EXPECT_NEAR(vMoments1[xDir], mom1[xDir], tol) << "1st order velocity moment x-dir false!";
+    EXPECT_NEAR(vMoments1[yDir], mom1[yDir], tol) << "1st order velocity moment y-dir false!";
+    EXPECT_NEAR(vMoments1[zDir], mom1[zDir], tol) << "1st order velocity moment z-dir false!";
+
+    EXPECT_NEAR(compute_v_moment_2(particles.get()), mom2, tol)
         << "2nd order velocity moment false!";
 }
 } // namespace

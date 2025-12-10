@@ -39,7 +39,7 @@ public:
         amrex::Geometry& geom,
         int const iteration,
         double const time,
-        std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vdim, ndata>>> const&
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles,
         int nlev,
         std::string const& prefix,

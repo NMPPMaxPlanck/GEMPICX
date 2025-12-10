@@ -10,7 +10,7 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_Config.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_SplineClass.H"
 
@@ -1264,7 +1264,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_curlj (
 template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
 void deposit_particle_density (
     Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& particleDensity,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
@@ -1307,7 +1307,7 @@ template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
 void deposit_individual_particle_density (
     std::vector<Gempic::Forms::DeRhamField<Grid::dual, Space::cell>>& rhoVec,
     std::vector<Gempic::Forms::DeRhamField<Grid::dual, Space::cell>>& rhoMassVec,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
@@ -1363,7 +1363,7 @@ void deposit_individual_particle_density (
 template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
 void deposit_current_density (
     Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
@@ -1419,7 +1419,7 @@ template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
 void deposit_rho_weighted_electric_field (
     Gempic::Forms::DeRhamField<Grid::dual, Space::face>& rhoE,
     Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
@@ -1483,7 +1483,7 @@ void deposit_rho_j_jcrossb_deldots (
     Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
     Gempic::Forms::DeRhamField<Grid::dual, Space::face>& jcrossB,
     Gempic::Forms::DeRhamField<Grid::dual, Space::face>& delDotS,
-    std::vector<std::shared_ptr<Gempic::Particle::ParticleGroups<vDim, nData>>> const& particles,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
     ComputationalDomain const& compDom,
     bool doSync = true)
 {

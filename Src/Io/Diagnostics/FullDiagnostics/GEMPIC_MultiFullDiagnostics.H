@@ -26,7 +26,7 @@ public:
         ComputationalDomain const& compDom,
         std::map<std::string, amrex::MultiFab const> const& fieldMap,
         std::map<std::string, amrex::Real const> const& fieldsScaling,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vDim, nData>>> const& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vDim, nData>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::MultiDiagnostics()");
         read_parameters();
@@ -63,7 +63,7 @@ public:
         ComputationalDomain const& compDom,
         std::map<std::string, amrex::MultiFab const> const& fieldMap,
         std::map<std::string, amrex::Real const> const& fieldsScaling,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vDim, nData>>> const& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vDim, nData>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::MultiDiagnostics::init_data()");
         for (auto& diag : m_alldiags)

@@ -2,7 +2,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
 using namespace Gempic;
@@ -21,12 +21,12 @@ protected:
     amrex::Real m_mass{1};
 
     ComputationalDomain m_infra;
-    std::unique_ptr<ParticleGroups<s_vDim>> m_particles;
+    std::unique_ptr<ParticleSpecies<s_vDim>> m_particles;
 
     ParticleIteratorTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
     {
         // particles
-        m_particles = std::make_unique<ParticleGroups<s_vDim>>(m_charge, m_mass, m_infra);
+        m_particles = std::make_unique<ParticleSpecies<s_vDim>>(m_charge, m_mass, m_infra);
     }
 };
 
@@ -40,7 +40,7 @@ TEST_F(ParticleIteratorTest, NullTest)
 
     for (auto& particleGrid : *m_particles)
     {
-        FAIL() << "The particle group is empty, so this should never be reached.";
+        FAIL() << "The particle species is empty, so this should never be reached.";
         EXPECT_EQ(particleGrid.numParticles(), 0);
     }
 }

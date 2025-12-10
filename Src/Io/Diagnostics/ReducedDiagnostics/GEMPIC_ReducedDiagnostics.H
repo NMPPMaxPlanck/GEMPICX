@@ -169,7 +169,7 @@ public:
      */
     virtual void compute_diags(
         ComputationalDomain const& infra,
-        std::vector<std::shared_ptr<Particle::ParticleGroups<vdim, ndata>>> const& partGr) = 0;
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles) = 0;
 
     /**
      * write to file function

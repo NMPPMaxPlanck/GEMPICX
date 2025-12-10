@@ -22,7 +22,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FunctionParse.H"
-#include "GEMPIC_ParticleGroups.H"
+#include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleUtils.H"
 #include "GEMPIC_SobolSampler.H"
 
@@ -482,8 +482,8 @@ enum class SamplerType
  * @tparam vDim : Number of velocity components associated with the particles
  * @tparam nData : Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] ppg : Particle group
- * @param infra : Computational Domain
+ * @param[out] ppg : Particle species
+ * @param geom : Geometry
  * @param species : Species number
  * @param rSeed : Random seed
  *
@@ -497,11 +497,11 @@ template <RandomScheme scheme,
 class ParticleSampler
 {
 public:
-    ParticleSampler(std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
-                    ComputationalDomain infra,
+    ParticleSampler(std::shared_ptr<ParticleSpecies<vDim, nData>>& ppg,
+                    amrex::Geometry geom,
                     int species,
                     int rSeed = 925);
-    void sample(std::shared_ptr<ParticleGroups<vDim, nData>>& ppg);
+    void sample(std::shared_ptr<ParticleSpecies<vDim, nData>>& ppg);
 
 private:
     void sample_region(int const nPart,
@@ -511,7 +511,7 @@ private:
     void direct_kernel();
     bool rejection_kernel();
 
-    ComputationalDomain m_infra;
+    amrex::Geometry m_geom;
     int m_species;
     int m_rSeed;
     int m_nPartPerCell;
@@ -544,11 +544,11 @@ template <RandomScheme scheme,
           std::size_t vDim,
           std::size_t nData>
 ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::ParticleSampler(
-    std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
-    ComputationalDomain infra,
+    std::shared_ptr<ParticleSpecies<vDim, nData>>& ppg,
+    amrex::Geometry geom,
     int species,
     int rSeed) :
-    m_infra(infra), m_species(species), m_rSeed(rSeed)
+    m_geom(geom), m_species(species), m_rSeed(rSeed)
 {
     std::string speciesName{ppg->get_name()};
     std::string specString = "Particle." + speciesName;
@@ -592,7 +592,7 @@ template <RandomScheme scheme,
           std::size_t vDim,
           std::size_t nData>
 void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample (
-    std::shared_ptr<ParticleGroups<vDim, nData>>& ppg)
+    std::shared_ptr<ParticleSpecies<vDim, nData>>& ppg)
 {
     for (amrex::MFIter mfi = ppg->MakeMFIter(0); mfi.isValid(); ++mfi)
     {
@@ -613,11 +613,11 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample 
                                 for (int j = lo[yDir]; j <= hi[yDir]; j++),
                                 for (int k = lo[zDir]; k <= hi[zDir]; k++))
                 amrex::Vector<amrex::Real> loNode;
-                m_infra.geometry().LoNode(amrex::IntVect{AMREX_D_DECL(l, j, k)}, loNode);
+                m_geom.LoNode(amrex::IntVect{AMREX_D_DECL(l, j, k)}, loNode);
                 for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
                 {
                     m_regionLo[dir] = loNode[dir];
-                    m_regionLength[dir] = m_infra.geometry().CellSize(dir);
+                    m_regionLength[dir] = m_geom.CellSize(dir);
                 }
                 sample_region(m_nPartPerCell, gen, unif, sobolSeed);
             GEMPIC_D_LOOP_END
@@ -628,14 +628,13 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample 
             {
                 if constexpr (region == SamplerRegion::box)
                 {
-                    m_regionLo[dir] = m_infra.geometry().ProbLo(dir) +
-                                      bx.smallEnd(dir) * m_infra.geometry().CellSize(dir);
-                    m_regionLength[dir] = bx.length(dir) * m_infra.geometry().CellSize(dir);
+                    m_regionLo[dir] = m_geom.ProbLo(dir) + bx.smallEnd(dir) * m_geom.CellSize(dir);
+                    m_regionLength[dir] = bx.length(dir) * m_geom.CellSize(dir);
                 }
                 else if constexpr (region == SamplerRegion::global)
                 {
-                    m_regionLo[dir] = m_infra.geometry().ProbLo(dir);
-                    m_regionLength[dir] = m_infra.geometry().ProbLength(dir);
+                    m_regionLo[dir] = m_geom.ProbLo(dir);
+                    m_regionLength[dir] = m_geom.ProbLength(dir);
                 }
             }
             sample_region(nPart, gen, unif, sobolSeed);
@@ -650,7 +649,7 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample 
         std::array<int, 2> tmp{m_nTargetHigherThanProposal, m_nSamples};
         amrex::ParallelAllReduce::Sum(tmp.data(), tmp.size(),
                                       amrex::ParallelContext::CommunicatorAll());
-        amrex::Real acceptanceRate = 1.0 * m_infra.box().numPts() * m_nPartPerCell / tmp[1];
+        amrex::Real acceptanceRate = 1.0 * m_geom.Domain().numPts() * m_nPartPerCell / tmp[1];
 
         amrex::Print() << "Rejection sampling: Acceptance rate                = " << acceptanceRate
                        << "\n";
@@ -718,7 +717,7 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample_
                     "tries.");
             }
         }
-        m_weight *= m_infra.geometry().CellSizeArray().product() / m_nPartPerCell;
+        m_weight *= m_geom.CellSizeArray().product() / m_nPartPerCell;
         m_buffer.add_particle(m_position, m_velocity, m_weight);
     }
 }
@@ -818,23 +817,23 @@ AMREX_GPU_HOST_DEVICE inline int get_cellid (
  * @tparam vDim Number of velocity components associated with the particles
  * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] ppg Particle group
- * @param infra Computational Domain
+ * @param[out] ppg Particle species
+ * @param geom Geometry
  * @param species Index of species in vector. Only used for the random seed
  * @param rSeed Seed for the random generator
  *
  */
 template <std::size_t vDim, std::size_t nData = 1>
-void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>>& ppg,
-                                     ComputationalDomain infra,
+void init_particles_full_domain_gpu (std::shared_ptr<ParticleSpecies<vDim, nData>>& ppg,
+                                     amrex::Geometry geom,
                                      int species,
                                      int rSeed = 925)
 {
     using namespace Impl;
     BL_PROFILE("Gempic::Particle::init_particles_full_domain_gpu()");
 
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> probLo{infra.m_geom.ProbLoArray()};
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx{infra.geometry().CellSizeArray()};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> probLo{geom.ProbLoArray()};
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx{geom.CellSizeArray()};
 
     std::string speciesName{ppg->get_name()};
     std::string specString = "Particle." + speciesName;
@@ -861,8 +860,8 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
         auto& particles = ppg->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())];
 
         // global domain box for determining unique particle id
-        amrex::IntVect domainLo = {infra.box().smallEnd()};
-        amrex::IntVect domainSize{infra.box().size()};
+        amrex::IntVect domainLo = {geom.Domain().smallEnd()};
+        amrex::IntVect domainSize{geom.Domain().size()};
 
         // resize particles structure before launching on GPU
         auto oldSize = particles.numParticles();
@@ -941,22 +940,22 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleGroups<vDim, nData>
  * @tparam nData : Number of further amount of data components to be stored, e.g. particle
  * weight
  *
- * @param[out] partGr Particle group
- * @param infra Computational Domain
+ * @param[out] particles Particle species
+ * @param geom Geometry
  * @param species Index of species in vector. Only used for the random seed
  * @param globalSamplerName Default sampler for all species
  * @param rSeed Seed for the random generator
  */
 template <unsigned int vDim, unsigned int nData>
-void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr,
-                     ComputationalDomain infra,
+void sample_species (std::shared_ptr<ParticleSpecies<vDim, nData>>& particles,
+                     amrex::Geometry geom,
                      int species,
                      std::string globalSamplerName,
                      int rSeed)
 {
-    BL_PROFILE("Gempic::Particle::sample_species(infra,partGr,species,globalSamplerName,rSeed)");
+    BL_PROFILE("Gempic::Particle::sample_species(particles,geom,species,globalSamplerName,rSeed)");
 
-    std::string speciesName{partGr->get_name()};
+    std::string speciesName{particles->get_name()};
     Io::Parameters params("Particle." + speciesName);
     std::string samplerName{globalSamplerName};
     params.get_or_set("sampler", samplerName);
@@ -965,40 +964,40 @@ void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr,
     {
         ParticleSampler<RandomScheme::pseudo, SamplerRegion::cell, SamplerType::direct, 0, vDim,
                         nData>
-            sampler(partGr, infra, species, rSeed);
-        sampler.sample(partGr);
+            sampler(particles, geom, species, rSeed);
+        sampler.sample(particles);
     }
     else if (samplerName == "PseudoRandomBox")
     {
         ParticleSampler<RandomScheme::pseudo, SamplerRegion::box, SamplerType::direct, 0, vDim,
                         nData>
-            sampler(partGr, infra, species, rSeed);
-        sampler.sample(partGr);
+            sampler(particles, geom, species, rSeed);
+        sampler.sample(particles);
     }
     else if (samplerName == "Sobol")
     {
         ParticleSampler<RandomScheme::sobol, SamplerRegion::box, SamplerType::direct, 0, vDim,
                         nData>
-            sampler(partGr, infra, species, rSeed);
-        sampler.sample(partGr);
+            sampler(particles, geom, species, rSeed);
+        sampler.sample(particles);
     }
     else if (samplerName == "Rejection")
     {
         ParticleSampler<RandomScheme::pseudo, SamplerRegion::global, SamplerType::rejection, 1,
                         vDim, nData>
-            sampler(partGr, infra, species, rSeed);
-        sampler.sample(partGr);
+            sampler(particles, geom, species, rSeed);
+        sampler.sample(particles);
     }
     else if (samplerName == "RejectionSobol")
     {
         ParticleSampler<RandomScheme::sobol, SamplerRegion::global, SamplerType::rejection, 1, vDim,
                         nData>
-            sampler(partGr, infra, species, rSeed);
-        sampler.sample(partGr);
+            sampler(particles, geom, species, rSeed);
+        sampler.sample(particles);
     }
     else if (samplerName == "PseudoRandomGPU")
     {
-        init_particles_full_domain_gpu<vDim, nData>(partGr, infra, species, rSeed);
+        init_particles_full_domain_gpu<vDim, nData>(particles, geom, species, rSeed);
     }
     else
     {
@@ -1014,14 +1013,14 @@ void sample_species (std::shared_ptr<ParticleGroups<vDim, nData>>& partGr,
  * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
  *
  * @param[out] particles : particles that are initialised
- * @param infra : Computational Domain
+ * @param geom : Geometry
  *
  */
 template <unsigned int vDim, unsigned int nData>
-void init_particles (std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
+void init_particles (std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>& particles,
                      ComputationalDomain infra)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(infra,particles)");
+    BL_PROFILE("Gempic::Particle::init_particles(particles,infra)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);
@@ -1036,9 +1035,10 @@ void init_particles (std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& 
     for (int species{0}; species < speciesNames.size(); ++species)
     {
         particles[species] =
-            std::make_shared<ParticleGroups<vDim, nData>>(speciesNames[species], infra);
+            std::make_shared<ParticleSpecies<vDim, nData>>(speciesNames[species], infra);
 
-        Impl::sample_species(particles[species], infra, species, globalSamplerName, rSeed);
+        Impl::sample_species(particles[species], infra.geometry(), species, globalSamplerName,
+                             rSeed);
         GEMPIC_DEBUG("species " + std::to_string(species) + " has " +
                      std::to_string(particles[species]->TotalNumberOfParticles()) + " particles");
         GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(particles[species]->OK(),
@@ -1055,16 +1055,16 @@ void init_particles (std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& 
  *
  * @param[out] particles : particles that are initialised
  * @param[out] particlesLinVlasov :
- * @param infra : Computational Domain
+ * @param geom : Geometry
  *
  */
 template <unsigned int vDim, unsigned int nData>
 void init_particles (
-    std::vector<std::shared_ptr<ParticleGroupsLinVlasov<vDim, nData>>>& particlesLinVlasov,
-    std::vector<std::shared_ptr<ParticleGroups<vDim, nData>>>& particles,
+    std::vector<std::shared_ptr<ParticleSpeciesLinVlasov<vDim, nData>>>& particlesLinVlasov,
+    std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>& particles,
     ComputationalDomain infra)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(infra,particlesLinVlasov,particles)");
+    BL_PROFILE("Gempic::Particle::init_particles(particlesLinVlasov,particles,infra)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);
@@ -1080,11 +1080,12 @@ void init_particles (
     for (int species{0}; species < speciesNames.size(); ++species)
     {
         particlesLinVlasov[species] =
-            std::make_shared<ParticleGroupsLinVlasov<vDim, nData>>(speciesNames[species], infra);
+            std::make_shared<ParticleSpeciesLinVlasov<vDim, nData>>(speciesNames[species], infra);
         particles[species] =
-            std::static_pointer_cast<ParticleGroups<vDim, nData>>(particlesLinVlasov[species]);
+            std::static_pointer_cast<ParticleSpecies<vDim, nData>>(particlesLinVlasov[species]);
 
-        Impl::sample_species(particles[species], infra, species, globalSamplerName, rSeed);
+        Impl::sample_species(particles[species], infra.geometry(), species, globalSamplerName,
+                             rSeed);
     }
 }
 
