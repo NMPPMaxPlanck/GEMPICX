@@ -1,20 +1,21 @@
 set(TMP_TEST_SOURCES
   ParticleIterator_test.cpp
+  ParticleIO_test.cpp
     )
 if("${AMReX_SPACEDIM}" STREQUAL "3")
   LIST(APPEND TMP_TEST_SOURCES Sampler_test.cpp)
 endif()
 target_sources(GtestTests PRIVATE ${TMP_TEST_SOURCES})
 
-add_executable(ParticleAdd_test
-               ParticleAdd_test.cpp
-               ${CMAKE_SOURCE_DIR}/Testing/TestUtils/GEMPIC_TestUtils.cpp
-               )
+add_executable(
+  ParticleAdd_test
+  ParticleAdd_test.cpp
+  ${CMAKE_SOURCE_DIR}/Testing/TestUtils/GEMPIC_TestUtils.cpp
+  )
 
 if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(ParticleAdd_test)
 endif()
-
 target_link_libraries(ParticleAdd_test
                       GEMPICX
                       GTest::gtest_main)

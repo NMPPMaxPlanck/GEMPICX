@@ -373,6 +373,20 @@ public:
         }
         return dd;
     }
+
+    /**
+     * @brief Overloads restarting to watch out for existing particles
+     */
+    void restart (std::string const& dir, std::string const& file, bool keepOldParticles = false)
+    {
+        // By default, AMReX's particle container Restart function keeps old particles.
+        if (not keepOldParticles and this->TotalNumberOfParticles() > 0)
+        {
+            amrex::Warning("Particles exist before restart operation. They will be deleted");
+            this->clearParticles();
+        }
+        this->Restart(dir, file);
+    }
 };
 
 /** \brief Helper struct for range-based for loops on multi-level particle containers
