@@ -1,7 +1,35 @@
-# Interruptible jobs even after stages with non-interruptible jobs
-workflow:
-  auto_cancel:
-    on_new_commit: interruptible
+# Inputs for e.g. scheduled jobs
+spec:
+  inputs:
+    run_unit_tests:
+      default: "default"
+      options:
+        - "true"
+        - "false"
+        - "default"
+      description: "whether to run unit tests. ''default'' to run unit tests according to default criteria (see .unit-test-setup for details)."
+    build_documentation:
+      default: "default"
+      options:
+        - "true"
+        - "false"
+        - "default"
+      description: "whether to build unit tests. ''default'' to build it only on master."
+    cleanup_macos:
+      default: "false"
+      options:
+        - "true"
+        - "false"
+      description: "whether to remove directories on the macos runner that may have been left over from old pipelines."
+---
+# Global variables make inputs modifiable according to job rules
+variables:
+  RUN_UNIT_TESTS:
+    value: $[[ inputs.run_unit_tests ]]
+  BUILD_DOCUMENTATION:
+    value: $[[ inputs.build_documentation ]]
+  CLEANUP_MACOS:
+    value: $[[ inputs.cleanup_macos ]]
 
 default:
   before_script:
@@ -11,6 +39,19 @@ stages:
   - test
   - deploy
 
+# Interruptible jobs even after stages with non-interruptible jobs
+# Avoids splitting commit and merge pipelines, and make jobs interruptible
+# Without this, every push to a branch with a merge request creates two pipelines: One for the 
+# branch itself, having all build-tests and another for the ones specific to merge requests.
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    # When part of a merge request pipelines are cancelled on the branch
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"
+      when: never
+    - when: always
+
 .mpcdf-modules:
   before_script:
     - export MPCDF_RUNNER=1
@@ -19,30 +60,37 @@ stages:
     - module load git
     - module load anaconda/3/2023
 
-# Avoids splitting commit and merge pipelines, and make jobs interruptible
-# Without this, every push to a branch with a merge request creates two pipelines: One for the 
-# branch itself, having all build-tests and another for the ones specific to merge requests.
-.remove-duplicate-pipelines:
+.unit-test-setup:
   rules:
-    # When part of a merge request, build-tests are run in the merge request pipeline ...
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    # ... but are cancelled on the branch
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+    - if: $RUN_UNIT_TESTS == "true"
+    - if: $RUN_UNIT_TESTS == "false"
       when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - Src/**/*
+          - Testing/**/*
+          - Examples/**/*
+        compare_to: $CI_MERGE_REQUEST_DIFF_BASE_SHA
     # When not part of a merge request, check for changes in all files compared to the previous
     # commit, and only run if there are changes. This should even avoid duplicate pipelines on
     # master after merges, running if the code after the merge differs from the feature branch.
-    - if: $CI_COMMIT_BRANCH
+    #
+    # CI_COMMIT_BEFORE_SHA is all 0 for scheduled pipelines, manually run pipelines, etc.
+    # in this case compare_to would get an invalid reference
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BEFORE_SHA !~ /^0+$/
       changes:
         paths:
-          - "**/*"
+          - Src/**/*
+          - Testing/**/*
+          - Examples/**/*
         compare_to: $CI_COMMIT_BEFORE_SHA
   # If another commit is made while the pipeline is running, the current one will be canceled.
   interruptible: true
 
 .mpcdf-gcc-env:
   extends:
-    - .remove-duplicate-pipelines
+    - .unit-test-setup
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
   tags:
     - cloud
@@ -77,7 +125,7 @@ build-test_gcc_1D:
 
 .mpcdf-cuda-env:
   extends:
-    - .remove-duplicate-pipelines
+    - .unit-test-setup
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-cuda:latest
   tags:
     - nvidia-cc80
@@ -121,7 +169,7 @@ build-test_cuda_1D:
 
 .mpcdf-clang-env:
   extends:
-    - .remove-duplicate-pipelines
+    - .unit-test-setup
   # N.B. clang/17+ needs gcc/13 libraries to run
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
   tags:
@@ -159,7 +207,7 @@ build-test_clang_cpu_1D:
 
 build-test_mac_3D:
   extends:
-    - .remove-duplicate-pipelines
+    - .unit-test-setup
   script:
     - configure_build_test cpu-release-3D
   after_script:
@@ -196,8 +244,16 @@ pages:
     - cloud
   stage: deploy
   rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_PURPOSE =~ /doc/
-    - if: $CI_COMMIT_BRANCH == "master"
+    - if: $BUILD_DOCUMENTATION == "true"
+    - if: $BUILD_DOCUMENTATION == "false"
+      when: never
+    # We also check Src because doxygen comments could have changed
+    - if: $CI_COMMIT_BRANCH == "master" && $CI_COMMIT_BEFORE_SHA !~ /^0+$/
+      changes:
+        paths:
+          - doc/**/*
+          - Src/**/*
+        compare_to: $CI_COMMIT_BEFORE_SHA
   before_script:
     - !reference [default,before_script]
     - apt-get update
@@ -226,6 +282,8 @@ cleanup-macos:
   tags: [macos]
   stage: test
   rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_PURPOSE =~ /clean-mac/
+    - if: $CLEANUP_MACOS == "true"
+    - if: $CLEANUP_MACOS == "false"
+      when: never
   script:
     - rm -rf $CI_BUILDS_DIR/$CI_PROJECT_NAME/job-*
