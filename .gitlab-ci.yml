@@ -58,7 +58,7 @@ workflow:
     - module purge
     - module load cmake
     - module load git
-    - module load anaconda/3/2023
+    - module load python-waterboa
 
 .unit-test-setup:
   rules:
@@ -93,7 +93,7 @@ workflow:
     - .unit-test-setup
   image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
   tags:
-    - cloud
+    - cpu
   stage: test
   before_script:
     - !reference [default,before_script]
@@ -126,9 +126,9 @@ build-test_gcc_1D:
 .mpcdf-cuda-env:
   extends:
     - .unit-test-setup
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-cuda:latest
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi-cuda:latest
   tags:
-    - nvidia-cc80
+    - gpu-nvidia-cc80
   stage: test
   before_script:
     - !reference [default,before_script]
@@ -139,6 +139,7 @@ build-test_gcc_1D:
     - module load fftw-mpi
     - module list
     - export NVIDIA_ARCHITECTURE=A100
+    - pip3 install ninja
 
 build-test_cuda_3D:
   extends:
@@ -171,9 +172,9 @@ build-test_cuda_1D:
   extends:
     - .unit-test-setup
   # N.B. clang/17+ needs gcc/13 libraries to run
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc_14-openmpi_5_0:2025
   tags:
-    - cloud
+    - cpu
   stage: test
   before_script:
     - !reference [default,before_script]
@@ -241,7 +242,7 @@ style-test_cpu_3D:
 pages:
   image: ubuntu
   tags:
-    - cloud
+    - cpu
   stage: deploy
   rules:
     - if: $BUILD_DOCUMENTATION == "true"
