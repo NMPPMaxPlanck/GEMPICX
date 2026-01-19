@@ -1,3 +1,5 @@
+#include <random>
+
 #include <gtest/gtest.h>
 
 #include <AMReX.H>
@@ -152,4 +154,129 @@ TEST(ParticleIOTest, WriteAndReadIntoNonEmptyContainer)
 
     // compare
     EXPECT_EQ(numParticles - 1, particles2.get()->TotalNumberOfParticles());
+}
+
+template <unsigned int vDim, unsigned int nData>
+void solve_pendulums (std::unique_ptr<ParticleSpecies<vDim, nData>>& particles, double const dt)
+{
+    for (auto& pti : *particles)
+    {
+        auto const ptd = pti.GetParticleTile().getParticleTileData();
+        long const np = pti.numParticles();
+        auto const ii = particles->get_data_indices();
+
+        amrex::ParallelFor(
+            np,
+            [=] AMREX_GPU_DEVICE(long pp)
+            {
+                //leap frog half position
+                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] += 0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
+                             ptd.rdata(ii.m_iposy)[pp] += 0.5 * dt * ptd.rdata(ii.m_ively)[pp],
+                             ptd.rdata(ii.m_iposz)[pp] += 0.5 * dt * ptd.rdata(ii.m_ivelz)[pp]);
+                // leap frog velocity
+                AMREX_D_EXPR(
+                    ptd.rdata(ii.m_ivelx)[pp] += -dt * std::sin(ptd.rdata(ii.m_iposx)[pp]),
+                    ptd.rdata(ii.m_ively)[pp] += -dt * std::sin(ptd.rdata(ii.m_iposy)[pp]),
+                    ptd.rdata(ii.m_ivelz)[pp] += -dt * std::sin(ptd.rdata(ii.m_iposz)[pp]));
+                //leap frog half position
+                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] += 0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
+                             ptd.rdata(ii.m_iposy)[pp] += 0.5 * dt * ptd.rdata(ii.m_ively)[pp],
+                             ptd.rdata(ii.m_iposz)[pp] += 0.5 * dt * ptd.rdata(ii.m_ivelz)[pp]);
+            });
+    }
+    particles->Redistribute(); // assign particles to the grid they are in, lose dead particle
+}
+
+TEST(ParticleIOTest, SolverCheckpoint)
+{
+    int constexpr vDim{AMREX_SPACEDIM};
+    int constexpr nIterations{100};
+    double const tol = 1e-10;
+    int constexpr numParticles{3};
+
+    amrex::Real charge{1.0};
+    amrex::Real mass{1};
+
+    ComputationalDomain infra{Gempic::Test::Utils::get_default_compdom()};
+    auto particles1 = std::make_unique<ParticleSpecies<vDim, 1>>(charge, mass, infra);
+    auto particles2init = std::make_unique<ParticleSpecies<vDim, 1>>(charge, mass, infra);
+
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> velocities;
+    auto p0 = infra.prob_low_3darray();
+    std::array<amrex::Real, AMREX_SPACEDIM> pL = {AMREX_D_DECL(infra.geometry().ProbLength(xDir),
+                                                               infra.geometry().ProbLength(yDir),
+                                                               infra.geometry().ProbLength(zDir))};
+
+    std::mt19937_64 rgen;
+    // normal distributions with mean center of box and sigma quarter of the box
+    // I'm trying to ensure that not too many leave the box during the test, I don't want AMReX to
+    // get upset during redistribute.
+    std::normal_distribution<amrex::Real> rdistx(p0[xDir] + 0.5 * pL[xDir], 0.25 * pL[xDir]);
+    std::normal_distribution<amrex::Real> rdisty(p0[yDir] + 0.5 * pL[yDir], 0.25 * pL[yDir]);
+    std::normal_distribution<amrex::Real> rdistz(p0[zDir] + 0.5 * pL[zDir], 0.25 * pL[zDir]);
+    rgen.seed(37); // most random number as explained by veritasium
+    for (auto pp = 0; pp < numParticles; pp++)
+    {
+        AMREX_D_TERM(positions[pp][xDir] = rdistx(rgen);, positions[pp][yDir] = rdisty(rgen);
+                     , positions[pp][zDir] = rdistz(rgen););
+        AMREX_D_TERM(velocities[pp][xDir] = 0;, velocities[pp][yDir] = 0;
+                     , velocities[pp][zDir] = 0;);
+    }
+    amrex::Array<amrex::Real, numParticles> weights = {1.0, 1.0, 1.0};
+
+    Gempic::Test::Utils::add_single_particles(particles1.get(), infra, weights, positions,
+                                              velocities);
+    Gempic::Test::Utils::add_single_particles(particles2init.get(), infra, weights, positions,
+                                              velocities);
+
+    // iterate 100 steps
+    for (auto tt = 0; tt < nIterations; tt++)
+    {
+        solve_pendulums(particles1, 0.125);
+        solve_pendulums(particles2init, 0.125);
+    }
+    // write and read back "particles2"
+    particles2init->Checkpoint("checkpoint_data", "particles2");
+    amrex::AsyncOut::Finish();
+    amrex::ParallelDescriptor::Barrier();
+    auto particles2 = std::make_unique<ParticleSpecies<vDim, 1>>(charge, mass, infra);
+    particles2->restart("checkpoint_data", "particles2");
+    // iterate 100 steps
+    for (auto tt = 0; tt < nIterations; tt++)
+    {
+        solve_pendulums(particles1, 0.125);
+        solve_pendulums(particles2, 0.125);
+    }
+    //// compare "particles1" and "particles2"
+    for (auto& pg1 : *particles1)
+    {
+        // get particle tile data for species 1
+        auto const ptd1 = pg1.GetParticleTile().getParticleTileData();
+        // get key of particle tile
+        // this is inspired by `operator++` definition of `ParIterBase_impl` in AMReX_ParIter.H
+        auto const pg1Key = std::make_pair(pg1.index(), pg1.LocalTileIndex());
+        // get particle tile data for species 2
+        auto const ptd2 = particles2->GetParticles(0).find(pg1Key)->second.getParticleTileData();
+
+        long const npt1 = pg1.numParticles(); // TODO: assert this equals numparticles for species 2
+        auto const ii = particles1->get_data_indices();
+
+        for (long pp = 0; pp < npt1; pp++)
+        {
+            EXPECT_NEAR(ptd1.rdata(ii.m_iweight)[pp], ptd2.rdata(ii.m_iweight)[pp], tol);
+            EXPECT_NEAR(ptd1.rdata(ii.m_iposx)[pp], ptd2.rdata(ii.m_iposx)[pp], tol);
+            EXPECT_NEAR(ptd1.rdata(ii.m_ivelx)[pp], ptd2.rdata(ii.m_ivelx)[pp], tol);
+            if (AMREX_SPACEDIM > 1)
+            {
+                EXPECT_NEAR(ptd1.rdata(ii.m_iposy)[pp], ptd2.rdata(ii.m_iposy)[pp], tol);
+                EXPECT_NEAR(ptd1.rdata(ii.m_ively)[pp], ptd2.rdata(ii.m_ively)[pp], tol);
+            }
+            if (AMREX_SPACEDIM > 2)
+            {
+                EXPECT_NEAR(ptd1.rdata(ii.m_iposz)[pp], ptd2.rdata(ii.m_iposz)[pp], tol);
+                EXPECT_NEAR(ptd1.rdata(ii.m_ivelz)[pp], ptd2.rdata(ii.m_ivelz)[pp], tol);
+            }
+        }
+    }
 }
