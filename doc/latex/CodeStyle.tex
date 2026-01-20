@@ -71,6 +71,7 @@ These conventions only apply to source and header files. Checks that cannot be a
     \item (*) \emph{Do not} put \lstinline{using namespace} statements in header (\verb|.H|) files
     \item (*) \emph{Do not} put third party \lstinline{using namespace} statements in source (\verb|.cpp|) files
 \end{itemize}
+
 \subsection{Naming conventions}
 \begin{itemize}
     \item Names for classes and namespaces are \verb|CamelCase|
@@ -88,8 +89,16 @@ These conventions only apply to source and header files. Checks that cannot be a
 \end{itemize}
 Exceptions to these conventions are unavoidable when inheriting from or calling third party libraries, but otherwise they should be followed and will be enforced with automatic tools.
 
+\subsection{Assertions, Errors, and Warnings}
+\begin{itemize}
+    \item \lstinline{GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(condition, message)} prints message to cerr and aborts if condition is violated
+    \item \lstinline{GEMPIC_ERROR(message)} prints message to cerr and aborts
+    \item \lstinline{amrex::Warning("Warning: " + message)} prints message to cerr with an exclamation mark appended automatically
+\end{itemize}
+In all three cases, \lstinline{message} is a string that can be dynamically created at runtime. Only use the AMReX macros/functions directly if needed in device code.
+
 \section{Automatic Linting and Formatting}
-To help enforce the above conventions we use two clang extra tools: \verb|clang-format| and \verb|clang-tidy|.
+To help enforce the formatting and naming conventions we use two clang extra tools: \verb|clang-format| and \verb|clang-tidy|.
 
 \verb|clang-format| is mostly responsible for formatting whitespace: \verb|{| on newlines, spaces around assignment operators, order of \lstinline{#include} statements, indentation, etc. It can be run in seconds.
 

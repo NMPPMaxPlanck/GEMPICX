@@ -261,7 +261,7 @@ ComputationalDomain::ComputationalDomain()
         {
             if (params.is_in_input_file("domainHi"))
             {
-                std::cerr << "Warning: \"domainHi\" will not be used if \"k\" exists\n";
+                amrex::Warning("Warning: \"domainHi\" will not be used if \"k\" exists");
             }
             params.get("k", k);
             for (int i = 0; i < AMREX_SPACEDIM; i++)

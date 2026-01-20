@@ -207,8 +207,8 @@ void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM
         if (not discrete_grid().is_periodic(dir))
         {
             amrex::Warning(
-                "WARNING: 'DiscreteField::apply_boundary_conditions()' Non periodic "
-                "boundaries are not well tested! API and behavior might change.");
+                "Warning: 'DiscreteField::apply_boundary_conditions()' Non periodic "
+                "boundaries are not well tested! API and behavior might change");
             m_data->m_boundaryCondition(m_data->m_data, 0, 1, ng, 0.0, 0);
             break;
         }

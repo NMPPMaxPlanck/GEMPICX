@@ -84,14 +84,14 @@ int main (int argc, char* argv[])
     {
         if (git::AnyUncommittedChanges())
         {
-            amrex::Warning("There were uncommitted changes at build-time.");
+            amrex::Warning("Warning: There were uncommitted changes at build-time");
         }
         amrex::Print() << "GEMPIC commit " << git::CommitSHA1() << " (" << git::Branch() << ")\n"
                        << "describe " << git::Describe() << "\n";
     }
     else
     {
-        amrex::Warning("Failed to get the current git state. Is this a git repo?");
+        amrex::Warning("Warning: Failed to get the current git state. Is this a git repo?");
     }
     //
     // Tell the parameters class to print output
