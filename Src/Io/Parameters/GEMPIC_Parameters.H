@@ -491,7 +491,7 @@ public:
         if (Gempic::Utils::Verbosity::level() > 0)
         {
             std::stringstream ss;
-            ss << "Variable " << variableName << " = " << convert_to_param(variable)
+            ss << "Warning: Variable " << variableName << " = " << convert_to_param(variable)
                << " set by default in " << m_className << "\n";
             amrex::Warning(ss.str().c_str());
         }

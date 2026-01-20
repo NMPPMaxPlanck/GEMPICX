@@ -215,11 +215,11 @@ private:
         // Check that rho and divD have been updated
         if (std::abs(rhoNorm - m_rhoNorm) < 1e-12 || std::abs(divDNorm - m_divDNorm) < 1e-12)
         {
-            amrex::Warning("rhoNorm " + std::to_string(rhoNorm) + " divDNorm " +
-                           std::to_string(divDNorm) + "\n");
-            amrex::Warning("m_rhoNorm " + std::to_string(m_rhoNorm) + " m_divDNorm " +
-                           std::to_string(m_divDNorm) + "\n");
-            amrex::Warning("WARNING: GaussError: rho or divD may have not been updated\n");
+            amrex::Warning(
+                std::format("Warning: rhoNorm: {0:e}\tdivDNorm: {1:e}\nm_rhoNorm: "
+                            "{2:e}\tm_divDNorm: {3:e}\nGaussError: rho or divD may not "
+                            "have been updated",
+                            rhoNorm, divDNorm, m_rhoNorm, m_divDNorm));
         }
         else
         {

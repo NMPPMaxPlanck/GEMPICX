@@ -778,8 +778,8 @@ public:
                              || nGhostVector[zDir] != nGhostVectorInputFile[zDir]))
             {
                 amrex::Warning(
-                    "Number of ghost cells should only be influenced by specifying the number of "
-                    "extra ghost cells!\n");
+                    "Warning: Number of ghost cells should only be influenced by specifying the "
+                    "number of extra ghost cells");
             }
         }
         params.get_or_set("nGhost", nGhostVector);

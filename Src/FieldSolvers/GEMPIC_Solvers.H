@@ -144,9 +144,8 @@ public:
         }
         if (m_verbose > 0 && !hasConverged)
         {
-            amrex::Print(amrex::ErrorStream())
-                << "WARNING: CG has not converged after " << m_maxiter << " iterations "
-                << sqrt(normResSquareOld / normbSquare) << std::endl;
+            amrex::Warning("Warning: CG has not converged after " + std::to_string(m_maxiter) +
+                           " iterations " + std::to_string(sqrt(normResSquareOld / normbSquare)));
         }
         if (!hasConverged)
         {
@@ -232,9 +231,8 @@ public:
         }
         if (m_verbose > 0 && !hasConverged)
         {
-            amrex::Print(amrex::ErrorStream())
-                << "WARNING: CG has not converged after " << m_maxiter << " iterations "
-                << sqrt(normResSquare / normbSquare) << std::endl;
+            amrex::Warning("Warning: CG has not converged after " + std::to_string(m_maxiter) +
+                           " iterations " + std::to_string(sqrt(normResSquare / normbSquare)));
         }
         if (!hasConverged)
         {

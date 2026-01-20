@@ -203,7 +203,7 @@ inline void read_function_or_constant (
         }
         if (params.exists(inputString))
         {
-            amrex::Warning(name + " constant string not read if functions are given");
+            amrex::Warning("Warning: " + name + " constant string not read if functions are given");
         }
     }
     else

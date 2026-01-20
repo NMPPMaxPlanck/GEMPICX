@@ -15,7 +15,7 @@ void Verbosity::set_level (int level)
     if (level < 0)
     {
         level = 0;
-        amrex::Warning("Negative Verbosity level corrected to 0");
+        amrex::Warning("Warning: Negative Verbosity level corrected to 0");
     }
     s_verbosityLevel = level;
     s_settable = false;

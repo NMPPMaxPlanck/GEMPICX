@@ -74,7 +74,7 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
     {
         if (tolerancesGiven)
         {
-            amrex::Warning("FFT Poisson solver does not use relTol and absTol.\n");
+            amrex::Warning("Warning: FFT Poisson solver does not use relTol and absTol");
         }
 #ifdef AMREX_USE_FFT
         if (infra.geometry().isAllPeriodic())

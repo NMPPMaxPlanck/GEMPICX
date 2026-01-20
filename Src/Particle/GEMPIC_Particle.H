@@ -382,7 +382,8 @@ public:
         // By default, AMReX's particle container Restart function keeps old particles.
         if (not keepOldParticles and this->TotalNumberOfParticles() > 0)
         {
-            amrex::Warning("Particles exist before restart operation. They will be deleted");
+            amrex::Warning(
+                "Warning: Particles exist before restart operation. They will be deleted");
             this->clearParticles();
         }
         this->Restart(dir, file);

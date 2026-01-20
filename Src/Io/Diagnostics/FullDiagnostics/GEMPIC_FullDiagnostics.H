@@ -372,7 +372,8 @@ private:
         {
             if (m_diagOutputProcessor != "Raw")
             {
-                amrex::Warning("outputProcessor argument has no effect for particle diagnostics\n");
+                amrex::Warning(
+                    "Warning: outputProcessor argument has no effect for particle diagnostics");
             }
             if (!m_plotParticles) // needs only to be performed once for all particle species
             {
