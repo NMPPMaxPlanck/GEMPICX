@@ -11,6 +11,19 @@ namespace Gempic
 {
 namespace Impl
 {
+std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM> convert_to_dof_category (
+    std::array<int, AMREX_SPACEDIM> const& from)
+{
+    using DOF = DiscreteField::DOFCategory;
+    return std::array<DOF, AMREX_SPACEDIM>{AMREX_D_DECL(
+        static_cast<DOF>(from[0]), static_cast<DOF>(from[1]), static_cast<DOF>(from[2]))};
+}
+std::array<int, AMREX_SPACEDIM> convert_to_int (
+    std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM> const& from)
+{
+    return std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(
+        static_cast<int>(from[0]), static_cast<int>(from[1]), static_cast<int>(from[2]))};
+}
 amrex::Box selected_ghost_box (DiscreteField const& df,
                                std::array<size_t, AMREX_SPACEDIM> const& ghostSize,
                                Direction const& dir,
@@ -60,9 +73,7 @@ DiscreteField::DiscreteField(std::string const& label,
                              DiscreteGrid const& discreteGrid,
                              std::array<DOFCategory, AMREX_SPACEDIM> const& dofCategory,
                              Impl::BoundaryConditionConfiguration const& bcConf) :
-    m_label{std::make_shared<std::string>(label)},
-    m_discreteGrid{discreteGrid},
-    m_dofCategory{dofCategory}
+    m_discreteGrid{discreteGrid}
 {
     amrex::BoxArray boxArray{Impl::to_amrex_box(discrete_grid())};
     if (params.exists("ComputationalDomain.maxGridSize"))
@@ -80,7 +91,7 @@ DiscreteField::DiscreteField(std::string const& label,
                      "Reduce ComputationalDomain.maxGridSize or number of MPI processes");
     }
     amrex::DistributionMapping dm{boxArray};
-    m_data = std::make_shared<amrex::MultiFab>(boxArray, dm, 1, 0);
+    amrex::MultiFab data{boxArray, dm, 1, 0};
     amrex::GpuBndryFuncFab<Forms::BoundaryCondition> bc{Forms::BoundaryCondition{
         Impl::to_amrex_idx_type(discrete_grid()), bcConf.m_extrapolationDegree, bcConf.m_grid}};
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
@@ -94,10 +105,12 @@ DiscreteField::DiscreteField(std::string const& label,
                 "periodic!");
         }
     }
-    m_boundaryCondition =
-        std::make_shared<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>>(
-            Impl::to_amrex_geometry(discrete_grid()), amrex::Vector<amrex::BCRec>{bcConf.m_bcRec},
-            bc);
+    amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> boundaryCondition{
+        Impl::to_amrex_geometry(discrete_grid()), amrex::Vector<amrex::BCRec>{bcConf.m_bcRec}, bc};
+
+    m_data = std::make_shared<Impl::DiscreteFieldData>(
+        label, std::move (data), m_discreteGrid, Impl::convert_to_int(dofCategory),
+        std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition);
 }
 
 DiscreteField::DiscreteField(std::string const& label,
@@ -106,9 +119,7 @@ DiscreteField::DiscreteField(std::string const& label,
                              amrex::BoxArray ba,
                              amrex::DistributionMapping dm,
                              Impl::BoundaryConditionConfiguration const& bcConf) :
-    m_label{std::make_shared<std::string>(label)},
-    m_discreteGrid{discreteGrid},
-    m_dofCategory{dofCategory}
+    m_discreteGrid{discreteGrid}
 {
     if (ba.size() < amrex::ParallelContext::NProcsAll())
     {
@@ -119,7 +130,7 @@ DiscreteField::DiscreteField(std::string const& label,
                      "Reduce ComputationalDomain.maxGridSize or number of MPI processes");
     }
     ba.convert(Impl::to_amrex_idx_type(m_discreteGrid));
-    m_data = std::make_shared<amrex::MultiFab>(ba, dm, 1, 0);
+    amrex::MultiFab data{ba, dm, 1, 0};
     amrex::GpuBndryFuncFab<Forms::BoundaryCondition> bc{Forms::BoundaryCondition{
         Impl::to_amrex_idx_type(discrete_grid()), bcConf.m_extrapolationDegree, bcConf.m_grid}};
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
@@ -133,14 +144,20 @@ DiscreteField::DiscreteField(std::string const& label,
                 "periodic!");
         }
     }
-    m_boundaryCondition =
-        std::make_shared<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>>(
-            Impl::to_amrex_geometry(discrete_grid()), amrex::Vector<amrex::BCRec>{bcConf.m_bcRec},
-            bc);
+    amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> boundaryCondition{
+        Impl::to_amrex_geometry(discrete_grid()), amrex::Vector<amrex::BCRec>{bcConf.m_bcRec}, bc};
+    m_data = std::make_shared<Impl::DiscreteFieldData>(
+        label, std::move (data), m_discreteGrid, Impl::convert_to_int(dofCategory),
+        std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition);
 };
 
-amrex::MultiFab const& DiscreteField::multi_fab() const { return *m_data; }
-amrex::MultiFab& DiscreteField::multi_fab() { return *m_data; }
+DiscreteField::DiscreteField(std::shared_ptr<Impl::DiscreteFieldData> const& data) :
+    m_data{data}, m_discreteGrid{data->m_discreteGrid}
+{
+}
+
+amrex::MultiFab const& DiscreteField::multi_fab() const { return m_data->m_data; }
+amrex::MultiFab& DiscreteField::multi_fab() { return m_data->m_data; }
 
 amrex::Box const& DiscreteField::select_box(amrex::MFIter const& mfi)
 {
@@ -151,40 +168,37 @@ amrex::Box const& DiscreteField::select_box(amrex::MFIter const& mfi)
 amrex::Box const& DiscreteField::select_box(int index)
 {
     m_view = this->multi_fab().array(index);
-    m_boxStatus = Impl::BoxStatus::boxSelected;
     m_selectedBoxIdx = index;
     return this->multi_fab()[index].box();
 }
 amrex::Box const& DiscreteField::selected_box() const
 {
-    return m_data->get(m_selectedBoxIdx).box();
+    return m_data->m_data.get(m_selectedBoxIdx).box();
 };
 void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM> width)
 {
     bool increaseHalo{false};
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        if (m_haloWidth[dir] < width[dir])
+        if (m_data->m_haloWidth[dir] < width[dir])
         {
-            m_haloWidth[dir] = width[dir];
+            m_data->m_haloWidth[dir] = width[dir];
             increaseHalo = true;
         }
     }
     amrex::IntVect ng;
     for (int i = 0; i < AMREX_SPACEDIM; i++)
     {
-        ng[i] = m_haloWidth[i];
+        ng[i] = m_data->m_haloWidth[i];
     }
     if (increaseHalo)
     {
-        int n{this->multi_fab().nComp()};
         amrex::BoxArray ba{this->multi_fab().boxArray()};
         amrex::DistributionMapping dm{this->multi_fab().DistributionMap()};
-        amrex::MultiFab dataNew{ba, dm, n, ng};
-        dataNew.LocalCopy(this->multi_fab(), 0, 0, n, amrex::IntVect{0});
-        m_data = std::make_shared<amrex::MultiFab>(std::move(dataNew));
+        amrex::MultiFab dataNew{ba, dm, 1, ng};
+        dataNew.LocalCopy(this->multi_fab(), 0, 0, 1, amrex::IntVect{0});
+        m_data->m_data = std::move(dataNew);
         m_view = amrex::Array4<amrex::Real>{};
-        m_boxStatus = Impl::BoxStatus::boxChanged;
         m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
     this->multi_fab().FillBoundary(ng, Impl::to_amrex_periodicty(this->discrete_grid()));
@@ -195,7 +209,7 @@ void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM
             amrex::Warning(
                 "WARNING: 'DiscreteField::apply_boundary_conditions()' Non periodic "
                 "boundaries are not well tested! API and behavior might change.");
-            this->m_boundaryCondition->operator()(*m_data, 0, 1, ng, 0.0, 0);
+            m_data->m_boundaryCondition(m_data->m_data, 0, 1, ng, 0.0, 0);
             break;
         }
     }
@@ -208,57 +222,13 @@ DiscreteVectorField::DiscreteVectorField(
     std::array<std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM>, 3> const& dofCategory,
     std::array<Impl::BoundaryConditionConfiguration, 3> const& bcConfig) :
     m_label{std::make_shared<std::string>(label)},
-    m_discreteGrid{discreteGrid},
-    m_dofCategory{dofCategory}
+    m_fields{DiscreteField{label + "x", params, discreteGrid[Direction::xDir],
+                           dofCategory[Direction::xDir], bcConfig[Direction::xDir]},
+             DiscreteField{label + "y", params, discreteGrid[Direction::yDir],
+                           dofCategory[Direction::yDir], bcConfig[Direction::yDir]},
+             DiscreteField{label + "z", params, discreteGrid[Direction::zDir],
+                           dofCategory[Direction::zDir], bcConfig[Direction::zDir]}}
 {
-    std::array<amrex::MultiFab, 3> data{};
-    for (int dir{0}; dir < 3; dir++)
-    {
-        amrex::BoxArray boxArray{Impl::to_amrex_box(discrete_grid(static_cast<Direction>(dir)))};
-        if (params.exists("ComputationalDomain.maxGridSize"))
-        {
-            amrex::IntVect maxGridSize;
-            params.get("ComputationalDomain.maxGridSize", maxGridSize);
-            boxArray.maxSize(maxGridSize);
-        }
-        if (boxArray.size() < amrex::ParallelContext::NProcsAll())
-        {
-            amrex::Abort("The DiscreteVectorField " + label + " is initialized with " +
-                         std::to_string(boxArray.size()) + " boxes. Available are " +
-                         std::to_string(amrex::ParallelContext::NProcsAll()) +
-                         " MPI processes. We require #processes <= #boxes. "
-                         "Reduce ComputationalDomain.maxGridSize or number of MPI processes");
-        }
-        amrex::DistributionMapping dm{boxArray};
-        data[dir] = amrex::MultiFab{boxArray, dm, 1, 0};
-    }
-    m_data = std::make_shared<std::array<amrex::MultiFab, 3>>(std::move(data));
-    std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, 3>
-        boundaryCondition{};
-    for (auto dirField : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        amrex::GpuBndryFuncFab<Forms::BoundaryCondition> bc{Forms::BoundaryCondition{
-            Impl::to_amrex_idx_type(discrete_grid(static_cast<Direction>(dirField))),
-            bcConfig[dirField].m_extrapolationDegree, bcConfig[dirField].m_grid}};
-        for (auto dirGrid : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
-        {
-            if ((discrete_grid(dirGrid).is_periodic(dirGrid) == true) and
-                not(bcConfig[dirField].m_bcRec.lo(dirGrid) == amrex::BCType::int_dir or
-                    bcConfig[dirField].m_bcRec.hi(dirGrid) == amrex::BCType::int_dir))
-            {
-                throw std::invalid_argument (
-                    "ERROR: Boundary conditions are not periodic but domain is configured to be "
-                    "periodic!");
-            }
-        }
-        boundaryCondition[dirField] =
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>{
-                Impl::to_amrex_geometry(discrete_grid(static_cast<Direction>(dirField))),
-                amrex::Vector<amrex::BCRec>{bcConfig[dirField].m_bcRec}, bc};
-    }
-    m_boundaryCondition = std::make_shared<
-        std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, 3>>(
-        boundaryCondition);
 }
 
 DiscreteVectorField::DiscreteVectorField(
@@ -269,57 +239,20 @@ DiscreteVectorField::DiscreteVectorField(
     amrex::DistributionMapping dm,
     std::array<Impl::BoundaryConditionConfiguration, 3> const& bcConfig) :
     m_label{std::make_shared<std::string>(label)},
-    m_discreteGrid{discreteGrid},
-    m_dofCategory{dofCategory}
+    m_fields{DiscreteField{label + "x", discreteGrid[Direction::xDir], dofCategory[Direction::xDir],
+                           ba, dm, bcConfig[Direction::xDir]},
+             DiscreteField{label + "y", discreteGrid[Direction::yDir], dofCategory[Direction::yDir],
+                           ba, dm, bcConfig[Direction::yDir]},
+             DiscreteField{label + "z", discreteGrid[Direction::zDir], dofCategory[Direction::zDir],
+                           ba, dm, bcConfig[Direction::zDir]}}
 {
-    std::array<amrex::MultiFab, 3> data{};
-    for (int dir{0}; dir < 3; dir++)
-    {
-        if (ba.size() < amrex::ParallelContext::NProcsAll())
-        {
-            amrex::Abort("The DiscreteVectorField " + label + " is initialized with " +
-                         std::to_string(ba.size()) + " boxes. Available are " +
-                         std::to_string(amrex::ParallelContext::NProcsAll()) +
-                         " MPI processes. We require #processes <= #boxes. "
-                         "Reduce ComputationalDomain.maxGridSize or number of MPI processes");
-        }
-        ba.convert(Gempic::Impl::to_amrex_idx_type(m_discreteGrid[dir]));
-        data[dir] = amrex::MultiFab{ba, dm, 1, 0};
-    }
-    m_data = std::make_shared<std::array<amrex::MultiFab, 3>>(std::move(data));
-    std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, 3>
-        boundaryCondition{};
-    for (auto dirField : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        amrex::GpuBndryFuncFab<Forms::BoundaryCondition> bc{Forms::BoundaryCondition{
-            Impl::to_amrex_idx_type(discrete_grid(static_cast<Direction>(dirField))),
-            bcConfig[dirField].m_extrapolationDegree, bcConfig[dirField].m_grid}};
-        for (auto dirGrid : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
-        {
-            if ((discrete_grid(dirGrid).is_periodic(dirGrid) == true) and
-                not(bcConfig[dirField].m_bcRec.lo(dirGrid) == amrex::BCType::int_dir or
-                    bcConfig[dirField].m_bcRec.hi(dirGrid) == amrex::BCType::int_dir))
-            {
-                throw std::invalid_argument (
-                    "ERROR: Boundary conditions are not periodic but domain is configured to be "
-                    "periodic!");
-            }
-        }
-        boundaryCondition[dirField] =
-            amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>{
-                Impl::to_amrex_geometry(discrete_grid(static_cast<Direction>(dirField))),
-                amrex::Vector<amrex::BCRec>{bcConfig[dirField].m_bcRec}, bc};
-    }
-    m_boundaryCondition = std::make_shared<
-        std::array<amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>>, 3>>(
-        boundaryCondition);
 }
 
 amrex::MultiFab const& DiscreteVectorField::multi_fab(Direction dir) const
 {
-    return m_data->operator[](dir);
+    return m_fields[dir].multi_fab();
 }
-amrex::MultiFab& DiscreteVectorField::multi_fab(Direction dir) { return m_data->operator[](dir); }
+amrex::MultiFab& DiscreteVectorField::multi_fab(Direction dir) { return m_fields[dir].multi_fab(); }
 
 std::array<amrex::Box, 3> const DiscreteVectorField::select_box(amrex::MFIter const& mfi)
 {
@@ -335,76 +268,21 @@ std::array<amrex::Box, 3> const DiscreteVectorField::select_box(int index)
     std::array<amrex::Box, 3> boxes{};
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        m_view[dir] = this->multi_fab(dir).array(index);
-        boxes[dir] = this->multi_fab(dir)[index].box();
+        boxes[dir] = m_fields[dir].select_box(index);
     }
-    m_boxStatus = Impl::BoxStatus::boxSelected;
-    m_selectedBoxIdx = index;
     return boxes;
 }
 
 amrex::Box const& DiscreteVectorField::selected_box(Direction dir) const
 {
-    return m_data->operator[](dir)[m_selectedBoxIdx].box();
+    return m_fields[dir].selected_box();
 }
 
 void DiscreteVectorField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM> width)
 {
-    bool increaseHalo{false};
-    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        if (m_haloWidth[dir] < width[dir])
-        {
-            m_haloWidth[dir] = width[dir];
-            increaseHalo = true;
-        }
-    }
-    amrex::IntVect ng;
-    for (int i = 0; i < AMREX_SPACEDIM; i++)
-    {
-        ng[i] = m_haloWidth[i];
-    }
-    if (increaseHalo)
-    {
-        std::array<amrex::MultiFab, 3> dataNew{};
-        for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-        {
-            amrex::BoxArray ba{this->multi_fab(dir).boxArray()};
-            amrex::DistributionMapping dm{this->multi_fab(dir).DistributionMap()};
-            amrex::IntVect ng;
-            for (int i = 0; i < AMREX_SPACEDIM; i++)
-            {
-                ng[i] = m_haloWidth[i];
-            }
-            int n{this->multi_fab(dir).nComp()};
-            dataNew[dir].define(ba, dm, n, ng);
-            dataNew[dir].LocalCopy(this->multi_fab(dir), 0, 0, n, amrex::IntVect{0});
-        }
-        m_data.reset();
-        m_data = std::make_shared<std::array<amrex::MultiFab, 3>>(std::move(dataNew));
-        for (int dir = 0; dir < 3; dir++)
-        {
-            m_view[dir] = amrex::Array4<amrex::Real>{};
-        }
-        m_boxStatus = Impl::BoxStatus::boxChanged;
-        m_selectedBoxIdx = std::numeric_limits<int>::min();
-    }
-    for (auto fieldDir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        this->multi_fab(fieldDir).FillBoundary(
-            ng, Impl::to_amrex_periodicty(this->discrete_grid(fieldDir)));
-        for (auto gridDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
-        {
-            if (not discrete_grid(fieldDir).is_periodic(gridDir))
-            {
-                amrex::Warning(
-                    "WARNING: 'DiscreteVectorField::apply_boundary_conditions()' Non periodic "
-                    "boundaries are not well tested! API and behavior might change.");
-                m_boundaryCondition->operator[](fieldDir).operator()(m_data->operator[](fieldDir),
-                                                                     0, 1, ng, 0.0, 0);
-                break;
-            }
-        }
+        m_fields[dir].apply_boundary_conditions(width);
     }
 };
 
@@ -538,64 +416,15 @@ amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
 
 std::array<bool, 3> is_nan (DiscreteVectorField& a)
 {
-    std::array<int, 3> isNan{};
-    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        auto ma = a.multi_fab(dir).const_arrays();
-        amrex::GpuTuple<int> res{};
-        res = amrex::ParReduce(amrex::TypeList<amrex::ReduceOpLogicalOr>{}, amrex::TypeList<int>{},
-                               a.multi_fab(dir),
-                               [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
-                                                         int iz) noexcept -> amrex::GpuTuple<int>
-                               {
-                                   auto aa = ma[boxNo];
-                                   return {std::isnan(aa(ix, iy, iz))};
-                               });
-        isNan[dir] = amrex::get<0>(res);
-    }
-    //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
-    //It should be noted that the reduction result of ParReduce is local and it is the user’s
-    //responsibility if MPI communication is needed
-    MPI_Allreduce(MPI_IN_PLACE, &isNan[0], 3, MPI_INT, MPI_LOR,
-                  amrex::ParallelContext::CommunicatorAll());
-    return std::array<bool, 3>{static_cast<bool>(isNan[Direction::xDir]),
-                               static_cast<bool>(isNan[Direction::yDir]),
-                               static_cast<bool>(isNan[Direction::zDir])};
+    return std::array<bool, 3>{is_nan(a[Direction::xDir]), is_nan(a[Direction::yDir]),
+                               is_nan(a[Direction::zDir])};
 }
 
 std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorField& b)
 {
-    std::array<amrex::Real, 3> maxError{0};
-    std::array<int, 3> isNan{false, false, false};
-    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        auto ma = a.multi_fab(dir).const_arrays();
-        auto mb = b.multi_fab(dir).const_arrays();
-        amrex::GpuTuple<amrex::Real, int> res{};
-        res = amrex::ParReduce(
-            amrex::TypeList<amrex::ReduceOpMax, amrex::ReduceOpLogicalOr>{},
-            amrex::TypeList<amrex::Real, int>{}, a.multi_fab(dir),
-            [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
-                                      int iz) noexcept -> amrex::GpuTuple<amrex::Real, int>
-            {
-                auto aa = ma[boxNo];
-                auto ba = mb[boxNo];
-                amrex::Real ldiff{aa(ix, iy, iz) - ba(ix, iy, iz)};
-                // NaN comparisons always evaluate to false, which is why we check on Nan manually.
-                // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
-                // https://rgambord.github.io/c99-doc/sections/7/12/14/index.html#id2
-                return {std::abs(ldiff), static_cast<int>(std::isnan(ldiff))};
-            });
-        isNan[dir] = amrex::get<1>(res);
-        maxError[dir] = amrex::get<0>(res);
-    }
-    MPI_Allreduce(MPI_IN_PLACE, &isNan[0], 3, MPI_INT, MPI_LOR,
-                  amrex::ParallelContext::CommunicatorAll());
-    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        if (isNan[dir]) maxError[dir] = std::numeric_limits<amrex::Real>::quiet_NaN();
-    }
-    return maxError;
+    return std::array<amrex::Real, 3>{l_inf_error(a[Direction::xDir], b[Direction::xDir]),
+                                      l_inf_error(a[Direction::yDir], b[Direction::yDir]),
+                                      l_inf_error(a[Direction::zDir], b[Direction::zDir])};
 }
 
 namespace Impl
@@ -610,22 +439,12 @@ amrex::Real dot (DiscreteField& a, DiscreteField& b)
                                 0);
 }
 
-amrex::Real dot (DiscreteVectorField& a, DiscreteVectorField& b, Direction dir)
-{
-    AMREX_ALWAYS_ASSERT(a.discrete_grid(dir) == b.discrete_grid(dir));
-    AMREX_ALWAYS_ASSERT(a.multi_fab(dir).nComp() == b.multi_fab(dir).nComp());
-    auto mask =
-        amrex::OwnerMask(a.multi_fab(dir), Gempic::Impl::to_amrex_periodicty(a.discrete_grid(dir)));
-    return amrex::MultiFab::Dot (*mask, a.multi_fab(dir), 0, b.multi_fab(dir), 0,
-                                a.multi_fab(dir).nComp(), 0);
-}
-
 amrex::Real dot (DiscreteVectorField& a, DiscreteVectorField& b)
 {
     amrex::Real result = 0;
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        result += dot(a, b, dir);
+        result += dot(a[dir], b[dir]);
     }
     return result;
 }
