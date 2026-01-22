@@ -33,8 +33,8 @@ module load ninja
 ################################################################################
 
 if string_matches ${CLUSTER} "RAVEN"; then
-    module load gcc/13
-    module load cuda/12.6
+    module load gcc/15
+    module load cuda/13.0
     module load openmpi/5.0 openmpi_gpu/5.0
     module load mkl/2024.0
     module load clang/18
