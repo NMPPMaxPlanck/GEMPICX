@@ -240,6 +240,125 @@ public:
     // end void Particle::ComputeDiags
 };
 
+/**
+ *  This class mainly contains a function that
+ *  computes the Kinetic Energy for the relativistic Model.
+ */
+template <int vdim, int degx, int degy, int degz, int ndata>
+class ParticleRelativistic : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
+{
+public:
+    /**
+     * constructor
+     * @param[in] rdName reduced diags names
+     * @param[in] indexNum the index of the print field in the header
+     * @param[in] isLastType is this the last type in the group?
+     * @param[in] fileName default file name suggested by MultiReducedDiagnostics
+     */
+    ParticleRelativistic(std::string const& rdName,
+                         int& indexNum,
+                         bool isLastType,
+                         std::string const& fileName) :
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
+    {
+        if (amrex::ParallelDescriptor::IOProcessor())
+        {
+            if (this->m_isNotRestart)
+            {
+                // open file
+                std::ofstream ofs{this->m_path, std::ofstream::out | std::ofstream::app};
+                // write header row
+                if (this->m_isFirstType)
+                {
+                    ofs << "#";
+                    ofs << "[" << ++indexNum << "]step()";
+                    ofs << this->m_sep;
+                    ofs << "[" << ++indexNum << "]time(s)";
+                }
+                ofs << this->m_sep;
+                ofs << "[" << ++indexNum << "]PX" + std::string("(Ns)");
+                ofs << this->m_sep;
+                ofs << "[" << ++indexNum << "]PY" + std::string("(Ns)");
+                ofs << this->m_sep;
+                ofs << "[" << ++indexNum << "]PZ" + std::string("(Ns)");
+                ofs << this->m_sep;
+                ofs << "[" << ++indexNum << "]KE" + std::string("(J)");
+                if (this->m_isLastType)
+                {
+                    ofs << std::endl;
+                }
+                // close file
+                ofs.close();
+            }
+        }
+    }
+    // end constructor
+
+    /**
+     * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
+     */
+    void compute_diags (
+        ComputationalDomain const& infra,
+        std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
+            particles) final
+    {
+        BL_PROFILE("Gempic::Io::Particle::compute_diags()");
+        constexpr int noutputs = 4;
+        this->m_data.assign(noutputs, 0.0);
+
+        Io::Parameters parameters{};
+        amrex::Real c{1.0};
+        // if nothing else is defined in the input file, the speed of light is set to one
+        parameters.get_or_set("c", c);
+
+        for (auto& particleSpecies : particles)
+        {
+            amrex::ReduceOps<amrex::ReduceOpSum, amrex::ReduceOpSum, amrex::ReduceOpSum,
+                             amrex::ReduceOpSum>
+                reduceOps;
+
+            using PTDType = typename Gempic::Particle::ParticleSpecies<
+                vdim, ndata>::ParticleTileType::ConstParticleTileDataType;
+            auto const ii = particleSpecies->get_data_indices();
+            auto particleTmp = amrex::ParticleReduce<
+                amrex::ReduceData<amrex::Real, amrex::Real, amrex::Real, amrex::Real>>(
+                *particleSpecies, 0, particleSpecies->finestLevel(),
+                [=] AMREX_GPU_HOST_DEVICE(PTDType const& pt, int const pp)
+
+                    -> amrex::GpuTuple<amrex::Real, amrex::Real, amrex::Real, amrex::Real>
+                {
+                    auto const weight = pt.rdata(ii.m_iweight)[pp];
+                    auto const ux = pt.rdata(ii.m_ivelx)[pp];
+                    auto const uy = pt.rdata(ii.m_ively)[pp];
+                    auto const uz = pt.rdata(ii.m_ivelz)[pp];
+                    amrex::Real gamma = sqrt(1 + (ux * ux + uy * uy + uz * uz) /
+                                                     (c * c)); // Lorentz factor: sqrt(1+u^2/c^2)
+
+                    auto const energy = (gamma - 1) * c * c;
+                    return {weight * ux / gamma, weight * uy / gamma, weight * uz / gamma,
+                            weight * energy};
+                },
+                reduceOps);
+
+            amrex::Real Px = amrex::get<xDir>(particleTmp);
+            amrex::Real Py = amrex::get<yDir>(particleTmp);
+            amrex::Real Pz = amrex::get<zDir>(particleTmp);
+            amrex::Real pe = amrex::get<3>(particleTmp);
+
+            // reduced sum over mpi ranks
+            amrex::ParallelDescriptor::ReduceRealSum(
+                {Px, Py, Pz, pe}, amrex::ParallelDescriptor::IOProcessorNumber());
+
+            // save results for this species i_s into m_data
+            this->m_data[0] += particleSpecies->get_mass() * Px;
+            this->m_data[1] += particleSpecies->get_mass() * Py;
+            this->m_data[2] += particleSpecies->get_mass() * Pz;
+            this->m_data[3] += particleSpecies->get_mass() * pe;
+        }
+    }
+    // end void Particle::ComputeDiags
+};
+
 } // namespace Gempic::Io
 
 #endif

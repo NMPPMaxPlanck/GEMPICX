@@ -468,8 +468,9 @@ enum class SamplerRegion
 
 enum class SamplerType
 {
-    direct,
-    rejection,
+    directMaxwellian,
+    rejectionMaxwellian,
+    rejectionJuettner,
 };
 
 /**
@@ -508,8 +509,9 @@ private:
                        std::mt19937& gen,
                        std::uniform_real_distribution<>& unif,
                        long long int& sobolSeed);
-    void direct_kernel();
-    bool rejection_kernel();
+    void direct_maxwellian_kernel();
+    bool rejection_maxwellian_kernel();
+    bool rejection_juettner_kernel();
 
     amrex::Geometry m_geom;
     int m_species;
@@ -531,6 +533,7 @@ private:
     int m_nMaxRejections{100};
     int m_nTargetHigherThanProposal{0};
     int m_nSamples{0};
+    amrex::Real m_c{1.0};
     amrex::Real m_rejectionScaling{1};
     amrex::Real m_minRejectionScaling{0};
     amrex::Parser m_rejectionParse;
@@ -559,7 +562,7 @@ ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::ParticleSamp
 
     m_vInit = VelocityInitializer<vDim>(params);
 
-    if constexpr (type == SamplerType::rejection)
+    if constexpr (type == SamplerType::rejectionMaxwellian)
     {
         // check that the settings for the Maxwellian are valid for rejection sampling
         GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -582,6 +585,18 @@ ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::ParticleSamp
                          , m_rejectionParse.setConstant("kvarz", k[zDir]);)
         }
         m_rejectionEval = m_rejectionParse.template compile<AMREX_SPACEDIM + 3>();
+    }
+
+    else if constexpr (type == SamplerType::rejectionJuettner)
+    {
+        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
+            m_vInit.m_numGauss == 1,
+            "Cannot apply Juettner rejection sampling with more than one Gaussian");
+
+        // read in additional information for relativistic samplers
+        params.get("nMaxRejections", m_nMaxRejections);
+        // read in speed of light from input file
+        params.get("c", m_c);
     }
 }
 
@@ -642,7 +657,8 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample 
 
         m_buffer.flush(ppg->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]);
     }
-    if constexpr (type == SamplerType::rejection)
+    if constexpr (type == SamplerType::rejectionMaxwellian or
+                  type == SamplerType::rejectionJuettner)
     {
         amrex::ParallelAllReduce::Max(m_minRejectionScaling,
                                       amrex::ParallelContext::CommunicatorAll());
@@ -678,7 +694,7 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample_
 {
     for (int pp = 0; pp < nPart; pp++)
     {
-        if constexpr (type == SamplerType::direct)
+        if constexpr (type == SamplerType::directMaxwellian)
         {
             if constexpr (scheme == RandomScheme::pseudo)
             {
@@ -688,9 +704,9 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample_
             {
                 calculate_sobol_values(m_randArray, sobolSeed);
             }
-            direct_kernel();
+            direct_maxwellian_kernel();
         }
-        else if constexpr (type == SamplerType::rejection)
+        else if constexpr (type == SamplerType::rejectionMaxwellian)
         {
             bool accepted = false;
             for (int i = 0; i < m_nMaxRejections; i++)
@@ -703,7 +719,7 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample_
                 {
                     calculate_sobol_values(m_randArray, sobolSeed);
                 }
-                accepted = rejection_kernel();
+                accepted = rejection_maxwellian_kernel();
                 if (accepted)
                 {
                     m_nSamples += i + 1;
@@ -714,6 +730,29 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample_
             {
                 amrex::Error(
                     "Rejection sampling: Did not accept a sample in nMaxRejections "
+                    "tries.");
+            }
+        }
+        else if constexpr (type == SamplerType::rejectionJuettner)
+        {
+            bool accepted = false;
+            for (int i = 0; i < m_nMaxRejections; i++)
+            {
+                static_assert(scheme == RandomScheme::pseudo,
+                              "Only the pseudorandom scheme is "
+                              "implemented for Juettner rejection sampling.");
+                calculate_random_values(m_randArray, unif, gen);
+                accepted = rejection_juettner_kernel();
+                if (accepted)
+                {
+                    m_nSamples += i + 1;
+                    break;
+                }
+            }
+            if (not accepted)
+            {
+                amrex::Error(
+                    "Juettner rejection sampling: Did not accept a sample in nMaxRejections "
                     "tries.");
             }
         }
@@ -728,7 +767,8 @@ template <RandomScheme scheme,
           std::size_t extraRandomVar,
           std::size_t vDim,
           std::size_t nData>
-inline void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::direct_kernel()
+inline void
+ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::direct_maxwellian_kernel()
 {
     for (int i = 0; i < AMREX_SPACEDIM; i++)
     {
@@ -745,9 +785,10 @@ template <RandomScheme scheme,
           std::size_t extraRandomVar,
           std::size_t vDim,
           std::size_t nData>
-bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::rejection_kernel ()
+bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::
+    rejection_maxwellian_kernel()
 {
-    direct_kernel(); // calculate position, Gaussian velocities, and density
+    direct_maxwellian_kernel(); // calculate position, Gaussian velocities, and density
     std::array<amrex::Real, vDim> vMean, vDev;
     for (int cc = 0; cc < vDim; cc++)
     {
@@ -782,6 +823,73 @@ bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::rejecti
     }
 
     return probability > m_randArray[AMREX_SPACEDIM + 2 * vDim + 1];
+}
+
+template <RandomScheme scheme,
+          SamplerRegion region,
+          SamplerType type,
+          std::size_t extraRandomVar,
+          std::size_t vDim,
+          std::size_t nData>
+bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::rejection_juettner_kernel ()
+{
+    // position and density same as for the direct kernel
+    for (int i = 0; i < AMREX_SPACEDIM; i++)
+    {
+        m_position[i] = m_regionLo[i] + m_randArray[i] * m_regionLength[i];
+    }
+
+    m_weight =
+        m_densityEval(AMREX_D_DECL(m_position[xDir], m_position[yDir], m_position[zDir]), 0.);
+
+    Io::Parameters params("Particle");
+
+    amrex::Real eta{0.0};
+    amrex::Real u{2.0};
+    amrex::Real checksum{0.0};
+    amrex::Real gamma{0.0};
+    std::array<amrex::Real, vDim> vThermal, vMean;
+
+    // implementation for now: just one Maxwell-Juettner sampling
+    for (int cc = 0; cc < vDim; cc++)
+    {
+        vMean[cc] = get_function_or_constant(m_vInit.m_vMeanSchemePtr[0], m_vInit.m_vMeanPtr[0][cc],
+                                             m_vInit.m_funcvMeanPtr[0][cc], m_position);
+        vThermal[cc] =
+            get_function_or_constant(m_vInit.m_vDevSchemePtr[0], m_vInit.m_vDevPtr[0][cc],
+                                     m_vInit.m_funcvDevPtr[0][cc], m_position);
+    }
+
+    // always use the x-value for vThermal
+    u = -vThermal[xDir] * vThermal[xDir] * log(m_randArray[3] * m_randArray[4] * m_randArray[5]);
+    eta = -vThermal[xDir] * vThermal[xDir] *
+          log(m_randArray[3] * m_randArray[4] * m_randArray[5] * m_randArray[6]);
+
+    checksum = eta * eta - u * u;
+
+    if (checksum > 1)
+    {
+        m_velocity[xDir] = u * (2 * m_randArray[7] - 1);
+        m_velocity[yDir] = 2 * u * sqrt(m_randArray[7] * (1 - m_randArray[7]));
+        m_velocity[zDir] = m_velocity[yDir] * sin(2 * M_PI * m_randArray[8]);
+        m_velocity[yDir] = m_velocity[yDir] * cos(2 * M_PI * m_randArray[8]);
+
+        gamma = sqrt(1 + u * u / (m_c * m_c));
+
+        if (-vMean[xDir] * m_velocity[xDir] / gamma > m_randArray[9])
+        {
+            m_velocity[xDir] = -m_velocity[xDir];
+        }
+
+        m_velocity[xDir] =
+            (m_velocity[xDir] + vMean[0] * gamma) / sqrt(1 - vMean[0] * vMean[0] / (m_c * m_c));
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 // Get global location of a cell corner given the cell indices assuming uniform mesh
@@ -962,36 +1070,43 @@ void sample_species (std::shared_ptr<ParticleSpecies<vDim, nData>>& particles,
 
     if (samplerName == "PseudoRandom")
     {
-        ParticleSampler<RandomScheme::pseudo, SamplerRegion::cell, SamplerType::direct, 0, vDim,
-                        nData>
+        ParticleSampler<RandomScheme::pseudo, SamplerRegion::cell, SamplerType::directMaxwellian, 0,
+                        vDim, nData>
             sampler(particles, geom, species, rSeed);
         sampler.sample(particles);
     }
     else if (samplerName == "PseudoRandomBox")
     {
-        ParticleSampler<RandomScheme::pseudo, SamplerRegion::box, SamplerType::direct, 0, vDim,
-                        nData>
+        ParticleSampler<RandomScheme::pseudo, SamplerRegion::box, SamplerType::directMaxwellian, 0,
+                        vDim, nData>
             sampler(particles, geom, species, rSeed);
         sampler.sample(particles);
     }
     else if (samplerName == "Sobol")
     {
-        ParticleSampler<RandomScheme::sobol, SamplerRegion::box, SamplerType::direct, 0, vDim,
-                        nData>
+        ParticleSampler<RandomScheme::sobol, SamplerRegion::box, SamplerType::directMaxwellian, 0,
+                        vDim, nData>
             sampler(particles, geom, species, rSeed);
         sampler.sample(particles);
     }
     else if (samplerName == "Rejection")
     {
-        ParticleSampler<RandomScheme::pseudo, SamplerRegion::global, SamplerType::rejection, 1,
-                        vDim, nData>
+        ParticleSampler<RandomScheme::pseudo, SamplerRegion::global,
+                        SamplerType::rejectionMaxwellian, 1, vDim, nData>
             sampler(particles, geom, species, rSeed);
         sampler.sample(particles);
     }
     else if (samplerName == "RejectionSobol")
     {
-        ParticleSampler<RandomScheme::sobol, SamplerRegion::global, SamplerType::rejection, 1, vDim,
-                        nData>
+        ParticleSampler<RandomScheme::sobol, SamplerRegion::global,
+                        SamplerType::rejectionMaxwellian, 1, vDim, nData>
+            sampler(particles, geom, species, rSeed);
+        sampler.sample(particles);
+    }
+    else if (samplerName == "RejectionJuettner")
+    {
+        ParticleSampler<RandomScheme::pseudo, SamplerRegion::global, SamplerType::rejectionJuettner,
+                        0, vDim, nData>
             sampler(particles, geom, species, rSeed);
         sampler.sample(particles);
     }

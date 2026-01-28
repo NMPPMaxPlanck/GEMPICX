@@ -46,6 +46,8 @@ protected:
     static int const s_numSpec{1};
     static int const s_spec{0};
 
+    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
+
     inline static int const s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
     inline static int const s_hodgeDegree{2};
@@ -75,15 +77,6 @@ protected:
 
 TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 {
-    // Adding particle to one cell
-    unsigned int const numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
-    amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
-
-    m_particles[0]->Redistribute(); // assign particles to the tile they are in
-
     // Setting testing parameters in the field far away from the border to ignore boundary
     // conditions
     amrex::Real chargeWeight = 2.0;
@@ -93,6 +86,13 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     amrex::Real primDiffRef = 0;
     amrex::Real yNodeVal = 0;
     amrex::Real zNodeVal = 0;
+
+    // Adding particle to one cell
+    unsigned int const numParticles{1};
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+    amrex::Array<amrex::Real, numParticles> weights{1};
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
@@ -107,7 +107,6 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
-        amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA, jA;
 
@@ -126,8 +125,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
                                                 m_infra.geometry().InvCellSize(xDir));
-        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
-            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
+        ParticleMeshCoupling::accumulate_j<xDir>(spline, chargeWeight,
+                                                 m_infra.geometry().CellSizeArray(), jA);
 
         // setup is in a way, that the first spline is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
@@ -156,7 +155,6 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
-        amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA, jA;
 
@@ -175,8 +173,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         spline.template update_1d_splines<yDir>(position[yDir], m_infra.geometry().ProbLo(yDir),
                                                 m_infra.geometry().InvCellSize(yDir));
-        ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(
-            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
+        ParticleMeshCoupling::accumulate_j<yDir>(spline, chargeWeight,
+                                                 m_infra.geometry().CellSizeArray(), jA);
 
         // setup is in a way, that the second index is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
@@ -202,7 +200,6 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
         // set random positions
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
-        amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA, jA;
 
@@ -221,8 +218,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         spline.template update_1d_splines<zDir>(position[zDir], m_infra.geometry().ProbLo(zDir),
                                                 m_infra.geometry().InvCellSize(zDir));
-        ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(
-            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
+        ParticleMeshCoupling::accumulate_j<zDir>(spline, chargeWeight,
+                                                 m_infra.geometry().CellSizeArray(), jA);
 
         // setup is in a way, that the first spline is in the "firstSpline" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
@@ -246,22 +243,22 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 }
 
 #if AMREX_SPACEDIM < 3
+// tests euler for both non-relativistic as well as relativistic implementation
 TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 {
+    // set the particle positions to a random position within the box
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 0.0;)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
-
-    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     // Setting testing parameters in the field far away from the border to ignore boundary
     // conditions
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.001;
-    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 0.0;)
 
     // make sure particle doesn't go out of computational domain (+ ghost cells)
     amrex::Real cfl{dt / m_infra.geometry().CellSize(xDir)};
@@ -277,6 +274,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 
     DeRhamField<Grid::primal, Space::face> B(deRham);
     DeRhamField<Grid::dual, Space::face> J(deRham);
+    DeRhamField<Grid::dual, Space::face> Jrel(deRham);
 
     // TEST FOR X DIRECTION
     for (auto& particleGrid : *m_particles[s_spec])
@@ -286,12 +284,13 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
             AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-        amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA, jA;
+        amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA, jA, jArel;
 
         for (int cc = 0; cc < 3; cc++)
         {
-            jA[cc] = (J.m_data[cc])[particleGrid].array();
             bA[cc] = (B.m_data[cc])[particleGrid].array();
+            jA[cc] = (J.m_data[cc])[particleGrid].array();
+            jArel[cc] = (Jrel.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -306,10 +305,13 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
                                                                bA, jA);
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_z(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
+        ParticleMeshCoupling::accumulate_j_euler_y(spline, dtv, chargeWeight, jArel);
+        ParticleMeshCoupling::accumulate_j_euler_z(spline, dtv, chargeWeight, jArel);
 #elif AMREX_SPACEDIM == 2
         yNodeVal = spline.m_nodeSplineVals[yDir][0];
         ParticleMeshCoupling::accumulate_j_integrate_b_euler_z(bfields, spline, dtv, chargeWeight,
                                                                bA, jA);
+        ParticleMeshCoupling::accumulate_j_euler_z(spline, dtv, chargeWeight, jArel);
 #endif
     }
 
@@ -323,6 +325,14 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
                          { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
                         {chargeWeight * dtv * GEMPIC_D_MULT(xNodeVal, yNodeVal, 1.0)}, {}, 1e-12);
         }
+
+        for (amrex::MFIter mfi(Jrel.m_data[dir]); mfi.isValid(); ++mfi)
+        {
+            CHECK_FIELD(Jrel.m_data[dir].array(mfi), mfi.validbox(),
+                        {[] (AMREX_D_DECL(int i, int j, int k))
+                         { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
+                        {chargeWeight * dtv * GEMPIC_D_MULT(xNodeVal, yNodeVal, 1.0)}, {}, 1e-12);
+        }
     }
 }
 #endif
@@ -331,17 +341,16 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 // it $rho^{n+1} = rho^n - div integratedJ$
 TEST_F(HamiltonianSplittingTest, GaussTest)
 {
+    // set the particle positions to a random position within the box
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
     // Adding a few particles
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
-    m_particles[0]->Redistribute(); // assign particles to the tile they are in
-
     amrex::Real chargeWeight = 1.0;
-    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
     amrex::Real xPosNew = 3.2;
     amrex::Real valBx = 2.0;
     amrex::Real valBy = 3.0;
@@ -436,19 +445,18 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 
 TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 {
+    // Setting testing parameters in the field far away from the border to ignore boundary
+    // conditions
+    amrex::Real chargeWeight = 2.0;
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 1.7;, amrex::Real zPosOld = 2.2;)
+    AMREX_D_TERM(amrex::Real xPosNew = 3.2;, amrex::Real yPosNew = 2.1;, amrex::Real zPosNew = 0.0;)
+
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
-
-    m_particles[0]->Redistribute(); // assign particles to the tile they are in
-
-    amrex::Real chargeWeight = 2.0;
-
-    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 1.7;, amrex::Real zPosOld = 2.2;)
-    AMREX_D_TERM(amrex::Real xPosNew = 3.2;, amrex::Real yPosNew = 2.1;, amrex::Real zPosNew = 0.0;)
 
     amrex::Real valBx = 3.0;
     amrex::Real valBy = 4.0;
@@ -539,27 +547,25 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
 #if AMREX_SPACEDIM < 3
 TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
 {
-    // Adding particle to one cell
-    int const numParticles{1};
-    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
-    amrex::Array<amrex::Real, numParticles> weights{1};
-    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
-
-    m_particles[0]->Redistribute(); // assign particles to the tile they are in
-
+    // Setting testing parameters in the field far away from the border to ignore boundary
+    // conditions
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.001;
-
     // make sure particle doesn't go out of computational domain (+ ghost cells)
     amrex::Real cfl{dt / m_infra.geometry().CellSize(xDir)};
     amrex::Real vx{1 * cfl}, vy{3.1 * cfl}, vz{-2.5 * cfl};
     amrex::GpuArray<amrex::Real, s_vDim> vel{vx, vy, vz};
-
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 1.7;, amrex::Real zPosOld = 2.2;)
     AMREX_D_TERM(amrex::Real xPosNew = xPosOld + dt * vel[0];
                  , amrex::Real yPosNew = yPosOld + dt * vel[1];
                  , amrex::Real zPosNew = zPosOld + dt * vel[2];)
+
+    // Adding particle to one cell
+    int const numParticles{1};
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+    amrex::Array<amrex::Real, numParticles> weights{1};
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
     amrex::Real valBx = 3.0;
     amrex::Real valBy = 4.0;
@@ -679,19 +685,20 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
 {
     Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
 
+    // Setting testing parameters in the field far away from the border to ignore boundary
+    // conditions
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.2;, amrex::Real zPosOld = 2.2;)
+
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
-
-    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real chargeWeight = 2.0;
     amrex::Real dt = 0.1; // set time step to 1.0 for testing purposes
     amrex::Real chargeOverMass = 0.6;
-    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.2;, amrex::Real zPosOld = 2.2;)
 
     // make sure particle doesn't go out of computational domain (+ ghost cells)
     amrex::Real cfl{dt / m_infra.geometry().CellSize(0)};
@@ -892,19 +899,19 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
 {
     Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
 
+    // Setting testing parameters in the field far away from the border to ignore boundary
+    // conditions
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
-
-    m_particles[0]->Redistribute(); // assign particles to the tile they are in
 
     amrex::Real dt = 0.1; // set time step to 0.1 for testing purposes
     amrex::Real chargeOverMass = 0.6;
 
-    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
     amrex::Real valEx = 3.0;
     amrex::Real valEy = 4.0;
     amrex::Real valEz = 5.0;
@@ -946,14 +953,13 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
 
         auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
         auto const ii = m_particles[s_spec]->get_data_indices();
-        long pp = 0;
 
-        ptd.rdata(ii.m_ivelx)[0] = v[0] * m_infra.geometry().CellSize(xDir);
-        ptd.rdata(ii.m_ively)[0] = v[1] * m_infra.geometry().CellSize(yDir);
-        ptd.rdata(ii.m_ivelz)[0] = v[2] * m_infra.geometry().CellSize(zDir);
+        ptd.rdata(ii.m_ivelx)[0] = v[xDir] * dx[xDir];
+        ptd.rdata(ii.m_ively)[0] = v[yDir] * dx[yDir];
+        ptd.rdata(ii.m_ivelz)[0] = v[zDir] * dx[zDir];
 
-        amrex::GpuArray<amrex::Real, s_vDim> vel{
-            ptd.rdata(ii.m_ivelx)[pp], ptd.rdata(ii.m_ively)[pp], ptd.rdata(ii.m_ivelz)[pp]};
+        amrex::GpuArray<amrex::Real, s_vDim> vel{ptd.rdata(ii.m_ivelx)[0], ptd.rdata(ii.m_ively)[0],
+                                                 ptd.rdata(ii.m_ivelz)[0]};
 
         ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
@@ -969,5 +975,330 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
         EXPECT_NEAR(ptd.rdata(ii.m_ivelz)[0] + dt * chargeOverMass * Ez, vel[2], 1e-12);
     }
 }
+
+// For alpha = 2pi, check if the rotation ends at the starting position,
+// i.e., if we have the matrix vector multiplication
+// [1 0 0]   [ux]
+// [0 1 0] * [uy]
+// [0 0 1]   [uv]
+TEST_F(HamiltonianSplittingTest, ApplyHpireluPositionTest)
+{
+    Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
+
+    // set the particle positions to a random position within the box
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
+    // Adding particle to one cell using these position
+    int const numParticles{1};
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+    amrex::Array<amrex::Real, numParticles> weights{1};
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
+
+    // setup constant random values for the B field
+    amrex::Real Bx{3.0};
+    amrex::Real By{4.0};
+    amrex::Real Bz{5.0};
+
+    amrex::Real dt = 0.1; // set time step to 0.1 for testing purposes
+
+    // start with random velocities
+    amrex::GpuArray<amrex::Real, 3> v{-3.9, 1.8, 0.9};
+
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    DeRhamField<Grid::primal, Space::face> B(deRham);
+
+    amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA;
+
+    // These code sections would be much simpler if we consider only 3-D implementations and
+    // design away special cases.
+    amrex::GpuArray<amrex::Real, 3> dx{GEMPIC_D_PAD_ONE(m_infra.geometry().CellSize(xDir),
+                                                        m_infra.geometry().CellSize(yDir),
+                                                        m_infra.geometry().CellSize(zDir))};
+
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[1], dx[2]),
+                                         GEMPIC_D_MULT(dx[0], 1.0, dx[2]),
+                                         GEMPIC_D_MULT(dx[0], dx[1], 1.0)};
+
+    // fill the B-field with constant values
+    B.m_data[xDir].setVal(Bx * dxdy[0]);
+    B.m_data[yDir].setVal(By * dxdy[1]);
+    B.m_data[zDir].setVal(Bz * dxdy[2]);
+
+    for (auto& particleGrid : *m_particles[s_spec])
+    {
+        // set random positions
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
+            AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particles[s_spec]->get_data_indices();
+
+        ptd.rdata(ii.m_ivelx)[0] = v[xDir] * dx[xDir];
+        ptd.rdata(ii.m_ively)[0] = v[yDir] * dx[yDir];
+        ptd.rdata(ii.m_ivelz)[0] = v[zDir] * dx[zDir];
+
+        amrex::Real gamma = sqrt(1 + (ptd.rdata(ii.m_ivelx)[0] * ptd.rdata(ii.m_ivelx)[0] +
+                                      ptd.rdata(ii.m_ively)[0] * ptd.rdata(ii.m_ively)[0] +
+                                      ptd.rdata(ii.m_ivelz)[0] * ptd.rdata(ii.m_ivelz)[0]) /
+                                         1.0);
+
+        // set q/m = 2pi*gamma/(dt*|B|) to make sure there is exactly one rotation
+        amrex::Real chargeOverMass = 2 * M_PI * gamma / (dt * sqrt(Bx * Bx + By * By + Bz * Bz));
+        amrex::GpuArray<amrex::Real, s_vDim> vel{ptd.rdata(ii.m_ivelx)[0], ptd.rdata(ii.m_ively)[0],
+                                                 ptd.rdata(ii.m_ivelz)[0]};
+
+        ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
+
+        for (int cc = 0; cc < 3; cc++)
+        {
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
+        }
+
+        operatorHamilton.apply_h_p_rel_u(vel, spline, bA, chargeOverMass, dt, gamma);
+
+        // the velocity is the same after one rotation
+        EXPECT_NEAR(ptd.rdata(ii.m_ivelx)[0], vel[0], 1e-12);
+        EXPECT_NEAR(ptd.rdata(ii.m_ively)[0], vel[1], 1e-12);
+        EXPECT_NEAR(ptd.rdata(ii.m_ivelz)[0], vel[2], 1e-12);
+    }
+}
+
+// check if, for a constant magnetic field of one, the original rotation matrices are recovered
+// by the apply_h_p_rel_u function, i.e.,
+// in x-Dir:
+// [1     0           0     ]
+// [0 cos(alpha) -sin(alpha)]
+// [0 sin(alpha)  cos(alpha)]
+// in y-Dir:
+// [ cos(alpha)  0 sin(alpha)]
+// [     0       1     0     ]
+// [-sin(alpha)] 0 cos(alpha)]
+// in z-Dir:
+// [cos(alpha) -sin(alpha) 0]
+// [sin(alpha)  cos(alpha) 0]
+// [    0           0      1]
+TEST_F(HamiltonianSplittingTest, ApplyHpireluRotationMatrixTest)
+{
+    Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
+
+    // set the particle positions to a random position within the box
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
+    // Adding particle to one cell
+    int const numParticles{1};
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+    amrex::Array<amrex::Real, numParticles> weights{1};
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
+
+    amrex::Real dt = 0.1;             // set time step to 0.1 for testing purposes
+    amrex::Real chargeOverMass = 0.6; // random number for testing purposes
+
+    // make sure that the velocity we multiply with is 1, so that we just get the rotation
+    amrex::GpuArray<amrex::Real, 3> v{-3.9, 1.8, 0.9};
+
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    DeRhamField<Grid::primal, Space::face> B(deRham);
+
+    amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA;
+
+    // These code sections would be much simpler if we consider only 3-D implementations and
+    // design away special cases.
+    amrex::GpuArray<amrex::Real, 3> dx{GEMPIC_D_PAD_ONE(m_infra.geometry().CellSize(xDir),
+                                                        m_infra.geometry().CellSize(yDir),
+                                                        m_infra.geometry().CellSize(zDir))};
+
+    amrex::GpuArray<amrex::Real, 3> dxdy{GEMPIC_D_MULT(1.0, dx[yDir], dx[zDir]),
+                                         GEMPIC_D_MULT(dx[xDir], 1.0, dx[zDir]),
+                                         GEMPIC_D_MULT(dx[xDir], dx[yDir], 1.0)};
+
+    amrex::GpuArray<amrex::Real, 3> velold{v[xDir] * dx[xDir], v[yDir] * dx[yDir],
+                                           v[zDir] * dx[zDir]};
+
+    auto rotate = [&] (amrex::Real Bx, amrex::Real By, amrex::Real Bz)
+    {
+        // fill the B-field with constant values
+        B.m_data[xDir].setVal(Bx * dxdy[0]);
+        B.m_data[yDir].setVal(By * dxdy[1]);
+        B.m_data[zDir].setVal(Bz * dxdy[2]);
+
+        // set random positions
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
+            AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+
+        amrex::GpuArray<amrex::Real, 3> velocity{v[xDir] * dx[xDir], v[yDir] * dx[yDir],
+                                                 v[zDir] * dx[zDir]};
+
+        amrex::Real gamma =
+            sqrt(1 + (velocity[xDir] * velocity[xDir] + velocity[yDir] * velocity[yDir] +
+                      velocity[zDir] * velocity[zDir]) /
+                         1.0);
+
+        ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
+        for (auto& particleGrid : *m_particles[s_spec])
+        {
+            for (int cc = 0; cc < 3; cc++)
+            {
+                bA[cc] = (B.m_data[cc])[particleGrid].array();
+            }
+        }
+        operatorHamilton.apply_h_p_rel_u(velocity, spline, bA, chargeOverMass, dt, gamma);
+
+        amrex::Real alpha = -chargeOverMass * dt / gamma;
+
+        return std::tuple{velocity, alpha};
+    };
+
+    // TEST FOR ROTATION MATRIX AROUND THE X-AXIS
+    amrex::Real Bx{1.0};
+    amrex::Real By{0.0};
+    amrex::Real Bz{0.0};
+    auto [velRotX, alphaX] = rotate(Bx, By, Bz);
+    // first row of rotation matrix around the x axis times (vx, vy, vz)'
+    EXPECT_NEAR(1 * velold[xDir], velRotX[xDir], 1e-12);
+    // second row of rotation matrix around the x axis times (vx, vy, vz)'
+    EXPECT_NEAR(velold[yDir] * cos(alphaX) - velold[zDir] * sin(alphaX), velRotX[yDir], 1e-12);
+    // third row of rotation matrix around the x axis times (vx, vy, vz)'
+    EXPECT_NEAR(velold[yDir] * sin(alphaX) + velold[zDir] * cos(alphaX), velRotX[zDir], 1e-12);
+
+    // TEST FOR ROTATION MATRIX AROUND THE Y-AXIS
+    Bx = 0.0;
+    By = 1.0;
+    Bz = 0.0;
+    auto [velRotY, alphaY] = rotate(Bx, By, Bz);
+    // first row of rotation matrix around the y axis times (vx, vy, vz)'
+    EXPECT_NEAR(velold[xDir] * cos(alphaY) + velold[zDir] * sin(alphaY), velRotY[xDir], 1e-12);
+    // second row of rotation matrix around the y axis times (vx, vy, vz)'
+    EXPECT_NEAR(1 * velold[yDir], velRotY[yDir], 1e-12);
+    // third row of rotation matrix around the y axis  times (vx, vy, vz)'
+    EXPECT_NEAR(-velold[xDir] * sin(alphaY) + velold[zDir] * cos(alphaY), velRotY[zDir], 1e-12);
+
+    // TEST FOR ROTATION MATRIX AROUND THE z-AXIS
+    Bx = 0.0;
+    By = 0.0;
+    Bz = 1.0;
+    auto [velRotZ, alphaZ] = rotate(Bx, By, Bz);
+    // first row of rotation matrix around the z axis times (vx, vy, vz)'
+    EXPECT_NEAR(velold[xDir] * cos(alphaZ) - velold[yDir] * sin(alphaZ), velRotZ[xDir], 1e-12);
+    // second row of rotation matrix around the z axis times (vx, vy, vz)'
+    EXPECT_NEAR(velold[xDir] * sin(alphaZ) + velold[yDir] * cos(alphaZ), velRotZ[yDir], 1e-12);
+    // third row of rotation matrix around the z axis times (vx, vy, vz)'
+    EXPECT_NEAR(1 * velold[zDir], velRotZ[zDir], 1e-12);
+}
+
+#if AMREX_SPACEDIM == 3
+// check whether the rotation is moving the correct direction
+// by comparing the rotation result with an explicit euler scheme:
+//
+// vy -= dt * q/m * vx * bz * |B|
+// vz += dt * q/m * vx * by * |B|
+//
+// vx += dt * q/m * vy * bz * |B|
+// vz -= dt * q/m * vy * bx * |B|
+//
+// vx -= dt * q/m * vz * by * |B|
+// vy += dt * q/m * vz * bx * |B|
+TEST_F(HamiltonianSplittingTest, ApplyHpireluRotationDirectionTest)
+{
+    Gempic::TimeLoop::OperatorHamilton<s_vDim, s_degX, s_degY, s_degZ> operatorHamilton;
+
+    // set the particle positions to a random position within the box
+    AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
+    // Adding particle to one cell
+    int const numParticles{1};
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
+        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+    amrex::Array<amrex::Real, numParticles> weights{1};
+    Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
+
+    amrex::Array<std::string, 3> const analyticalB = {
+        "sqrt(3)*cos(x+y+z-sqrt(3.0))",
+        "cos(x+y+z)",
+        "-cos(x+y+z-sqrt(3.0))",
+    };
+
+    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> funcB;
+    amrex::Array<amrex::Parser, 3> parserB;
+    for (int i = 0; i < 3; ++i)
+    {
+        parserB[i].define(analyticalB[i]);
+        parserB[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
+        funcB[i] = parserB[i].compile<s_nVar>();
+    }
+
+    amrex::GpuArray<amrex::Real, 3> bfield = {0.0, 0.0, 0.0};
+    bfield[0] = sqrt(3) * cos(xPosOld + yPosOld + zPosOld - sqrt(3.0));
+    bfield[1] = cos(xPosOld + yPosOld + zPosOld);
+    bfield[2] = -cos(xPosOld + yPosOld + zPosOld - sqrt(3.0));
+
+    amrex::Real normBfield = 0;
+    normBfield = sqrt(bfield[0] * bfield[0] + bfield[1] * bfield[1] + bfield[2] * bfield[2]);
+
+    // Initialize the De Rham Complex
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
+                                                    HodgeScheme::FDHodge);
+
+    DeRhamField<Grid::primal, Space::face> B(deRham, funcB);
+
+    amrex::GpuArray<amrex::Real, 3> v{-3.9, 1.8, 0.9};
+    amrex::Real dt = 0.1;             // set time step to 0.1 for testing purposes
+    amrex::Real chargeOverMass = 0.6; // random number for testing purposes
+
+    amrex::GpuArray<amrex::Array4<amrex::Real>, s_vDim> bA;
+
+    for (auto& particleGrid : *m_particles[s_spec])
+    {
+        // set random positions
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> position{
+            AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+
+        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+        auto const ii = m_particles[s_spec]->get_data_indices();
+
+        ptd.rdata(ii.m_ivelx)[0] = v[0] * m_infra.geometry().CellSize(xDir);
+        ptd.rdata(ii.m_ively)[0] = v[1] * m_infra.geometry().CellSize(yDir);
+        ptd.rdata(ii.m_ivelz)[0] = v[2] * m_infra.geometry().CellSize(zDir);
+
+        // perform Euler step for reference solution
+        amrex::Real vxEuler = ptd.rdata(ii.m_ivelx)[0];
+        amrex::Real vyEuler = ptd.rdata(ii.m_ively)[0];
+        amrex::Real vzEuler = ptd.rdata(ii.m_ivelz)[0];
+
+        vyEuler -= dt * chargeOverMass * vxEuler * normBfield * bfield[2];
+        vzEuler += dt * chargeOverMass * vxEuler * normBfield * bfield[1];
+
+        vxEuler += dt * chargeOverMass * vyEuler * normBfield * bfield[2];
+        vzEuler -= dt * chargeOverMass * vyEuler * normBfield * bfield[0];
+
+        vxEuler -= dt * chargeOverMass * vzEuler * normBfield * bfield[1];
+        vyEuler += dt * chargeOverMass * vzEuler * normBfield * bfield[0];
+
+        // perform function call
+        amrex::GpuArray<amrex::Real, s_vDim> vel{ptd.rdata(ii.m_ivelx)[0], ptd.rdata(ii.m_ively)[0],
+                                                 ptd.rdata(ii.m_ivelz)[0]};
+
+        ParticleMeshCoupling::SplineWithPrimitive<s_degX, s_degY, s_degZ> spline(
+            position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
+
+        for (int cc = 0; cc < 3; cc++)
+        {
+            bA[cc] = (B.m_data[cc])[particleGrid].array();
+        }
+
+        operatorHamilton.apply_h_p_rel_u(vel, spline, bA, chargeOverMass, dt, 1.0);
+
+        EXPECT_NEAR(vxEuler, vel[0], 5e-2);
+        EXPECT_NEAR(vyEuler, vel[1], 5e-2);
+        EXPECT_NEAR(vzEuler, vel[2], 5e-2);
+    }
+}
+#endif
 
 } // namespace

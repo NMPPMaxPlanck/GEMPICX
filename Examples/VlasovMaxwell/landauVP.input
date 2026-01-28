@@ -1,5 +1,5 @@
 # General setting
-Sim.Type = "VlasovPoisson"
+Sim.Type = "HSVlasovMaxwell"
 
 # Grid parameters
 ComputationalDomain.nCell = 32 4 4
