@@ -280,6 +280,11 @@ private:
             using Part = ParticleLinVlasov<vdim, degx, degy, degz, ndata>;
             return std::make_unique<Part>(name, indexNum, isLastType, fileName);
         }
+        else if (diagType == "ParticleRelativistic")
+        {
+            using Part = ParticleRelativistic<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<Part>(name, indexNum, isLastType, fileName);
+        }
         else
         {
             GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(

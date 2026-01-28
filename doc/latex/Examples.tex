@@ -35,7 +35,7 @@ The provided Python files to analyze the simulation results can either be used d
     jupytext --to ipynb Weibel.py 
 \end{lstlisting}
 
-\subsection{Vlasov-Maxwell}
+\subsection{Vlasov-Maxwell non relativistic}
 
 The Vlasov-Maxwell system describes plasma particles in their self-consistent electromagnetic fields. The non-relativistic Vlasov equation for a particle species $s$ of charge $q_s$ and mass $m_s$ governs the evolution of a distribution function $f_s$ on phase space $(\bx, \bv) \in \Omega \times \mathbb{R}^3$ and is given by
 \begin{equation}
@@ -64,21 +64,22 @@ Under suitable boundary conditions, the Vlasov-Maxwell system conserves the ener
     \cH = \frac{1}{2} \int \bs E \cdot \bs D \dd\bx + \frac{1}{2} \int \bs B \cdot \bs H \dd\bx + \sum_s \frac{1}{2} m_s \int |\bv|^2 f_s \dd\bx \dd\bv.
 \end{equation}
 
-We apply a structure-preserving mimetic finite difference PIC discretization and obtain a discrete noncanonical Hamiltonian system. The resulting numerical scheme and details on the implementation are given in \ref{sec:splitting_vlasovmaxwell}.
+We apply a structure-preserving mimetic finite difference PIC discretization and obtain a discrete noncanonical Hamiltonian system. We offer two numerical schemes to solve this system, namely \verb|HamiltonianSplittingExact| and \verb|HamiltonianSplittingNested|, which are described in detail in \ref{sec:splitting_vlasovmaxwell}.
 
-As a simulation example, we demonstrate the Weibel instability, which includes a genuine magnetic effect driven by a temperature anisotropy. \ref{fig:vmaxweibelfourier} and \ref{fig:vmaxweibelenergy} are created by running the 3D simulation of the Vlasov-Maxwell example using the input file \verb|Examples/VlasovMaxwell/weibel.input|.
+As a simulation example, we demonstrate the Weibel instability, which includes a genuine magnetic effect driven by a temperature anisotropy. \ref{fig:vmaxweibelfourier} and \ref{fig:vmaxweibelenergy} are created by running the 3D simulation of the Vlasov-Maxwell example using the input file \verb|Examples/VlasovMaxwell/weibel.input| 
+with \verb|HamiltonianSplittingExact| and \verb|HamiltonianSplittingNested| respectively.
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelFourierComp.png}
-    \caption{Real and imaginary parts for the fundamental mode of the Weibel instability.}
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelExact.png}
+    \caption{Energyplots for the Weibel instability using the \verb|HamiltonianSplittingExact| splitting method.}
     \label{fig:vmaxweibelfourier}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelEnergy.png}
-    \caption{Energy composition and conserved quantities for the Weibel instability simulation.}
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelNested.png}
+    \caption{Energyplots for the Weibel instability using the \verb|HamiltonianSplittingNested| splitting method.}
     \label{fig:vmaxweibelenergy}
 \end{figure}
 

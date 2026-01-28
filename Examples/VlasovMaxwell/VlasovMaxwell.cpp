@@ -52,6 +52,34 @@ int main (int argc, char* argv[])
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
 
+        // "HamiltonianSplittingExact", "HamiltonianSplittingNested" or
+        // "HamiltonianSplittingNestedRelativistic"
+        std::string simType{"HamiltonianSplittingExact"};
+        parameters.get_or_set("simType", simType);
+
+        if (simType == "HamiltonianSplittingExact")
+        {
+            amrex::Print() << "****************************************\n";
+            amrex::Print() << "* HamiltonianSplittingExact simulation *\n";
+            amrex::Print() << "****************************************\n";
+        }
+        else if (simType == "HamiltonianSplittingNested")
+        {
+            amrex::Print() << "*****************************************\n";
+            amrex::Print() << "* HamiltonianSplittingNested simulation *\n";
+            amrex::Print() << "*****************************************\n";
+        }
+        else if (simType == "HamiltonianSplittingNestedRelativistic")
+        {
+            amrex::Print() << "*****************************************************\n";
+            amrex::Print() << "* HamiltonianSplittingNestedRelativistic simulation *\n";
+            amrex::Print() << "*****************************************************\n";
+        }
+        else
+        {
+            GEMPIC_ERROR("Simulation type " + simType + " is not implemented");
+        }
+
         auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
         auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
@@ -73,6 +101,10 @@ int main (int argc, char* argv[])
         init_particles(particles, infra);
         amrex::Real rhoBackground{0.0};
         parameters.get_or_set("rhoBackground", rhoBackground);
+
+        amrex::Real c{1.0};
+        // if nothing else is defined in the input file, the speed of light is set to one
+        parameters.get_or_set("c", c);
 
         auto poisson{make_poisson_solver(deRham, infra)};
         Gempic::TimeLoop::OperatorHamilton<vdim, degx, degy, degz> operatorHamilton;
@@ -138,78 +170,30 @@ int main (int argc, char* argv[])
                 // needed for energy conservation)
                 biFilter->apply_stencil(eFiltered, E);
 
-                // initialize rho and J to 0 for particle loop
+                // Initialize rho and J to 0 for particle loop
                 rho.m_data.setVal(0.0);
                 for (int comp = 0; comp < vdim; ++comp)
                 {
                     J.m_data[comp].setVal(0.0);
                 }
-
-                for (auto const& particleSpecies : particles)
+                // Choose, which numerical method to use for the particle part of the splitting
+                if (simType == "HamiltonianSplittingExact")
                 {
-                    amrex::Real charge = particleSpecies->get_charge();
-                    amrex::Real chargeOverMass = charge / particleSpecies->get_mass();
-
-                    for (auto& particleGrid : *particleSpecies)
-                    {
-                        long const np = particleGrid.numParticles();
-                        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-                        auto const ii = particleSpecies->get_data_indices();
-
-                        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
-                        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
-                        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> bA;
-
-                        for (int cc = 0; cc < vdim; cc++)
-                        {
-                            jA[cc] = (J.m_data[cc])[particleGrid].array();
-                            eA[cc] = (eFiltered.m_data[cc])[particleGrid]
-                                         .array(); // Filtered E for pushing
-                            bA[cc] = (B.m_data[cc])[particleGrid].array();
-                        }
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
-                            infra.geometry().ProbLoArray()};
-
-                        amrex::ParallelFor(
-                            np,
-                            [=] AMREX_GPU_DEVICE(long pp)
-                            {
-                                // Read out particle position and compute according
-                                // splines
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
-                                AMREX_D_EXPR(pos[xDir] = ptd.rdata(ii.m_iposx)[pp],
-                                             pos[yDir] = ptd.rdata(ii.m_iposy)[pp],
-                                             pos[zDir] = ptd.rdata(ii.m_iposz)[pp]);
-
-                                SplineWithPrimitive<degx, degy, degz> spline(
-                                    pos, plo, infra.inv_cell_size_array());
-
-                                // Read out particle velocity
-                                amrex::GpuArray<amrex::Real, vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
-                                                                       ptd.rdata(ii.m_ively)[pp],
-                                                                       ptd.rdata(ii.m_ivelz)[pp]};
-
-                                operatorHamilton.apply_h_e_particle(vel, eA, spline, chargeOverMass,
-                                                                    0.5 * dt);
-
-                                amrex::Real chargeWeight = charge * ptd.rdata(ii.m_iweight)[pp];
-
-                                operatorHamilton.apply_h_p(pos, vel, infra, spline,
-                                                           infra.cell_size_array(), jA, bA,
-                                                           chargeOverMass, chargeWeight, dt);
-
-                                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = pos[0],
-                                             ptd.rdata(ii.m_iposy)[pp] = pos[1],
-                                             ptd.rdata(ii.m_iposz)[pp] = pos[2]);
-
-                                ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
-                                ptd.rdata(ii.m_ively)[pp] = vel[yDir];
-                                ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
-                            });
-                    }
-                    particleSpecies->Redistribute();
+                    operatorHamilton.template apply_h_p<operatorHamilton.HamiltonianSplittingExact>(
+                        particles, J, eFiltered, B, infra, dt, c);
                 }
-                J.post_particle_loop_sync();
+                else if (simType == "HamiltonianSplittingNestedRelativistic")
+                {
+                    operatorHamilton.template apply_h_p<
+                        operatorHamilton.HamiltonianSplittingNestedRelativistic>(
+                        particles, J, eFiltered, B, infra, dt, c);
+                }
+                else if (simType == "HamiltonianSplittingNested")
+                {
+                    operatorHamilton
+                        .template apply_h_p<operatorHamilton.HamiltonianSplittingNested>(
+                            particles, J, eFiltered, B, infra, dt, c);
+                }
 
                 // Apply filter and compute D with filtered J
                 biFilter->apply_stencil(jFiltered, J);

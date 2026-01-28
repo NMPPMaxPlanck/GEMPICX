@@ -263,12 +263,12 @@ int main (int argc, char* argv[])
                                     ptd.rdata(ii.m_is0)[pp];
 
                                 // Push particle and integrate current
-                                operatorHamilton.apply_h_p(pos, vel, infra, spline,
-                                                           infra.cell_size_array(), jA, bA,
-                                                           chargeMass,
-                                                           ptd.rdata(ii.m_isqrtf0)[pp] * charge *
-                                                               ptd.rdata(ii.m_iweight)[pp],
-                                                           dt);
+                                operatorHamilton.apply_h_p_exact(
+                                    pos, vel, infra, spline, infra.cell_size_array(), jA, bA,
+                                    chargeMass,
+                                    ptd.rdata(ii.m_isqrtf0)[pp] * charge *
+                                        ptd.rdata(ii.m_iweight)[pp],
+                                    dt);
 
                                 // Write position and velocities
                                 AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = pos[xDir],

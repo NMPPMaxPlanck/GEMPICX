@@ -1,0 +1,79 @@
+# General setting
+simName = "RelativisticSimulation"
+simType = "HamiltonianSplittingNestedRelativistic"
+
+# Grid parameters
+ComputationalDomain.nCell = 16 4 4
+ComputationalDomain.maxGridSize = 1 1 1
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
+
+# Scaling factors
+sV = 1
+sOmega = 1
+
+# Particle parameters
+
+Particle.speciesNames = electrons ions
+
+
+rhoBackground = 0 # ions explicitely set up
+
+Particle.electrons.nPartPerCell = 7813 # ceil(2000000particles/(16*4*4grid points)) 
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+Particle.electrons.density = "1 + 0.01*cos(kvarx * x)" # 1+alpha_e*cos(k*x1)
+Particle.electrons.numGaussians = 1
+
+Particle.ions.nPartPerCell = 7813 # ceil(2000000particles/(16*4*4grid points)) 
+Particle.ions.charge = 1.0 # vector (one entry per species)
+Particle.ions.mass = 100.0 # vector (one entry per species) mi_me=100
+Particle.ions.density = "1.0" # no disturbtion in ions
+Particle.ions.numGaussians = 1
+
+Particle.sampler = Sobol
+# GPU settings
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 0.0 0.0 0.0 # gaussian centered around 0
+#Particle.electrons.G0.vThermal = 1/10 1/10 1/10 # c/10 c/10 c/10 
+Particle.electrons.G0.vThermal = 1/100 1/100 1/100 # c/100 c/100 c/100 
+Particle.electrons.G0.vWeight = 1.0
+Particle.ions.G0.vMean = 0.0 0.0 0.0
+#Particle.ions.G0.vThermal = 0.01 0.01 0.01 # sqrt(me/mi)*v_e,thermal = sqrt(1/100)*1/10
+Particle.ions.G0.vThermal = 0.001 0.001 0.001 # sqrt(me/mi)*v_e,thermal = sqrt(1/100)*1/100
+Particle.ions.G0.vWeight = 1.0
+
+# wave vector
+k = 0.4 0.4 0.4 # k = 0.4
+
+# Simulation parameters
+TimeLoop.nSteps = 320 # 16/0.05
+TimeLoop.dt = 0.05
+
+# Function parameters
+Function.Ex = "0.0"
+Function.Ey = "0.0"
+Function.Ez = "0.0"
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "0.00025 * cos(kvarx * x)" # beta * cos(k1x1)
+Function.phi = "0.0"
+
+# Diagnostics
+#Full Diagnostics 
+#FullDiagnostics.enable = 1 # 1 for true, 0 for false
+#FullDiagnostics.groupNames = part field
+#FullDiagnostics.part.varNames = electrons ions
+#FullDiagnostics.part.saveInterval = 1000
+#FullDiagnostics.field.varNames = rho phi Ex Ey Bz
+#FullDiagnostics.field.outputProcessor = CellCenter
+#FullDiagnostics.field.saveInterval = 1
+# Reduced Diagnostics 
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
+ReducedDiagnostics.saveInterval = 1 # saveInterval
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+ReducedDiagnostics.GaussError.types = GaussError
+ReducedDiagnostics.Part.types = Particle
+

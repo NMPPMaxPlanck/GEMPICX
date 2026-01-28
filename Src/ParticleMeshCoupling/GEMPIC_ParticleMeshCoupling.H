@@ -336,8 +336,8 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
  * @brief Updates J and computes an integrated B on a given particle for the H_p_z update
  * in one and two spatial dimension
  *
- * Since for AMREX_SPACEDIM == 1 and AMREX_SPACEDIM == 2, there is not primitive Difference
- * available for the z-step.Therefore, v_{p,x} and v_{p,y} are updated using an explicit Euler step.
+ * For AMREX_SPACEDIM == 1 and AMREX_SPACEDIM == 2 there is no primitive difference available
+ * for the z-step. Therefore, v_{p,x} and v_{p,y} are updated using an explicit Euler step.
  *
  * @tparam SplineType Necessary for mocking so the function can take mock spline types
  * @tparam bDim Number of components of B
@@ -345,7 +345,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
  *
  * @param[out] fields Integral of B components along trajectory (the 2 that are not in integration
  * direction)
- * @param 5pline Object containing spline values and the particle trajectory
+ * @param spline Object containing spline values and the particle trajectory
  * @param dtv timestep * v_z
  * @param chargeWeight Particle weight * charge
  * @param bArray Degrees of freedom of B as primal 2-form
@@ -369,7 +369,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     for (int ii = 0; ii <= degX; ++ii)
     {
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
-        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
 
         amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
 
@@ -380,6 +379,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
 
         if (ii < degX)
         {
+            amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
             fields[0] += xCellVal * (bArray[yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
         }
         fields[1] += xNodeVal * (bArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
@@ -390,14 +390,11 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     for (int ii = 0; ii <= degX; ++ii)
     {
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
-        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
 
         for (int jj = 0; jj <= degY; ++jj)
         {
             amrex::Real yNodeVal = spline.m_nodeSplineVals[yDir][jj];
-            amrex::Real yCellVal = spline.m_cellSplineVals[yDir][jj];
             amrex::Dim3 cellIndex = {
-
                 GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii, spline.m_firstIndex[yDir] + jj, 0)};
 
             double sCoeff = chargeWeight * dtv * xNodeVal * yNodeVal;
@@ -407,11 +404,13 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
 
             if (ii < degX)
             {
+                amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
                 fields[0] +=
                     xCellVal * yNodeVal * (bArray[yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
             }
             if (jj < degY)
             {
+                amrex::Real yCellVal = spline.m_cellSplineVals[yDir][jj];
                 fields[1] +=
                     xNodeVal * yCellVal * (bArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
             }
@@ -906,6 +905,523 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     }
 }
 #endif
+
+#if AMREX_SPACEDIM == 3
+/**
+ * @brief Updates J
+ *
+ * Description:
+ * given a trajectory \f$ xx_{p,d} \f$ moving along a single direction d (with velocity
+ * \f$ vv_{p,d} \f$ parallel to \f$ e_d \f$), this function computes the time integrals
+ * \f$ dJ_{i,p,d} = q_p w_p\int_{t_{start}}^{t_{end}} t_{R2_i}(v_{p,d} * S(xx - xx_{p,d}(t))) dt \f$
+ * and adds them to the i-th component of the "current density" for every dual face (dof) with
+ * index i, where \f$ t_{R2_i} \f$ is corresponding dof (reduction) operator
+ *
+ * Note that the resulting current density is a time integral over the time step, not a time
+ * average
+ *
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam vDim Number of components of J
+
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param dx Spatial grid size
+ * @param jArray Degrees of freedom of J as dual 2-form
+ */
+
+template <Direction pDir, typename SplineType, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void accumulate_j (
+    SplineType& spline,
+    amrex::Real const chargeWeight,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
+{
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
+    using namespace Impl; // utility functions for this function
+    constexpr int pDir1 = (pDir + 1) % 3;
+    constexpr int pDir2 = (pDir + 2) % 3;
+
+    constexpr int degP = SplineType::s_splineDegrees[pDir];
+    constexpr int degP1 = SplineType::s_splineDegrees[pDir1];
+    constexpr int degP2 = SplineType::s_splineDegrees[pDir2];
+
+    // Size of support of difference of primitives
+    // check for ghost cells
+    int localSize = std::abs(spline.m_firstIndex[pDir] - spline.m_firstIndexOld[pDir]) +
+                    spline.s_splineDegrees[pDir];
+
+    // Region of only first spline
+    for (int ii = 0; ii < std::min(degP, localSize - degP); ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        for (int j = 0; j <= degP1; ++j)
+        {
+            for (int k = 0; k <= degP2; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<pDir>(ii, j, k);
+
+                update_j_component<pDir, pDir1, pDir2>(jArray, spline, cellIndex, j, k,
+                                                       chargeWeight, primitiveDifference);
+            }
+        }
+    }
+
+    // Region of no splines (may not exist)
+    for (int ii = degP; ii < localSize - degP; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        for (int j = 0; j <= degP1; ++j)
+        {
+            for (int k = 0; k <= degP2; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<pDir>(ii, j, k);
+
+                update_j_component<pDir, pDir1, pDir2>(jArray, spline, cellIndex, j, k,
+                                                       chargeWeight, primitiveDifference);
+            }
+        }
+    }
+
+    // Region of both splines (may not exist)
+    for (int ii = localSize - degP; ii < degP; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        for (int j = 0; j <= degP1; ++j)
+        {
+            for (int k = 0; k <= degP2; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<pDir>(ii, j, k);
+
+                update_j_component<pDir, pDir1, pDir2>(jArray, spline, cellIndex, j, k,
+                                                       chargeWeight, primitiveDifference);
+            }
+        }
+    }
+
+    // Region of only last spline
+    for (int ii = std::max(degP, localSize - degP); ii < localSize; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+
+        for (int j = 0; j <= degP1; ++j)
+        {
+            for (int k = 0; k <= degP2; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<pDir>(ii, j, k);
+
+                update_j_component<pDir, pDir1, pDir2>(jArray, spline, cellIndex, j, k,
+                                                       chargeWeight, primitiveDifference);
+            }
+        }
+    }
+}
+#elif AMREX_SPACEDIM == 2
+
+/**
+ * @brief Updates J in 2 spatial dimensions (namely the x- and y- direction)
+ *
+ * Description:
+ * given a trajectory \f$ xx_{p,d} \f$ moving along a single direction d (with velocity
+ * \f$ vv_{p,d} \f$ parallel to \f$ e_d \f$), this function computes the time integrals
+ * \f$ dJ_{i,p,d} = q_p w_p\int_{t_{start}}^{t_{end}} t_{R2_i}(v_{p,d} * S(xx - xx_{p,d}(t))) dt \f$
+ * and adds them to the i-th component of the "current density" for every dual face (dof) with
+ * index i, where \f$ t_{R2_i} \f$ is corresponding dof (reduction) operator
+ *
+ * Note that the resulting current density is a time integral over the time step, not a time
+ * average
+ *
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam vDim Number of components of J
+
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param dx Spatial grid size
+ * @param jArray Degrees of freedom of J as dual 2-form
+ */
+
+template <Direction pDir, typename SplineType, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void accumulate_j (
+    SplineType& spline,
+    amrex::Real const chargeWeight,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
+{
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
+    using namespace Impl; // utility functions for this function
+    constexpr int degX = SplineType::s_splineDegrees[xDir];
+    constexpr int degY = SplineType::s_splineDegrees[yDir];
+
+    if constexpr (pDir == xDir)
+    {
+        // Size of support of difference of primitives
+        // check for ghost cells
+        int localSize = std::abs(spline.m_firstIndex[xDir] - spline.m_firstIndexOld[xDir]) +
+                        spline.s_splineDegrees[xDir];
+
+        // Region of only first spline
+        for (int ii = 0; ii < std::min(degX, localSize - degX); ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+            for (int j = 0; j <= degY; ++j)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, j, 0);
+
+                update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, j, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+
+        // Region of no splines (may not exist)
+        for (int ii = degX; ii < localSize - degX; ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+            for (int j = 0; j <= degY; ++j)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, j, 0);
+
+                update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, j, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+
+        // Region of both splines (may not exist)
+        for (int ii = localSize - degX; ii < degX; ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+            for (int j = 0; j <= degY; ++j)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, j, 0);
+
+                update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, j, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+
+        // Region of only last spline
+        for (int ii = std::max(degX, localSize - degX); ii < localSize; ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+            for (int j = 0; j <= degY; ++j)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, j, 0);
+
+                update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, j, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+    }
+    else if constexpr (pDir == yDir)
+    {
+        // Size of support of difference of primitives
+        // check for ghost cells
+        int localSize = std::abs(spline.m_firstIndex[yDir] - spline.m_firstIndexOld[yDir]) +
+                        spline.s_splineDegrees[yDir];
+
+        // Region of only first spline
+        for (int ii = 0; ii < std::min(degY, localSize - degY); ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+
+            for (int k = 0; k <= degX; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<yDir>(ii, 0, k);
+
+                update_j_component<yDir, xDir, zDir>(jArray, spline, cellIndex, k, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+
+        // Region of no splines (may not exist)
+        for (int ii = degY; ii < localSize - degY; ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+
+            for (int k = 0; k <= degX; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<yDir>(ii, 0, k);
+
+                update_j_component<yDir, xDir, zDir>(jArray, spline, cellIndex, k, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+
+        // Region of both splines (may not exist)
+        for (int ii = localSize - degY; ii < degY; ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+
+            for (int k = 0; k <= degX; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<yDir>(ii, 0, k);
+
+                update_j_component<yDir, xDir, zDir>(jArray, spline, cellIndex, k, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+
+        // Region of only last spline
+        for (int ii = std::max(degY, localSize - degY); ii < localSize; ++ii)
+        {
+            constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
+            amrex::Real primitiveDifference =
+                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+
+            for (int k = 0; k <= degX; ++k)
+            {
+                amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<yDir>(ii, 0, k);
+
+                update_j_component<yDir, xDir, zDir>(jArray, spline, cellIndex, k, 0, chargeWeight,
+                                                     primitiveDifference);
+            }
+        }
+    }
+}
+
+#elif AMREX_SPACEDIM == 1
+/**
+ * @brief Updates J along the grid x-direction
+ *
+ * Description:
+ * given a trajectory \f$ xx_{p,d} \f$ moving along a single direction d (with velocity
+ * \f$ vv_{p,d} \f$ parallel to \f$ e_d \f$), this function computes the time integrals
+ * \f$ dJ_{i,p,d} = q_p w_p\int_{t_{start}}^{t_{end}} t_{R2_i}(v_{p,d} * S(xx - xx_{p,d}(t))) dt \f$
+ * and adds them to the i-th component of the "current density" for every dual face (dof) with
+ * index i, where \f$ t_{R2_i} \f$ is corresponding dof (reduction) operator
+ *
+ * Note that the resulting current density is a time integral over the time step, not a time
+ * average
+ *
+ * @tparam pDir Direction of integration (trajectory) (x=0, y=1, z=2)
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam vDim Number of components of J
+
+ * @param spline Object containing spline values and the particle trajectory
+ * @param chargeWeight Particle weight * charge
+ * @param dx Spatial grid size
+ * @param jArray Degrees of freedom of J as dual 2-form
+ */
+
+template <Direction pDir, typename SplineType, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void accumulate_j (
+    SplineType& spline,
+    amrex::Real const chargeWeight,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
+{
+    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
+    using namespace Impl; // utility functions for this function
+
+    constexpr int degPx = SplineType::s_splineDegrees[xDir];
+
+    int localSize = std::abs(spline.m_firstIndex[xDir] - spline.m_firstIndexOld[xDir]) +
+                    spline.s_splineDegrees[xDir];
+
+    // Region of only first spline
+    for (int ii = 0; ii < std::min(degPx, localSize - degPx); ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+        amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
+
+        update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, 0, 0, chargeWeight,
+                                             primitiveDifference);
+    }
+
+    // Region of no splines (may not exist)
+    for (int ii = degPx; ii < localSize - degPx; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+        amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
+
+        update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, 0, 0, chargeWeight,
+                                             primitiveDifference);
+    }
+
+    // Region of both splines (may not exist)
+    for (int ii = localSize - degPx; ii < degPx; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+        amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
+
+        update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, 0, 0, chargeWeight,
+                                             primitiveDifference);
+    }
+
+    // Region of only last spline
+    for (int ii = std::max(degPx, localSize - degPx); ii < localSize; ++ii)
+    {
+        constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
+        amrex::Real primitiveDifference =
+            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+
+        amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
+
+        update_j_component<xDir, yDir, zDir>(jArray, spline, cellIndex, 0, 0, chargeWeight,
+                                             primitiveDifference);
+    }
+}
+#endif
+
+#if AMREX_SPACEDIM == 1
+/**
+ * @brief Updates J in one spatial dimension
+ *
+ * For AMREX_SPACEDIM == 1 there is no primitive difference available for the y-step.
+ * Therefore, v_{p,x} and v_{p,z} are updated using an explicit Euler step.
+ *
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam vDim Number of components of J
+ *
+ * @param spline Object containing spline values and the particle trajectory
+ * @param dtv timestep * v_y
+ * @param chargeWeight Particle weight * charge
+ * @param jArray Degrees of freedom of J as dual 2-form
+ */
+template <typename SplineType, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void accumulate_j_euler_y (
+    SplineType& spline,
+    amrex::Real const& dtv,
+    amrex::Real const chargeWeight,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
+{
+    constexpr int degX = SplineType::s_splineDegrees[xDir];
+
+    for (int ii = 0; ii <= degX; ++ii)
+    {
+        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+
+        amrex::HostDevice::Atomic::Add(jArray[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                                       chargeWeight * dtv * xNodeVal);
+    }
+}
+#endif
+
+#if AMREX_SPACEDIM == 1 || AMREX_SPACEDIM == 2
+/**
+ * @brief Updates J in one and two spatial dimension
+ *
+ * For AMREX_SPACEDIM == 1 and AMREX_SPACEDIM == 2 there is no primitive difference available
+ * for the z-step. Therefore, v_{p,x} and v_{p,y} are updated using an explicit Euler step.
+
+ *
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam vDim Number of components of J
+ *
+ * @param spline Object containing spline values and the particle trajectory
+ * @param dtv timestep * v_z
+ * @param chargeWeight Particle weight * charge
+ * @param jArray Degrees of freedom of J as dual 2-form
+ */
+template <typename SplineType, unsigned int vDim>
+AMREX_GPU_HOST_DEVICE inline void accumulate_j_euler_z (
+    SplineType& spline,
+    amrex::Real const& dtv,
+    amrex::Real const chargeWeight,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
+{
+    constexpr int degX = SplineType::s_splineDegrees[xDir];
+
+#if AMREX_SPACEDIM == 1
+    for (int ii = 0; ii <= degX; ++ii)
+    {
+        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+
+        double sCoeff = chargeWeight * dtv * xNodeVal;
+        amrex::HostDevice::Atomic::Add(jArray[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
+                                       sCoeff);
+    }
+
+#elif AMREX_SPACEDIM == 2
+    constexpr int degY = SplineType::s_splineDegrees[yDir];
+    for (int ii = 0; ii <= degX; ++ii)
+    {
+        amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
+
+        for (int jj = 0; jj <= degY; ++jj)
+        {
+            amrex::Real yNodeVal = spline.m_nodeSplineVals[yDir][jj];
+            amrex::Dim3 cellIndex = {
+                GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii, spline.m_firstIndex[yDir] + jj, 0)};
+
+            double sCoeff = chargeWeight * dtv * xNodeVal * yNodeVal;
+            amrex::HostDevice::Atomic::Add(
+                jArray[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0), sCoeff);
+        }
+    }
+#endif
+}
+#endif
+
+/**
+ * @brief Evaluates the B-field for the rotational matrix
+ *
+ * @tparam SplineType Necessary for mocking so the function can take mock spline types
+ * @tparam bDim Number of components of B
+ *
+ * @param[out] bValues resulting values for the rotational matrix
+ * @param[out] normB resulting norm
+ * @param bArray array of B field coefficients (primal face dofs)
+ * @param spline object containing the values of non-zero grid splines at the particle
+ * position
+ */
+template <typename SplineType, unsigned int bDim>
+AMREX_GPU_HOST_DEVICE inline void compute_b (
+    amrex::GpuArray<amrex::Real, 3>& bValues,
+    amrex::Real& normB,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
+    SplineType& spline)
+{
+    amrex::GpuArray<amrex::Real, bDim> bfield =
+        spline.template eval_spline_field<Field::PrimalTwoForm>(bArray);
+
+    normB = std::max(sqrt(bfield[0] * bfield[0] + bfield[1] * bfield[1] + bfield[2] * bfield[2]),
+                     1e-15);
+
+    bValues[0] = bfield[0] / normB;
+    bValues[1] = bfield[1] / normB;
+    bValues[2] = bfield[2] / normB;
+}
 
 /**
  * @brief Deposits charge density on cells of dual grid

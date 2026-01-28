@@ -44,7 +44,13 @@
 
 \subsection{Splitting for Vlasov-Maxwell}
 \label{sec:splitting_vlasovmaxwell}
+In this section, we discuss multiple numerical methods for solving the Vlasov Maxwell equations. First, we introduce the \verb|HamiltonianSplittingExact| method, which is an exact solver of the Hamiltonian Splitting scheme. 
+Based on this scheme, we introduce the \verb|HamiltonianSplittingNestedRelativistic| method, which follows most of the same steps as the exact method. To account for the Lorentz factor, however, this scheme needs to treat
+the particles differently. Since this results in a different splitting scheme, we also offer the \verb|HamiltonianSplittingNested| method as an alternative to the exact method, in which we take the relativistic splitting 
+scheme and set the Lorentz factor to 1. \\
+The selection of the numerical method can be done via the input file using the parameter \verb|simType|. If no particular method is specified via the input file, the default simulation \verb|HamiltonianSplittingExact| is used.
 
+\subsubsection{\verb|simType = "HamiltonianSplittingExact"|}
 The semi-discrete Vlasov-Maxwell equations on staggered grids form a noncanonical Hamiltonian sytem of the form $\fract{\arrU}{t}=\mathcal{J}(\arrU)\nabla\cH$, where $\arrU$ stacks all
 the particle positions $\arrX$, velocities $\arrV$ as well as the electric field $\tilde\arrD$ and magnetic field $\arrB$.
 
@@ -144,7 +150,7 @@ including the last equation using the definition of $\tilde{\arrJ}_z$.
 
 In one space dimension, the same also applies to the previous step.
 
-\subsubsection{Algorithm for the $\cH_p$ Part}
+\paragraph{Algorithm for the $\cH_p$ Part}
 \label{sec:splitting_vlasovmaxwell_algo}
 
 As we just saw, the  $\cH_p$ part of the Hamiltonian splitting can be solved exactly by splitting each of the components of the particle kinetic energy. This yields three further parts, that will be solved in the innermost loop by a Strang splitting.
@@ -212,6 +218,103 @@ $$
         \tilde{\arrD}_z^{n+1} & = \tilde{\arrD}_z^n -(\check{\arrJ}_z^{(1)}-\check{\arrJ}_z^n).
     \end{aligned}
 $$
+
+\subsubsection{\verb|simType = "HamiltonianSplittingNestedRelativistic"|}
+\label{sec:splitting_vlasovmaxwell_rel}
+The splitting for the relativistic case follows the same idea as the splitting for the Vlasov-Maxwell model. Note, however, that in this case, we need to account for the Lorentz factor $\gamma = \sqrt{1+\frac{|\pmb{p}|^2}{m_s^2c^2}}$, where $\pmb{p}=\gamma m_s \pmb{v}$ denotes the relativistic momentum.
+Using the relativistic velocity $\pmb{u} = \pmb{v} \cdot \gamma$ instead of $\pmb{v}$, the splitting steps for $\cH_{b}$ and $\cH_{e}$ are
+
+
+\begin{enumerate}
+    \item Keeping only $\cH_b$:
+          $$
+              \begin{aligned}
+                  \fract{\bx_p}{t}         & = 0,                                \\
+                  \fract{\bu_p }{t}        & = 0                                 \\
+                  \fract{\tilde{\arrD}}{t} & =  \tilde{\mathbb{C}}\tilde{\arrH}, \\
+                  \fract{\arrB }{t}        & = 0.
+              \end{aligned}
+          $$
+    \item Keeping only $\cH_e$:
+          $$
+              \begin{aligned}
+                  \fract{\bx_p}{t}       & = 0,                          \\
+                  \fract{\bu_p }{t}      & = \frac {q_p}{m_p} \bE(\bx_p) \\
+                  \fract{\tilde\arrD}{t} & =  0,                         \\
+                  \fract{\arrB }{t}      & = - \mathbb{C}\arrE.
+              \end{aligned}
+          $$
+\end{enumerate}
+
+Therefore the functions \emph{apply_h_b()}, \emph{apply_h_e_particles()}, and \emph{apply_h_e_field()} can be used equivalently to the Vlasov-Maxwell system.
+
+The discrete equations of motion for $\cH_p$ are
+$$
+    \begin{aligned}
+                  \fract{\arrX}{t}         & = \arrV,                                 \\
+                  \fract{\arrU }{t}        & = \matW_{\frac{q}{m}} \mathcal{R}(\arrX, \arrB)\arrV, \\
+                  \fract{\tilde{\arrD}}{t} & =  -\tilde{\arrJ},                       \\
+                  \fract{\arrB }{t}        & = 0,
+    \end{aligned}
+$$
+where $\mathcal{R}(\arrX, \arrB)$ denotes the rotation of the positions according to the magnetic field.
+In contrast to the non-relativistic case, this Hamiltonian cannot be split any further, and we need to apply a different strategy. 
+
+\paragraph{Algorithm for the $\cH_p$ Part}
+The implemented algorithm conserves Gauss' law, but not the full Poisson structure. We split $\cH_p$ into the subsystems $\cH_{p,d}$ and $\cH_{p,u}$, which are
+
+
+\begin{enumerate}
+    \item Subsystem $\cH_{p,d}$:
+          $$
+              \begin{aligned}
+                  \fract{\arrX}{t}         & = \arrV,                                 \\
+                  \fract{\arrU }{t}        & = 0,                                 \\
+                  \fract{\tilde{\arrD}}{t} & =  -\tilde{\arrJ}, \\
+                  \fract{\arrB }{t}        & = 0.
+              \end{aligned}
+          $$
+    \item Subsystem $\cH_{p,u}$:
+          $$
+              \begin{aligned}
+                  \fract{\arrX}{t}       & = 0,                          \\
+                  \fract{\arrU }{t}        & = \matW_{\frac{q}{m}} \mathcal{R}(\arrX, \arrB)\arrV, \\
+                  \fract{\tilde\arrD}{t} & =  0,                         \\
+                  \fract{\arrB }{t}      & = 0.
+              \end{aligned}
+          $$
+    
+\end{enumerate}
+
+\paragraph{Solve the subsystem $\cH_{p,d}$}
+    \begin{itemize}
+        \item{Translate $\bu_p$ into $\bv_p = \bu_p/\gamma$.}
+        \item{Update $\bx_{p}$ and  $\tilde\arrD$ similar to the Vlasov-Maxwell system (without the magnetic field).}
+    \end{itemize}
+
+\paragraph{Solve the subsystem $\cH_{p,u}$}   
+ In this splitting step, we need to solve the decoupled equation for each particle
+ $$
+\fract{\bu_p}{t} = \frac{q_p}{m_p} \bv_p \times \bB(\bx_p) = \frac{q_p}{m_p \gamma_p} \bu_p \times \bB(\bx_p).
+ $$
+ Taking the dot product with $\bu_p$ it follows that $|\bu_p|^2$ and hence $\gamma_p$ is conserved over this step. 
+ Therefore, the solution is obtained by a rotation $\mathcal{R}_b(\alpha)$ around the axis defined by $\bB(\bx_p)$ with $\alpha = -\frac{q_p \Delta t |\bB(\bx_p)|}{m_p \gamma_p}$.
+ For $\frac{\bB(\bx_p)}{|\bB(\bx_p)|} = (b_1, b_2, b_3)$, the rotation matrix is explicitely given by
+ $$
+ \mathcal{R}_b(\alpha) = 
+    \begin{pmatrix}
+        b_0^2 (1- \cos \alpha) + \cos \alpha & b_0 b_1 (1- \cos \alpha ) - b_2 \sin \alpha & b_0 b_2 (1-\cos \alpha) + b_1 \sin \alpha \\
+        b_0 b_1 (1- \cos \alpha) + b_2 \sin \alpha & b_1^2 (1-\cos \alpha) + \cos \alpha & b_1 b_2 (1-\cos \alpha) - b_0 \sin \alpha\\
+        b_0 b_2 (1-\cos \alpha) - b_1 \sin \alpha & b_1 b_2 (1-\cos \alpha) + b_0 \sin \alpha & b_2^2 (1-\cos \alpha) + \cos \alpha
+    \end{pmatrix}    
+ $$
+and the exact solution for this subsystem using the initial value $\bu_p (0)$ is given by
+
+$$
+\bu_p (\Delta t) = \mathcal{R}_b(\alpha) \bu_p (0).
+$$
+\subsubsection{\verb|simType = "HamiltonianSplittingNested"|}
+As discussed in the introduction, this method is described in section \ref{sec:splitting_vlasovmaxwell_rel}, where the Lorentz factor $\gamma = 1.0$.
 
 \subsection{Splitting for Electrostatic}
 
