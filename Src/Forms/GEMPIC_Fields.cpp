@@ -293,9 +293,8 @@ void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
         for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
         {
             field.select_box(mfi);
-            amrex::ParallelFor(mfi.validbox(), field.multi_fab(dir).nComp(),
-                               [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz, int n)
-                               { field(dir, ix, iy, iz, n) *= scalar; });
+            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                               { field(dir, ix, iy, iz) *= scalar; });
         }
     }
 }
@@ -308,9 +307,8 @@ void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
         {
             a.select_box(mfi);
             auto const& otherView{b.multi_fab(dir).array(mfi)};
-            amrex::ParallelFor(mfi.validbox(), a.multi_fab(dir).nComp(),
-                               [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz, int n)
-                               { a(dir, ix, iy, iz, n) += otherView(ix, iy, iz, n); });
+            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                               { a(dir, ix, iy, iz) += otherView(ix, iy, iz); });
         }
     }
 }

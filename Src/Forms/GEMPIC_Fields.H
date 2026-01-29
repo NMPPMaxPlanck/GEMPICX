@@ -136,15 +136,12 @@ public:
     //! @endcond
 
     //! Access indexable degrees of freedom stored in the @ref DiscreteField
-    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1,
-                                                  int ix2,
-                                                  int ix3,
-                                                  int component = 0) const
+    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1, int ix2, int ix3) const
     {
-        return m_view(ix1, ix2, ix3, component);
+        return m_view(ix1, ix2, ix3);
     }
     //! Describes the degree of freedom stored by the @ref DiscreteField
-    DOFCategory const dof_category (Direction dir) const
+    DOFCategory dof_category (Direction dir) const
     {
         return static_cast<DOFCategory>(m_data->m_dofCategory[dir]);
     };
@@ -255,12 +252,11 @@ public:
     DiscreteField& operator[](Direction dir) { return m_fields[dir]; };
 
     //! Access indexable degrees of freedom stored in the @ref DiscreteVectorField
-    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(
-        Direction dir, int ix1, int ix2, int ix3, int component = 0) const
+    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(Direction dir, int ix1, int ix2, int ix3) const
     {
-        return m_fields[dir](ix1, ix2, ix3, component);
+        return m_fields[dir](ix1, ix2, ix3);
     }
-    DiscreteField::DOFCategory const dof_category (Direction field, Direction grid) const
+    DiscreteField::DOFCategory dof_category (Direction field, Direction grid) const
     {
         return m_fields[field].dof_category(grid);
     };
