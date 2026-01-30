@@ -223,12 +223,18 @@ build-test_mac_3D:
 
 # Test that merge requests are "clean", i.e. with the proper style
 style-test_cpu_3D:
-  extends: .mpcdf-clang-env
+  image: debian:stable-slim
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
+  before_script:
+    - !reference [default,before_script]
+    - start_details environment "Setup environment"
+    - apt update
+    - apt install -y git cmake clang-18 libopenmpi-dev clang-tidy-18 clang-format-18 python3
+    - end_details environment
   script:
     - start_details configure "CMake Configure Step"
-    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -B ./build
+    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_C_COMPILER=clang-18 -B ./build
     - end_details configure
     - start_details sanitize
     - python3 scripts/sanitize_with_python.py
