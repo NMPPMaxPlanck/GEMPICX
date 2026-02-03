@@ -134,11 +134,11 @@ FFTSolver::FFTSolver(ComputationalDomain const& compDom,
 }
 
 void FFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
-                      DeRhamField<Grid::dual, Space::cell>& rho)
+                      DeRhamField<Grid::dual, Space::cell> const& rho)
 {
     BL_PROFILE("Gempic::FieldSolvers::FFTSolver::solve()");
 
-    subtract_constant_part(rho, m_compDom);
+    check_charge_neutrality(rho, m_compDom);
 
     // define cell-centered containers for storing data, declaring 1 ghost cell to be able to
     // copy back to the node-centered MultiFab, phi, without data loss.

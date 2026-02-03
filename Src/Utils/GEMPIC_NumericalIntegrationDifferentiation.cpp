@@ -110,14 +110,4 @@ std::array<amrex::Real, GaussLegendreQuadrature::s_maxPoints> GaussLegendreQuadr
                 std::to_string(points) + ". Only stencils 1 to 10 are implemented.");
     }
 }
-
-/// Compute integral of rho
-amrex::Real compute_rho_integral (Forms::DeRhamField<Grid::dual, Space::cell>& rho)
-{
-    BL_PROFILE("Gempic::FieldSolvers::compute_rho_integral()");
-
-    amrex::Real rhoSum = rho.m_data.sum_unique(0, false, rho.m_deRham->m_geom.periodicity());
-    amrex::Real ninv = 1.0 / rho.m_deRham->m_geom.Domain().numPts();
-    return rhoSum * ninv;
-}
 } // namespace Gempic

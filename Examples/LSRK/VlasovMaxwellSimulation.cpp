@@ -354,6 +354,10 @@ int main (int argc, char* argv[])
             rho.post_particle_loop_sync();
             J.post_particle_loop_sync();
 
+            // Add background charge (needs to be done after post_particle_loop_sync)
+            amrex::Real rhoBackground =
+                get_and_apply_neutralizing_background(rho, infra, parameters);
+
             // Apply filter and compute phi with filtered rho
             biFilter->apply_stencil(rhoFiltered, rho);
             poisson->solve(phi, rhoFiltered);

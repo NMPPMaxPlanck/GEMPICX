@@ -360,7 +360,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
     rho.m_data.setVal(0.0);
     ParticleMeshCoupling::deposit_particle_density<s_degX, s_degY, s_degZ>(rho, m_particles,
                                                                            m_infra);
-    rho += m_backgroundDensity * m_infra.cell_volume();
+    amrex::Real rhoBackground =
+        FieldSolvers::get_and_apply_neutralizing_background(rho, m_infra, m_parameters);
 
     auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
     poisson->solve(phi, rho);
@@ -466,7 +467,8 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
     rho.m_data.setVal(0.0);
     ParticleMeshCoupling::deposit_particle_density<s_degX, s_degY, s_degZ>(rho, m_particles,
                                                                            m_infra);
-    rho += m_backgroundDensity * m_infra.cell_volume();
+    amrex::Real rhoBackground =
+        FieldSolvers::get_and_apply_neutralizing_background(rho, m_infra, m_parameters);
 
     auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, m_infra)};
     poisson->solve(phi, rho);

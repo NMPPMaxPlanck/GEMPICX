@@ -181,6 +181,9 @@ int main (int argc, char* argv[])
             }
 
             rho.post_particle_loop_sync();
+            // Add background charge (needs to be done after post_particle_loop_sync)
+            amrex::Real rhoBackground =
+                FieldSolvers::get_and_apply_neutralizing_background(rho, infra, parameters);
 
             poisson->solve(phi, rho);
             grad(E, phi);

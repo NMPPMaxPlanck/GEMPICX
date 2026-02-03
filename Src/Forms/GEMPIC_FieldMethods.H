@@ -363,7 +363,7 @@ inline void multiply_and_add (OneTwoForm1& field1, amrex::Real a, OneTwoForm2 co
  * @return The dot product of the fields.
  */
 template <OneTwoFormC OneTwoForm1, OneTwoFormC OneTwoForm2>
-inline amrex::Real dot_product (OneTwoForm1& field1, OneTwoForm2 const& field2)
+inline amrex::Real dot_product (OneTwoForm1 const& field1, OneTwoForm2 const& field2)
 {
     bool const skipMpiCommTrue = true;
     // Compute the dot product by summing the dot product of each component.
@@ -389,7 +389,7 @@ inline amrex::Real dot_product (OneTwoForm1& field1, OneTwoForm2 const& field2)
  * @return The dot product of the two fields.
  */
 template <ZeroThreeFormC ZeroThreeForm1, ZeroThreeFormC ZeroThreeForm2>
-inline amrex::Real dot_product (ZeroThreeForm1& field1, ZeroThreeForm2 const& field2)
+inline amrex::Real dot_product (ZeroThreeForm1 const& field1, ZeroThreeForm2 const& field2)
 {
     auto mask = amrex::OwnerMask(field1.m_data, field1.m_deRham->get_periodicity());
     amrex::Real dotProd =

@@ -98,11 +98,17 @@ public:
                 int bottomVerbose = 0);
 
     void solve(DeRhamField<Grid::primal, Space::node>& phi,
-               DeRhamField<Grid::dual, Space::cell>& rho) override;
+               DeRhamField<Grid::dual, Space::cell> const& rho) override;
 };
 
-void subtract_constant_part(DeRhamField<Grid::dual, Space::cell>& rho,
-                            ComputationalDomain const& compDom);
+void check_charge_neutrality(DeRhamField<Grid::dual, Space::cell> const& rho,
+                             ComputationalDomain const& compDom);
+amrex::Real compute_rho_integral(Forms::DeRhamField<Grid::dual, Space::cell> const& rho);
+amrex::Real compute_rho_average(Forms::DeRhamField<Grid::dual, Space::cell> const& rho);
+amrex::Real get_and_apply_neutralizing_background(Forms::DeRhamField<Grid::dual, Space::cell>& rho,
+                                                  ComputationalDomain const& infra,
+                                                  Io::Parameters& params,
+                                                  bool neutralizeTwice = true);
 
 } // namespace Gempic::FieldSolvers
 #endif

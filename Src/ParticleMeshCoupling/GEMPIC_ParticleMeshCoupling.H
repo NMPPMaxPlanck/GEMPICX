@@ -1501,8 +1501,6 @@ void deposit_rho_j_jcrossb_deldots (
         amrex::Real mass = particleSpecies->get_mass();
         amrex::Real chargeByMass = charge / mass;
 
-        particleSpecies->reset_total_weight(compDom.geometry().ProbSize());
-
         for (auto& pti : *particleSpecies)
         {
             long const np = pti.numParticles();

@@ -115,17 +115,8 @@ int main (int argc, char* argv[])
             deposit_particle_density<degx, degy, degz>(rho, ions, infra);
 
             // Add background charge (needs to be done after post_particle_loop_sync)
-            amrex::Real rhoBackground{0.0};
-            parameters.get_or_set("rhoBackground", rhoBackground);
-            rho += rhoBackground * infra.cell_volume();
-            // check if this is a neutral plasma
-            amrex::Real rhoInt = compute_rho_integral(rho);
-            if (std::abs(rhoInt) > 1e-7)
-            {
-                amrex::Print()
-                    << "WARNING: you might not have a neutral plasma: the integral of rho ("
-                    << rhoInt << ") exceeds a tolerance of 1e-7\n";
-            }
+            amrex::Real rhoBackground =
+                get_and_apply_neutralizing_background(rho, infra, parameters);
 
             // Apply filter and compute phi with filtered rho
             biFilter->apply_stencil(rhoFiltered, rho);
@@ -194,6 +185,8 @@ int main (int argc, char* argv[])
                 }
 
                 rho.post_particle_loop_sync();
+                // add neutralizing background charge
+                rho += rhoBackground * infra.cell_volume();
 
                 // Apply filter and compute phi with filtered rho
                 biFilter->apply_stencil(rhoFiltered, rho);
@@ -303,6 +296,8 @@ int main (int argc, char* argv[])
                     particleSpecies->Redistribute();
                 }
                 rho.post_particle_loop_sync();
+                // add neutralizing background charge
+                rho += rhoBackground * infra.cell_volume();
 
                 simTime = dt * (tStep + 1);
                 diagnostics.compute_and_write_to_file(tStep + 1, simTime);

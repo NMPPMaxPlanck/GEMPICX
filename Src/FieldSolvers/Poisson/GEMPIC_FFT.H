@@ -51,6 +51,6 @@ public:
               Forms::HodgeScheme hodgeScheme = Forms::HodgeScheme::FDHodge);
 
     void solve(Forms::DeRhamField<Grid::primal, Space::node>& phi,
-               Forms::DeRhamField<Grid::dual, Space::cell>& rho) override;
+               Forms::DeRhamField<Grid::dual, Space::cell> const& rho) override;
 };
 } //namespace Gempic::FieldSolvers

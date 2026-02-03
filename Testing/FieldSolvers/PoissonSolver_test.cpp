@@ -125,7 +125,7 @@ TEST_F(PoissonSolverTest, ConjugateGradientHodge2)
     hodge(rho, phiIn);
 
     auto cgHodge{make_conjugate_gradient<CGRhs, CGSol>(
-        deRham, [=] (CGRhs& rhs, CGSol& sol) { hodge(rhs, sol); })};
+        deRham, [=] (CGRhs& rhs, CGSol const& sol) { hodge(rhs, sol); })};
     cgHodge.solve(phi, rho);
 
     amrex::Real tol = 1e-12;
