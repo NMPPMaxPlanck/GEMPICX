@@ -131,7 +131,7 @@ DualZeroForm FiniteDifferenceDeRhamSpaces::create_dual_zero_form (
     std::string const& label, Impl::BoundaryConditionConfiguration bcConf) const
 {
     bcConf.m_grid = Grid::dual;
-    DiscreteField df{label,      dof_on_cell_center(m_grid), cell_centered_integral(),
+    DiscreteField df{label,      dof_on_cell_center(m_grid), point_value(),
                      m_boxArray, m_distributionMapping,      bcConf};
     return DualZeroForm{std::move(df), m_integrator};
 };
@@ -398,37 +398,33 @@ select_hodge_stencil_finite_difference (size_t degree)
             throw std::runtime_error("Undefined Hodge degree given!");
     }
 };
-amrex::Real hodge_scale (Direction fieldDir,
-                         DiscreteVectorField const& dst,
-                         DiscreteVectorField const& src)
+amrex::Real hodge_scale (DiscreteField const& dst, DiscreteField const& src)
 {
     amrex::Real scale{1.0};
     for (auto gridDir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        if (dst.dof_category(fieldDir, gridDir) ==
-                DiscreteField::DOFCategory::CenteredLineIntegral and
-            src.dof_category(fieldDir, gridDir) == DiscreteField::DOFCategory::PointValue)
+        if (dst.dof_category(gridDir) == DiscreteField::DOFCategory::CenteredLineIntegral and
+            src.dof_category(gridDir) == DiscreteField::DOFCategory::PointValue)
         {
-            scale *= dst.discrete_grid(fieldDir).dx(gridDir);
+            scale *= dst.discrete_grid().dx(gridDir);
         }
-        else if (dst.dof_category(fieldDir, gridDir) == DiscreteField::DOFCategory::PointValue and
-                 src.dof_category(fieldDir, gridDir) ==
-                     DiscreteField::DOFCategory::CenteredLineIntegral)
+        else if (dst.dof_category(gridDir) == DiscreteField::DOFCategory::PointValue and
+                 src.dof_category(gridDir) == DiscreteField::DOFCategory::CenteredLineIntegral)
         {
-            scale *= 1.0 / dst.discrete_grid(fieldDir).dx(gridDir);
+            scale *= 1.0 / dst.discrete_grid().dx(gridDir);
         }
     }
     return scale;
 }
 
-template <typename Stencil>
+template <AMREX_D_DECL(typename StencilXdir, typename StencilYdir, typename StencilZdir)>
 void hodge (DiscreteField& dst,
             DiscreteField& src,
-            Stencil const& stencil,
-            amrex::Real const& scale)
+            AMREX_D_DECL(StencilXdir stencilXdir, StencilYdir stencilYdir, StencilZdir stencilZdir))
 {
+    amrex::Real scale{hodge_scale(dst, src)};
     std::array<size_t, AMREX_SPACEDIM> ghostWidth{
-        AMREX_D_DECL(stencil.s_halfWidth, stencil.s_halfWidth, stencil.s_halfWidth)};
+        AMREX_D_DECL(stencilXdir.s_halfWidth, stencilYdir.s_halfWidth, stencilZdir.s_halfWidth)};
     src.apply_boundary_conditions(ghostWidth);
     for (amrex::MFIter mfi{src.multi_fab()}; mfi.isValid(); ++mfi)
     {
@@ -439,71 +435,18 @@ void hodge (DiscreteField& dst,
                     [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
                     {
 #if AMREX_SPACEDIM == 1
-                        StridedArrayView<Stencil::s_width> tmp{src(ix, iy, iz),
-                                                               strides[Direction::xDir]};
-                        dst(ix, iy, iz) = scale * (stencil.m_coeff * tmp);
-#elif AMREX_SPACEDIM == 2
-                        std::array<amrex::Real, Stencil::s_width> tmp1D{};
-                        int const &hw{static_cast<int>(stencil.s_halfWidth)};
-                        for(int sx=-hw;sx<=hw;sx++) {
-                            StridedArrayView<Stencil::s_width> const tmp{src(ix + sx,iy,iz), strides[Direction::yDir]};
-                            tmp1D[sx + hw] = stencil.m_coeff*tmp;
-                        };
-                        StridedArrayView<Stencil::s_width> const tmp{tmp1D[hw], 1};
-                        dst(ix,iy,iz) = scale * (stencil.m_coeff*tmp);
-#elif AMREX_SPACEDIM == 3
-                        // No 2-D array is available. Is emulated manually using C-layout (LayoutRight).
-                        std::array<amrex::Real, Stencil::s_width * Stencil::s_width> tmp2D{};
-                        std::array<amrex::Real, Stencil::s_width> tmp1D{};
-                        int const &hw{static_cast<int>(stencil.s_halfWidth)};
-                        int const &w{static_cast<int>(stencil.s_width)};
-                        for(int sx=-hw;sx<=hw;sx++) {
-                            for(int sy=-hw;sy<=hw;sy++) {
-                               StridedArrayView<Stencil::s_width> const tmp{src(ix + sx,iy + sy,iz), strides[Direction::zDir]};
-                               tmp2D[(sx + hw) + (sy + hw) * w] = stencil.m_coeff * tmp;
-                        }
-}
-                        for(int sx=0;sx<w;sx++) {
-                            StridedArrayView<Stencil::s_width> const tmp{tmp2D[sx + hw*w], w};
-                            tmp1D[sx] = stencil.m_coeff * tmp;
-                        };
-                        StridedArrayView<Stencil::s_width> const tmp{tmp1D[hw], 1};
-                        dst(ix,iy,iz) = scale * (stencil.m_coeff * tmp);
-#endif
-                    });
-    }
-}
-template <Direction fieldDir,
-          AMREX_D_DECL(typename StencilXdir, typename StencilYdir, typename StencilZdir)>
-void hodge (DiscreteVectorField& dst,
-            DiscreteVectorField& src,
-            AMREX_D_DECL(StencilXdir stencilXdir, StencilYdir stencilYdir, StencilZdir stencilZdir),
-            amrex::Real scale)
-{
-    std::array<size_t, AMREX_SPACEDIM> ghostWidth{
-        AMREX_D_DECL(stencilXdir.s_halfWidth, stencilYdir.s_halfWidth, stencilZdir.s_halfWidth)};
-    src.apply_boundary_conditions(ghostWidth);
-    for (amrex::MFIter mfi{src.multi_fab(fieldDir)}; mfi.isValid(); ++mfi)
-    {
-        src.select_box(mfi);
-        dst.select_box(mfi);
-        auto strides = stride(src.view(fieldDir));
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
-#if AMREX_SPACEDIM == 1
-                        StridedArrayView<StencilXdir::s_width> tmp{src(fieldDir, ix, iy, iz),
+                        StridedArrayView<StencilXdir::s_width> tmp{src(ix, iy, iz),
                                                                    strides[Direction::xDir]};
-                        dst(fieldDir, ix, iy, iz) = scale * (stencilXdir.m_coeff * tmp);
+                        dst(ix, iy, iz) = scale * (stencilXdir.m_coeff * tmp);
 #elif AMREX_SPACEDIM == 2
                         std::array<amrex::Real, StencilXdir::s_width> tmp1D{};
                         int const &hw{static_cast<int>(stencilXdir.s_halfWidth)};
                         for(int sx=-hw;sx<=hw;sx++) {
-                            StridedArrayView<StencilYdir::s_width> const tmp{src(fieldDir, ix + sx,iy,iz), strides[Direction::yDir]};
+                            StridedArrayView<StencilYdir::s_width> const tmp{src(ix + sx,iy,iz), strides[Direction::yDir]};
                             tmp1D[sx + hw] = stencilYdir.m_coeff*tmp;
                         };
                         StridedArrayView<StencilXdir::s_width> const tmp{tmp1D[hw], 1};
-                        dst(fieldDir, ix,iy,iz) = scale * (stencilXdir.m_coeff*tmp);
+                        dst(ix,iy,iz) = scale * (stencilXdir.m_coeff*tmp);
 #elif AMREX_SPACEDIM == 3
                         // No 2-D array is available. Is emulated manually using C-layout (LayoutRight).
                         std::array<amrex::Real, StencilXdir::s_width * StencilYdir::s_width> tmp2D{};
@@ -513,16 +456,16 @@ void hodge (DiscreteVectorField& dst,
                         int const &w{static_cast<int>(stencilXdir.s_width)};
                         for(int sx=-hwx;sx<=hwx;sx++) {
                             for(int sy=-hwy;sy<=hwy;sy++) {
-                               StridedArrayView<stencilZdir.s_width> const tmp{src(fieldDir ,ix + sx,iy + sy,iz), strides[Direction::zDir]};
+                               StridedArrayView<stencilZdir.s_width> const tmp{src(ix + sx,iy + sy,iz), strides[Direction::zDir]};
                                tmp2D[(sx + hwx) + (sy + hwy) * w] = stencilZdir.m_coeff * tmp;
+                            }
                         }
-}
                         for(int sx=0;sx<w;sx++) {
                             StridedArrayView<StencilYdir::s_width> const tmp{tmp2D[sx + hwy*w], w};
                             tmp1D[sx] = stencilYdir.m_coeff * tmp;
                         };
                         StridedArrayView<StencilXdir::s_width> const tmp{tmp1D[hwx], 1};
-                        dst(fieldDir, ix,iy,iz) = scale * (stencilXdir.m_coeff * tmp);
+                        dst(ix,iy,iz) = scale * (stencilXdir.m_coeff * tmp);
 #endif
                     });
     }
@@ -573,9 +516,8 @@ namespace Impl
 void finite_difference_hodge (PrimalZeroForm& p, DualThreeForm& d, size_t degree)
 {
     auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    amrex::Real scale{GEMPIC_D_MULT(p.discrete_grid().dx(xDir), p.discrete_grid().dx(yDir),
-                                    p.discrete_grid().dx(zDir))};
-    std::visit([&] (auto const& chosenStencil) { Impl::hodge(p, d, chosenStencil, 1.0 / scale); },
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(p, d, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
                cellToNode);
 };
 void finite_difference_hodge (PrimalOneForm& p, DualTwoForm& d, size_t degree)
@@ -584,15 +526,12 @@ void finite_difference_hodge (PrimalOneForm& p, DualTwoForm& d, size_t degree)
     std::visit(
         [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
         {
-            amrex::Real scale = hodge_scale(Direction::xDir, p, d);
-            Impl::hodge<Direction::xDir>(
-                p, d, AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode), scale);
-            scale = hodge_scale(Direction::yDir, p, d);
-            Impl::hodge<Direction::yDir>(
-                p, d, AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode), scale);
-            scale = hodge_scale(Direction::zDir, p, d);
-            Impl::hodge<Direction::zDir>(
-                p, d, AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell), scale);
+            Impl::hodge(p[Direction::xDir], d[Direction::xDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode));
+            Impl::hodge(p[Direction::yDir], d[Direction::yDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode));
+            Impl::hodge(p[Direction::zDir], d[Direction::zDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell));
         },
         cellToNode, nodeToCell);
 };
@@ -602,32 +541,27 @@ void finite_difference_hodge (PrimalTwoForm& p, DualOneForm& d, size_t degree)
     std::visit(
         [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
         {
-            amrex::Real scale = hodge_scale(Direction::xDir, p, d);
-            Impl::hodge<Direction::xDir>(
-                p, d, AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell), scale);
-            scale = hodge_scale(Direction::yDir, p, d);
-            Impl::hodge<Direction::yDir>(
-                p, d, AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell), scale);
-            scale = hodge_scale(Direction::zDir, p, d);
-            Impl::hodge<Direction::zDir>(
-                p, d, AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode), scale);
+            Impl::hodge(p[Direction::xDir], d[Direction::xDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell));
+            Impl::hodge(p[Direction::yDir], d[Direction::yDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell));
+            Impl::hodge(p[Direction::zDir], d[Direction::zDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode));
         },
         cellToNode, nodeToCell);
 };
 void finite_difference_hodge (PrimalThreeForm& p, DualZeroForm& d, size_t degree)
 {
     auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    amrex::Real scale{GEMPIC_D_MULT(d.discrete_grid().dx(xDir), d.discrete_grid().dx(yDir),
-                                    d.discrete_grid().dx(zDir))};
-    std::visit([&] (auto const& chosenStencil) { Impl::hodge(p, d, chosenStencil, scale); },
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(p, d, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
                nodeToCell);
 };
 void finite_difference_hodge (DualZeroForm& d, PrimalThreeForm& p, size_t degree)
 {
     auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    amrex::Real scale{GEMPIC_D_MULT(p.discrete_grid().dx(xDir), p.discrete_grid().dx(yDir),
-                                    p.discrete_grid().dx(zDir))};
-    std::visit([&] (auto const& chosenStencil) { Impl::hodge(d, p, chosenStencil, 1.0 / scale); },
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(d, p, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
                cellToNode);
 };
 void finite_difference_hodge (DualOneForm& d, PrimalTwoForm& p, size_t degree)
@@ -636,15 +570,12 @@ void finite_difference_hodge (DualOneForm& d, PrimalTwoForm& p, size_t degree)
     std::visit(
         [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
         {
-            amrex::Real scale = hodge_scale(Direction::xDir, d, p);
-            Impl::hodge<Direction::xDir>(
-                d, p, AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode), scale);
-            scale = hodge_scale(Direction::yDir, d, p);
-            Impl::hodge<Direction::yDir>(
-                d, p, AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode), scale);
-            scale = hodge_scale(Direction::zDir, d, p);
-            Impl::hodge<Direction::zDir>(
-                d, p, AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell), scale);
+            Impl::hodge(d[Direction::xDir], p[Direction::xDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode));
+            Impl::hodge(d[Direction::yDir], p[Direction::yDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode));
+            Impl::hodge(d[Direction::zDir], p[Direction::zDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell));
         },
         cellToNode, nodeToCell);
 };
@@ -654,25 +585,20 @@ void finite_difference_hodge (DualTwoForm& d, PrimalOneForm& p, size_t degree)
     std::visit(
         [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
         {
-            amrex::Real scale{};
-            scale = hodge_scale(Direction::xDir, d, p);
-            Impl::hodge<Direction::xDir>(
-                d, p, AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell), scale);
-            scale = hodge_scale(Direction::yDir, d, p);
-            Impl::hodge<Direction::yDir>(
-                d, p, AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell), scale);
-            scale = hodge_scale(Direction::zDir, d, p);
-            Impl::hodge<Direction::zDir>(
-                d, p, AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode), scale);
+            Impl::hodge(d[Direction::xDir], p[Direction::xDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell));
+            Impl::hodge(d[Direction::yDir], p[Direction::yDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell));
+            Impl::hodge(d[Direction::zDir], p[Direction::zDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode));
         },
         cellToNode, nodeToCell);
 };
 void finite_difference_hodge (DualThreeForm& d, PrimalZeroForm& p, size_t degree)
 {
     auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    amrex::Real scale{GEMPIC_D_MULT(d.discrete_grid().dx(xDir), d.discrete_grid().dx(yDir),
-                                    d.discrete_grid().dx(zDir))};
-    std::visit([&] (auto const& chosenStencil) { Impl::hodge(d, p, chosenStencil, scale); },
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(d, p, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
                nodeToCell);
 };
 } // namespace Impl
