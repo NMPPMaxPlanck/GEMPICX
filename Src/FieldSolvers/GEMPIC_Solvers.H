@@ -17,20 +17,31 @@ template <typename Rhs, typename Sol>
 class SolverMethod
 {
 public:
-    virtual void solve(Sol& out, Rhs& in) = 0;
+    virtual void solve(Sol& out, Rhs const& in) = 0;
     virtual ~SolverMethod() {};
 };
 
+/** @brief Conjugate gradient solver class to solve equations of the type
+ * A * x = b
+ *
+ * User must provide an operation that takes x and yields b (e.g. a matrix multiplication)
+ * Additionally, one can provide
+ * - a precondition operation that provides an initial guess for x based on b
+ * - a function that checks whether the system is solvable for a given b
+ * - relative tolerance for the solver
+ * - absolute tolerance for the solver
+ * - verbosity level
+ */
 template <class Rhs,
           class Sol,
           class Operation,
           class PreconditionOp = std::nullptr_t,
-          class AverageB0Op = std::nullptr_t>
+          class SolvableOp = std::nullptr_t>
 class ConjugateGradient : public SolverMethod<Rhs, Sol>
 {
 private:
     PreconditionOp m_precondOp;
-    AverageB0Op m_avgB0Op;
+    SolvableOp m_solvableOp;
     Rhs m_residual, m_ap;
     Sol m_p, m_z;
     amrex::Real m_relTol, m_absTol;
@@ -45,12 +56,12 @@ public:
     ConjugateGradient(std::shared_ptr<Forms::DeRhamComplex> drc,
                       Operation&& matMultOp,
                       PreconditionOp&& precondOp = nullptr,
-                      AverageB0Op&& avgB0Op = nullptr,
+                      SolvableOp&& solvableOp = nullptr,
                       amrex::Real relTol = 1e-10,
                       amrex::Real absTol = 1e-12,
                       int verbose = 0) :
         m_precondOp{std::move(precondOp)},
-        m_avgB0Op{std::move(avgB0Op)},
+        m_solvableOp{std::move(solvableOp)},
         m_residual(drc),
         m_ap(drc),
         m_p(drc),
@@ -69,7 +80,7 @@ public:
                       "Given precondition operation must follow the precondition signature "
                       "(void(Sol&, Rhs&))");
         static_assert(
-            std::is_null_pointer_v<AverageB0Op> || std::is_invocable_r_v<void, AverageB0Op, Rhs&>,
+            std::is_null_pointer_v<SolvableOp> || std::is_invocable_r_v<void, SolvableOp, Rhs&>,
             "Given average_b_zero operation must follow the signature void(Rhs&)");
     }
 
@@ -79,13 +90,12 @@ public:
      * @param[out] x The solution vector
      * @param b The right-hand side vector
      */
-    void solve (Sol& x, Rhs& b) override
+    void solve (Sol& x, Rhs const& b) override
     {
         amrex::Real pAp{0}, normResSquareOld{0}, normResSquareNew{0};
         amrex::Real alpha{0}, beta{0};
 
-        // average rhs to zero in periodic case
-        average_b_zero(b);
+        check_solvability(b);
         // Compute norm of b for relative error
         amrex::Real normbSquare = dot_product(b, b);
 
@@ -164,13 +174,12 @@ public:
      * @param[out] x The solution vector
      * @param b The right-hand side vector
      */
-    void precond_solve (Sol& x, Rhs& b)
+    void precond_solve (Sol& x, Rhs const& b)
     {
         amrex::Real pAp{0}, rdotzNew{0};
         amrex::Real alpha{0}, beta{0};
 
-        // average rhs to zero in periodic case
-        average_b_zero(b);
+        check_solvability(b);
         // Compute norm of b for relative error
         amrex::Real normbSquare = dot_product(b, b);
 
@@ -242,7 +251,7 @@ public:
         x.fill_boundary();
     }
 
-    inline void cg_mat_mul (Rhs& mResidual, Sol& x) { m_operator(mResidual, x); }
+    inline void cg_mat_mul (Rhs& mResidual, Sol const& x) { m_operator(mResidual, x); }
 
     inline void precond (Sol& z, Rhs& r)
     {
@@ -256,11 +265,11 @@ public:
         }
     }
 
-    inline void average_b_zero (Rhs& b)
+    inline void check_solvability (Rhs const& b)
     {
-        if constexpr (!std::is_null_pointer_v<AverageB0Op>)
+        if constexpr (!std::is_null_pointer_v<SolvableOp>)
         {
-            m_avgB0Op(b);
+            m_solvableOp(b);
         }
     }
 
@@ -275,18 +284,18 @@ template <class Rhs,
           class Sol,
           class Operation,
           class PreconditionOp = std::nullptr_t,
-          class AverageB0Op = std::nullptr_t>
+          class SolvableOp = std::nullptr_t>
 inline auto make_conjugate_gradient (std::shared_ptr<Forms::DeRhamComplex> drc,
                                      Operation&& matMultOp,
                                      PreconditionOp&& precondOp = nullptr,
-                                     AverageB0Op&& avgB0Op = nullptr,
+                                     SolvableOp&& solvableOp = nullptr,
                                      amrex::Real relTol = 1e-10,
                                      amrex::Real absTol = 1e-12,
                                      int verbose = 0)
 {
-    return ConjugateGradient<Rhs, Sol, Operation, PreconditionOp, AverageB0Op>(
+    return ConjugateGradient<Rhs, Sol, Operation, PreconditionOp, SolvableOp>(
         drc, std::forward<Operation> (matMultOp), std::forward<PreconditionOp>(precondOp),
-        std::forward<AverageB0Op>(avgB0Op), absTol, relTol, verbose);
+        std::forward<SolvableOp>(solvableOp), absTol, relTol, verbose);
 }
 
 /// Helper function for template deduction. Allows you to specify Rhs and Sol explicitly, but have
@@ -295,18 +304,18 @@ template <class Rhs,
           class Sol,
           class Operation,
           class PreconditionOp = std::nullptr_t,
-          class AverageB0Op = std::nullptr_t>
+          class SolvableOp = std::nullptr_t>
 inline auto make_conjugate_gradient_unique_ptr (std::shared_ptr<Forms::DeRhamComplex> drc,
                                                 Operation&& matMultOp,
                                                 PreconditionOp&& precondOp = nullptr,
-                                                AverageB0Op&& avgB0Op = nullptr,
+                                                SolvableOp&& solvableOp = nullptr,
                                                 amrex::Real relTol = 1e-10,
                                                 amrex::Real absTol = 1e-12,
                                                 int verbose = 0)
 {
-    return std::make_unique<ConjugateGradient<Rhs, Sol, Operation, PreconditionOp, AverageB0Op>>(
+    return std::make_unique<ConjugateGradient<Rhs, Sol, Operation, PreconditionOp, SolvableOp>>(
         drc, std::forward<Operation> (matMultOp), std::forward<PreconditionOp>(precondOp),
-        std::forward<AverageB0Op>(avgB0Op), relTol, absTol, verbose);
+        std::forward<SolvableOp>(solvableOp), relTol, absTol, verbose);
 }
 } //namespace Gempic::FieldSolvers
 #endif

@@ -3,7 +3,6 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
-#include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Solvers.H"
 #ifdef AMREX_USE_FFT
@@ -13,7 +12,8 @@
 #include "GEMPIC_Hypre.H"
 #endif
 
-using namespace Gempic::FieldSolvers;
+namespace Gempic::FieldSolvers
+{
 
 /// @brief Applies the Poisson equation
 class PoissonApply
@@ -29,7 +29,7 @@ public:
     PoissonApply(std::shared_ptr<DeRhamComplex> deRham);
 
     void operator()(DeRhamField<Grid::dual, Space::cell>& rho,
-                    DeRhamField<Grid::primal, Space::node>& phi);
+                    DeRhamField<Grid::primal, Space::node> const& phi);
 };
 
 /// @brief Applies the Poisson equation, using a ConjugateGradient solver instead of the Hodge
@@ -52,7 +52,7 @@ public:
                              Gempic::ComputationalDomain const& infra);
 
     void operator()(DeRhamField<Grid::dual, Space::cell>& rho,
-                    DeRhamField<Grid::primal, Space::node>& phi);
+                    DeRhamField<Grid::primal, Space::node> const& phi);
 };
 
 std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_poisson_solver (
@@ -116,9 +116,9 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
             {
                 amrexSolver.solve(z, r); // precondition using the amrex solver
             },
-            [=] (Rhs& b)
+            [=] (Rhs const& b)
             {
-                subtract_constant_part(b, infra); // average b to 0 in the usual way
+                check_charge_neutrality(b, infra); // average b to 0 in the usual way
             },
             relTol, absTol, verbose);
     }
@@ -130,9 +130,9 @@ std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_p
             deRham,
             // make the operator the poisson inverse hodge operator
             PoissonApplyInverseHodge{deRham, infra}, nullptr,
-            [=] (Rhs& b)
+            [=] (Rhs const& b)
             {
-                subtract_constant_part(b, infra); // average b to 0 in the usual way
+                check_charge_neutrality(b, infra); // average b to 0 in the usual way
             },
             relTol, absTol, verbose);
     }
@@ -214,12 +214,12 @@ AmrexSolver::AmrexSolver(ComputationalDomain const& compDom,
 }
 
 void AmrexSolver::solve (Forms::DeRhamField<Grid::primal, Space::node>& phi,
-                        Forms::DeRhamField<Grid::dual, Space::cell>& rho)
+                        Forms::DeRhamField<Grid::dual, Space::cell> const& rho)
 {
     BL_PROFILE("Gempic::FieldSolvers::AmrexSolver::solve()");
 
     // Sum of rhs needs to be 0 if domain is periodic in all directions
-    subtract_constant_part(rho, m_compDom);
+    check_charge_neutrality(rho, m_compDom);
 
     // Solve Poisson equation
     m_mlmg->solve({&phi.m_data}, {&rho.m_data}, m_relTol, m_absTol);
@@ -243,7 +243,7 @@ PoissonApply::PoissonApply(std::shared_ptr<DeRhamComplex> deRham) :
  * @param phi The primal field to apply the operator to.
  */
 void PoissonApply::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
-                              DeRhamField<Grid::primal, Space::node>& phi)
+                              DeRhamField<Grid::primal, Space::node> const& phi)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonApply::operator()()");
     grad(m_primalEdge, phi);
@@ -262,7 +262,7 @@ PoissonApplyInverseHodge::PoissonApplyInverseHodge(std::shared_ptr<DeRhamComplex
     m_deRham{deRham},
     m_infra{infra},
     m_cgHodge{make_conjugate_gradient_unique_ptr<CGRhs, CGSol>(
-        deRham, [=] (CGRhs& primalEdge, CGSol& dualFace) { hodge(primalEdge, dualFace); })},
+        deRham, [=] (CGRhs& primalEdge, CGSol const& dualFace) { hodge(primalEdge, dualFace); })},
     m_primalEdge(deRham),
     m_dualFace(deRham)
 {
@@ -278,7 +278,7 @@ PoissonApplyInverseHodge::PoissonApplyInverseHodge(std::shared_ptr<DeRhamComplex
  * @param phi The primal field to apply the operator to.
  */
 void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
-                                          DeRhamField<Grid::primal, Space::node>& phi)
+                                          DeRhamField<Grid::primal, Space::node> const& phi)
 {
     BL_PROFILE("Gempic::FieldSolvers::PoissonApplyInverseHodge::operator()()");
     // Conjugate gradient to compute inverse Hodge
@@ -288,17 +288,74 @@ void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>&
     div(rho, m_dualFace);
 
     // Sum of rhs needs to be 0 if domain is periodic in all directions
-    subtract_constant_part(rho, m_infra);
+    if (m_infra.geometry().isAllPeriodic())
+    {
+        rho -= compute_rho_average(rho);
+    }
 }
 
-/// Ensures that the average value of the field is 0 if domain is periodic in all directions
-void Gempic::FieldSolvers::subtract_constant_part (DeRhamField<Grid::dual, Space::cell>& rho,
-                                                  ComputationalDomain const& compDom)
+/// Check that the average value of the charge density is 0 if domain is periodic in all directions
+void check_charge_neutrality (DeRhamField<Grid::dual, Space::cell> const& rho,
+                              ComputationalDomain const& compDom)
 {
-    BL_PROFILE("Gempic::FieldSolvers::subtract_constant_part()");
+    BL_PROFILE("Gempic::FieldSolvers::check_charge_neutrality()");
     if (compDom.geometry().isAllPeriodic())
     {
         amrex::Real rhoInt = compute_rho_integral(rho);
-        rho -= rhoInt;
+        if (abs(rhoInt) > 1e3 * std::numeric_limits<amrex::Real>::epsilon() *
+                              rho.m_data.norm1(0, rho.m_deRham->m_geom.periodicity()))
+        {
+            amrex::Warning(
+                "Warning: Rhs of Poisson equation does not satisfy solvability condition (zero "
+                "average):\nabs(sum(rho)) = " +
+                std::format("{:e}", abs(rhoInt)) + " > " +
+                std::format("{:e}", 1e3 * std::numeric_limits<amrex::Real>::epsilon() *
+                                        rho.m_data.norm1(0, rho.m_deRham->m_geom.periodicity())) +
+                " = 1e3 * epsilon * norm1(rho)");
+        }
     }
 }
+
+amrex::Real compute_rho_integral (Forms::DeRhamField<Grid::dual, Space::cell> const& rho)
+{
+    BL_PROFILE("Gempic::FieldSolvers::compute_rho_integral()");
+    return rho.m_data.sum_unique(0, false, rho.m_deRham->m_geom.periodicity());
+}
+
+amrex::Real compute_rho_average (Forms::DeRhamField<Grid::dual, Space::cell> const& rho)
+{
+    BL_PROFILE("Gempic::FieldSolvers::compute_rho_average()");
+    return compute_rho_integral(rho) / rho.m_deRham->m_geom.Domain().numPts();
+}
+
+amrex::Real get_and_apply_neutralizing_background (Forms::DeRhamField<Grid::dual, Space::cell>& rho,
+                                                   ComputationalDomain const& infra,
+                                                   Io::Parameters& params,
+                                                   bool neutralizeTwice)
+{
+    BL_PROFILE("Gempic::FieldSolvers::get_and_apply_neutralizing_background()");
+    amrex::Real rhoBackground = -1 * compute_rho_average(rho) / infra.cell_volume();
+    amrex::Real rhoBackgroundExpected = 0;
+    params.get_or_set("rhoBackground", rhoBackgroundExpected);
+    if (std::abs(rhoBackgroundExpected - rhoBackground) > 1e-7)
+    {
+        amrex::Warning("Warning: You might not have a neutral plasma, the net charge density (" +
+                       std::format("{:e}", rhoBackgroundExpected - rhoBackground) +
+                       ") exceeds an absolute tolerance of 1e-7");
+    }
+    if (not infra.geometry().isAllPeriodic())
+    {
+        rhoBackground = rhoBackgroundExpected;
+    }
+    rho += rhoBackground * infra.cell_volume();
+
+    // optional second subtraction of average to obtain neutrality close to machine precision
+    if (neutralizeTwice && infra.geometry().isAllPeriodic())
+    {
+        amrex::Real correction = -1 * compute_rho_average(rho);
+        rho += correction;
+        rhoBackground += correction / infra.cell_volume();
+    }
+    return rhoBackground;
+}
+} // namespace Gempic::FieldSolvers

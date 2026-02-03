@@ -168,9 +168,9 @@ public:
      * @param rho The right-hand side vector
      */
     void solve (DeRhamField<Grid::primal, Space::node>& phi,
-                DeRhamField<Grid::dual, Space::cell>& rho) override
+                DeRhamField<Grid::dual, Space::cell> const& rho) override
     {
-        subtract_constant_part(rho, m_compDom); // average rhs to zero in periodic case
+        check_charge_neutrality(rho, m_compDom);
 
         m_hypreSolver->solve(amrex::Vector<amrex::MultiFab*>{&(phi.m_data)},
                              amrex::Vector<amrex::MultiFab const*>{&(rho.m_data)}, m_relTol,

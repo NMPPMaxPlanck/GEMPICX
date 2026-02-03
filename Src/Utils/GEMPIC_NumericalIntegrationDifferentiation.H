@@ -142,8 +142,6 @@ private:
     static std::array<amrex::Real, s_maxPoints> weights(int points);
 };
 
-amrex::Real compute_rho_integral(Forms::DeRhamField<Grid::dual, Space::cell>& rho);
-
 // clang-format off
 /**
  * @brief Gauss-Legendre quadrature weights and nodes on the unit interval [0,1]

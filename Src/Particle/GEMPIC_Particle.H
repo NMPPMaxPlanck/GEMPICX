@@ -244,48 +244,6 @@ public:
         this->copyParticles(source, local);
     }
 
-    /**
-     * Resets the total weight of the particle species to the specified target weight.
-     * This is needed to correct sampling errors for low particle counts and non-symmetric velocity
-     * distributions.
-     *
-     * @param targetWeight the new total weight of the particle species
-     */
-    void reset_total_weight (amrex::Real targetWeight)
-    {
-        BL_PROFILE("Gempic::Particle::ParticleSpecies::reset_total_weight(totalWeight)");
-
-        // Compute total weight of particle species
-        amrex::ReduceOps<amrex::ReduceOpSum> reduceOps;
-        auto ii = this->get_data_indices();
-        using PTDType = typename amrex::ParticleContainerPureSoA<
-            AMREX_SPACEDIM + vDim + nData, 0>::ParticleTileType::ConstParticleTileDataType;
-        auto particleTmp = amrex::ParticleReduce<amrex::ReduceData<amrex::Real>>(
-            *this,
-            [=] AMREX_GPU_HOST_DEVICE(PTDType const& pt,
-                                      int const pp) -> amrex::GpuTuple<amrex::Real>
-            {
-                auto const weight = pt.rdata(ii.m_iweight)[pp];
-                return weight;
-            },
-            reduceOps);
-
-        amrex::Real W = amrex::get<0>(particleTmp);
-
-        // reduced sum over mpi ranks
-        amrex::ParallelDescriptor::ReduceRealSum(W);
-
-        // Remove average weight from all particles
-        auto totalNumberOfParticles = this->TotalNumberOfParticles();
-        amrex::Real averageDiff = (targetWeight - W) / totalNumberOfParticles;
-        for (auto& particleGrid : *this)
-        {
-            long const np = particleGrid.numParticles();
-            auto* const weight = particleGrid.GetStructOfArrays().GetRealData(vDim).data();
-            amrex::ParallelFor(np, [=] AMREX_GPU_DEVICE(long pp) { weight[pp] += averageDiff; });
-        }
-    }
-
     Impl::ParticleSpeciesIterator<vDim, nData> begin (int level = 0)
     {
         return Impl::ParticleSpeciesIterator<vDim, nData>(*this, level);

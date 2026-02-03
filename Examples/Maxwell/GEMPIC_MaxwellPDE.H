@@ -79,7 +79,7 @@ public:
      * @param : x vector
      *
      */
-    void operator()(V1field_dual& Ax, V1field& x)
+    void operator()(V1field_dual& Ax, V1field const& x)
     {
         // e.g.
         //  B = Bold - dt curl E
