@@ -142,7 +142,7 @@ TEST_F(DepositRhoTest, NullTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        {{m_infra.m_geom.ProbLoArray()}}};
 
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
