@@ -95,7 +95,7 @@ TEST_F(SplineWithPrimitiveTest, SplineConstructorTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        {{m_infra.m_geom.ProbLoArray()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -143,7 +143,7 @@ TEST_F(SplineWithPrimitiveTest, SplineUpdate1DPrimitiveTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        {{m_infra.m_geom.ProbLoArray()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -193,7 +193,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
     // Adding one particle at lower left corner of domain
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        {{m_infra.m_geom.ProbLoArray()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -251,7 +251,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        {{m_infra.m_geom.ProbLoArray()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -310,7 +310,7 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
     // Adding particle at lower left corner of computational domain
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        {{m_infra.m_geom.ProbLoArray()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -374,7 +374,7 @@ TEST_F(SplineWithPrimitiveTest, SplinePrimitiveEvalTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        {{*m_infra.m_geom.ProbLo()}}};
+        {{m_infra.m_geom.ProbLoArray()}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
