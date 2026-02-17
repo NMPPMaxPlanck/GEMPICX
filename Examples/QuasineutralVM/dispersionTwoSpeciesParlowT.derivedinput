@@ -1,0 +1,6 @@
+FILE = dispersion.input
+
+Particle.electrons.G0.vThermal = 0.000001 0.000001 0.000001
+Particle.ions.G0.vThermal = 0.0000005 0.0000005 0.0000005
+
+ICs.Bmean = 1.0 0.0 0.0
