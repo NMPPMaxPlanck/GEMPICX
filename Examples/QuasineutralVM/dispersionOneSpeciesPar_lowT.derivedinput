@@ -1,0 +1,16 @@
+FILE = dispersion.input
+
+# Particle parameters
+Particle.speciesNames = electrons
+Particle.electrons.G0.vThermal = 0.000001 0.000001 0.000001
+
+# Simulation parameters
+TimeLoop.nSteps = 3000
+TimeLoop.dt = 0.1
+
+# Initial conditions
+ICs.Bmean = 1.0 0.0 0.0
+Function.idealRho = "-1.0"
+
+#Full Diagnostics
+FullDiagnostics.field.saveInterval = 1
