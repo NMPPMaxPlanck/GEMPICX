@@ -1,9 +1,6 @@
 macro(set_amrex_options_from_gempic)
   include(cmake/check_FFT.cmake)
   set(AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
-  if(GEMPIC_USE_HYPRE)
-    set(AMReX_HYPRE ON CACHE BOOL "AMReX Option set by default within GEMPIC")
-  endif()
   if(GEMPIC_USE_CUDA)
     if(IPO_IS_SUPPORTED)
       set(AMReX_CUDA_LTO ON CACHE STRING "AMReX Option set within GEMPIC")
@@ -23,7 +20,7 @@ endmacro()
 
 include(cmake/gempic_FetchContent_Declare.cmake)
 
-if(GEMPIC_USE_HYPRE)
+if(AMReX_HYPRE)
   gempic_FetchContent_Declare(HYPRE
     SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/hypre-src
     GIT_REPOSITORY https://github.com/hypre-space/hypre
