@@ -1,6 +1,7 @@
 #ifndef GEMPIC_CONFIG_H_
 #define GEMPIC_CONFIG_H_
 #include <math.h>
+#include <variant>
 
 #ifndef M_PI /// M_PI is gnu @todo: switch to c++20 and std::numbers::pi_v<amrex::Real>
 #define M_PI 3.14159265358979323846
@@ -123,6 +124,19 @@
 #endif
 
 /**
+ * The GEMPIC_D_AND(a,b,c) macro compare conditions of a
+ * comma-separated list of 1, 2, or all 3 of the arguments of the call,
+ * depending on the value of AMREX_SPACEDIM.
+ */
+#if AMREX_SPACEDIM == 1
+#define GEMPIC_D_AND(a, b, c) a
+#elif AMREX_SPACEDIM == 2
+#define GEMPIC_D_AND(a, b, c) ((a) && (b))
+#elif AMREX_SPACEDIM == 3
+#define GEMPIC_D_AND(a, b, c) ((a) && (b) && (c))
+#endif
+
+/**
  * Tiny profiler macro for host device functions. Profiling uses a host function which cannot be
  * called from a device context.
  */
@@ -196,7 +210,12 @@
 #endif
 // Useful for static_assert, because without a layer of indirection a false condition triggers
 // even in code that's never supposed to be reached
-template <typename>
+template <typename> // only accepts types
+constexpr bool gempic_always_false ()
+{
+    return false;
+}
+template <auto> // only accepts values
 constexpr bool gempic_always_false ()
 {
     return false;
@@ -208,6 +227,7 @@ enum Direction : unsigned int
     xDir = 0,
     yDir = 1,
     zDir = 2,
+    DirectionCount
 };
 
 // deRham enum
@@ -227,5 +247,23 @@ enum class Form
 
 template <typename T>
 using canonical_t = std::remove_cvref_t<T>;
+
+// Checks if T is in the variant
+template <typename T, typename Variant>
+struct is_variant_member;
+
+/**
+ * @brief check if type T is a variant alternative of the variants
+ * @tparam T a type
+ * @tparam ...Ts parameter pack listing all variant alternatives
+ * @note    - iterate over the variant alternatives automatically, without manually listing each of
+ * them.
+ *          - disjunction_v is a helper for disjunction<...>::value
+ *          - disjunction: once a true trait is found, the rest are not evaluated
+ */
+template <typename T, typename... Ts>
+struct is_variant_member<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, Ts>...>
+{
+};
 
 #endif

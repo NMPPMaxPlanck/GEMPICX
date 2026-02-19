@@ -373,7 +373,7 @@ bool is_nan (DiscreteField& a)
                                  return {std::isnan(aa(ix, iy, iz))};
                              });
     //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
-    //It should be noted that the reduction result of ParReduce is local and it is the user’s
+    //It should be noted that the reduction result of ParReduce is local and it is the user's
     //responsibility if MPI communication is needed
     MPI_Allreduce(MPI_IN_PLACE, &isNan, 1, MPI_INT, MPI_LOR,
                   amrex::ParallelContext::CommunicatorAll());
@@ -402,7 +402,7 @@ amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
     int isNan{amrex::get<1>(res)};
     amrex::Real norm{amrex::get<0>(res)};
     //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
-    //It should be noted that the reduction result of ParReduce is local and it is the user’s
+    //It should be noted that the reduction result of ParReduce is local and it is the user's
     //responsibility if MPI communication is needed
     MPI_Allreduce(MPI_IN_PLACE, &isNan, 1, MPI_INT, MPI_LOR,
                   amrex::ParallelContext::CommunicatorAll());
@@ -447,5 +447,39 @@ amrex::Real dot (DiscreteVectorField& a, DiscreteVectorField& b)
     return result;
 }
 } //namespace Impl
+
+namespace Forms
+{
+/// Constructor for the DeRhamComplex class
+/// @param infra The computational domain needed to construct the class correctly
+/// @param hodgeDegree The degree of the Hodge scheme, used for a lower limit of ghost cells
+/// @param maxSplineDegree The degree of the splines, used for a lower limit of ghost cells
+DeRhamComplex::DeRhamComplex(ComputationalDomain const& infra,
+                             int const hodgeDegree,
+                             int const maxSplineDegree)
+/*  :
+  m_fieldRegistry(std::make_unique<FieldRegistry>())*/
+{
+    BL_PROFILE("Gempic::Forms::DeRhamComplex:: DeRhamComplex()");
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(infra.geometry().Ok(), "Uninitialized geometry");
+
+    m_grid = infra.m_grid;
+    m_distriMap = infra.m_distriMap;
+    m_geom = infra.m_geom;
+    m_hodgeDegree = hodgeDegree;
+    m_dx = infra.geometry().CellSizeArray();
+
+    // set index: // 0 -> cell-centered | 1 -> node-centered
+    m_primalNodeIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 1)});
+    m_primalEdgeIndex[xDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 1)});
+    m_primalEdgeIndex[yDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 1)});
+    m_primalEdgeIndex[zDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 1, 0)});
+    m_primalFaceIndex[xDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(1, 0, 0)});
+    m_primalFaceIndex[yDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 1, 0)});
+    m_primalFaceIndex[zDir] = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 1)});
+    m_primalCellIndex = amrex::IndexType(amrex::IntVect{AMREX_D_DECL(0, 0, 0)});
+}
+
+} //namespace Forms
 
 } //namespace Gempic

@@ -592,13 +592,11 @@ public:
     void init();
 
     // Parameterized constructor
-    MHD(std::array<std::string, 2> const& outputFields);
+    MHD();
 };
 
 template <int nVarPde, int polyrecDegreeFv, typename ParamsClass, typename PdeTagType>
-MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::MHD(
-    std::array<std::string, 2> const& outputFields) :
-    m_disc(outputFields)
+MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::MHD() : m_disc()
 {
     amrex::Print() << "hello from MHD!\n";
 }
@@ -615,13 +613,13 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::compute_norms_reduc
     // SEE FabArray<FAB>::norminf for reference (AMReX) or void compute_diags (in
     // GEMPIC_ParticleDiags) to be tested with MPI or OMP
     amrex::MultiArray4<amrex::Real const> const& qLoc =
-        (m_disc.m_myfields->m_q.m_data).const_arrays();
+        (m_disc.m_fields->m_q.m_data).const_arrays();
 
     ParamsClass myparams;
     smaxLoc = amrex::ParReduce(
         amrex::TypeList<AMREX_D_DECL(amrex::ReduceOpMax, amrex::ReduceOpMax, amrex::ReduceOpMax)>{},
         amrex::TypeList<AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real)>{},
-        m_disc.m_myfields->m_q.m_data,
+        m_disc.m_fields->m_q.m_data,
         amrex::IntVect(0), // zero ghost cells
         // ncomp,       // number of components
         [qLoc, idVol, myparams] AMREX_GPU_DEVICE(int boxNo, int i, int j, int k) noexcept
@@ -689,11 +687,11 @@ template <int nVarPde, int polyrecDegreeFv, typename ParamsClass, typename PdeTa
 void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::init ()
 {
     int ncomp = nVarPde;
-    for (amrex::MFIter mfi(m_disc.m_myfields->m_q.m_data, true); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi(m_disc.m_fields->m_q.m_data, true); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.growntilebox(); // real and ghost cells.
         // creating pointer to data for GPU:
-        amrex::Array4<amrex::Real> const& qnewLoc = (m_disc.m_myfields->m_q.m_data)[mfi].array();
+        amrex::Array4<amrex::Real> const& qnewLoc = (m_disc.m_fields->m_q.m_data)[mfi].array();
 
         // starts the loop inside the box,
         amrex::GpuArray<amrex::Real, 3> r0Loc = {m_disc.m_r0};
@@ -717,7 +715,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::init ()
                 }
             });
     }
-    amrex::MultiFab::Copy(m_disc.m_myfieldsTmpEx->m_q.m_data, m_disc.m_myfields->m_q.m_data, 0, 0,
+    amrex::MultiFab::Copy(m_disc.m_fieldsTmpEx->m_q.m_data, m_disc.m_fields->m_q.m_data, 0, 0,
                           ncomp, m_disc.m_nGhosts);
 
     amrex::GpuArray<amrex::Real, 3> n, ndir;
@@ -734,12 +732,12 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::init ()
         n[idir] = 1.0;
         amrex::Real const dVol = m_disc.m_dVol;
         amrex::Real const dS = dVol * idrLoc[idir];
-        for (amrex::MFIter mfi(m_disc.m_myfields->m_b.m_data[idir], true); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(m_disc.m_fields->m_b.m_data[idir], true); mfi.isValid(); ++mfi)
         {
             amrex::Box const& bx = mfi.growntilebox(); // real and ghost cells.
             // creating pointer to data for GPU:
             amrex::Array4<amrex::Real> const& bnewLoc =
-                (m_disc.m_myfields->m_b.m_data[idir])[mfi].array();
+                (m_disc.m_fields->m_b.m_data[idir])[mfi].array();
 
             amrex::GpuArray<amrex::Real, 3> r0Loc = {m_disc.m_r0};
             amrex::GpuArray<amrex::Real, 3> drLoc = {m_disc.m_dr};
@@ -761,7 +759,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::init ()
                     bnewLoc(i, j, k) = qGpu[bxIdx + idir] * dS;
                 });
         }
-        amrex::MultiFab::Copy(m_disc.m_bold.m_data[idir], m_disc.m_myfields->m_b.m_data[idir], 0, 0,
+        amrex::MultiFab::Copy(m_disc.m_bold.m_data[idir], m_disc.m_fields->m_b.m_data[idir], 0, 0,
                               ncomp, m_disc.m_nGhosts);
     }
 }
@@ -770,17 +768,17 @@ template <int nVarPde, int polyrecDegreeFv, typename ParamsClass, typename PdeTa
 void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::update_qnew ()
 {
     //Euler update
-    amrex::MultiFab::LinComb(m_disc.m_myfields->m_q.m_data, 1.0, m_disc.m_myfieldsTmpEx->m_q.m_data,
-                             0, m_disc.m_dt, m_disc.m_myfieldsDtEx->m_q.m_data, 0, 0, nVarPde,
+    amrex::MultiFab::LinComb(m_disc.m_fields->m_q.m_data, 1.0, m_disc.m_fieldsTmpEx->m_q.m_data, 0,
+                             m_disc.m_dt, m_disc.m_fieldsDtEx->m_q.m_data, 0, 0, nVarPde,
                              0); // no ghost cells update
-    m_disc.m_myfields->m_q.m_data.FillBoundary(
+    m_disc.m_fields->m_q.m_data.FillBoundary(
         m_disc.m_compDom.m_geom.periodicity()); // this will update the mpi/patch ghost cells
 }
 
 /**
  * This is the single-time-step update of the Explicit scheme.
- * It must evaluate time derivative of the explicit step (stored in m_myfieldsDtEx),
- * as a function of the explicit state (m_myfieldsTmpEx)
+ * It must evaluate time derivative of the explicit step (stored in m_fieldsDtEx),
+ * as a function of the explicit state (m_fieldsTmpEx)
  */
 template <int nVarPde, int polyrecDegreeFv, typename ParamsClass, typename PdeTagType>
 template <ReconstructionMode userRecMode>
@@ -789,7 +787,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
     amrex::GpuArray<amrex::Real, 3> n, ndir;
     amrex::GpuArray<amrex::Real, 3> const idrLoc = {m_disc.m_idr};
     // Fill boundary before computing the reconstruction
-    m_disc.m_myfieldsTmpEx->m_q.m_data.FillBoundary(
+    m_disc.m_fieldsTmpEx->m_q.m_data.FillBoundary(
         m_disc.m_compDom.m_geom.periodicity()); // this will update the mpi/patch ghost cells
     /*************************************************************************************************************/
     // LOOP OVER BARYCENTERS
@@ -813,7 +811,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
         // creating pointer to data for GPU:
         amrex::Array4<amrex::Real> const& v0 = (m_disc.m_v.m_data)[mfi].array();
         amrex::Array4<amrex::Real const> const& q0 =
-            (m_disc.m_myfieldsTmpEx->m_q.m_data)[mfi].const_array();
+            (m_disc.m_fieldsTmpEx->m_q.m_data)[mfi].const_array();
         amrex::Real idVolLoc{m_disc.m_idVol};
 
         ParamsClass myparams;
@@ -850,7 +848,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
         }
     }
 
-    for (amrex::MFIter mfi(m_disc.m_myfields->m_q.m_data); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi(m_disc.m_fields->m_q.m_data); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.tilebox(); // cache blocking (for cpus) loops over valid boxes
 
@@ -862,11 +860,11 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
             amrex::Real, FVreconstruction<nVarPde, polyrecDegreeFv>::s_faceDof>> const& qLx =
             (m_disc.m_qlRecFab[xDir]).array(mfi);
         amrex::Array4<amrex::Real const> const& bx0 =
-            (m_disc.m_myfields->m_b.m_data[xDir])[mfi].array();
+            (m_disc.m_fields->m_b.m_data[xDir])[mfi].array();
         amrex::Array4<amrex::Real const> const& by0 =
-            (m_disc.m_myfields->m_b.m_data[yDir])[mfi].array();
+            (m_disc.m_fields->m_b.m_data[yDir])[mfi].array();
         amrex::Array4<amrex::Real const> const& bz0 =
-            (m_disc.m_myfields->m_b.m_data[zDir])[mfi].array();
+            (m_disc.m_fields->m_b.m_data[zDir])[mfi].array();
 #if AMREX_SPACEDIM > 1
         amrex::Array4<amrex::GpuArray<
             amrex::Real, FVreconstruction<nVarPde, polyrecDegreeFv>::s_faceDof>> const& qRy =
@@ -1015,10 +1013,10 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
     // LOOP OVER BARYCENTERS
     // - update cell averages with numerical fluxes:    Q_i - dt/dx*(F_{i+1/2} - F_{i-1/2})
     int ncomp = nVarPde;
-    for (amrex::MFIter mfi(m_disc.m_myfields->m_q.m_data); mfi.isValid(); ++mfi)
+    for (amrex::MFIter mfi(m_disc.m_fields->m_q.m_data); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.validbox();
-        amrex::Array4<amrex::Real> const& dQdt = (m_disc.m_myfieldsDtEx->m_q.m_data)[mfi].array();
+        amrex::Array4<amrex::Real> const& dQdt = (m_disc.m_fieldsDtEx->m_q.m_data)[mfi].array();
         amrex::Array4<amrex::Real const> const& Fx =
             (m_disc.m_fluxes.m_data[xDir])[mfi].const_array();
 #if AMREX_SPACEDIM > 1
@@ -1071,22 +1069,22 @@ public:
      */
     std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_initial_field_explicit () override
     {
-        return m_mhd.m_disc.m_myfieldsTmpEx;
+        return m_mhd.m_disc.m_fieldsTmpEx;
     }
 
     std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_initial_field_implicit () override
     {
-        return m_mhd.m_disc.m_myfieldsTmpIm;
+        return m_mhd.m_disc.m_fieldsTmpIm;
     }
 
     std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_time_derivative_explicit () override
     {
-        return m_mhd.m_disc.m_myfieldsDtEx;
+        return m_mhd.m_disc.m_fieldsDtEx;
     }
 
     std::shared_ptr<MHDFieldsHandlerStruct> const& get_pointer_time_derivative_implicit () override
     {
-        return m_mhd.m_disc.m_myfieldsDtIm;
+        return m_mhd.m_disc.m_fieldsDtIm;
     }
 
     /**
@@ -1158,7 +1156,7 @@ public:
     void one_step_solve_q_implicit (amrex::Real rkTime, amrex::Real dtLoc) override { return; }
 
     /**
-     * compute time derivative for the semi-implicit solver (stored in m_myfieldsDtIm).
+     * compute time derivative for the semi-implicit solver (stored in m_fieldsDtIm).
      *  k_i =  H(qExplicit,qStar + dt*aii*k_i
      *  dtloc = dt*aii
      * =>  qImplicit = qStar + dtloc*(HE(qExplicit) + HI(qImplicit))
@@ -1214,7 +1212,7 @@ public:
      */
     void print_now ()
     {
-        m_mhd.m_disc.m_myfields->fill_boundary();
+        m_mhd.m_disc.m_fields->fill_boundary();
         m_mhd.m_disc.m_diagn.compute_and_write_to_file(m_mhd.m_disc.m_timeStep, m_mhd.m_disc.m_time,
                                                        true);
     }
@@ -1253,10 +1251,7 @@ public:
         return m_mhd.m_disc.m_compDom.m_geom.periodicity();
     }
 
-    MhdfvNumericalScheme(int myrank,
-                         int nMPIranks,
-                         std::array<std::string, 2> const& outputFields) :
-        m_mhd(outputFields)
+    MhdfvNumericalScheme(int myrank, int nMPIranks) : m_mhd()
     {
         Gempic::Io::Parameters params("TimeLoop");
         amrex::Real dt;

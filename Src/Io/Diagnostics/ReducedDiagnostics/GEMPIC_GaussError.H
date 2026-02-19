@@ -16,6 +16,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FieldMethods.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Particle.H"
@@ -33,12 +34,12 @@ template <int vdim, int degx, int degy, int degz, int ndata>
 class GaussError : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_rho;
-    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge> const> m_constE;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell>> m_divD;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face> const> m_constD;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::cell> const> m_constDivD;
+    std::unique_ptr<Forms::DeRhamComplex::Dual3Form> m_rho;
+    std::unique_ptr<Forms::DeRhamComplex::Primal1Form const> m_constE;
+    std::unique_ptr<Forms::DeRhamComplex::Dual2Form> m_D;
+    std::unique_ptr<Forms::DeRhamComplex::Dual3Form> m_divD;
+    std::unique_ptr<Forms::DeRhamComplex::Dual2Form const> m_constD;
+    std::unique_ptr<Forms::DeRhamComplex::Dual3Form const> m_constDivD;
 
     // Initialization value needs to be chosen so that it is unlilkely to match computed value
     amrex::Real m_rhoNorm{0.0};
@@ -46,6 +47,7 @@ public:
 
     enum class ComputeMethod
     {
+        missingAll,
         missingNone,
         missingDivD,
         missingD
@@ -98,11 +100,13 @@ public:
     /**
      * function to initialize data after amr levels are initialized.
      */
-    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf) final
+    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc,
+                    FieldRegistry const& reg,
+                    bool cmf) final
     {
         BL_PROFILE("Gempic::Io::GaussError::init_data()");
-        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, cmf);
-        m_computeMethod = choose_computation_method(this->m_deRham->m_fieldsDiagnostics);
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, reg, cmf);
+        m_computeMethod = choose_computation_method(reg);
     }
 
     /**
@@ -128,6 +132,11 @@ public:
                 div(*m_divD, *m_constD);
                 update_data(*m_rho, *m_divD, infra);
                 break;
+            default:
+                amrex::Abort(
+                    "Gempic::Io::GaussError::compute_diags(): ComputeMethod missing all "
+                    "required fields!");
+                return;
         }
     }
 
@@ -137,72 +146,65 @@ private:
      * Selects computation method based on missing fields and the input file switch
      * computeMissingFields
      */
-    ComputeMethod choose_computation_method (std::map<std::string, amrex::MultiFab const>& fieldMap)
+    ComputeMethod choose_computation_method (FieldRegistry const& registry)
     {
         BL_PROFILE("Gempic::Io::GaussError::choose_computation_method()");
         using namespace Forms;
-        if (fieldMap.count("rho") && fieldMap.count("divD"))
+        using DRC = Forms::DeRhamComplex;
+        auto const* rhoPtr = get_field_ptr_or_null<DRC::Dual3Form>(registry, "rho");
+        auto const* divdPtr = get_field_ptr_or_null<DRC::Dual3Form>(registry, "divD");
+        if (rhoPtr && divdPtr)
         {
-            this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham,
-                                                                                 fieldMap["rho"]);
-            this->m_constDivD = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
-                this->m_deRham, fieldMap["divD"]);
+            this->m_rho = std::make_unique<DRC::Dual3Form>(this->m_deRham, *rhoPtr);
+            this->m_constDivD = std::make_unique<DRC::Dual3Form>(this->m_deRham, *divdPtr);
             return ComputeMethod::missingNone;
         }
         else if (this->m_computeMissingFields)
         {
-            if (fieldMap.count("rho") && fieldMap.count("Dx") && fieldMap.count("Dy") &&
-                fieldMap.count("Dz"))
+            if (rhoPtr && !divdPtr)
             {
-                int nComps{fieldMap["Dx"].nComp()};
-                this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
-                    this->m_deRham, fieldMap["rho"]);
-                this->m_constD = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
-                    this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
+                this->m_rho = std::make_unique<DRC::Dual3Form>(this->m_deRham, *rhoPtr);
 
-                this->m_divD =
-                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
-                return ComputeMethod::missingDivD;
-            }
-            else if (fieldMap.count("rho") && fieldMap.count("Ex") && fieldMap.count("Ey") &&
-                     fieldMap.count("Ez"))
-            {
-                int nComps{fieldMap["Ex"].nComp()};
-                this->m_rho = std::make_unique<DeRhamField<Grid::dual, Space::cell>>(
-                    this->m_deRham, fieldMap["rho"]);
-                this->m_constE = std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
-                    this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
-
-                this->m_D =
-                    std::make_unique<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
-                this->m_divD =
-                    std::make_unique<DeRhamField<Grid::dual, Space::cell>>(this->m_deRham, nComps);
-                return ComputeMethod::missingD;
-            }
-            else
-            {
-                GEMPIC_ERROR(
-                    "rho and (D or E or divD) not found: rho and either Dx, Dy and Dz or Ex, Ey "
-                    "and Ez or divD are needed to compute "
-                    "Gauss error when computeMissingFields is set");
+                auto const* dPtr = get_field_ptr_or_null<DRC::Dual2Form>(registry, "Dx");
+                auto const* ePtr = get_field_ptr_or_null<DRC::Primal1Form>(registry, "Ex");
+                if (dPtr)
+                {
+                    int nComps = dPtr->get_ncomp(xDir);
+                    this->m_constD = std::make_unique<DRC::Dual2Form>(this->m_deRham, *dPtr);
+                    this->m_divD = std::make_unique<DRC::Dual3Form>(this->m_deRham, nComps);
+                    return ComputeMethod::missingDivD;
+                }
+                else if (ePtr)
+                {
+                    int nComps = ePtr->get_ncomp(xDir);
+                    this->m_constE = std::make_unique<DRC::Primal1Form>(this->m_deRham, *ePtr);
+                    this->m_D = std::make_unique<DRC::Dual2Form>(this->m_deRham, nComps);
+                    this->m_divD = std::make_unique<DRC::Dual3Form>(this->m_deRham, nComps);
+                    return ComputeMethod::missingD;
+                }
+                else
+                {
+                    GEMPIC_ERROR(
+                        "divD (or D or E) not found: rho and either Dx, Dy and Dz or Ex, Ey "
+                        "and Ez or divD are needed to compute "
+                        "Gauss error when computeMissingFields is set");
+                    return ComputeMethod::missingAll;
+                }
             }
         }
-        else
-        {
-            GEMPIC_ERROR(
-                "rho or divD not found: rho and divD are both needed to compute Gauss error when "
-                "computeMissingFields "
-                "is not set");
-        }
-        return ComputeMethod::missingNone; // never reached
+        GEMPIC_ERROR(
+            "rho or divD not found: rho and divD are both needed to compute Gauss error when "
+            "computeMissingFields "
+            "is not set");
+        return ComputeMethod::missingAll; // never reached
     }
 
     /**
      * This function computes the Gauss error by comparing rho computed from particles with
      * div D coming from Maxwell
      */
-    void update_data (Forms::DeRhamField<Grid::dual, Space::cell> const& rho,
-                      Forms::DeRhamField<Grid::dual, Space::cell> const& divD,
+    void update_data (Forms::DeRhamComplex::Dual3Form const& rho,
+                      Forms::DeRhamComplex::Dual3Form const& divD,
                       ComputationalDomain const& infra)
     {
         BL_PROFILE("Gempic::Io::GaussError::update_data()");

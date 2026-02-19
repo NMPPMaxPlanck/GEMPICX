@@ -13,6 +13,7 @@
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
@@ -54,15 +55,20 @@ int main (int argc, char* argv[])
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
-
-        DeRhamField<Grid::primal, Space::edge> E(deRham, "E");
-        DeRhamField<Grid::dual, Space::face> D(deRham, "D");
+        Gempic::Io::FieldRegistry fieldRegistry;
+        // Field declarations (labels removed from constructors)
+        auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry,
+                                                                                     "E", deRham);
+        auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
+                                                                                   "D", deRham);
         amrex::Real c1 = -1.0, c2 = 1.0;
 
-        DeRhamField<Grid::primal, Space::face> B(deRham, "B");
-        DeRhamField<Grid::primal, Space::face> bOld(deRham, "B_old");
+        auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(fieldRegistry,
+                                                                                     "B", deRham);
+        DeRhamField<Grid::primal, Space::face> bOld(deRham);
         DeRhamField<Grid::primal, Space::cell> divB(deRham);
-        DeRhamField<Grid::dual, Space::edge> H(deRham, "H");
+        auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(fieldRegistry,
+                                                                                   "H", deRham);
         DeRhamField<Grid::dual, Space::face> curlH(deRham);
         DeRhamField<Grid::dual, Space::face> jMinusCurlH(deRham);
 
@@ -71,12 +77,13 @@ int main (int argc, char* argv[])
         DeRhamField<Grid::primal, Space::edge> aPrimal(deRham);
 
         DeRhamField<Grid::dual, Space::face> jcrossB(
-            deRham); // This is really sum(species) ((q/m) multiplied by J x B)
+            deRham); // This is really sum(species) ((q/m) J x B)
         DeRhamField<Grid::dual, Space::face> delDotS(
-            deRham); // This is really sum(species) ((q/m) multiplied by Del.S)
+            deRham); // This is really sum(species) ((q/m) Del.S)
         DeRhamField<Grid::dual, Space::face> rhs(deRham);
 
-        DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
+        auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                     "rho", deRham);
 
         Io::Parameters iCparams("ICs");
 
@@ -90,7 +97,8 @@ int main (int argc, char* argv[])
         bmean[zDir] *= dx[xDir] * dx[yDir];
 
         auto [parserIdealRho, funcIdealRho] = Utils::parse_function("idealRho");
-        DeRhamField<Grid::dual, Space::cell> rhoIdeal(deRham, funcIdealRho, "rho_ideal");
+        DeRhamField<Grid::dual, Space::cell> rhoIdeal(deRham, funcIdealRho);
+        Gempic::Io::register_form(fieldRegistry, "rho_ideal", rhoIdeal);
 
         DeRhamField<Grid::dual, Space::face> J(deRham);
         DeRhamField<Grid::dual, Space::face> jOld(deRham);
@@ -113,7 +121,8 @@ int main (int argc, char* argv[])
             int nSteps;
             params.get("nSteps", nSteps);
 
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
+            auto diagnostics =
+                Io::make_diagnostics<degx, degy, degz>(infra, deRham, fieldRegistry, particles);
 
             amrex::Real simTime{0.0};
             diagnostics.compute_and_write_to_file(0, simTime);

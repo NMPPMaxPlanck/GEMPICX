@@ -16,11 +16,14 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_RungeKutta.H"
 
+constexpr Gempic::Forms::HodgeScheme maxwellHodgeScheme = Gempic::Forms::HodgeScheme::GDECHodge;
+using MaxwellDeRham = Gempic::Forms::DeRhamComplexMF<maxwellHodgeScheme>;
 /**
  * auxiliary parameter struct;
  */
@@ -77,9 +80,10 @@ struct StructDefinitions
 struct MaxwellFieldsHandlerStruct
     : Gempic::TimeLoop::BaseFieldsHandlerStruct<MaxwellFieldsHandlerStruct>
 {
+    static constexpr int s_nVar = 1;
     // and the variables
-    Gempic::Forms::DeRhamField<Grid::primal, Space::face> m_b;
-    Gempic::Forms::DeRhamField<Grid::primal, Space::edge> m_e;
+    MaxwellDeRham::Primal2Form m_b;
+    MaxwellDeRham::Primal1Form m_e;
 
     /**
      * the assign method
@@ -133,20 +137,10 @@ struct MaxwellFieldsHandlerStruct
     }
 
     /**
-     * Constructor, overloaded for variables initialized with the GEMPIC diagnostic
-     */
-    MaxwellFieldsHandlerStruct(std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
-                               int nVar,
-                               std::array<std::string, 2> strings) :
-        m_b(drc, strings[0]), m_e(drc, strings[1]), m_nComp{nVar}, m_nGhost{drc->get_n_ghost()}
-    {
-    }
-
-    /**
      * Constructor
      */
-    MaxwellFieldsHandlerStruct(std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc, int nVar) :
-        m_b(drc), m_e(drc), m_nComp{nVar}, m_nGhost{AMREX_D_DECL(0, 0, 0)} //{drc->get_n_ghost()}
+    MaxwellFieldsHandlerStruct(std::shared_ptr<MaxwellDeRham>& drc) :
+        m_b(drc), m_e(drc), m_nGhost{AMREX_D_DECL(0, 0, 0)}
     {
     }
 
@@ -156,7 +150,6 @@ struct MaxwellFieldsHandlerStruct
     }
 
 private:
-    int m_nComp;
     amrex::IntVect m_nGhost;
     static constexpr int s_nFields{2};
 };
@@ -166,43 +159,53 @@ private:
  */
 struct MaxwellDiscretization : public StructDefinitions
 {
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::edge> V1field;
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::face> V2field;
-    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::face> V1field_dual;
-    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::edge> V2field_dual;
+    using V1field = MaxwellDeRham::Primal1Form;
+    using V2field = MaxwellDeRham::Primal2Form;
+    using V1field_dual = MaxwellDeRham::Dual2Form;
+    using V2field_dual = MaxwellDeRham::Dual1Form;
 
     // Initialize the De Rham Complex
-    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> m_drc; //  HodgeScheme::GDECHodge); //
+    std::shared_ptr<MaxwellDeRham> m_drc;
 
     // auxiliary state variables for the time integrators
-    std::shared_ptr<MaxwellFieldsHandlerStruct> m_myfields;
-    std::shared_ptr<MaxwellFieldsHandlerStruct> m_myfieldsDtEx;
-    std::shared_ptr<MaxwellFieldsHandlerStruct> m_myfieldsDtIm;
-    std::shared_ptr<MaxwellFieldsHandlerStruct> m_myfieldsTmpEx;
-    std::shared_ptr<MaxwellFieldsHandlerStruct> m_myfieldsTmpIm;
-    std::shared_ptr<MaxwellFieldsHandlerStruct> m_myfieldsNew;
+    std::shared_ptr<MaxwellFieldsHandlerStruct> m_fields;
+    std::shared_ptr<MaxwellFieldsHandlerStruct> m_fieldsDtEx;
+    std::shared_ptr<MaxwellFieldsHandlerStruct> m_fieldsDtIm;
+    std::shared_ptr<MaxwellFieldsHandlerStruct> m_fieldsTmpEx;
+    std::shared_ptr<MaxwellFieldsHandlerStruct> m_fieldsTmpIm;
+    std::shared_ptr<MaxwellFieldsHandlerStruct> m_fieldsNew;
 
     amrex::Real m_time;
     amrex::Real m_dt;
     amrex::Real m_tend;
     int m_timeStep;
+    Gempic::Io::FieldRegistry m_fieldRegistry;
 
     Gempic::Io::Diagnostics<s_degx, s_degy, s_degz, s_vdim, s_ndata> m_diagn;
 
     IOParameters m_iopar;
 
-    MaxwellDiscretization(std::array<std::string, 2> const& outputFields) :
-        m_drc{std::make_shared<Gempic::Forms::FDDeRhamComplex>(
-            m_compDom, s_hodgeDegree, s_maxSplineDegree, Gempic::Forms::HodgeScheme::GDECHodge)},
-        m_myfields(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1, outputFields)),
-        m_myfieldsDtEx(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1)),
-        m_myfieldsDtIm(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1)),
-        m_myfieldsTmpEx(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1)),
-        m_myfieldsTmpIm(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1)),
-        m_myfieldsNew(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc, 1)),
-        m_diagn(m_compDom, m_drc, m_particles)
+    Gempic::Io::FieldRegistry maxwell_field_registration ()
     {
-        m_time = 0.0;
+        Gempic::Io::FieldRegistry fieldRegistry;
+        // labels for the output state in the diagnostics
+        Gempic::Io::register_form(fieldRegistry, "B", m_fields->m_b);
+        Gempic::Io::register_form(fieldRegistry, "E", m_fields->m_e);
+
+        return fieldRegistry;
+    }
+
+    MaxwellDiscretization() :
+        m_drc{std::make_shared<MaxwellDeRham>(m_compDom, s_hodgeDegree, s_maxSplineDegree)},
+        m_fields(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc)), // this has to be registered
+        m_fieldsDtEx(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc)),
+        m_fieldsDtIm(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc)),
+        m_fieldsTmpEx(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc)),
+        m_fieldsTmpIm(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc)),
+        m_fieldsNew(std::make_shared<MaxwellFieldsHandlerStruct>(m_drc)),
+        m_fieldRegistry{maxwell_field_registration()},
+        m_diagn(m_compDom, m_drc, m_fieldRegistry, m_particles)
+    {
     }
 };
 

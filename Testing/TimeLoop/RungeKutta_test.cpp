@@ -8,6 +8,7 @@
 
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FieldMethods.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Interpolation.H"
@@ -56,6 +57,7 @@ protected:
     ComputationalDomain m_infra;
     std::vector<std::shared_ptr<ParticleSpecies<s_vDim, s_ndata>>> m_particles;
     std::shared_ptr<FDDeRhamComplex> m_deRham;
+    Gempic::Io::FieldRegistry m_fieldRegistry;
     amrex::Geometry const m_geom = m_infra.m_geom;
 
     RungeKuttaTest() : m_infra{get_compdom()}
@@ -424,14 +426,20 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell)
     }
 
     RungeKutta rkSolver(m_infra, m_deRham);
-    DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE, "E");
-    DeRhamField<Grid::primal, Space::edge> eSolution(m_deRham, "eSolution");
-    DeRhamField<Grid::primal, Space::edge> eError(m_deRham, "eError");
+    auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        m_fieldRegistry, "E", m_deRham, funcE);
+    auto eSolution = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        m_fieldRegistry, "eSolution", m_deRham);
+    auto eError = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        m_fieldRegistry, "eError", m_deRham);
     DeRhamField<Grid::dual, Space::face> D(m_deRham, funcE);
-    DeRhamField<Grid::primal, Space::face> B(m_deRham, funcB, "B");
-    DeRhamField<Grid::primal, Space::face> bSolution(m_deRham, funcB, "bSolution");
+    auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
+        m_fieldRegistry, "B", m_deRham, funcB);
+    auto bSolution = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
+        m_fieldRegistry, "bSolution", m_deRham, funcB);
     DeRhamField<Grid::dual, Space::edge> H(m_deRham, funcB);
-    DeRhamField<Grid::dual, Space::face> J(m_deRham, "J");
+    auto J = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(m_fieldRegistry, "J",
+                                                                               m_deRham);
 
     amrex::Real dt = 0.1;
     double T = 10;       //T=2*pi/w w=0.2*pi
@@ -512,15 +520,24 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell_hodgeDK)
     }
 
     RungeKutta rkSolver(m_infra, m_deRham);
-    DeRhamField<Grid::primal, Space::edge> E(m_deRham, funcE, "E");
-    DeRhamField<Grid::primal, Space::edge> eSolution(m_deRham, "eSolution");
-    DeRhamField<Grid::primal, Space::edge> eError(m_deRham, "eError");
-    DeRhamField<Grid::dual, Space::face> D(m_deRham, funcD, "D");
-    DeRhamField<Grid::primal, Space::face> B(m_deRham, funcB, "B");
-    DeRhamField<Grid::primal, Space::face> bSolution(m_deRham, funcB, "bSolution");
-    DeRhamField<Grid::primal, Space::face> bError(m_deRham, "bError");
-    DeRhamField<Grid::dual, Space::edge> H(m_deRham, funcB, "H");
-    DeRhamField<Grid::dual, Space::face> J(m_deRham, "J");
+    auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        m_fieldRegistry, "E", m_deRham, funcE);
+    auto eSolution = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        m_fieldRegistry, "eSolution", m_deRham);
+    auto eError = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        m_fieldRegistry, "eError", m_deRham);
+    auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(m_fieldRegistry, "D",
+                                                                               m_deRham, funcD);
+    auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
+        m_fieldRegistry, "B", m_deRham, funcB);
+    auto bSolution = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
+        m_fieldRegistry, "bSolution", m_deRham, funcB);
+    auto bError = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
+        m_fieldRegistry, "bError", m_deRham);
+    auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(m_fieldRegistry, "H",
+                                                                               m_deRham, funcB);
+    auto J = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(m_fieldRegistry, "J",
+                                                                               m_deRham);
 
     // Compute inverse of dielectric tensor going from D to E
     DeRhamField<Grid::primal, Space::edge> tensor(m_deRham,

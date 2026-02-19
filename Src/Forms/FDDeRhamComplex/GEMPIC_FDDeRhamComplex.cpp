@@ -92,7 +92,7 @@ FiniteDifferenceDeRhamSpaces::face_centered_integral() const
 PrimalZeroForm FiniteDifferenceDeRhamSpaces::create_primal_zero_form (
     std::string const& label, Impl::BoundaryConditionConfiguration bcConf) const
 {
-    bcConf.m_grid = Grid::primal;
+    bcConf.m_grid = Forms::Grid::primal;
     DiscreteField df{label,      dof_on_node(m_grid),   point_value(),
                      m_boxArray, m_distributionMapping, bcConf};
     return PrimalZeroForm{std::move(df), m_integrator};
@@ -102,7 +102,7 @@ PrimalOneForm FiniteDifferenceDeRhamSpaces::create_primal_one_form (
 {
     for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        bcConf[dir].m_grid = Grid::primal;
+        bcConf[dir].m_grid = Forms::Grid::primal;
     }
     DiscreteVectorField df{label,      dof_on_edge(m_grid),   edge_centered_integral(),
                            m_boxArray, m_distributionMapping, bcConf};
@@ -113,7 +113,7 @@ PrimalTwoForm FiniteDifferenceDeRhamSpaces::create_primal_two_form (
 {
     for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        bcConf[dir].m_grid = Grid::primal;
+        bcConf[dir].m_grid = Forms::Grid::primal;
     }
     DiscreteVectorField df{label,      dof_on_face(m_grid),   face_centered_integral(),
                            m_boxArray, m_distributionMapping, bcConf};
@@ -122,7 +122,7 @@ PrimalTwoForm FiniteDifferenceDeRhamSpaces::create_primal_two_form (
 PrimalThreeForm FiniteDifferenceDeRhamSpaces::create_primal_three_form (
     std::string const& label, Impl::BoundaryConditionConfiguration bcConf) const
 {
-    bcConf.m_grid = Grid::primal;
+    bcConf.m_grid = Forms::Grid::primal;
     DiscreteField df{label,      dof_on_cell_center(m_grid), cell_centered_integral(),
                      m_boxArray, m_distributionMapping,      bcConf};
     return PrimalThreeForm{std::move(df), m_integrator};
@@ -130,7 +130,7 @@ PrimalThreeForm FiniteDifferenceDeRhamSpaces::create_primal_three_form (
 DualZeroForm FiniteDifferenceDeRhamSpaces::create_dual_zero_form (
     std::string const& label, Impl::BoundaryConditionConfiguration bcConf) const
 {
-    bcConf.m_grid = Grid::dual;
+    bcConf.m_grid = Forms::Grid::dual;
     DiscreteField df{label,      dof_on_cell_center(m_grid), point_value(),
                      m_boxArray, m_distributionMapping,      bcConf};
     return DualZeroForm{std::move(df), m_integrator};
@@ -140,7 +140,7 @@ DualOneForm FiniteDifferenceDeRhamSpaces::create_dual_one_form (
 {
     for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        bcConf[dir].m_grid = Grid::dual;
+        bcConf[dir].m_grid = Forms::Grid::dual;
     }
     DiscreteVectorField df{label,      dof_on_face(m_grid),   edge_centered_integral(),
                            m_boxArray, m_distributionMapping, bcConf};
@@ -151,7 +151,7 @@ DualTwoForm FiniteDifferenceDeRhamSpaces::create_dual_two_form (
 {
     for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        bcConf[dir].m_grid = Grid::dual;
+        bcConf[dir].m_grid = Forms::Grid::dual;
     }
     DiscreteVectorField df{label,      dof_on_edge(m_grid),   face_centered_integral(),
                            m_boxArray, m_distributionMapping, bcConf};
@@ -160,7 +160,7 @@ DualTwoForm FiniteDifferenceDeRhamSpaces::create_dual_two_form (
 DualThreeForm FiniteDifferenceDeRhamSpaces::create_dual_three_form (
     std::string const& label, Impl::BoundaryConditionConfiguration bcConf) const
 {
-    bcConf.m_grid = Grid::dual;
+    bcConf.m_grid = Forms::Grid::dual;
     DiscreteField df{label,      dof_on_node(m_grid),   cell_centered_integral(),
                      m_boxArray, m_distributionMapping, bcConf};
     return DualThreeForm{std::move(df), m_integrator};
@@ -458,7 +458,7 @@ void hodge (DiscreteField& dst,
                             for(int sy=-hwy;sy<=hwy;sy++) {
                                StridedArrayView<stencilZdir.s_width> const tmp{src(ix + sx,iy + sy,iz), strides[Direction::zDir]};
                                tmp2D[(sx + hwx) + (sy + hwy) * w] = stencilZdir.m_coeff * tmp;
-                            }
+                        }
                         }
                         for(int sx=0;sx<w;sx++) {
                             StridedArrayView<StencilYdir::s_width> const tmp{tmp2D[sx + hwy*w], w};
@@ -672,12 +672,104 @@ FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& infra,
     DeRhamComplex::DeRhamComplex{infra, hodgeDegree, maxSplineDegree}
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::FDDeRhamComplex()");
+    Io::Parameters params("DeRhamComplex");
+    /* Number of essential ghost cells is determined by degree of the Hodge and particle
+    ** splines:
+    **
+    ** - Hodges: hodgeDegree / 2 - 1
+    ** - Particle-Mesh-Coupling: ceil((max(degx, degy, degz) + 1) / 2)
+    **   (Assuming that the particle is located inside the domain)
+    ** - External Derivatives: 1 ghost cell for some dual operators, e.g., curl
+    **
+    ** The maximum over essential ghost cells is taken and nGhostExtra are added to allow for
+    ** more particle movement.
+    **
+    ** Example:
+    ** Tridiagonal Hodge (deg = 4) -> 1 ghost cell
+    ** Linear splines (deg = 1)    -> 1 ghost cell
+    ** => 1 + 3 extra = 4 ghost cells get initialized.
+    ** */
+    int nGhostRequired{0};
+    switch (hodgeScheme)
+    {
+        case HodgeScheme::FDHodge:
+            nGhostRequired =
+                std::max(std::max(m_hodgeDegree / 2 - 1,
+                                  static_cast<int>(std::ceil((maxSplineDegree + 1) / 2))),
+                         1);
+            break;
+        case HodgeScheme::GalerkinHodge:
+            nGhostRequired = std::max(
+                std::max(m_hodgeDegree - 1, static_cast<int>(std::ceil((maxSplineDegree + 1) / 2))),
+                1);
+            break;
+        case HodgeScheme::GDECHodge:
+            nGhostRequired = std::max(
+                std::max(m_hodgeDegree - 1, static_cast<int>(std::ceil((maxSplineDegree + 1) / 2))),
+                1);
+            break;
+        case HodgeScheme::GDECLumpHodge:
+            nGhostRequired = std::max(
+                std::max(m_hodgeDegree - 1, static_cast<int>(std::ceil((maxSplineDegree + 1) / 2))),
+                1);
+            break;
+        default:
+            GEMPIC_ERROR("you selected an unknown hodgescheme!");
+    }
+
+    m_nGhostRequired = amrex::IntVect{AMREX_D_DECL(nGhostRequired, nGhostRequired, nGhostRequired)};
+    int nGhostExtra{3};
+    params.get_or_set("nGhostExtra", nGhostExtra);
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(nGhostExtra >= 0,
+                                      "Number of extra ghost cells cannot be negative.");
+    int nGhost{nGhostRequired + nGhostExtra};
+    std::vector<int> nGhostVector{AMREX_D_DECL(nGhost, nGhost, nGhost)};
+    // Check that at least nGhost valid cells exist in periodic directions. Otherwise, the
+    // communication routines amrex::FillBoundary and amrex::SumBoundary can behave
+    // unexpectedly.
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+    {
+        if (infra.geometry().isPeriodic(dir))
+        {
+            GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+                nGhost <= infra.m_nCell[dir],
+                "Number of valid cells in a periodic direction cannot be smaller than the "
+                "number of essential + extra ghost cells: " +
+                    std::to_string(infra.m_nCell[dir]) + " valid < " + std::to_string(nGhost) +
+                    " ghost cells");
+        }
+    }
+    // Check that user isn't expecting "nGhost" to have an effect
+    if (params.is_in_input_file("nGhost"))
+    {
+        amrex::ParmParse pp;
+        std::vector<int> nGhostVectorInputFile;
+        pp.getarr("nGhost", nGhostVectorInputFile);
+        if (AMREX_D_TERM(nGhostVector[xDir] != nGhostVectorInputFile[xDir],
+                         || nGhostVector[yDir] != nGhostVectorInputFile[yDir],
+                         || nGhostVector[zDir] != nGhostVectorInputFile[zDir]))
+        {
+            amrex::Warning(
+                "Number of ghost cells should only be influenced by specifying the number of "
+                "extra ghost cells.\n");
+        }
+    }
+    params.get_or_set("nGhost", nGhostVector);
+    if (AMREX_D_TERM(nGhostVector[xDir] < m_nGhostRequired[xDir],
+                     || nGhostVector[yDir] < m_nGhostRequired[yDir],
+                     || nGhostVector[zDir] < m_nGhostRequired[zDir]))
+    {
+        GEMPIC_ERROR("nGhost must be larger than " + std::to_string(nGhostRequired) +
+                     " to accomodate spline and/or Hodge operations");
+    }
+    m_nGhost =
+        amrex::IntVect{AMREX_D_DECL(nGhostVector[xDir], nGhostVector[yDir], nGhostVector[zDir])};
+
     // Parameters used in the projection and hodge
     for (size_t dir = 0; dir < AMREX_SPACEDIM; dir++)
     {
         m_dr[dir] = infra.geometry().CellSize(dir);
     }
-    m_nGhost = DeRhamComplex::m_nGhost[xDir];
     m_hodgeScheme = hodgeScheme;
 
     // Read the scaling factors from input file and compute value for the Hodge operator

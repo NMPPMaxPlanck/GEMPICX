@@ -7,6 +7,8 @@
 #include <AMReX_MultiFab.H>
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_FieldRegistry.H"
+#include "GEMPIC_Fields.H"
 
 namespace Gempic::Io
 {
@@ -21,10 +23,6 @@ public:
 
     /** Virtual Destructor to handle clean destruction of derived classes */
     virtual ~ComputeDiagOutputProcessor() = default;
-
-    /** Number of component from the input MultiFab to write to the output
-     * MultiFab */
-    int n_comp() const;
 
     /** Reference computational domain to write to the output
      * MultiFab. This will give the Geometry to WriteSingleLevelPlotfile.
@@ -60,11 +58,11 @@ class RawOutputProcessor final : public ComputeDiagOutputProcessor
 public:
     /** Constructor.
      *
-     * \param[in] mfSrc source MultiFab.
-     * \param[in] crseRatio for interpolating field values from the simulation MultiFab, mfSrc,
+     * \param[in] dataSrc source AnyFieldPtr register (type AnyFieldPtr).
+     * \param[in] crseRatio for interpolating field values from the simulation form, dataSrc,
                   to the output diagnostic MultiFab, mfDst.
      */
-    RawOutputProcessor(amrex::MultiFab const& mfSrc, amrex::IntVect const crseRatio);
+    RawOutputProcessor(AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio);
 
     /** \brief copy m_mfSrc to mfDst.
      *
@@ -76,8 +74,9 @@ public:
     amrex::BoxArray get_box_array(amrex::IndexType& t) override;
 
 private:
-    /** Alias of source MultiFab (can be multi-component) */
-    amrex::MultiFab const m_mfSrc;
+    /** Non-owning handle to a registered diagnostics field (type-erased, possibly multi-component)
+     */
+    AnyFieldPtr const* m_dataSrc;
 };
 
 /**
@@ -88,14 +87,11 @@ class CellCenterOutputProcessor final : public ComputeDiagOutputProcessor
 public:
     /** Constructor.
      *
-     * \param[in] mfSrc source MultiFab.
-     * \param[in] scaling scaling factor.
-     * \param[in] crseRatio for interpolating field values from the simulation MultiFab, mfSrc,
-                  to the output diagnostic MultiFab, mfDst.
+     * \param[in] dataSrc source AnyFieldPtr register (type AnyFieldPtr).
+     * \param[in] crseRatio for interpolating field values from the simulation
+     AnyFieldPtr, dataSrc, to the output diagnostic MultiFab, mfDst.
      */
-    CellCenterOutputProcessor(amrex::MultiFab const& mfSrc,
-                              amrex::Real scaling,
-                              amrex::IntVect const crseRatio);
+    CellCenterOutputProcessor(AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio);
 
     /** \brief Cell-center m_mfSrc and write the result in mfDst.
      *
@@ -111,14 +107,15 @@ public:
     amrex::BoxArray get_box_array(amrex::IndexType& t) override;
 
 private:
-    /** Alias of source MultiFab (can be multi-component) */
-    amrex::MultiFab const m_mfSrc;
+    /** Non-owning handle to a registered diagnostics field (type-erased, possibly multi-component)
+     */
+    AnyFieldPtr const* m_dataSrc;
 
-    // Scaling factor
-    amrex::Real m_scaling{1.0};
     amrex::Real m_ishift{0}, m_jshift{0}, m_kshift{0};
 };
+
 } //namespace Impl
+
 } //namespace Gempic::Io
 
 #endif // DIAGNOSTICSTRATEGIES_H_

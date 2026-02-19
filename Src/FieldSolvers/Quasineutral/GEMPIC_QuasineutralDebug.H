@@ -20,8 +20,8 @@ namespace Gempic::FieldSolvers
 {
 template <unsigned int vdim, unsigned int ndata>
 void check_energies (
-    Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-    Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
     std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>>& particles,
     std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
     ComputationalDomain& mInfra)
@@ -75,30 +75,30 @@ void check_energies (
 
 template <unsigned int vdim, unsigned int ndata, int degx, int degy, int degz>
 void check_e_related_norms (
-    Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-    Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-    Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
-    Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
-    Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& rho,
-    Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& rhoIdeal,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rhoIdeal,
     std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
-    Gempic::Forms::DeRhamField<Grid::dual, Space::face> const& rhs,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> const& rhs,
     std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>>& particles,
     ComputationalDomain& mInfra)
 {
     amrex::Print() << "\nError checks for E-related computations:";
 
     // lhs = CurlCurlE + rhoE = rhs check
-    Gempic::Forms::DeRhamField<Grid::primal, Space::face> curlE(drc);
-    Gempic::Forms::DeRhamField<Grid::dual, Space::edge> curlEProj(drc);
-    Gempic::Forms::DeRhamField<Grid::dual, Space::face> curlCurlE(drc);
-    Gempic::Forms::DeRhamField<Grid::dual, Space::face> rhoE(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face> curlE(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge> curlEProj(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> curlCurlE(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> rhoE(drc);
 
-    Gempic::Forms::DeRhamField<Grid::dual, Space::face> lhs(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> lhs(drc);
 
-    Gempic::Forms::DeRhamField<Grid::dual, Space::cell> divRhoE(drc);
-    Gempic::Forms::DeRhamField<Grid::dual, Space::cell> divLhs(drc);
-    Gempic::Forms::DeRhamField<Grid::dual, Space::cell> divRhs(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> divRhoE(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> divLhs(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> divRhs(drc);
 
     curl(curlE, E);
     hodge(curlEProj, curlE, drc->scaling_bto_h());
@@ -124,7 +124,7 @@ void check_e_related_norms (
                    << Utils::gempic_norm (rhs.m_data[zDir], mInfra, 1)
                    << "), rhs_div: " << Utils::gempic_norm(divRhs.m_data, mInfra, 1);
 
-    Gempic::Forms::DeRhamField<Grid::dual, Space::cell> rhoError(drc);
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> rhoError(drc);
     linear_combination(rhoError, 1.0, rho, -1.0, rhoIdeal);
     amrex::Real den = Utils::gempic_norm(rhoIdeal.m_data, mInfra, 1);
     if (den == 0.0) den = 1.0;
@@ -132,27 +132,28 @@ void check_e_related_norms (
                    << (Utils::gempic_norm(rhoError.m_data, mInfra, 1) / den) * 100.0 << "\n";
 }
 
-void check_b_calculation(Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-                         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& bOld,
-                         Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
+void check_b_calculation(Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+                         Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& bOld,
+                         Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
                          std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
                          amrex::Real dt,
                          ComputationalDomain& mInfra);
 
-void check_b_related_norms(Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& divJ,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::face>& A,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::cell>& divA,
-                           Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-                           Gempic::Forms::DeRhamField<Grid::primal, Space::cell>& divB,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::face>& curlH,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::face>& jMinusCurlH,
-                           std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
-                           ComputationalDomain& mInfra);
+void check_b_related_norms(
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& divJ,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& A,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& divA,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::cell>& divB,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& curlH,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jMinusCurlH,
+    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
+    ComputationalDomain& mInfra);
 
-void check_j_change_norms(Gempic::Forms::DeRhamField<Grid::dual, Space::face>& jOld,
-                          Gempic::Forms::DeRhamField<Grid::dual, Space::face>& jNew,
+void check_j_change_norms(Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jOld,
+                          Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jNew,
                           std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
                           ComputationalDomain& mInfra);
 } //namespace Gempic::FieldSolvers

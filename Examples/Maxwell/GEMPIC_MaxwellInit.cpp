@@ -35,13 +35,13 @@ void maxwell_initial_condition (MaxwellDiscretization& disc)
         amrex::Real const dS = dVol / dr[idir];
 
         // LOOP OVER FACES:
-        for (amrex::MFIter mfi(disc.m_myfields->m_e.m_data[idir]); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(disc.m_fields->m_e.m_data[idir]); mfi.isValid(); ++mfi)
         {
             amrex::Box const& bx = mfi.growntilebox();
             amrex::Real const edgeLoc{dr[idir]};
             amrex::Real const time{disc.m_time};
             amrex::Array4<amrex::Real> const& edir =
-                (disc.m_myfields->m_e.m_data[idir])[mfi].array(); // define pointer to variable
+                (disc.m_fields->m_e.m_data[idir])[mfi].array(); // define pointer to variable
 
             ParallelFor(bx,
                         [=] AMREX_GPU_DEVICE(int i, int j, int k)
@@ -60,12 +60,12 @@ void maxwell_initial_condition (MaxwellDiscretization& disc)
         }
 
         // LOOP OVER FACES:
-        for (amrex::MFIter mfi(disc.m_myfields->m_b.m_data[idir]); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(disc.m_fields->m_b.m_data[idir]); mfi.isValid(); ++mfi)
         {
             amrex::Box const& bx = mfi.growntilebox();
             amrex::Real const time{disc.m_time};
             amrex::Array4<amrex::Real> const& bdir =
-                (disc.m_myfields->m_b.m_data[idir])[mfi].array(); // define pointer to variable
+                (disc.m_fields->m_b.m_data[idir])[mfi].array(); // define pointer to variable
             ParallelFor(bx,
                         [=] AMREX_GPU_DEVICE(int i, int j, int k)
                         {

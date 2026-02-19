@@ -62,7 +62,7 @@ public:
         m_multiRds;
 
     /// constructor
-    MultiReducedDiagnostics(std::shared_ptr<Forms::DeRhamComplex> drc)
+    MultiReducedDiagnostics(std::shared_ptr<Forms::DeRhamComplex> drc, FieldRegistry const& reg)
     {
         BL_PROFILE("Gempic::Io::MultiReduceDiagnostics()");
         read_params();
@@ -70,13 +70,14 @@ public:
         {
             return;
         }
-        init_data(drc);
+        init_data(drc, reg);
     }
     // end constructor
 
     /** Loop over all ReducedDiagnostics and call their InitData
      */
-    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc)
+    template <Forms::DeRhamComplexC DRC>
+    void init_data (std::shared_ptr<DRC> drc, FieldRegistry const& reg)
     {
         BL_PROFILE("Gempic::Io::MultiReduceDiagnostics::init_data()");
         if (!m_plotRd)
@@ -88,7 +89,7 @@ public:
         {
             for (size_t iType{0}; iType < m_multiRds[iRd].size(); ++iType)
             {
-                m_multiRds[iRd][iType]->init_data(drc, m_computeMissingFields[iRd]);
+                m_multiRds[iRd][iType]->init_data(drc, reg, m_computeMissingFields[iRd]);
             }
         }
     }

@@ -16,7 +16,9 @@
 #include <AMReX_Vector.H>
 
 #include "GEMPIC_CustomDiagnosticStrategies.H"
+#include "GEMPIC_DeRhamComplex.H"
 #include "GEMPIC_DiagnosticStrategies.H"
+#include "GEMPIC_Fields.H"
 #include "GEMPIC_FlushFormat.H"
 #include "GEMPIC_FlushFormatPlotfile.H"
 #include "GEMPIC_Parameters.H"
@@ -72,14 +74,13 @@ public:
     /** Initialize pointers to main fields and allocate output multifab m_mf_outputs. */
     void init_data (
         ComputationalDomain const& compDom,
-        std::map<std::string, amrex::MultiFab const> const& fieldMap,
-        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& ions)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::init_data()");
         // initialize member variables and arrays in base class::Diagnostics
         init_base_data();
-        initialize_field_operators_and_buffer_data(compDom, fieldMap, fieldsScaling, ions);
+        initialize_field_operators_and_buffer_data(compDom, fieldRegistry, ions);
     }
 
     /** Perform necessary operations with user-defined diagnostic parameters
@@ -298,7 +299,7 @@ private:
      * have the identical names.
      */
     DiagnosticType get_diag_type (
-        std::map<std::string, amrex::MultiFab const> const& fieldMap,
+        FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::get_diag_type()");
@@ -306,13 +307,13 @@ private:
         bool fieldType{false};
         for (auto const& diagName : m_diagVarnames)
         {
-            if (fieldMap.find(diagName) != fieldMap.end())
+            if (fieldRegistry.find(diagName) != fieldRegistry.end())
             {
                 fieldType = true;
                 continue;
             }
             else
-            {
+            { // handle the "not found" case
                 bool diagNameMatched{false};
                 for (auto& particleSpecies : particles)
                 {
@@ -355,16 +356,14 @@ private:
 
     /** Initialize outputProcessors that store pointers to the fields requested by the user.
      */
-
     void initialize_field_operators_and_buffer_data (
         ComputationalDomain const& compDom,
-        std::map<std::string, amrex::MultiFab const> const& fieldMap,
-        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::FullDiagnostics::initialize_field_operators_and_buffer_data()");
         using namespace Impl;
-        DiagnosticType diagType{get_diag_type(fieldMap, particles)};
+        DiagnosticType diagType{get_diag_type(fieldRegistry, particles)};
 
         m_geomOutput = compDom.m_geom;
 
@@ -397,11 +396,16 @@ private:
 
                 for (int i{0}; i < m_nGroupMembers; ++i)
                 {
-                    m_allFieldOutputProcessors[i] = std::make_unique<CellCenterOutputProcessor>(
-                        fieldMap.at(m_diagVarnames[i]), fieldsScaling.at(m_diagVarnames[i]),
-                        this->m_crseRatio);
+                    auto it = fieldRegistry.find(m_diagVarnames[i]);
+                    if (it == fieldRegistry.end())
+                    {
+                        amrex::Abort("Field not found in registry: " + m_diagVarnames[i]);
+                    }
+                    Io::AnyFieldPtr const& field = it->second; // reuse iterator
+                    m_allFieldOutputProcessors[i] =
+                        std::make_unique<CellCenterOutputProcessor>(field, this->m_crseRatio);
 
-                    int nComp = fieldMap.at(m_diagVarnames[i]).nComp();
+                    int nComp = field.n_comp();
                     nCompTotal += nComp;
 
                     auto compNames{get_comp_names(nComp, i)};
@@ -416,14 +420,19 @@ private:
             {
                 for (int i{0}; i < m_nGroupMembers; ++i)
                 {
-                    m_allFieldOutputProcessors[i] = std::make_unique<RawOutputProcessor>(
-                        fieldMap.at(m_diagVarnames[i]), this->m_crseRatio);
+                    auto it = fieldRegistry.find(m_diagVarnames[i]);
+                    if (it == fieldRegistry.end())
+                    {
+                        amrex::Abort("Field not found in registry: " + m_diagVarnames[i]);
+                    }
+                    Io::AnyFieldPtr const& field = it->second; // reuse iterator
+                    m_allFieldOutputProcessors[i] =
+                        std::make_unique<RawOutputProcessor>(field, this->m_crseRatio);
                     // nGhost 0 as just copying.
                     int nGhost = 0;
-                    int nComp = fieldMap.at(m_diagVarnames[i]).nComp();
+                    int nComp = field.n_comp();
                     m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(
-                        fieldMap.at(m_diagVarnames[i]).boxArray(),
-                        fieldMap.at(m_diagVarnames[i]).DistributionMap(), nComp, nGhost));
+                        field.box_array(), field.get_distribution_mapping(), nComp, nGhost));
 
                     m_actualVarnames.push_back(get_comp_names(nComp, i));
                 }
@@ -432,16 +441,21 @@ private:
             {
                 for (int i{0}; i < m_nGroupMembers; ++i)
                 {
-                    m_allFieldOutputProcessors[i] = match_custom_id(m_customId)(
-                        fieldMap.at(m_diagVarnames[i]), fieldsScaling.at(m_diagVarnames[i]),
-                        this->m_crseRatio);
+                    auto it = fieldRegistry.find(m_diagVarnames[i]);
+                    if (it == fieldRegistry.end())
+                    {
+                        amrex::Abort("Field not found in registry: " + m_diagVarnames[i]);
+                    }
+                    Io::AnyFieldPtr const& field = it->second; // reuse iterator
+                    m_allFieldOutputProcessors[i] =
+                        match_custom_id(m_customId)(field, this->m_crseRatio);
                     // nGhost 0 as just copying.
                     int nGhost = 0;
-                    int nComp = fieldMap.at(m_diagVarnames[i]).nComp();
-                    amrex::IndexType t = fieldMap.at(m_diagVarnames[i]).ixType();
+                    int nComp = field.n_comp();
+                    amrex::IndexType t = field.ix_type();
+                    //amrex::BoxArray ba = field.get_box_array(); // why not?
                     amrex::BoxArray ba = m_allFieldOutputProcessors[i]->get_box_array(t);
-                    amrex::DistributionMapping const dm =
-                        fieldMap.at(m_diagVarnames[i]).DistributionMap();
+                    amrex::DistributionMapping const dm = field.get_distribution_mapping();
                     m_mfOutputs.push_back(std::make_unique<amrex::MultiFab>(ba, dm, nComp, nGhost));
                     m_actualVarnames.push_back(get_comp_names(nComp, i));
                 }

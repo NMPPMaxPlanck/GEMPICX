@@ -15,6 +15,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FieldMethods.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_Profiling.H"
@@ -30,13 +31,14 @@ template <int vdim, int degx, int degy, int degz, int ndata>
 class MagFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
-    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::face>> m_B;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::edge>> m_H;
-    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::face> const> m_constB;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::edge> const> m_constH;
+    std::unique_ptr<Forms::DeRhamComplex::Primal2Form> m_B;
+    std::unique_ptr<Forms::DeRhamComplex::Dual1Form> m_H;
+    std::unique_ptr<Forms::DeRhamComplex::Primal2Form const> m_constB;
+    std::unique_ptr<Forms::DeRhamComplex::Dual1Form const> m_constH;
 
     enum class ComputeMethod
     {
+        missingAll,
         missingNone,
         missingH,
         missingB
@@ -89,11 +91,13 @@ public:
     /**
      * function to initialize data after amr levels are initialized.
      */
-    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf) final
+    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc,
+                    FieldRegistry const& reg,
+                    bool cmf) final
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::init_data()");
-        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, cmf);
-        m_computeMethod = choose_computation_method(this->m_deRham->m_fieldsDiagnostics);
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, reg, cmf);
+        m_computeMethod = choose_computation_method(reg);
     }
 
     /**
@@ -118,6 +122,11 @@ public:
                 hodge(*m_B, *m_constH);
                 update_data(*m_B, *m_constH, infra.m_geom.periodicity());
                 return;
+            default:
+                amrex::Abort(
+                    "Gempic::Io::MagFieldEnergy::compute_diags(): ComputeMethod missing all "
+                    "required fields!");
+                return;
         }
     }
     // end void MagFieldEnergy::ComputeDiags
@@ -129,68 +138,47 @@ private:
      * Selects computation method based on missing fields and the input file switch
      * computeMissingFields
      */
-    ComputeMethod choose_computation_method (std::map<std::string, amrex::MultiFab const>& fieldMap)
+    ComputeMethod choose_computation_method (FieldRegistry const& registry)
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::choose_computation_method()");
-        using namespace Forms;
-        if (fieldMap.count("Hx") && fieldMap.count("Hy") && fieldMap.count("Hz") &&
-            fieldMap.count("Bx") && fieldMap.count("By") && fieldMap.count("Bz"))
+        using DRC = Forms::DeRhamComplex;
+        auto const* bPtr = get_field_ptr_or_null<DRC::Primal2Form>(registry, "Bx");
+        auto const* hPtr = get_field_ptr_or_null<DRC::Dual1Form>(registry, "Hx");
+
+        if (bPtr && hPtr)
         {
-            this->m_constB = std::make_unique<DeRhamField<Grid::primal, Space::face>>(
-                this->m_deRham, fieldMap["Bx"], fieldMap["By"], fieldMap["Bz"]);
-            this->m_constH = std::make_unique<DeRhamField<Grid::dual, Space::edge>>(
-                this->m_deRham, fieldMap["Hx"], fieldMap["Hy"], fieldMap["Hz"]);
+            this->m_constB = std::make_unique<DRC::Primal2Form>(this->m_deRham, *bPtr);
+            this->m_constH = std::make_unique<DRC::Dual1Form>(this->m_deRham, *hPtr);
             return ComputeMethod::missingNone;
         }
-        else if (this->m_computeMissingFields)
+        // Handle missing fields: construct from nComps if necessary
+        else if (bPtr && !hPtr)
         {
-            if (fieldMap.count("Bx") && fieldMap.count("By") && fieldMap.count("Bz") &&
-                (!fieldMap.count("Hx") || !fieldMap.count("Hy") || !fieldMap.count("Hz")))
-            {
-                int nComps{fieldMap["Bx"].nComp()};
-                this->m_constB = std::make_unique<DeRhamField<Grid::primal, Space::face>>(
-                    this->m_deRham, fieldMap["Bx"], fieldMap["By"], fieldMap["Bz"]);
-
-                this->m_H =
-                    std::make_unique<DeRhamField<Grid::dual, Space::edge>>(this->m_deRham, nComps);
-
-                return ComputeMethod::missingH;
-            }
-            else if (fieldMap.count("Hx") && fieldMap.count("Hy") && fieldMap.count("Hz") &&
-                     (!fieldMap.count("Bx") || !fieldMap.count("By") || !fieldMap.count("Bz")))
-            {
-                int nComps{fieldMap["Hx"].nComp()};
-                this->m_constH = std::make_unique<DeRhamField<Grid::dual, Space::edge>>(
-                    this->m_deRham, fieldMap["Hx"], fieldMap["Hy"], fieldMap["Hz"]);
-
-                this->m_B = std::make_unique<DeRhamField<Grid::primal, Space::face>>(this->m_deRham,
-                                                                                     nComps);
-
-                return ComputeMethod::missingB;
-            }
-            else
-            {
-                GEMPIC_ERROR(
-                    "Neither B nor H was found: Either Bx, By and Bz or Hx, Hy and Hz are needed "
-                    "to compute magnetic energy "
-                    "when computeMissingFields is set");
-            }
+            int nComps = bPtr->get_ncomp(xDir);
+            this->m_constB = std::make_unique<DRC::Primal2Form>(this->m_deRham, *bPtr);
+            this->m_H = std::make_unique<DRC::Dual1Form>(this->m_deRham, nComps);
+            return ComputeMethod::missingH;
         }
-        else
+        else if (hPtr && !bPtr)
         {
-            GEMPIC_ERROR(
-                "B or H not found: Bx, By, Bz, Hx, Hy and Hz are all needed to compute magnetic "
-                "energy when "
-                "computeMissingFields is not set");
+            int nComps = hPtr->get_ncomp(xDir);
+            this->m_constH = std::make_unique<DRC::Dual1Form>(this->m_deRham, *hPtr);
+            this->m_B = std::make_unique<DRC::Primal2Form>(this->m_deRham, nComps);
+            return ComputeMethod::missingB;
         }
-        return ComputeMethod::missingNone; // never reached
+
+        GEMPIC_ERROR(
+            "B or H not found: Bx, By, Bz, Hx, Hy and Hz are all needed to compute magnetic "
+            "energy when "
+            "computeMissingFields is not set");
+        return ComputeMethod::missingAll; // never reached
     }
 
     /**
      * This function computes the magnetic energy (EF) component wise
      */
-    void update_data (Forms::DeRhamField<Grid::primal, Space::face> const& fieldB,
-                      Forms::DeRhamField<Grid::dual, Space::edge> const& fieldH,
+    void update_data (Forms::DeRhamComplex::Primal2Form const& fieldB,
+                      Forms::DeRhamComplex::Dual1Form const& fieldH,
                       amrex::Periodicity const& periodicity)
     {
         BL_PROFILE("Gempic::Io::MagFieldEnergy::update_data()");

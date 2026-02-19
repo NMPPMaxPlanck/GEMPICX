@@ -51,15 +51,13 @@ int main (int argc, char* argv[])
         // Create an instance of the selected type
         IMEXRKTBtype imexrKreference;
 
-        // labels for the output state in the diagnostics
-        std::array<std::string, 2> outputFields = {"B", "E"};
-
         // the Maxwell numerical scheme class
-        MaxwellNumericalScheme maxwell(outputFields);
+        MaxwellNumericalScheme maxwell;
 
         // the IMEX RK class
-        Gempic::TimeLoop::ImexRk<MaxwellFieldsHandlerStruct, imExRkTag> implicitExplicitRk(
-            maxwell.m_disc.m_myfields, maxwell, maxwell.m_disc.m_drc, imexrKreference);
+        Gempic::TimeLoop::ImexRk<MaxwellFieldsHandlerStruct, imExRkTag, MaxwellDeRham>
+            implicitExplicitRk(maxwell.m_disc.m_fields, maxwell, maxwell.m_disc.m_drc,
+                               imexrKreference);
         {
             maxwell.set_initial_condition();
             // print initial condition

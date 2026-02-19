@@ -5,6 +5,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_FullDiagnostics.H"
 #include "GEMPIC_GempicNorm.H"
@@ -12,6 +13,8 @@
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Sampler.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
+
+using DRC = Gempic::Forms::DeRhamComplex;
 
 namespace
 {
@@ -166,6 +169,7 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     // Initialize the De Rham Complex with deg 2
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
+    Io::FieldRegistry fieldRegistry;
 
     // Initialize fields
     [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
@@ -173,13 +177,16 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsFields)
     [[maybe_unused]] auto [parseRho, funcRho] = Utils::parse_function("rho");
     [[maybe_unused]] auto [parsePhi, funcPhi] = Utils::parse_function("phi");
 
-    DeRhamField<Grid::dual, Space::cell> rho(deRham, funcRho, "rho");
-    DeRhamField<Grid::primal, Space::node> phi(deRham, funcPhi, "phi");
-    DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
-    DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
+    auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(
+        fieldRegistry, "rho", deRham, funcRho);
+    auto phi = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::node>>(
+        fieldRegistry, "phi", deRham, funcPhi);
+    auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry, "E",
+                                                                                 deRham, funcE);
+    auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(fieldRegistry, "B",
+                                                                                 deRham, funcB);
 
-    Io::MultiDiagnostics fullDiagn(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling,
-                                   m_particles);
+    Io::MultiDiagnostics fullDiagn(m_infra, fieldRegistry, m_particles);
     // Compute and write diagnostics
     fullDiagn.filter_compute_pack_flush(0, 0.0);
 
@@ -254,18 +261,19 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOperatorOutputProcessor)
     // Initialize the De Rham Complex with deg 2
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
+    Io::FieldRegistry fieldRegistry;
 
     // Initialize fields
     [[maybe_unused]] auto [parseRho, funcRho] = Utils::parse_function("rho");
 
-    DeRhamField<Grid::dual, Space::cell> rho(deRham, funcRho, "rho");
+    auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(
+        fieldRegistry, "rho", deRham, funcRho);
 
     // create and add lambda, (this one multiplies by a constant and cell centers)
     add_custom_processor(operatorId, multiplicationFactor);
 
     // Initialize diagnostics
-    Io::MultiDiagnostics fullDiagn(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling,
-                                   m_particles);
+    Io::MultiDiagnostics fullDiagn(m_infra, fieldRegistry, m_particles);
     // Compute and write diagnostics
     fullDiagn.filter_compute_pack_flush(0, 0.0);
 
@@ -297,17 +305,30 @@ class DumbOutputProcessor : public Gempic::Io::CustomOutputProcessor
 public:
     static inline int s_counter{0};
 
-    DumbOutputProcessor(amrex::MultiFab const& mfSrc,
-                        amrex::Real const scaling,
-                        amrex::IntVect const crseRatio) :
-        CustomOutputProcessor{mfSrc, scaling, crseRatio}
+    DumbOutputProcessor(Gempic::Io::AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio) :
+        CustomOutputProcessor{dataSrc, crseRatio}
     {
+    }
+
+    void copy_any_field_to_multifabs (amrex::MultiFab& mfDst,
+                                      Gempic::Io::AnyFieldPtr const& dataSrc,
+                                      int dcomp) const noexcept
+    {
+        // Raw copy of the selected subfield into destination
+        dataSrc.any_field_to_rawdata_multifabs(mfDst, dcomp);
+
+        // If you want cell-centered output instead:
+        // dataSrc.anyField_to_cellcentered_multifabs(mfDst, dcomp);
+
+        // Or interpolation on-the-fly:
+        // dataSrc.interpolate_anyField_to_multifab(mfDst, dcomp);
     }
 
     void operator()(amrex::MultiFab& mfDst, int dcomp) const final
     {
-        s_counter++;
-        amrex::Copy(mfDst, m_mfSrc, 0, dcomp, mfDst.nComp(), 0);
+        BL_PROFILE("DumbOutputProcessor::operator()");
+        ++s_counter;
+        copy_any_field_to_multifabs(mfDst, *this->m_dataSrc, dcomp);
     }
 };
 
@@ -340,18 +361,19 @@ TEST_F(FullDiagnosticsTest, FullDiagnosticsCustomOutputProcessor)
     // Initialize the De Rham Complex with deg 2
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
+    Io::FieldRegistry fieldRegistry;
 
     // Initialize fields
     [[maybe_unused]] auto [parsePhi, funcPhi] = Utils::parse_function("phi");
 
-    DeRhamField<Grid::primal, Space::node> phi(deRham, funcPhi, "phi");
+    auto phi = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::node>>(
+        fieldRegistry, "phi", deRham, funcPhi);
 
     // Add custom strategy, (this one does nothing except count how many times it's been used)
     Gempic::Io::add_output_processor<DumbOutputProcessor>(customId);
 
     // Initialize diagnostics
-    Io::MultiDiagnostics fullDiagn(m_infra, deRham->m_fieldsDiagnostics, deRham->m_fieldsScaling,
-                                   m_particles);
+    Io::MultiDiagnostics fullDiagn(m_infra, fieldRegistry, m_particles);
     // Check that it hasn't been used yet ...
     EXPECT_EQ(DumbOutputProcessor::s_counter, 0);
     // Compute and write diagnostics

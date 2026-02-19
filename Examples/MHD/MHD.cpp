@@ -44,13 +44,12 @@ int main_new_mhdpde ()
     // Create an instance of the selected type
     myRKTBtype rKreference;
 
-    std::array<std::string, 2> outputFields = {"Q", "B"};
-    MhdfvNumericalScheme myMHDscheme(myrank, nMPIranks, outputFields);
+    MhdfvNumericalScheme myMHDscheme(myrank, nMPIranks);
 
     amrex::Print() << "Initialization step 00" << std::endl;
 
-    Gempic::TimeLoop::ExplicitRK<MHDFieldsHandlerStruct, myRKTag> rKintegrator(
-        myMHDscheme.m_mhd.m_disc.m_myfields, myMHDscheme, myMHDscheme.m_mhd.m_disc.m_drc,
+    Gempic::TimeLoop::ExplicitRK<MHDFieldsHandlerStruct, myRKTag, MHDDeRham> rKintegrator(
+        myMHDscheme.m_mhd.m_disc.m_fields, myMHDscheme, myMHDscheme.m_mhd.m_disc.m_drc,
         rKreference);
 
     amrex::Print() << "Initialization step 01" << std::endl;

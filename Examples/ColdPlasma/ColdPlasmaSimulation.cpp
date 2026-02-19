@@ -12,6 +12,7 @@
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
@@ -51,18 +52,26 @@ int main (int argc, char* argv[])
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
+        Gempic::Io::FieldRegistry fieldRegistry;
 
         auto [parseBBackground, funcBBackground] =
             Utils::parse_functions<3>({"BBackgroundX", "BBackgroundY", "BBackgroundZ"});
         auto [parseDensityField, funcDensityField] = Utils::parse_function("DensityField");
         auto [parseDensityFieldInv, funcDensityFieldInv] = Utils::parse_function("DensityFieldInv");
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham, "E");
-        DeRhamField<Grid::dual, Space::face> D(deRham, "D");
-        DeRhamField<Grid::primal, Space::face> B(deRham, "B");
-        DeRhamField<Grid::dual, Space::edge> H(deRham, "H");
-        DeRhamField<Grid::primal, Space::edge> jField(deRham, "JField");
-        DeRhamField<Grid::dual, Space::face> jFieldT(deRham, "JFieldT");
+        auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry,
+                                                                                     "E", deRham);
+        auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
+                                                                                   "D", deRham);
+        auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(fieldRegistry,
+                                                                                     "B", deRham);
+        auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(fieldRegistry,
+                                                                                   "H", deRham);
+        auto jField = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+            fieldRegistry, "JField", deRham);
+        auto jFieldT = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(
+            fieldRegistry, "JFieldT", deRham);
+
         // temporary fields
         DeRhamField<Grid::primal, Space::face> auxPrimalF2(deRham);
         DeRhamField<Grid::dual, Space::face> auxDualF2(deRham);
@@ -80,7 +89,8 @@ int main (int argc, char* argv[])
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
+            auto diagnostics =
+                Io::make_diagnostics<degx, degy, degz>(infra, deRham, fieldRegistry, particles);
 
             // Initialize noisy electric field
             std::mt19937 gen(123);

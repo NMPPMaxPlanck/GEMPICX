@@ -2,6 +2,7 @@
 #define GEMPICX_DIAGNOSTICS_H_
 
 #include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_MultiFullDiagnostics.H"
 #include "GEMPIC_MultiReducedDiagnostics.H"
@@ -24,12 +25,14 @@ private:
     ComputationalDomain m_compDom;
 
 public:
+    template <Gempic::Forms::DeRhamComplexC DRC>
     Diagnostics(ComputationalDomain const& compDom,
-                std::shared_ptr<Forms::DeRhamComplex> const drc,
+                std::shared_ptr<DRC> const drc,
+                FieldRegistry const& fieldRegistry,
                 std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const&
                     particles) :
-        m_fullDiagn{compDom, drc->m_fieldsDiagnostics, drc->m_fieldsScaling, particles},
-        m_redDiagn{drc},
+        m_fullDiagn{compDom, fieldRegistry, particles},
+        m_redDiagn{drc, fieldRegistry},
         m_particles{particles},
         m_compDom{compDom}
     {
@@ -54,13 +57,20 @@ public:
 /**
  * Convenience function to create diagnostics objects with partial tepmlate specialization
  */
-template <int xDeg, int yDeg, int zDeg, unsigned int vDim, unsigned int nData>
+
+template <int xDeg,
+          int yDeg,
+          int zDeg,
+          unsigned int vDim,
+          unsigned int nData,
+          Gempic::Forms::DeRhamComplexC DRC>
 Diagnostics<xDeg, yDeg, zDeg, vDim, nData> make_diagnostics (
     ComputationalDomain const& compDom,
-    std::shared_ptr<Forms::DeRhamComplex> const drc,
+    std::shared_ptr<DRC> const drc,
+    FieldRegistry const& reg,
     std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles)
 {
-    return Diagnostics<xDeg, yDeg, zDeg, vDim, nData>(compDom, drc, particles);
+    return Diagnostics<xDeg, yDeg, zDeg, vDim, nData>(compDom, drc, reg, particles);
 }
 } //namespace Gempic::Io
 #endif

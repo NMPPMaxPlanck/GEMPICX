@@ -12,6 +12,7 @@
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
@@ -60,18 +61,25 @@ int main (int argc, char* argv[])
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
-
+        Gempic::Io::FieldRegistry fieldRegistry;
         auto [parseBBackground, funcBBackground] =
             Utils::parse_functions<3>({"BBackgroundX", "BBackgroundY", "BBackgroundZ"});
 
-        DeRhamField<Grid::primal, Space::edge> E(deRham, "E");
-        DeRhamField<Grid::dual, Space::face> D(deRham, "D");
-        DeRhamField<Grid::primal, Space::face> B(deRham, "B");
+        auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry,
+                                                                                     "E", deRham);
+        auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
+                                                                                   "D", deRham);
+        auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(fieldRegistry,
+                                                                                     "B", deRham);
         DeRhamField<Grid::primal, Space::face> bBackground(deRham, funcBBackground);
-        DeRhamField<Grid::dual, Space::edge> H(deRham, "H");
-        DeRhamField<Grid::dual, Space::face> J(deRham, "J");
-        DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
-        DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
+        auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(fieldRegistry,
+                                                                                   "H", deRham);
+        auto J = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
+                                                                                   "J", deRham);
+        auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                     "rho", deRham);
+        auto phi = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::node>>(
+            fieldRegistry, "phi", deRham);
 
         // Initialize needed propagators/solvers
         auto poisson{Gempic::FieldSolvers::make_poisson_solver(deRham, infra)};
@@ -97,7 +105,8 @@ int main (int argc, char* argv[])
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
+            auto diagnostics =
+                Io::make_diagnostics<degx, degy, degz>(infra, deRham, fieldRegistry, particles);
 
             // Deposit initial charge and compute s0
             for (auto& particleSpecies : particlesLinVlasov)
