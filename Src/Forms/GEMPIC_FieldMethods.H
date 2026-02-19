@@ -5,6 +5,25 @@
 #include "GEMPIC_Interpolation.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 
+namespace Gempic
+{
+template <class T>
+concept HasScalarMF = requires(T const& f) {
+    { f.multi_fab() } -> std::same_as<amrex::MultiFab const&>;
+};
+
+template <class T>
+concept HasScaling = requires(T const& f, int s) {
+    { f.scaling(s) } -> std::convertible_to<amrex::Real>;
+};
+
+template <class T>
+concept HasDiscreteGrid = requires(T const& f) {
+    { f.discrete_grid() } -> std::same_as<DiscreteGrid>;
+} || requires(T const& f) {
+    { f.discrete_grid() } -> std::same_as<DiscreteGrid const&>;
+};
+} //namespace Gempic
 namespace Gempic::Forms
 {
 /**
@@ -1749,35 +1768,6 @@ inline void apply_1d_hodge (amrex::Geometry geom,
     multiOutput.FillBoundary(geom.periodicity());
 }
 
-template <>
-constexpr auto valid_degrees<HodgeScheme::FDHodge>()
-{
-    constexpr std::array<int, 3> sValidDegreesFdHodge{2, 4, 6};
-    return sValidDegreesFdHodge;
-}
-
-template <>
-constexpr auto valid_degrees<HodgeScheme::GalerkinHodge>()
-{
-    constexpr std::array<int, 3> sValidDegreesGalerkinHodge{2, 4, 6};
-    return sValidDegreesGalerkinHodge;
-}
-
-template <>
-constexpr auto valid_degrees<HodgeScheme::GDECHodge>()
-{
-    // for GDEC we have theoretical arbitrary order of accuracy
-    constexpr std::array<int, 5> sValidDegreesGdecHodge{2, 4, 6, 8, 10};
-    return sValidDegreesGdecHodge;
-}
-
-template <>
-constexpr auto valid_degrees<HodgeScheme::GDECLumpHodge>()
-{
-    constexpr std::array<int, 3> sValidDegreesGdecLumpHodge{2, 4, 6};
-    return sValidDegreesGdecLumpHodge;
-}
-
 template <int hodgeDegree, HodgeScheme hodgeScheme, typename SrcForm, typename DstForm>
     requires MutualDual<SrcForm, DstForm>
 void hodge_operator (DstForm f0, SrcForm f1, amrex::Real weight = 1.0)
@@ -1804,9 +1794,9 @@ void hodge_operator (DstForm f0, SrcForm f1, amrex::Real weight = 1.0)
  * @param zeroForm DeRhamComplex::Primal0Form, resulting 0-form \f$u^0\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Primal0Form& zeroForm,
-                     DeRhamComplex::Dual3Form const& threeForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Primal0Form& zeroForm,
+                     typename DRC::Dual3Form const& threeForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(dual,cell,primal,node,weight)");
@@ -1853,9 +1843,9 @@ void hodge_operator (DeRhamComplex::Primal0Form& zeroForm,
  * @param zeroForm DeRhamComplex::Dual0Form, resulting 0-form \f$\tilde{u}^0\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Dual0Form& zeroForm,
-                     DeRhamComplex::Primal3Form const& threeForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Dual0Form& zeroForm,
+                     typename DRC::Primal3Form const& threeForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(primal,cell,dual,node,weight)");
@@ -1898,13 +1888,13 @@ void hodge_operator (DeRhamComplex::Dual0Form& zeroForm,
  *
  * @tparam hodgeDegree int, degree of basis functions used
  * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
- * @param twoForm DeRhamComplex::Dual2Form, 2-form \f$\tilde{u}^2\f$
- * @param oneForm DeRhamComplex::Primal1Form, resulting 1-form \f$u^1\f$
+ * @param twoForm DRC::Dual2Form, 2-form \f$\tilde{u}^2\f$
+ * @param oneForm DRC::Primal1Form, resulting 1-form \f$u^1\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Primal1Form& oneForm,
-                     DeRhamComplex::Dual2Form const& twoForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Primal1Form& oneForm,
+                     typename DRC::Dual2Form const& twoForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(dual,face,primal,edge,weight)");
@@ -1966,13 +1956,13 @@ void hodge_operator (DeRhamComplex::Primal1Form& oneForm,
  * Parameters:
  * @tparam hodgeDegree int, degree of basis functions used
  * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
- * @param twoForm DeRhamComplex::Primal2Form, 2-form \f$u^2\f$
- * @param oneForm DeRhamComplex::Dual1Form, resulting 1-form \f$\tilde{u}^1\f$
+ * @param twoForm DRC::Primal2Form, 2-form \f$u^2\f$
+ * @param oneForm DRC::Dual1Form, resulting 1-form \f$\tilde{u}^1\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Dual1Form& oneForm,
-                     DeRhamComplex::Primal2Form const& twoForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Dual1Form& oneForm,
+                     typename DRC::Primal2Form const& twoForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(primal,face,dual,edge,weight)");
@@ -2032,13 +2022,13 @@ void hodge_operator (DeRhamComplex::Dual1Form& oneForm,
  *
  * @tparam hodgeDegree int, degree of basis functions used
  * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
- * @param oneForm DeRhamComplex::Dual1Form, 1-form \f$\tilde{u}^1\f$
- * @param twoForm DeRhamComplex::Primal2Form, resulting 2-form \f$u^2\f$
+ * @param oneForm DRC::Dual1Form, 1-form \f$\tilde{u}^1\f$
+ * @param twoForm DRC::Primal2Form, resulting 2-form \f$u^2\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Primal2Form& twoForm,
-                     DeRhamComplex::Dual1Form const& oneForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Primal2Form& twoForm,
+                     typename DRC::Dual1Form const& oneForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(dual,edge,primal,face,weight)");
@@ -2101,13 +2091,13 @@ void hodge_operator (DeRhamComplex::Primal2Form& twoForm,
  * Parameters:
  * @tparam hodgeDegree int, degree of basis functions used
  * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
- * @param oneForm DeRhamComplex::Primal1Form, 1-form \f$u^1\f$
- * @param twoForm DeRhamComplex::Dual2Form, resulting 2-form \f$\tilde{u}^2\f$
+ * @param oneForm DRC::Primal1Form, 1-form \f$u^1\f$
+ * @param twoForm DRC::Dual2Form, resulting 2-form \f$\tilde{u}^2\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Dual2Form& twoForm,
-                     DeRhamComplex::Primal1Form const& oneForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Dual2Form& twoForm,
+                     typename DRC::Primal1Form const& oneForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(primal,edge,dual,face,weight)");
@@ -2169,13 +2159,13 @@ void hodge_operator (DeRhamComplex::Dual2Form& twoForm,
  * Parameters:
  * @tparam hodgeDegree int, degree of basis functions used
  * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
- * @param zeroForm DeRhamComplex::Dual0Form, 0-form \f$\tilde{u}^0\f$
- * @param threeForm DeRhamComplex::Primal3Form, resulting 3-form \f$u^3\f$
+ * @param zeroForm DRC::Dual0Form, 0-form \f$\tilde{u}^0\f$
+ * @param threeForm DRC::Primal3Form, resulting 3-form \f$u^3\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Primal3Form& threeForm,
-                     DeRhamComplex::Dual0Form const& zeroForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Primal3Form& threeForm,
+                     typename DRC::Dual0Form const& zeroForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(dual,node,primal,cell,weight)");
@@ -2219,13 +2209,13 @@ void hodge_operator (DeRhamComplex::Primal3Form& threeForm,
  * Parameters:
  * @tparam hodgeDegree int, degree of basis functions used
  * @tparam hodgeScheme HodgeScheme, determines the stencils used for the Hodge operator
- * @param zeroForm DeRhamComplex::Primal0Form, 0-form \f$u^0\f$
- * @param threeForm DeRhamComplex::Dual3Form, resulting 3-form \f$\tilde{u}^3\f$
+ * @param zeroForm DRC::Primal0Form, 0-form \f$u^0\f$
+ * @param threeForm DRC::Dual3Form, resulting 3-form \f$\tilde{u}^3\f$
  * @param weight Real, constant weight function
  */
-template <int hodgeDegree, HodgeScheme hodgeScheme>
-void hodge_operator (DeRhamComplex::Dual3Form& threeForm,
-                     DeRhamComplex::Primal0Form const& zeroForm,
+template <int hodgeDegree, HodgeScheme hodgeScheme, DeRhamComplexC DRC = DeRhamComplex>
+void hodge_operator (typename DRC::Dual3Form& threeForm,
+                     typename DRC::Primal0Form const& zeroForm,
                      amrex::Real weight = 1.0)
 {
     BL_PROFILE("hodge_operator(primal,node,dual,cell,weight)");
@@ -2277,6 +2267,7 @@ template <HodgeScheme hodgeScheme,
     requires MutualDual<SrcFormType, DstFormType>
 void hodge_degree_selector (DstFormType& dstForm, SrcFormType& srcForm, amrex::Real weight)
 {
+    using DRC = field_to_drc_t<SrcFormType>;
     BL_PROFILE("hodge_degree_selector()")
     AMREX_ASSERT(srcForm.m_deRham->get_hodge_degree() == dstForm.m_deRham->get_hodge_degree());
     constexpr auto validDegreesArray = valid_degrees<hodgeScheme>();
@@ -2284,8 +2275,8 @@ void hodge_degree_selector (DstFormType& dstForm, SrcFormType& srcForm, amrex::R
     {
         if (srcForm.m_deRham->get_hodge_degree() == validDegreesArray[hodgeDegreeIdx])
         {
-            hodge_operator<validDegreesArray[hodgeDegreeIdx], hodgeScheme>(dstForm, srcForm,
-                                                                           weight);
+            hodge_operator<validDegreesArray[hodgeDegreeIdx], hodgeScheme, DRC>(dstForm, srcForm,
+                                                                                weight);
         }
         else
         {
@@ -2304,15 +2295,15 @@ void hodge_degree_selector (DstFormType& dstForm, SrcFormType& srcForm, amrex::R
 /**
  * @brief Selects a precompiled Hodge operator scheme from a runtime scheme parameter
  *
- * @tparam dstFormType type of the destination form (parameter deduction)
- * @tparam srcFormType type of the source form (parameter deduction)
+ * @tparam DstFormType type of the destination form (parameter deduction)
+ * @tparam SrcFormType type of the source form (parameter deduction)
  * @param f2 destination form
  * @param f1 const source form
  * @param weight optional weight for the Hodge
  */
 template <typename DstFormType, typename SrcFormType>
-    requires MutualDual<SrcFormType, DstFormType>
-void hodge (DstFormType& dstForm, SrcFormType const& srcForm, amrex::Real weight = 1.)
+    requires MutualDual<SrcFormType, DstFormType> && (!HasHodgeScheme<field_to_drc_t<SrcFormType>>)
+void hodge(DstFormType& dstForm, SrcFormType const& srcForm, amrex::Real weight = 1.)
 {
     BL_PROFILE("hodge()");
     AMREX_ASSERT(dstForm.m_deRham->get_hodge_scheme() == srcForm.m_deRham->get_hodge_scheme());
@@ -2439,8 +2430,8 @@ inline void hodge_dk (DstFormType& formOut,
  *
  * Recursively calls itself until the runtime Hodge degree == validDegrees[hodgeDegreeIdx],
  * then calls
- *   eval_form_component<degree, grid, space> for 0-/3-forms, or
- *   eval_form_component<degree, grid, space, dir> for 1-/2-forms
+ *   eval_form_component<degree, srcFormType> for 0-/3-forms, or
+ *   eval_form_component<degree, srcFormType, dir> for 1-/2-forms
  *
  * @tparam dir            Optional direction as found by eval_form_direction_selector
  * @tparam hodgeDegreeIdx Not the Hodge degree! The index of the validDegrees array
@@ -2450,9 +2441,9 @@ inline void hodge_dk (DstFormType& formOut,
  * @param evalShift vector of shifts from lower corner of primal cell (between 0 and 1)
  * @param pointValues Multifab in which to store the interpolated values
  */
-template <typename FormConstRef, int testDegInd = 0>
+template <typename SrcFormType, int testDegInd = 0>
 void eval_form_degree_selector (
-    FormConstRef& field,
+    SrcFormType& field,
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
@@ -2464,13 +2455,12 @@ void eval_form_degree_selector (
         {
             constexpr int degree = validDegreesArray[testDegInd];
             // 0-/3-form call
-            amrex::MultiFab const& data = field.m_data;
-            eval_form_component<degree, FormConstRef::s_grid, FormConstRef::s_space>(
-                evalShift, data, pointValues, field.m_deRham->get_dx(), field.m_deRham->m_geom);
+            eval_form_component<degree, SrcFormType>(
+                evalShift, field, pointValues, field.m_deRham->get_dx(), field.m_deRham->m_geom);
         }
         else
         {
-            eval_form_degree_selector<FormConstRef, testDegInd + 1>(field, evalShift, pointValues);
+            eval_form_degree_selector<SrcFormType, testDegInd + 1>(field, evalShift, pointValues);
         }
     }
     else
@@ -2480,9 +2470,9 @@ void eval_form_degree_selector (
     }
 }
 
-template <Direction dir, typename FormConstRef, int testDegInd = 0>
+template <Direction dir, typename SrcFormType, int testDegInd = 0>
 void eval_form_degree_selector (
-    FormConstRef& field,
+    SrcFormType& field,
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
@@ -2494,14 +2484,13 @@ void eval_form_degree_selector (
         {
             constexpr int degree = validDegreesArray[testDegInd];
             // 1-/2-form call
-            amrex::MultiFab const& data = field.m_data[dir];
-            eval_form_component<degree, FormConstRef::s_grid, FormConstRef::s_space, dir>(
-                evalShift, data, pointValues, field.m_deRham->get_dx(), field.m_deRham->m_geom);
+            eval_form_component<degree, SrcFormType, dir>(
+                evalShift, field, pointValues, field.m_deRham->get_dx(), field.m_deRham->m_geom);
         }
         else
         {
-            eval_form_degree_selector<dir, FormConstRef, testDegInd + 1>(field, evalShift,
-                                                                         pointValues);
+            eval_form_degree_selector<dir, SrcFormType, testDegInd + 1>(field, evalShift,
+                                                                        pointValues);
         }
     }
     else
@@ -2520,9 +2509,9 @@ void eval_form_degree_selector (
  * @param dir Direction in which to evaluate the interpolation(s)
  */
 
-template <typename FormConstRef>
+template <typename SrcFormType>
 inline void eval_form_direction_selector (
-    FormConstRef& field,
+    SrcFormType& field,
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues,
     Direction dir)

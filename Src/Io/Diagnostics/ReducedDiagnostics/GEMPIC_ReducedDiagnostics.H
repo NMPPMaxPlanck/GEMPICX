@@ -22,6 +22,7 @@
 #include <AMReX_ParallelDescriptor.H>
 #include <AMReX_REAL.H>
 
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 
 namespace Gempic::Io
@@ -153,7 +154,9 @@ public:
     /**
      * function to initialize data after amr levels are initialized.
      */
-    virtual void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf)
+    virtual void init_data (std::shared_ptr<Forms::DeRhamComplex> drc,
+                            Io::FieldRegistry const& reg,
+                            bool cmf)
     {
         BL_PROFILE("Gempic::Io::ReducedDiagnostics::init_data()");
         m_deRham = drc;

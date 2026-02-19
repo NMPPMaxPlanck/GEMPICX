@@ -3,7 +3,7 @@ simName = "Maxwell"
 
 # Grid parameters
 ComputationalDomain.nCell = 16 16 8
-ComputationalDomain.maxGridSize = 8 8 8
+ComputationalDomain.maxGridSize = 16 16 16
 ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
 # grid vector
@@ -45,7 +45,7 @@ FullDiagnostics.groupNames = customEmpty
 FullDiagnostics.saveFolder = FullDiagnostics/CustomOutputProcessorTest
 
 
-FullDiagnostics.customEmpty.varNames = By  Ez  # 		#By Bz Ex Ey Ez
+FullDiagnostics.customEmpty.varNames = Bx By Ex  Ez  # 		#By Bz Ex Ey Ez
 FullDiagnostics.customEmpty.outputProcessor = Custom
 FullDiagnostics.customEmpty.customID = HighResSubcellOutputProcessor
 

@@ -14,16 +14,13 @@ ComputeDiagOutputProcessor::ComputeDiagOutputProcessor(int ncomp, amrex::IntVect
     BL_PROFILE("ComputeDiagOutputProcessor::ComputeDiagOutputProcessor()");
 }
 
-int ComputeDiagOutputProcessor::n_comp() const { return m_ncomp; }
-
 namespace Impl
 {
-RawOutputProcessor::RawOutputProcessor(amrex::MultiFab const& mfSrc,
-                                       amrex::IntVect const crseRatio) :
-    ComputeDiagOutputProcessor(mfSrc.nComp(), crseRatio),
-    m_mfSrc(amrex::MultiFab(mfSrc, amrex::make_alias, 0, mfSrc.nComp()))
+
+RawOutputProcessor::RawOutputProcessor(AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio) :
+    ComputeDiagOutputProcessor(dataSrc.n_comp(), crseRatio), m_dataSrc(&dataSrc)
 {
-    BL_PROFILE("RawOutputProcessor::RawOutputProcessor()");
+    BL_PROFILE("RawOutputProcessor<drc>::RawOutputProcessor()");
 }
 
 amrex::BoxArray RawOutputProcessor::get_box_array (amrex::IndexType& t)
@@ -34,22 +31,15 @@ amrex::BoxArray RawOutputProcessor::get_box_array (amrex::IndexType& t)
 
 void RawOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
 {
-    BL_PROFILE("RawOutputProcessor::operator()");
-    // Copying raw MultiFab. You might think this a waste, but amrex's plot function does the same
-    // if the MultiFab passed to it has ghost cells.
-    amrex::Copy(mfDst, m_mfSrc, 0, dcomp, mfDst.nComp(), 0);
-    // mf_dst.ParallelCopy( *m_mf_src, 0, dcomp, m_mf_src->nComp() );
+    this->m_dataSrc->any_field_to_rawdata_multifabs(mfDst, dcomp);
 }
 
-CellCenterOutputProcessor::CellCenterOutputProcessor(amrex::MultiFab const& mfSrc,
-                                                     amrex::Real scaling,
+CellCenterOutputProcessor::CellCenterOutputProcessor(AnyFieldPtr const& dataSrc,
                                                      amrex::IntVect const crseRatio) :
-    ComputeDiagOutputProcessor(mfSrc.nComp(), crseRatio),
-    m_mfSrc(amrex::MultiFab(mfSrc, amrex::make_alias, 0, mfSrc.nComp()))
+    ComputeDiagOutputProcessor(dataSrc.n_comp(), crseRatio), m_dataSrc(&dataSrc)
 {
-    BL_PROFILE("CellCenterOutputProcessor::CellCenterOutputProcessor()");
-    m_scaling = scaling;
-    amrex::IntVect const indexTypeSrc = mfSrc.boxArray().ixType().toIntVect();
+    BL_PROFILE("CellCenterOutputProcessor<drc>::CellCenterOutputProcessor()");
+    amrex::IntVect const indexTypeSrc = dataSrc.box_array().ixType().toIntVect();
     AMREX_D_TERM(m_ishift = indexTypeSrc[xDir];, m_jshift = indexTypeSrc[yDir];
                  , m_kshift = indexTypeSrc[zDir];)
 }
@@ -64,35 +54,10 @@ amrex::BoxArray CellCenterOutputProcessor::get_box_array (amrex::IndexType& t)
 
 void CellCenterOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
 {
-    BL_PROFILE("CellCenterOutputProcessor::operator()");
-    // In cartesian geometry, interpolate from simulation MultiFab, m_mfSrc,
-    // to output diagnostic MultiFab, mfDst.
-    int nComps = m_mfSrc.nComp();
-
-    for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)
-    {
-        amrex::Box const& bx = mfi.tilebox();
-        amrex::Array4 dst = mfDst[mfi].array();
-        amrex::Array4 const src = m_mfSrc[mfi].array();
-
-        // You shouldn't try to use private variables in a GPU loop -- CUDA disallows it
-        amrex::Real scaling{m_scaling};
-        amrex::Real ishift{m_ishift};
-        amrex::Real jshift{m_jshift};
-        amrex::Real kshift{m_kshift};
-
-        ParallelFor(
-            bx, nComps,
-            [=] AMREX_GPU_DEVICE(int i, int j, int k, int srcComp)
-            {
-                dst(i, j, k, dcomp + srcComp) =
-                    0.125 * scaling *
-                    (src(i + ishift, j + jshift, k + kshift, srcComp) + src(i, j, k, srcComp) +
-                     src(i + ishift, j + jshift, k, srcComp) + src(i, j, k + kshift, srcComp) +
-                     src(i + ishift, j, k + kshift, srcComp) + src(i, j + jshift, k, srcComp) +
-                     src(i, j + jshift, k + kshift, srcComp) + src(i + ishift, j, k, srcComp));
-            });
-    }
+    BL_PROFILE("CellCenterOutputProcessor<drc>::operator()");
+    this->m_dataSrc->any_field_to_cellcentered_multifabs(mfDst, dcomp);
 }
+
 } //namespace Impl
+
 } //namespace Gempic::Io

@@ -80,7 +80,7 @@ struct TestFieldsHandlerStruct : BaseFieldsHandlerStruct<TestFieldsHandlerStruct
     /**
      * Constructor
      */
-    TestFieldsHandlerStruct(std::shared_ptr<FDDeRhamComplex>& drc, int nComp) {}
+    TestFieldsHandlerStruct(std::shared_ptr<FDDeRhamComplex>& drc) {}
 
     // this is necessary to define array of this classes: first define the array, then construct
     // component by component.
@@ -324,12 +324,12 @@ public:
                                               s_maxSplineDegree,
                                               //HodgeScheme::GDECLumpHodge);  //
                                               HodgeScheme::GDECHodge)}, //HodgeScheme::FDHodge)}, //
-        m_fields(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc, 0)),
-        m_fieldsQExplicit(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc, 0)),
-        m_fieldsDtEx(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc, 0)),
-        m_fieldsQStar(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc, 0)),
-        m_fieldsDtIm(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc, 0)),
-        m_fieldsNew(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc, 0))
+        m_fields(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc)),
+        m_fieldsQExplicit(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc)),
+        m_fieldsDtEx(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc)),
+        m_fieldsQStar(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc)),
+        m_fieldsDtIm(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc)),
+        m_fieldsNew(std::make_shared<TestFieldsHandlerStruct<nVar>>(m_drc))
     {
         m_timeStep = 0;
         m_tend = 10.0;
@@ -375,7 +375,7 @@ public:
         int nMaxSteps{m_numericalScheme.m_nmaxSteps};
         // set initial condition
         int nTimeSteps{10};
-        TestFieldsHandlerStruct<s_nVarPde> referenceSol(m_numericalScheme.m_drc, 0);
+        TestFieldsHandlerStruct<s_nVarPde> referenceSol(m_numericalScheme.m_drc);
         m_numericalScheme.set_reference_data(referenceSol, m_numericalScheme.m_tend);
         constexpr int nIter = 4;
         std::array<TestFieldsHandlerStruct<s_nVarPde>, nIter - 1> convergence;
@@ -383,11 +383,11 @@ public:
         // Initialization of std::array elements
         for (int i = 0; i < nIter - 1; ++i)
         {
-            convergence[i] = TestFieldsHandlerStruct<s_nVarPde>(m_numericalScheme.m_drc, i);
+            convergence[i] = TestFieldsHandlerStruct<s_nVarPde>(m_numericalScheme.m_drc);
         }
         for (int i = 0; i < nIter; ++i)
         {
-            error[i] = TestFieldsHandlerStruct<s_nVarPde>(m_numericalScheme.m_drc, i);
+            error[i] = TestFieldsHandlerStruct<s_nVarPde>(m_numericalScheme.m_drc);
         }
         amrex::Real refinement{2.0};
         for (int iter = 0; iter < nIter; ++iter)
@@ -447,8 +447,9 @@ class RkButcherTableauExplicitTest : public RkButcherTableauTest<RkTagWrapper>
 
 public:
     // the Explicit RK class
-    Gempic::TimeLoop::ExplicitRK<TestFieldsHandlerStruct<Parent::s_nVarPde>, Parent::s_rkTag>
-        m_explicitRk;
+    Gempic::TimeLoop::
+        ExplicitRK<TestFieldsHandlerStruct<Parent::s_nVarPde>, Parent::s_rkTag, FDDeRhamComplex>
+            m_explicitRk;
 
     void rk_explicit () { this->rk(m_explicitRk); }
 
@@ -468,8 +469,9 @@ class RkButcherTableauImexTest : public RkButcherTableauTest<RkTagWrapper>
 
 public:
     // the IMEX RK class
-    Gempic::TimeLoop::ImexRk<TestFieldsHandlerStruct<Parent::s_nVarPde>, Parent::s_rkTag>
-        m_implicitExplicitRk;
+    Gempic::TimeLoop::
+        ImexRk<TestFieldsHandlerStruct<Parent::s_nVarPde>, Parent::s_rkTag, FDDeRhamComplex>
+            m_implicitExplicitRk;
 
     void rk_implicit_explicit () { this->rk(m_implicitExplicitRk); }
 

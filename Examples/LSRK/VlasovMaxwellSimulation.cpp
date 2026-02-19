@@ -13,6 +13,7 @@
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
@@ -117,7 +118,7 @@ int main (int argc, char* argv[])
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
-
+        Gempic::Io::FieldRegistry fieldRegistry;
         // Initialize simulation
         Io::Parameters paramsSim("Sim");
         std::string simType{"UNDEFINED"};
@@ -162,19 +163,29 @@ int main (int argc, char* argv[])
         auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
         auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
-        DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
-        DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
-        DeRhamField<Grid::primal, Space::edge> E(deRham, "E");
+        auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
+            fieldRegistry, "B", deRham, funcB);
+        auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(
+            fieldRegistry, "H", deRham, funcB);
+        auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry,
+                                                                                     "E", deRham);
         DeRhamField<Grid::primal, Space::edge> einit(deRham, funcE);
-        DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
-        DeRhamField<Grid::dual, Space::face> J(deRham, "J");
-        DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
-        DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
-        DeRhamField<Grid::primal, Space::cell> divB(deRham, "divB");
+        auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(
+            fieldRegistry, "D", deRham, funcE);
+        auto J = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
+                                                                                   "J", deRham);
+        auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                     "rho", deRham);
+        auto divD = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(
+            fieldRegistry, "divD", deRham);
+        auto divB = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::cell>>(
+            fieldRegistry, "divB", deRham);
         DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham);
-        DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
+        auto phi = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::node>>(
+            fieldRegistry, "phi", deRham);
         // tensor including polarization for DK
         DeRhamField<Grid::primal, Space::edge> tensor(deRham, 3);
+
         amrex::Real vAlfven;
 
         // Initialize particles
@@ -194,7 +205,8 @@ int main (int argc, char* argv[])
             params.get("nSteps", nSteps);
 
             // Initialize diagnostics and write initial time step
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
+            auto diagnostics =
+                Io::make_diagnostics<degx, degy, degz>(infra, deRham, fieldRegistry, particles);
 
             if (simType == "DriftKinetic" || simType == "DeFi")
             {

@@ -13,27 +13,42 @@
 #include <AMReX_MultiFab.H>
 
 #include "GEMPIC_DiagnosticStrategies.H"
+#include "GEMPIC_FieldRegistry.H"
+#include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
+
+// -----------------------------------------------------------------------------
+// Registration lifetime contract
+//
+// All custom output processors (class-based) and custom operators (callable-based)
+// must be registered *before the first diagnostics evaluation*.
+//
+// In practice, registration should happen during program initialization,
+// typically before the time-stepping loop and before any diagnostics objects
+// are constructed or executed.
+//
+// The internal registries are host-only, process-local, and not synchronized.
+// Registering processors after diagnostics have been created or used results
+// in undefined behavior and is therefore not supported.
+// -----------------------------------------------------------------------------
 
 namespace Gempic::Io::Impl
 {
-// ------------------------------- Helpers for CustomOutputProcessor -------------------------------
+// Factory type: builds a ComputeDiagOutputProcessor from AnyFieldPtr and crseRatio
 using ConstructorType = std::function<std::unique_ptr<ComputeDiagOutputProcessor>(
-    amrex::MultiFab const& mfSrc, amrex::Real const scaling, amrex::IntVect const crseRatio)>;
+    Io::AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio)>;
 
+// Helper to wrap a derived processor class T into a factory
 template <typename T>
-std::unique_ptr<ComputeDiagOutputProcessor> dynamic_convert (amrex::MultiFab const& mfSrc,
-                                                             amrex::Real const scaling,
+std::unique_ptr<ComputeDiagOutputProcessor> dynamic_convert (Io::AnyFieldPtr const& dataSrc,
                                                              amrex::IntVect const crseRatio)
 {
-    return std::make_unique<T>(mfSrc, scaling, crseRatio);
+    return std::make_unique<T>(dataSrc, crseRatio);
 }
-
-ConstructorType match_custom_id(std::string const& key);
-
 // -------------------- Helpers for CustomOperatorOutputProcessor --------------------
 // Type Erasure helper class a la Iglberger ("C++ Software Design", 2022 O'Reilly Media, Inc.)
 // OwningModel is separate because CUDA complained otherwise.
+// Type-erasure for device-callables
 template <typename T>
 struct OwningModel
 {
@@ -41,7 +56,7 @@ struct OwningModel
 
     void operator()(amrex::Box const& bx,
                     amrex::Array4<amrex::Real> dst,
-                    amrex::Array4<amrex::Real const> const src,
+                    amrex::Array4<amrex::Real const> src,
                     int nSrcComp,
                     double scaling,
                     double ishift,
@@ -69,29 +84,25 @@ public:
     template <typename T>
     CustomOperatorType(T object) :
         m_pimpl(new OwningModel<T>(std::move(object)),
-                [] (void* operatorBytes)
-                {
-                    auto* const model = static_cast<OwningModel<T>*>(operatorBytes);
-                    delete model;
-                }),
+                [] (void* p) { delete static_cast<OwningModel<T>*>(p); }),
         m_calc(
-            [] (void* operatorBytes,
+            [] (void* p,
                 amrex::Box const& bx,
                 amrex::Array4<amrex::Real> dst,
-                amrex::Array4<amrex::Real const> const src,
+                amrex::Array4<amrex::Real const> src,
                 int nSrcComp,
                 double scaling,
                 double ishift,
                 double jshift,
                 double kshift)
             {
-                auto* const model = static_cast<OwningModel<T>*>(operatorBytes);
-                model->operator()(bx, dst, src, nSrcComp, scaling, ishift, jshift, kshift);
+                auto* model = static_cast<OwningModel<T>*>(p);
+                (*model)(bx, dst, src, nSrcComp, scaling, ishift, jshift, kshift);
             }),
         m_clone(
-            [] (void* operatorBytes) -> void*
+            [] (void* p) -> void*
             {
-                auto* const model = static_cast<OwningModel<T>*>(operatorBytes);
+                auto* model = static_cast<OwningModel<T>*>(p);
                 return new OwningModel<T>(*model);
             })
     {
@@ -107,19 +118,20 @@ public:
     CustomOperatorType& operator=(CustomOperatorType const& other)
     {
         using std::swap;
-        CustomOperatorType copy(other);
-        swap(m_pimpl, copy.m_pimpl);
-        swap(m_calc, copy.m_calc);
-        swap(m_clone, copy.m_clone);
+        CustomOperatorType tmp(other);
+        swap(m_pimpl, tmp.m_pimpl);
+        swap(m_calc, tmp.m_calc);
+        swap(m_clone, tmp.m_clone);
         return *this;
     }
 
     ~CustomOperatorType() = default;
     CustomOperatorType(CustomOperatorType&&) = default;
     CustomOperatorType& operator=(CustomOperatorType&&) = default;
+
     void operator()(amrex::Box const& bx,
                     amrex::Array4<amrex::Real> dst,
-                    amrex::Array4<amrex::Real const> const src,
+                    amrex::Array4<amrex::Real const> src,
                     int nSrcComp,
                     double scaling,
                     double ishift,
@@ -146,13 +158,25 @@ private:
     CalcOperation* m_calc{nullptr};
     CloneOperation* m_clone{nullptr};
 };
-} //namespace Gempic::Io::Impl
+
+} // namespace Gempic::Io::Impl
+
+//STRATEGY: free registry function + public static API on the class
+//Define host-only registry accessors as free functions
+namespace Gempic::Io::Detail
+{
+
+// Host-only registries (function-local statics)
+inline std::map<std::string, Impl::ConstructorType>& class_registry();
+
+inline std::map<std::string, Impl::CustomOperatorType>& operator_registry();
+
+} //namespace Gempic::Io::Detail
 
 namespace Gempic::Io
 {
-template <typename T>
-void add_output_processor(std::string const& str);
 
+// Base class with class-factory registry (friend-free)
 /**
  * \brief OutputProcessor for custom OutputProcessor classes. Inherit from this if you want to
  * create your own outputProcessor from scratch. Otherwise, if you only need to customize the
@@ -172,19 +196,15 @@ void add_output_processor(std::string const& str);
 class CustomOutputProcessor : public ComputeDiagOutputProcessor
 {
 public:
-    using ConstructorType = Impl::ConstructorType;
     /** Constructor.
      *
-     * \param[in] mfSrc source MultiFab.
-     * \param[in] scaling scaling factor.
+     * \param[in] dataSrc source AnyFieldPtr register (type AnyFieldPtr).
      * \param[in] crseRatio for interpolating field values from the simulation MultiFab, srcMf,
                   to the output diagnostic MultiFab, mfDst.
      */
-    CustomOutputProcessor(amrex::MultiFab const& mfSrc,
-                          amrex::Real const scaling,
-                          amrex::IntVect const crseRatio);
+    CustomOutputProcessor(Io::AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio);
 
-    /** \brief copy m_mfSrc to mfDst.
+    /** \brief copy m_dataSrc to mfDst.
      *
      * \param[out] mfDst output MultiFab where the result is written
      */
@@ -192,39 +212,18 @@ public:
 
     amrex::BoxArray get_box_array(amrex::IndexType& t) override;
 
+    //public static register_class/find_class
+    static void register_class(std::string key, Impl::ConstructorType ctor);
+
+    static Impl::ConstructorType const* find_class(std::string_view const& key);
+
 protected:
-    /** Alias of source MultiFab (can be multi-component) */
-    amrex::MultiFab const m_mfSrc;
-    // Scaling factor
-    amrex::Real const m_scaling{1.0};
-
-private:
-    /** map of all user-provided outputProcessor classes */
-    inline static std::map<std::string, ConstructorType> s_outputProcessorClassMap{};
-
-    template <typename T>
-    friend void add_output_processor(std::string const&);
-
-    friend ConstructorType Impl::match_custom_id(std::string const&);
+    /** Non-owning handle to a registered diagnostics field (type-erased, possibly multi-component)
+     */
+    Io::AnyFieldPtr const* m_dataSrc;
 };
 
-// Add custom class to the list along with a key so it can be selected in the input file
-template <typename T>
-void add_output_processor (std::string const& key)
-{
-    // MUST provide a derived class
-    static_assert(std::is_base_of_v<CustomOutputProcessor, T>);
-    if (CustomOutputProcessor::s_outputProcessorClassMap.find(key) !=
-        CustomOutputProcessor::s_outputProcessorClassMap.end())
-    {
-        GEMPIC_ERROR("Already defined custom diagnostic Id: '" + key + "'.");
-    }
-    CustomOutputProcessor::s_outputProcessorClassMap.emplace(key, Impl::dynamic_convert<T>);
-}
-
-// Add custom lamba to the list along with a key so it can be selected in the input file
-void add_output_processor(std::string const& key, Impl::CustomOperatorType const& f);
-
+// Derived class with kernel-callable registry (friend-free)
 /**
  * \brief OutputProcessor for customizing only the diagnostics operator
  *
@@ -260,36 +259,62 @@ public:
     using CustomOperatorType = Impl::CustomOperatorType;
     /** Constructor.
      *
-     * \param[in] mfSrc source MultiFab.
-     * \param[in] scaling scaling factor.
+     * \param[in] dataSrc source AnyFieldPtr register (type AnyFieldPtr).
      * \param[in] crseRatio for interpolating field values from the simulation MultiFab, srcMf,
                   to the output diagnostic MultiFab, mfDst.
      * \param[in] f the constructor of the custom outputProcessor chosen from the input file.
      */
-    CustomOperatorOutputProcessor(amrex::MultiFab const& mfSrc,
-                                  amrex::Real const scaling,
+    CustomOperatorOutputProcessor(Io::AnyFieldPtr const& dataSrc,
                                   amrex::IntVect const crseRatio,
                                   CustomOperatorType const& f);
 
-    /** \brief copy m_mfSrc to mfDst.
-     *
-     * \param[out] mfDst output MultiFab where the result is written
-     */
     void operator()(amrex::MultiFab& mfDst, int /*dcomp*/) const final;
 
+    //public static register_operator/find_operator
+    static void register_operator(std::string key, CustomOperatorType op);
+    static CustomOperatorType const* find_operator(std::string_view const& key);
+
 private:
-    /** User-provided operator specific to this instance */
     CustomOperatorType m_f;
     amrex::Real m_ishift{0}, m_jshift{0}, m_kshift{0};
-    /** map of all user-provided outputProcessors */
-    inline static std::map<std::string, CustomOperatorType> s_outputProcessorMap{};
-
-    friend void add_output_processor(std::string const& key, CustomOperatorType const& f);
-    friend Impl::ConstructorType Impl::match_custom_id(std::string const&);
 };
 
+// Free registration for class-based custom processors
+template <typename T>
+inline void add_output_processor (std::string const& key)
+{
+    static_assert(std::is_base_of_v<CustomOutputProcessor, T>,
+                  "T must derive from CustomOutputProcessor");
+    CustomOutputProcessor::register_class(key, Impl::dynamic_convert<T>);
+}
+
+// Free registration for callable-based operators
+inline void add_output_processor (std::string const& key, Impl::CustomOperatorType const& f)
+{
+    CustomOperatorOutputProcessor::register_operator(key, f);
+}
+
+template <class F>
+    requires(!std::same_as<std::decay_t<F>, Impl::CustomOperatorType>)
+inline void add_output_processor (std::string const& key, F&& f)
+{
+    add_output_processor(key, Impl::CustomOperatorType(std::forward<F>(f)));
+}
+
+} // namespace Gempic::Io
+
+namespace Gempic::Io::Impl
+{
+// Factory lookup (consult both registries): try class factories first, then operator kernels
+ConstructorType match_custom_id(std::string const& key);
+
+} // namespace Gempic::Io::Impl
+
+namespace Gempic::Io
+{
 /**
- * A higher resolution writer: high-order interpolation on a finer grid.
+ * A higher resolution writer: high-order interpolation of a Field (AnyFieldPtr) on a finer grid
+ * (MultiFab).
  */
 class HighResSubcellOutputProcessor : public CustomOutputProcessor
 {
@@ -297,53 +322,18 @@ public:
     void operator()(amrex::MultiFab& mfDst, int dcomp) const final;
 
     amrex::BoxArray get_box_array(amrex::IndexType& t) final;
-
-    HighResSubcellOutputProcessor(amrex::MultiFab const& mfSrc,
-                                  amrex::Real const scaling,
-                                  amrex::IntVect const crseRatio);
-
-    // V0, V3 interpolation
     /**
-     * interpolation function from the source to a finer multifab.
-     *
-     * @param mfDst[out] : destination cell-centered finer multifab (output data)
-     *
-     * @param mfDst[in] : destination cell-centered finer multifab iterator (output data)
-     *
-     * @param mfiDst0[in] : destination cell-centered non-refined multifab iterator
-     *
-     * @param mfiSrc[in] : source non-refined multifab iterator
+     * @brief
+     * @tparam AnyFieldPtr allow OutputProcessor for different field types
+     * @param dataSrc
+     * @param crseRatio
      */
-    template <int degree, Grid grid, Space space>
-    void io_interpolation(amrex::MultiFab& mfDst, amrex::MFIter& mfiSrc) const;
-    // V1, V2 interpolation
+    HighResSubcellOutputProcessor(Io::AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio);
+
     /**
-     * interpolation function from the source to a finer multifab.
-     *
-     * @param mfDst[out] : destination cell-centered finer multifab (output data)
-     *
-     * @param mfDst[in] : destination cell-centered finer multifab iterator (output data)
-     *
-     * @param mfiDst0[in] : destination cell-centered non-refined multifab iterator
-     *
-     * @param mfiSrc[in] : source non-refined multifab iterator
+     * @brief evaluate field to destination multifab grid points
      */
-    template <int degree, Grid grid, Space space, Direction dir>
-    void io_interpolation(amrex::MultiFab& mfDst, amrex::MFIter& mfiSrc) const;
-
-private:
-    static constexpr int s_polyrecDegree{4};
-    std::array<int, 3> m_sNSubCell3d{1, 1, 1};
-
-    std::array<int, 3> m_shiftNode{1, 1, 1};
-    std::array<int, 3> m_shiftCell{0, 0, 0};
-    std::array<int, 3> m_shiftXFace{1, 0, 0};
-    std::array<int, 3> m_shiftYFace{0, 1, 0};
-    std::array<int, 3> m_shiftZFace{0, 0, 1};
-    std::array<int, 3> m_shiftXEdge{0, 1, 1};
-    std::array<int, 3> m_shiftYEdge{1, 0, 1};
-    std::array<int, 3> m_shiftZEdge{1, 1, 0};
-    std::array<int, 3> m_shiftV{0, 0, 0};
+    void interpolate_any_field_to_multifab(amrex::MultiFab& mfDst, int dcomp) const;
 };
 
 } //namespace Gempic::Io

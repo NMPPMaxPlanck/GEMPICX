@@ -24,8 +24,7 @@ class MultiDiagnostics
 public:
     MultiDiagnostics(
         ComputationalDomain const& compDom,
-        std::map<std::string, amrex::MultiFab const> const& fieldMap,
-        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vDim, nData>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::MultiDiagnostics()");
@@ -41,7 +40,7 @@ public:
                 i, m_diagsNames[i], m_defaultSaveInterval, m_defaultSaveFolder);
         }
 
-        init_data(compDom, fieldMap, fieldsScaling, particles);
+        init_data(compDom, fieldRegistry, particles);
     }
     /** \brief Read Input parameters. Called in constructor. */
     void read_parameters ()
@@ -61,14 +60,13 @@ public:
     /** \brief Loop over diags in alldiags and call their InitDiags */
     void init_data (
         ComputationalDomain const& compDom,
-        std::map<std::string, amrex::MultiFab const> const& fieldMap,
-        std::map<std::string, amrex::Real const> const& fieldsScaling,
+        FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vDim, nData>>> const& particles)
     {
         BL_PROFILE("Gempic::Io::MultiDiagnostics::init_data()");
         for (auto& diag : m_alldiags)
         {
-            diag->init_data(compDom, fieldMap, fieldsScaling, particles);
+            diag->init_data(compDom, fieldRegistry, particles);
         }
     }
     /** \brief Called at each iteration. Compute diags and flush. */

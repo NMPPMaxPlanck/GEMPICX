@@ -1,7 +1,47 @@
 #ifndef GEMPIC_DERHAMCOMPLEX_H_
 #define GEMPIC_DERHAMCOMPLEX_H_
 
+#include <type_traits>
+#include <variant>
+
 #include "GEMPIC_Config.H"
+
+namespace Gempic::Forms
+{
+
+template <typename DRC>
+concept HasHodgeScheme = requires {
+    { static_cast<int>(DRC::s_hodgeScheme) } -> std::convertible_to<int>;
+};
+
+// concept for deRham complexes
+template <typename T>
+concept DeRhamComplexC = requires(T drc) {
+    //{ T::s_hodgeDegree } -> std::convertible_to<int>; // static member, no instance
+    { drc.get_hodge_degree() } -> std::convertible_to<int>; // non static member
+    typename T::Primal0Form;
+    typename T::Primal1Form;
+    typename T::Primal2Form;
+    typename T::Primal3Form;
+    typename T::Dual0Form;
+    typename T::Dual1Form;
+    typename T::Dual2Form;
+    typename T::Dual3Form;
+};
+
+template <DeRhamComplexC Drc>
+using FieldVariantPtr = std::variant<typename Drc::Primal0Form,
+                                     typename Drc::Primal1Form,
+                                     typename Drc::Primal2Form,
+                                     typename Drc::Primal3Form,
+                                     typename Drc::Dual0Form,
+                                     typename Drc::Dual1Form,
+                                     typename Drc::Dual2Form,
+                                     typename Drc::Dual3Form>;
+
+// Concept for forms in a DeRham complex
+template <typename T, typename DRC>
+concept FormOfComplexC = DeRhamComplexC<DRC> && is_variant_member<T, FieldVariantPtr<DRC>>::value;
 
 // Primary template deleted
 template <typename T>
@@ -205,8 +245,12 @@ constexpr Field complement_form ()
     }
 }
 
-namespace Gempic::Forms
-{
+// Primary template (undefined for unsupported types)
+template <typename Field>
+struct field_to_drc;
+
+template <typename Field>
+using field_to_drc_t = typename field_to_drc<canonical_t<Field>>::type;
 
 enum class HodgeScheme
 {
@@ -216,114 +260,147 @@ enum class HodgeScheme
     GDECLumpHodge, // with Mass lumping
 };
 
-// concept for deRham complexes
-template <typename T>
-concept DeRhamComplexC = requires(T drc) {
-    //{ T::s_hodgeScheme } -> std::convertible_to<HodgeScheme>; // static member, no instance
-    { drc.m_hodgeDegree() } -> std::convertible_to<int>; // non static member
-    typename T::Primal0Form;
-    typename T::Primal1Form;
-    typename T::Primal2Form;
-    typename T::Primal3Form;
-    typename T::Dual0Form;
-    typename T::Dual1Form;
-    typename T::Dual2Form;
-    typename T::Dual3Form;
-};
+template <HodgeScheme hodgeScheme>
+constexpr auto valid_degrees() = delete;
 
-// // map of pointers to the field multifabs for the diagnostics
-// static std::map<std::string, amrex::MultiFab*> fieldsDiagnostics;
-// // map of scaling parameters to go from degrees of freedom to point values for diagnostics
-// static std::map<std::string, amrex::Real> fieldsScaling;
+template <>
+constexpr auto valid_degrees<HodgeScheme::FDHodge>()
+{
+    constexpr std::array<int, 3> validDegreesFdHodge{2, 4, 6};
+    return validDegreesFdHodge;
+}
 
-// Helpful for enable_if magic. @todo: If we switch to C++20, we should use concepts, as shown in
-// https://gitlab.mpcdf.mpg.de/gempic/gempic/-/merge_requests/127#note_225990
-//template <Space space>
-//inline constexpr bool isZeroOrThreeForm{false};
-//
-//template <>
-//inline constexpr bool is_zero_or_three_form<Space::node>{true};
-//
-//template <>
-//inline constexpr bool is_zero_or_three_form<Space::cell>{true};
-//
-//template <Space space>
-//inline constexpr bool isOneOrTwoForm{!is_zero_or_three_form<space>};
+template <>
+constexpr auto valid_degrees<HodgeScheme::GalerkinHodge>()
+{
+    constexpr std::array<int, 3> validDegreesGalerkinHodge{2, 4, 6};
+    return validDegreesGalerkinHodge;
+}
 
-template <typename SrcFormType>
+template <>
+constexpr auto valid_degrees<HodgeScheme::GDECHodge>()
+{
+    // for GDEC we have theoretical arbitrary order of accuracy
+    constexpr std::array<int, 5> validDegreesGdecHodge{2, 4, 6, 8, 10};
+    return validDegreesGdecHodge;
+}
+
+template <>
+constexpr auto valid_degrees<HodgeScheme::GDECLumpHodge>()
+{
+    constexpr std::array<int, 3> validDegreesGdecLumpHodge{2, 4, 6};
+    return validDegreesGdecLumpHodge;
+}
+
+template <typename SrcFormType, DeRhamComplexC DRC>
+    requires FormOfComplexC<SrcFormType, DRC>
 struct DualOf;
 
 // Handle const/ref wrappers
-template <typename SrcFormType>
-    requires(!std::same_as<SrcFormType, canonical_t<SrcFormType>>)
-struct DualOf<SrcFormType> : DualOf<canonical_t<SrcFormType>>
+template <typename SrcFormType, DeRhamComplexC DRC>
+    requires(FormOfComplexC<SrcFormType, DRC> &&
+             !std::same_as<SrcFormType, canonical_t<SrcFormType>>)
+struct DualOf<SrcFormType, DRC> : DualOf<canonical_t<SrcFormType>, DRC>
 {
 };
 
-template <typename SrcFormType>
+template <typename SrcFormType, DeRhamComplexC DRC>
+    requires FormOfComplexC<SrcFormType, DRC>
 struct DualOf
 {
     static_assert(gempic_always_false<SrcFormType>(),
-                  "DualOf specialization missing for this form type");
+                  "DualOf specialization missing for this form SrcFormType type");
+    static_assert(gempic_always_false<DRC>(), "DualOf specialization missing for this DRC");
 };
 
-template <typename T>
-using dual_t = typename DualOf<T>::type;
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Primal0Form, DRC>
+{
+    using type = typename DRC::Dual3Form;
+};
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Dual3Form, DRC>
+{
+    using type = typename DRC::Primal0Form;
+};
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Primal2Form, DRC>
+{
+    using type = typename DRC::Dual1Form;
+};
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Dual1Form, DRC>
+{
+    using type = typename DRC::Primal2Form;
+};
 
-// c++20 concept for one two forms
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Primal1Form, DRC>
+{
+    using type = typename DRC::Dual2Form;
+};
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Dual2Form, DRC>
+{
+    using type = typename DRC::Primal1Form;
+};
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Primal3Form, DRC>
+{
+    using type = typename DRC::Dual0Form;
+};
+template <DeRhamComplexC DRC>
+struct DualOf<typename DRC::Dual0Form, DRC>
+{
+    using type = typename DRC::Primal3Form;
+};
+
+template <typename T, DeRhamComplexC DRC>
+using dual_t = typename DualOf<canonical_t<T>, DRC>::type;
+
+// c++20 concept forms
 template <typename T>
 concept DeRhamFormC = requires {
     { canonical_t<T>::s_sequence } -> std::convertible_to<Sequence>;
     { canonical_t<T>::s_form } -> std::convertible_to<Form>;
 };
 
-// c++20 concept for zero three forms
 template <typename T>
-concept PrimalFormC = DeRhamFormC<canonical_t<T>> && is_primal<canonical_t<T>::s_sequence>();
-// c++20 concept for zero three forms
+concept PrimalFormC = DeRhamFormC<T> && is_primal<canonical_t<T>::s_sequence>();
 template <typename T>
-concept DualFormC = DeRhamFormC<canonical_t<T>> && is_dual<canonical_t<T>::s_sequence>();
-// c++20 concept for zero three forms
-template <typename T>
-concept ZeroFormC = DeRhamFormC<canonical_t<T>> && is_zero_form<canonical_t<T>::s_form>();
-template <typename T>
-concept ThreeFormC = DeRhamFormC<canonical_t<T>> && is_three_form<canonical_t<T>::s_form>();
-template <typename T>
-concept ZeroThreeFormC =
-    DeRhamFormC<canonical_t<T>> && is_zero_or_three_form<canonical_t<T>::s_form>();
+concept DualFormC = DeRhamFormC<T> && is_dual<canonical_t<T>::s_sequence>();
 
 template <typename T>
-concept PrimalZeroFormC = DeRhamFormC<canonical_t<T>> && is_zero_form<canonical_t<T>::s_form>() &&
-                          is_primal<canonical_t<T>::s_sequence>();
+concept ZeroFormC = DeRhamFormC<T> && is_zero_form<canonical_t<T>::s_form>();
 template <typename T>
-concept PrimalThreeFormC = DeRhamFormC<canonical_t<T>> && is_three_form<canonical_t<T>::s_form>() &&
-                           is_primal<canonical_t<T>::s_sequence>();
+concept ThreeFormC = DeRhamFormC<T> && is_three_form<canonical_t<T>::s_form>();
 template <typename T>
-concept DualZeroFormC = DeRhamFormC<canonical_t<T>> && is_zero_form<canonical_t<T>::s_form>() &&
-                        is_dual<canonical_t<T>::s_sequence>();
-template <typename T>
-concept DualThreeFormC = DeRhamFormC<canonical_t<T>> && is_three_form<canonical_t<T>::s_form>() &&
-                         is_dual<canonical_t<T>::s_sequence>();
-// c++20 concept for zero three forms
-template <typename T>
-concept OneFormC = DeRhamFormC<canonical_t<T>> && is_one_form<canonical_t<T>::s_form>();
-template <typename T>
-concept TwoFormC = DeRhamFormC<canonical_t<T>> && is_two_form<canonical_t<T>::s_form>();
-template <typename T>
-concept OneTwoFormC = DeRhamFormC<canonical_t<T>> && is_one_or_two_form<canonical_t<T>::s_form>();
+concept ZeroThreeFormC = ZeroFormC<T> || ThreeFormC<T>;
 
 template <typename T>
-concept PrimalOneFormC = DeRhamFormC<canonical_t<T>> && is_one_form<canonical_t<T>::s_form>() &&
-                         is_primal<canonical_t<T>::s_sequence>();
+concept PrimalZeroFormC = ZeroFormC<T> && PrimalFormC<T>;
 template <typename T>
-concept PrimalTwoFormC = DeRhamFormC<canonical_t<T>> && is_two_form<canonical_t<T>::s_form>() &&
-                         is_primal<canonical_t<T>::s_sequence>();
+concept PrimalThreeFormC = ThreeFormC<T> && PrimalFormC<T>;
 template <typename T>
-concept DualOneFormC = DeRhamFormC<canonical_t<T>> && is_one_form<canonical_t<T>::s_form>() &&
-                       is_dual<canonical_t<T>::s_sequence>();
+concept DualZeroFormC = ZeroFormC<T> && DualFormC<T>;
 template <typename T>
-concept DualTwoFormC = DeRhamFormC<canonical_t<T>> && is_two_form<canonical_t<T>::s_form>() &&
-                       is_dual<canonical_t<T>::s_sequence>();
+concept DualThreeFormC = ThreeFormC<T> && DualFormC<T>;
+
+template <typename T>
+concept OneFormC = DeRhamFormC<T> && is_one_form<canonical_t<T>::s_form>();
+template <typename T>
+concept TwoFormC = DeRhamFormC<T> && is_two_form<canonical_t<T>::s_form>();
+template <typename T>
+concept OneTwoFormC = OneFormC<T> || TwoFormC<T>;
+
+template <typename T>
+concept PrimalOneFormC = OneFormC<T> && PrimalFormC<T>;
+template <typename T>
+concept PrimalTwoFormC = TwoFormC<T> && PrimalFormC<T>;
+template <typename T>
+concept DualOneFormC = OneFormC<T> && DualFormC<T>;
+template <typename T>
+concept DualTwoFormC = TwoFormC<T> && DualFormC<T>;
 template <Sequence sequence, Form form>
 struct DeRhamFormBase
 {
@@ -333,10 +410,10 @@ public:
 };
 
 template <typename FormA, typename FormB>
-concept MutualDual = std::same_as<canonical_t<dual_t<FormA>>, canonical_t<FormB>> &&
-                     std::same_as<canonical_t<dual_t<FormB>>, canonical_t<FormA>> &&
-                     ((ZeroThreeFormC<FormA> && ZeroThreeFormC<FormB>) ||
-                      (OneTwoFormC<FormA> && OneTwoFormC<FormB>));
+concept MutualDual =
+    requires { typename field_to_drc_t<FormA>; } && DeRhamComplexC<field_to_drc_t<FormA>> &&
+    std::same_as<dual_t<FormA, field_to_drc_t<FormA>>, canonical_t<FormB>> &&
+    std::same_as<dual_t<FormB, field_to_drc_t<FormA>>, canonical_t<FormA>>;
 
 template <typename FormA, typename FormB>
 concept SameSequence = std::same_as<decltype(canonical_t<FormA>::s_sequence),

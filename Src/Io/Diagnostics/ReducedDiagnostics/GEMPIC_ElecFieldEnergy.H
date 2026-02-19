@@ -15,6 +15,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FieldMethods.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_Profiling.H"
@@ -30,13 +31,14 @@ template <int vdim, int degx, int degy, int degz, int ndata>
 class ElecFieldEnergy : public ReducedDiagnostics<vdim, degx, degy, degz, ndata>
 {
 public:
-    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge>> m_E;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face>> m_D;
-    std::unique_ptr<Forms::DeRhamField<Grid::primal, Space::edge> const> m_constE;
-    std::unique_ptr<Forms::DeRhamField<Grid::dual, Space::face> const> m_constD;
+    std::unique_ptr<Forms::DeRhamComplex::Primal1Form> m_E;
+    std::unique_ptr<Forms::DeRhamComplex::Dual2Form> m_D;
+    std::unique_ptr<Forms::DeRhamComplex::Primal1Form const> m_constE;
+    std::unique_ptr<Forms::DeRhamComplex::Dual2Form const> m_constD;
 
     enum class ComputeMethod
     {
+        missingAll,
         missingNone,
         missingD,
         missingE
@@ -90,11 +92,13 @@ public:
     /**
      * function to initialize data after amr levels are initialized.
      */
-    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc, bool cmf) final
+    void init_data (std::shared_ptr<Forms::DeRhamComplex> drc,
+                    FieldRegistry const& reg,
+                    bool cmf) final
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::init_data()");
-        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, cmf);
-        m_computeMethod = choose_computation_method(this->m_deRham->m_fieldsDiagnostics);
+        ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, reg, cmf);
+        m_computeMethod = choose_computation_method(reg);
     }
 
     /**
@@ -120,6 +124,11 @@ public:
                 hodge(*m_E, *m_constD);
                 update_data(*m_E, *m_constD, infra.m_geom.periodicity());
                 return;
+            default:
+                amrex::Abort(
+                    "Gempic::Io::ElecFieldEnergy::compute_diags(): ComputeMethod missing all "
+                    "required fields!");
+                return;
         }
     }
     // end void ElecFieldEnergy::ComputeDiags
@@ -131,43 +140,32 @@ private:
      * Selects computation method based on missing fields and the input file switch
      * compute_missing_fields
      */
-    ComputeMethod choose_computation_method (std::map<std::string, amrex::MultiFab const>& fieldMap)
+    ComputeMethod choose_computation_method (FieldRegistry const& registry)
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::choose_computation_method()");
-        using namespace Forms;
-        if (fieldMap.count("Dx") && fieldMap.count("Dy") && fieldMap.count("Dz") &&
-            fieldMap.count("Ex") && fieldMap.count("Ey") && fieldMap.count("Ez"))
+        using DRC = Forms::DeRhamComplex;
+        auto const* dPtr = get_field_ptr_or_null<DRC::Dual2Form>(registry, "Dx");
+        auto const* ePtr = get_field_ptr_or_null<DRC::Primal1Form>(registry, "Ex");
+        if (dPtr && ePtr)
         {
-            this->m_constE = std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
-                this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
-            this->m_constD = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
-                this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
+            this->m_constD = std::make_unique<DRC::Dual2Form>(this->m_deRham, *dPtr);
+            this->m_constE = std::make_unique<DRC::Primal1Form>(this->m_deRham, *ePtr);
             return ComputeMethod::missingNone;
         }
         else if (this->m_computeMissingFields)
         {
-            if (fieldMap.count("Ex") && fieldMap.count("Ey") && fieldMap.count("Ez") &&
-                (!fieldMap.count("Dx") || !fieldMap.count("Dy") || !fieldMap.count("Dz")))
+            if (!dPtr && ePtr)
             {
-                int nComps{fieldMap["Ex"].nComp()};
-                this->m_constE = std::make_unique<DeRhamField<Grid::primal, Space::edge> const>(
-                    this->m_deRham, fieldMap["Ex"], fieldMap["Ey"], fieldMap["Ez"]);
-
-                this->m_D =
-                    std::make_unique<DeRhamField<Grid::dual, Space::face>>(this->m_deRham, nComps);
-
+                int nComps = ePtr->get_ncomp(xDir);
+                this->m_constE = std::make_unique<DRC::Primal1Form>(this->m_deRham, *ePtr);
+                this->m_D = std::make_unique<DRC::Dual2Form>(this->m_deRham, nComps);
                 return ComputeMethod::missingD;
             }
-            else if (fieldMap.count("Dx") && fieldMap.count("Dy") && fieldMap.count("Dz") &&
-                     (!fieldMap.count("Ex") || !fieldMap.count("Ey") || !fieldMap.count("Ez")))
+            else if (dPtr && !ePtr)
             {
-                int nComps{fieldMap["Dx"].nComp()};
-                this->m_constD = std::make_unique<DeRhamField<Grid::dual, Space::face> const>(
-                    this->m_deRham, fieldMap["Dx"], fieldMap["Dy"], fieldMap["Dz"]);
-
-                this->m_E = std::make_unique<DeRhamField<Grid::primal, Space::edge>>(this->m_deRham,
-                                                                                     nComps);
-
+                int nComps = dPtr->get_ncomp(xDir);
+                this->m_constD = std::make_unique<DRC::Dual2Form>(this->m_deRham, *dPtr);
+                this->m_E = std::make_unique<DRC::Primal1Form>(this->m_deRham, nComps);
                 return ComputeMethod::missingE;
             }
             else
@@ -176,24 +174,23 @@ private:
                     "Neither E nor D was found: Either Ex, Ey and Ez or Dx, Dy and Dz are needed "
                     "to compute electric field "
                     "energy when computeMissingFields is set");
+                return ComputeMethod::missingAll;
             }
         }
-        else
-        {
-            GEMPIC_ERROR(
-                "E or D not found: Ex, Ey, Ez, Dx, Dy and Dz are all needed to compute electric "
-                "field energy when "
-                "computeMissingFields is not set");
-        }
-        return ComputeMethod::missingNone; // never reached
+
+        GEMPIC_ERROR(
+            "E or D not found: Ex, Ey, Ez, Dx, Dy and Dz are all needed to compute electric "
+            "field energy when "
+            "computeMissingFields is not set");
+        return ComputeMethod::missingAll;
     }
 
     /**
      * This function computes the electric field energy (EF) component wise:
      * epref_ep0 is the vacuum permittivity
      */
-    void update_data (Forms::DeRhamField<Grid::primal, Space::edge> const& fieldE,
-                      Forms::DeRhamField<Grid::dual, Space::face> const& fieldD,
+    void update_data (Forms::DeRhamComplex::Primal1Form const& fieldE,
+                      Forms::DeRhamComplex::Dual2Form const& fieldD,
                       amrex::Periodicity const& periodicity)
     {
         BL_PROFILE("Gempic::Io::ElecFieldEnergy::update_data()");

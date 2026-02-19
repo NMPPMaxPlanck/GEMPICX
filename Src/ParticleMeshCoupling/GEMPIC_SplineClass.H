@@ -225,12 +225,12 @@ public:
      *
      * @return The value of the calculated coefficient
      */
-    template <Field form, Direction dir>
+    template <Forms::Field form, Direction dir>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline (int i, int j, int k) const
     {
-        static_assert(form == Field::DualOneForm || form == Field::DualTwoForm,
+        static_assert(form == Forms::Field::DualOneForm || form == Forms::Field::DualTwoForm,
                       "Function called with primal form, or superfluous direction supplied.");
-        if constexpr (form == Field::DualTwoForm)
+        if constexpr (form == Forms::Field::DualTwoForm)
         {
             if constexpr (dir == Direction::xDir)
             {
@@ -251,7 +251,7 @@ public:
                                      m_cellSplineVals[Direction::zDir][k]);
             }
         }
-        else if constexpr (form == Field::DualOneForm)
+        else if constexpr (form == Forms::Field::DualOneForm)
         {
             if constexpr (dir == Direction::xDir)
             {
@@ -274,18 +274,18 @@ public:
         }
     }
 
-    template <Field form>
+    template <Forms::Field form>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline (int i, int j, int k) const
     {
-        static_assert(form == Field::DualZeroForm || form == Field::DualThreeForm,
+        static_assert(form == Forms::Field::DualZeroForm || form == Forms::Field::DualThreeForm,
                       "Function called with primal form, or no direction supplied.");
-        if constexpr (form == Field::DualThreeForm)
+        if constexpr (form == Forms::Field::DualThreeForm)
         {
             return GEMPIC_D_MULT(m_nodeSplineVals[Direction::xDir][i],
                                  m_nodeSplineVals[Direction::yDir][j],
                                  m_nodeSplineVals[Direction::zDir][k]);
         }
-        else if constexpr (form == Field::DualZeroForm)
+        else if constexpr (form == Forms::Field::DualZeroForm)
         {
             return GEMPIC_D_MULT(m_cellSplineVals[Direction::xDir][i],
                                  m_cellSplineVals[Direction::yDir][j],
@@ -339,11 +339,11 @@ public:
      *
      * @return fields: value of the spline-smoothed field at particle position
      */
-    template <Field form, unsigned int vDim>
+    template <Forms::Field form, unsigned int vDim>
     AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, vDim> eval_spline_field (
         amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const fieldArray) const
     {
-        static_assert(form == Field::PrimalOneForm || form == Field::PrimalTwoForm,
+        static_assert(form == Forms::Field::PrimalOneForm || form == Forms::Field::PrimalTwoForm,
                       "Attempting smoothing of incorrect field type.");
         bool xCond{false};
         bool yCond{false};
@@ -365,18 +365,18 @@ public:
                     .dim3();
 
             // Ensure that we only access existing elements of cellSplineVals
-            if constexpr (form == Field::PrimalOneForm)
+            if constexpr (form == Forms::Field::PrimalOneForm)
             {
                 xCond = (ii < degX);
             }
-            else if constexpr (form == Field::PrimalTwoForm)
+            else if constexpr (form == Forms::Field::PrimalTwoForm)
             {
                 xCond = AMREX_D_TERM(true, &&(jj < degY), &&(kk < degZ));
             }
             if (xCond)
             {
                 amrex::Real const sCoeff =
-                    eval_b_spline<complement_form<form>(), Direction::xDir>(ii, jj, kk);
+                    eval_b_spline<Forms::complement_form<form>(), Direction::xDir>(ii, jj, kk);
                 fields[Direction::xDir] += sCoeff * (fieldArray[Direction::xDir])(
                                                         cellIndex.x, cellIndex.y, cellIndex.z, 0);
             }
@@ -384,18 +384,18 @@ public:
             if constexpr (vDim > 1)
             {
                 // Ensure that we only access existing elements of cellSplineVals
-                if constexpr (form == Field::PrimalOneForm)
+                if constexpr (form == Forms::Field::PrimalOneForm)
                 {
                     yCond = AMREX_D_TERM(true, &&(jj < degY), );
                 }
-                else if constexpr (form == Field::PrimalTwoForm)
+                else if constexpr (form == Forms::Field::PrimalTwoForm)
                 {
                     yCond = AMREX_D_TERM((ii < degX), , &&(kk < degZ));
                 }
                 if (yCond)
                 {
                     amrex::Real const sCoeff =
-                        eval_b_spline<complement_form<form>(), Direction::yDir>(ii, jj, kk);
+                        eval_b_spline<Forms::complement_form<form>(), Direction::yDir>(ii, jj, kk);
                     fields[Direction::yDir] +=
                         sCoeff *
                         (fieldArray[Direction::yDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
@@ -404,18 +404,18 @@ public:
             if constexpr (vDim == 3)
             {
                 // Ensure that we only access existing elements of cellSplineVals
-                if constexpr (form == Field::PrimalOneForm)
+                if constexpr (form == Forms::Field::PrimalOneForm)
                 {
                     zCond = AMREX_D_TERM(true, , &&(kk < degZ));
                 }
-                else if constexpr (form == Field::PrimalTwoForm)
+                else if constexpr (form == Forms::Field::PrimalTwoForm)
                 {
                     zCond = AMREX_D_TERM((ii < degX), &&(jj < degY), );
                 }
                 if (zCond)
                 {
                     amrex::Real const sCoeff =
-                        eval_b_spline<complement_form<form>(), Direction::zDir>(ii, jj, kk);
+                        eval_b_spline<Forms::complement_form<form>(), Direction::zDir>(ii, jj, kk);
                     fields[Direction::zDir] +=
                         sCoeff *
                         (fieldArray[Direction::zDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
@@ -456,12 +456,14 @@ public:
                                 for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
                 amrex::Real const sCoeff =
                     ((ndir == 0)
-                         ? eval_b_spline<complement_form<Field::PrimalOneForm>(), Direction::xDir>(
-                               ii, jj, kk)
-                         : ((ndir == 1) ? eval_b_spline<complement_form<Field::PrimalOneForm>(),
-                                                        Direction::yDir>(ii, jj, kk)
-                                        : eval_b_spline<complement_form<Field::PrimalOneForm>(),
-                                                        Direction::zDir>(ii, jj, kk)));
+                         ? eval_b_spline<Forms::complement_form<Forms::Field::PrimalOneForm>(),
+                                         Direction::xDir>(ii, jj, kk)
+                         : ((ndir == 1) ? eval_b_spline<
+                                              Forms::complement_form<Forms::Field::PrimalOneForm>(),
+                                              Direction::yDir>(ii, jj, kk)
+                                        : eval_b_spline<
+                                              Forms::complement_form<Forms::Field::PrimalOneForm>(),
+                                              Direction::zDir>(ii, jj, kk)));
 
                 eWts[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
                      jj * nWtsXYZ[xDir][ndir] + ii] = sCoeff;
@@ -505,12 +507,14 @@ public:
 
                 amrex::Real const sCoeff =
                     ((ndir == 0)
-                         ? eval_b_spline<complement_form<Field::PrimalTwoForm>(), Direction::xDir>(
-                               ii, jj, kk)
-                         : ((ndir == 1) ? eval_b_spline<complement_form<Field::PrimalTwoForm>(),
-                                                        Direction::yDir>(ii, jj, kk)
-                                        : eval_b_spline<complement_form<Field::PrimalTwoForm>(),
-                                                        Direction::zDir>(ii, jj, kk)));
+                         ? eval_b_spline<Forms::complement_form<Forms::Field::PrimalTwoForm>(),
+                                         Direction::xDir>(ii, jj, kk)
+                         : ((ndir == 1) ? eval_b_spline<
+                                              Forms::complement_form<Forms::Field::PrimalTwoForm>(),
+                                              Direction::yDir>(ii, jj, kk)
+                                        : eval_b_spline<
+                                              Forms::complement_form<Forms::Field::PrimalTwoForm>(),
+                                              Direction::zDir>(ii, jj, kk)));
 
                 bWts[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
                      jj * nWtsXYZ[xDir][ndir] + ii] = sCoeff;
@@ -965,7 +969,7 @@ public:
      *
      * This function computes a dual dof of the tensor-product particle spline
      * centered at the particle position encoded in this spline object, with a vector orientation
-     * for l = 1 or 2 Field::DualOneForm.
+     * for l = 1 or 2 Forms::Field::DualOneForm.
      *
      * Specifically, it computes
      *  - \f$ t_{R\{3-l\}_{ijk}}(S^{part}(xx-xx_p)) \f$ if l = 0 or 3
@@ -990,12 +994,12 @@ public:
      *
      * @return The value of the calculated coefficient
      */
-    template <Field form, Direction dir, Direction dirDeriv>
+    template <Forms::Field form, Direction dir, Direction dirDeriv>
     AMREX_GPU_HOST_DEVICE amrex::Real eval_b_spline_derivative (int i, int j, int k) const
     {
-        static_assert(form == Field::DualOneForm || form == Field::DualTwoForm,
+        static_assert(form == Forms::Field::DualOneForm || form == Forms::Field::DualTwoForm,
                       "Function called with primal form, or superfluous direction supplied.");
-        if constexpr (form == Field::DualTwoForm)
+        if constexpr (form == Forms::Field::DualTwoForm)
         {
             if constexpr (dir == Direction::xDir)
             {
@@ -1037,7 +1041,7 @@ public:
                          : SplineBase<degX, degY, degZ>::m_cellSplineVals[Direction::zDir][k]));
             }
         }
-        else if constexpr (form == Field::DualOneForm)
+        else if constexpr (form == Forms::Field::DualOneForm)
         {
             if constexpr (dir == Direction::xDir)
             {

@@ -290,55 +290,11 @@ void hodge(DualThreeForm& d, PrimalZeroForm& p);
 
 namespace Gempic::Forms
 {
-
-template <>
-struct DualOf<DeRhamComplex::Primal0Form>
-{
-    using type = DeRhamComplex::Dual3Form;
-};
-template <>
-struct DualOf<DeRhamComplex::Dual3Form>
-{
-    using type = DeRhamComplex::Primal0Form;
-};
-template <>
-struct DualOf<DeRhamComplex::Primal2Form>
-{
-    using type = DeRhamComplex::Dual1Form;
-};
-template <>
-struct DualOf<DeRhamComplex::Dual1Form>
-{
-    using type = DeRhamComplex::Primal2Form;
-};
-
-template <>
-struct DualOf<DeRhamComplex::Primal1Form>
-{
-    using type = DeRhamComplex::Dual2Form;
-};
-template <>
-struct DualOf<DeRhamComplex::Dual2Form>
-{
-    using type = DeRhamComplex::Primal1Form;
-};
-template <>
-struct DualOf<DeRhamComplex::Primal3Form>
-{
-    using type = DeRhamComplex::Dual0Form;
-};
-template <>
-struct DualOf<DeRhamComplex::Dual0Form>
-{
-    using type = DeRhamComplex::Primal3Form;
-};
-
 /// FDDeRhamComplex
 class FDDeRhamComplex : public DeRhamComplex
 {
 private:
     amrex::RealVect m_dr;
-    int m_nGhost;
     HodgeScheme m_hodgeScheme;
 
     // Temporary MultiFabs used in the Hodges
@@ -366,7 +322,6 @@ public:
                     int const maxSplineDegree,
                     HodgeScheme const hodgeScheme = HodgeScheme::FDHodge,
                     int nComp = 1);
-
     HodgeScheme get_hodge_scheme () const override { return m_hodgeScheme; }
     amrex::MultiFab& get_temp_primal_zero_form () override { return m_tempPrimalZeroForm; }
     amrex::MultiFab& get_temp_dual_zero_form () override { return m_tempDualZeroForm; }
@@ -404,6 +359,169 @@ public:
 
 private:
 };
+
+/**
+ * @brief Actual specialization of FDDeRhamComplex class for specific hodge
+ * @tparam hodgeSchemeLoc the actual hodge scheme we use to specialize the DeRhamComplex
+ * @note FDDeRhamComplex is a deRham complex class assuming a single MF data structure.
+ */
+template <HodgeScheme hodgeSchemeLoc, Grid grid, Space space>
+class DeRhamFieldMF
+{
+    static_assert(gempic_always_false<hodgeSchemeLoc>(),
+                  "DeRhamFieldMF is not implemented for this TagType!");
+};
+
+template <Grid grid, Space space>
+class DeRhamFieldMF<HodgeScheme::FDHodge, grid, space> : public DeRhamField<grid, space>
+{
+public:
+    // Inherit all constructors from DeRhamField<Grid, Space>
+    using DeRhamField<grid, space>::DeRhamField;
+};
+
+template <Grid grid, Space space>
+class DeRhamFieldMF<HodgeScheme::GDECHodge, grid, space> : public DeRhamField<grid, space>
+{
+public:
+    // Inherit all constructors from DeRhamField<Grid, Space>
+    using DeRhamField<grid, space>::DeRhamField;
+};
+
+template <Grid grid, Space space>
+class DeRhamFieldMF<HodgeScheme::GDECLumpHodge, grid, space> : public DeRhamField<grid, space>
+{
+public:
+    // Inherit all constructors from DeRhamField<Grid, Space>
+    using DeRhamField<grid, space>::DeRhamField;
+};
+
+template <Grid grid, Space space>
+class DeRhamFieldMF<HodgeScheme::GalerkinHodge, grid, space> : public DeRhamField<grid, space>
+{
+public:
+    // Inherit all constructors from DeRhamField<Grid, Space>
+    using DeRhamField<grid, space>::DeRhamField;
+};
+
+/**
+ * @brief Actual specialization of FDDeRhamComplex class for specific hodge
+ * @tparam hodgeSchemeLoc the actual hodge scheme we use to specialize the DeRhamComplex
+ * @note FDDeRhamComplex is a deRham complex class assuming a single MF data structure.
+ */
+template <HodgeScheme hodgeSchemeLoc>
+class DeRhamComplexMF
+{
+    static_assert(gempic_always_false<hodgeSchemeLoc>(),
+                  "DeRhamComplexMF is not implemented for this TagType!");
+};
+
+template <>
+class DeRhamComplexMF<HodgeScheme::FDHodge>
+    : public FDDeRhamComplex,
+      public std::enable_shared_from_this<DeRhamComplexMF<HodgeScheme::FDHodge>>
+{
+public:
+    static constexpr HodgeScheme s_hodgeScheme = HodgeScheme::FDHodge;
+    static constexpr auto s_validDegrees{valid_degrees<s_hodgeScheme>()};
+    DeRhamComplexMF(ComputationalDomain const& infra,
+                    int const hodgeDegree,
+                    int const maxSplineDegree,
+                    int nComp = 1) :
+        FDDeRhamComplex::FDDeRhamComplex(
+            infra, hodgeDegree, maxSplineDegree, s_hodgeScheme, nComp) {};
+};
+
+template <>
+class DeRhamComplexMF<HodgeScheme::GalerkinHodge>
+    : public FDDeRhamComplex,
+      public std::enable_shared_from_this<DeRhamComplexMF<HodgeScheme::GalerkinHodge>>
+{
+public:
+    static constexpr HodgeScheme s_hodgeScheme = HodgeScheme::GalerkinHodge;
+    static constexpr auto s_validDegrees{valid_degrees<s_hodgeScheme>()};
+
+    DeRhamComplexMF(ComputationalDomain const& infra,
+                    int const hodgeDegree,
+                    int const maxSplineDegree,
+                    int nComp = 1) :
+        FDDeRhamComplex::FDDeRhamComplex(
+            infra, hodgeDegree, maxSplineDegree, s_hodgeScheme, nComp) {};
+};
+
+template <>
+class DeRhamComplexMF<HodgeScheme::GDECHodge>
+    : public FDDeRhamComplex,
+      public std::enable_shared_from_this<DeRhamComplexMF<HodgeScheme::GDECHodge>>
+{
+public:
+    static constexpr HodgeScheme s_hodgeScheme = HodgeScheme::GDECHodge;
+    using Primal0Form = DeRhamFieldMF<s_hodgeScheme, Grid::primal, Space::node>;
+    using Primal1Form = DeRhamFieldMF<s_hodgeScheme, Grid::primal, Space::edge>;
+    using Primal2Form = DeRhamFieldMF<s_hodgeScheme, Grid::primal, Space::face>;
+    using Primal3Form = DeRhamFieldMF<s_hodgeScheme, Grid::primal, Space::cell>;
+    using Dual0Form = DeRhamFieldMF<s_hodgeScheme, Grid::dual, Space::node>;
+    using Dual1Form = DeRhamFieldMF<s_hodgeScheme, Grid::dual, Space::edge>;
+    using Dual2Form = DeRhamFieldMF<s_hodgeScheme, Grid::dual, Space::face>;
+    using Dual3Form = DeRhamFieldMF<s_hodgeScheme, Grid::dual, Space::cell>;
+
+    static constexpr auto s_validDegrees{valid_degrees<s_hodgeScheme>()};
+    DeRhamComplexMF(ComputationalDomain const& infra,
+                    int const hodgeDegree,
+                    int const maxSplineDegree,
+                    int nComp = 1) :
+        FDDeRhamComplex::FDDeRhamComplex(
+            infra, hodgeDegree, maxSplineDegree, s_hodgeScheme, nComp) {};
+};
+
+template <>
+class DeRhamComplexMF<HodgeScheme::GDECLumpHodge>
+    : public FDDeRhamComplex,
+      public std::enable_shared_from_this<DeRhamComplexMF<HodgeScheme::GDECLumpHodge>>
+{
+public:
+    static constexpr HodgeScheme s_hodgeScheme = HodgeScheme::GDECLumpHodge;
+    static constexpr auto s_validDegrees{valid_degrees<s_hodgeScheme>()};
+    DeRhamComplexMF(ComputationalDomain const& infra,
+                    int const hodgeDegree,
+                    int const maxSplineDegree,
+                    int nComp = 1) :
+        FDDeRhamComplex::FDDeRhamComplex(
+            infra, hodgeDegree, maxSplineDegree, s_hodgeScheme, nComp) {};
+};
+
+// alias for MF deRham complexes
+using FDDeRhamComplexMF = DeRhamComplexMF<HodgeScheme::FDHodge>;
+using FDGalerkinDeRhamComplexMF = DeRhamComplexMF<HodgeScheme::GalerkinHodge>;
+using GDECDeRhamComplexMF = DeRhamComplexMF<HodgeScheme::GDECHodge>;
+using GDECLDeRhamComplexMF = DeRhamComplexMF<HodgeScheme::GDECLumpHodge>;
+
+// alias for MF deRham fields
+template <Grid grid, Space space>
+using FDDeRhamFieldMF = DeRhamFieldMF<HodgeScheme::FDHodge, grid, space>;
+template <Grid grid, Space space>
+using GDECDeRhamFieldMF = DeRhamFieldMF<HodgeScheme::GDECHodge, grid, space>;
+
+// Partial specialization for any FDDeRhamField<G,S>
+template <Grid g, Space s>
+struct field_to_drc<FDDeRhamFieldMF<g, s>>
+{
+    using type = FDDeRhamComplexMF; // always maps to the same DeRhamComplex
+};
+// Partial specialization for any FDDeRhamField<G,S>
+template <Grid g, Space s>
+struct field_to_drc<GDECDeRhamFieldMF<g, s>>
+{
+    using type = GDECDeRhamComplexMF; // always maps to the same DeRhamComplex
+};
+
+template <typename DstFormType, typename SrcFormType>
+    requires MutualDual<SrcFormType, DstFormType> && HasHodgeScheme<field_to_drc_t<SrcFormType>>
+void hodge (DstFormType& dstForm, SrcFormType const& srcForm, amrex::Real weight = 1.)
+{
+    BL_PROFILE("hodge()");
+    hodge_degree_selector<field_to_drc_t<SrcFormType>::s_hodgeScheme>(dstForm, srcForm, weight);
+}
 
 } // namespace Gempic::Forms
 

@@ -17,36 +17,35 @@
 #include "GEMPIC_CustomDiagnosticStrategies.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_RungeKutta.H"
 
+constexpr Gempic::Forms::HodgeScheme mhdHodgeScheme = Gempic::Forms::HodgeScheme::GDECHodge;
+using MHDDeRham = Gempic::Forms::DeRhamComplexMF<mhdHodgeScheme>;
+
 constexpr int nVarMHD = 8;          // compile time constant
 constexpr int polyrecDegreeMHD = 2; // polynomial degree of the WENO-FV (V3) reconstruction. //
                                     // even: we only have 3 stencils: Left-Central-Right.
 
-static constexpr Gempic::TimeLoop::RungeKuttaTag myRKTag = Gempic::TimeLoop::RungeKuttaTag::RK3;
-//constexpr int timeDegree =
-//    2; // polynomial degree of the time discretization. // check availability in GEMPIC_NumTools.H
+constexpr Gempic::TimeLoop::RungeKuttaTag myRKTag = Gempic::TimeLoop::RungeKuttaTag::RK3;
 
-static constexpr int rhoIdx{0};
-static constexpr int vxIdx{1};
-static constexpr int vyIdx{2};
-static constexpr int vzIdx{3};
-static constexpr int mxIdx{1};
-static constexpr int myIdx{2};
-static constexpr int mzIdx{3};
-static constexpr int pIdx{4};
-static constexpr int eIdx{4};
-static constexpr int bxIdx{5};
-static constexpr int byIdx{6};
-static constexpr int bzIdx{7};
-
-//constexpr int myRKstages = timeDegree + 1; // polynomial degree of the reconstruction.
+constexpr int rhoIdx{0};
+constexpr int vxIdx{1};
+constexpr int vyIdx{2};
+constexpr int vzIdx{3};
+constexpr int mxIdx{1};
+constexpr int myIdx{2};
+constexpr int mzIdx{3};
+constexpr int pIdx{4};
+constexpr int eIdx{4};
+constexpr int bxIdx{5};
+constexpr int byIdx{6};
+constexpr int bzIdx{7};
 
 constexpr int nDof1D{polyrecDegreeMHD + 1};
-//constexpr int volumeDof{AMREX_D_PICK(nDof_1D, nDof_1D* nDof_1D, nDof1D* nDof1D* nDof1D)};
 constexpr int faceDof{AMREX_D_PICK(1, nDof1D, nDof1D* nDof1D)};
 constexpr int edgeDof{AMREX_D_PICK(1, 1, nDof1D)};
 
@@ -95,10 +94,8 @@ struct StructDefinitions
 
     static constexpr int s_nDof1D{polyrecDegreeMHD + 1};
     static constexpr int s_hodgeDegree{s_nDof1D};
-    static constexpr int s_hodgeOrder{s_nDof1D};
-    //static constexpr int s_nghost{s_hodgeDegree / 2 -
-    //                              1}; //s_hodgeDegree / 2 }; //hodgeDegree / 2 - 1 + 1
-    static constexpr int s_nghost{s_nDof1D}; //s_hodgeOrder / 2}; //hodgeDegree / 2 - 1 + 1
+    static constexpr int s_hodgeOrder{s_nDof1D + 1};
+    static constexpr int s_nghost{s_nDof1D};
 
     Gempic::ComputationalDomain m_compDom;
 
@@ -114,9 +111,10 @@ struct StructDefinitions
 struct MHDFieldsHandlerStruct : Gempic::TimeLoop::BaseFieldsHandlerStruct<MHDFieldsHandlerStruct>
 {
 public:
+    static constexpr int s_nVar = nVarMHD;
     // Member variables
-    Gempic::Forms::DeRhamField<Grid::primal, Space::cell> m_q;
-    Gempic::Forms::DeRhamField<Grid::primal, Space::face> m_b;
+    MHDDeRham::Primal3Form m_q;
+    MHDDeRham::Primal2Form m_b;
 
     // Implement the assign method
     void assign (MHDFieldsHandlerStruct const& other) // now we can use the = operator of the base
@@ -169,38 +167,19 @@ public:
         }
         return *this;
     }
-
-    /**
-     * Constructor, overloaded for variables initialized with the GEMPIC diagnostic
-     */
-    MHDFieldsHandlerStruct(std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
-                           int nVar,
-                           std::array<std::string, 2> strings) :
-        m_q(drc, strings[0], nVar),
-        m_b(drc, strings[1]),
-        m_nComp{nVar},
-        m_nGhost{drc->get_n_ghost()}
-    {
-    }
-
     /**
      * Constructor
      */
-    MHDFieldsHandlerStruct(std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc, int nVar) :
-        m_q(drc, nVar),
-        m_b(drc),
-        m_nComp{nVar},
-        m_nGhost{AMREX_D_DECL(0, 0, 0)} //{drc->get_n_ghost()}
+    MHDFieldsHandlerStruct(std::shared_ptr<MHDDeRham>& drc) :
+        m_q(drc, s_nVar), m_b(drc), m_nGhost{AMREX_D_DECL(0, 0, 0)}
     {
     }
-
     ~MHDFieldsHandlerStruct() override
     { // Destructor called when deleted via base class pointer
       // Cleanup code for MHDFieldsHandlerStruct
     }
 
 private:
-    int m_nComp;
     amrex::IntVect m_nGhost;
     static constexpr int s_nFields{2};
 };
@@ -211,29 +190,27 @@ private:
 struct MHDDiscretization : public StructDefinitions
 {
 public:
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::node> V0field;
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::edge> V1field;
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::face> V2field;
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::cell> V3field;
+    using V0field = MHDDeRham::Primal0Form;
+    using V1field = MHDDeRham::Primal1Form;
+    using V2field = MHDDeRham::Primal2Form;
+    using V3field = MHDDeRham::Primal3Form;
 
     // Initialize the De Rham Complex
-    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> m_drc; //  HodgeScheme::GDECHodge); //
+    std::shared_ptr<MHDDeRham> m_drc; //  HodgeScheme::GDECHodge); //
 
-    //Io::Parameters parameters{};
     // Initialize the input parameters
     IOParameters m_iopar;
 
     // auxiliary state variables for the EXPLICIT time integrators
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfields;
-    //std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsDtEx;
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTmpEx;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_fields;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_fieldsTmpEx;
     // auxiliary state variables for the IMPLICIT time integrators
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsDtEx;
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsDtIm;
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTmpIm;
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsNew;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_fieldsDtEx;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_fieldsDtIm;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_fieldsTmpIm;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_fieldsNew;
 
-    std::shared_ptr<MHDFieldsHandlerStruct> m_myfieldsTilde;
+    std::shared_ptr<MHDFieldsHandlerStruct> m_fieldsTilde;
 
     static constexpr int s_volumeDof{
         AMREX_D_PICK(s_nDof1D, s_nDof1D* s_nDof1D, s_nDof1D* s_nDof1D* s_nDof1D)};
@@ -256,6 +233,7 @@ public:
     amrex::Real m_tend;
     int m_timeStep;
 
+    Gempic::Io::FieldRegistry m_fieldRegistry;
     Gempic::Io::Diagnostics<s_degx, s_degy, s_degz, s_vdim, s_ndata> m_diagn;
 
     amrex::Real m_dtLocal;
@@ -277,8 +255,6 @@ public:
     amrex::Vector<int> m_nDofVector{AMREX_D_DECL(1, 1, 1)};
 
     // FV explicit
-    //V3field Q;
-    //V3field dQdt;
     V3field m_v;
     V2field m_fluxes;
     V2field m_qlRec;
@@ -303,22 +279,28 @@ public:
                  AMREX_SPACEDIM>
         m_bEdge; // default number of stencils is 3
 
-    MHDDiscretization(std::array<std::string, 2> const& outputFields) :
-        m_drc{
-            std::make_shared<Gempic::Forms::FDDeRhamComplex>(m_compDom,
-                                                             s_hodgeDegree,
-                                                             s_maxSplineDegree,
-                                                             //HodgeScheme::GDECLumpHodge);  //
-                                                             Gempic::Forms::HodgeScheme::FDHodge)},
+    Gempic::Io::FieldRegistry mhd_field_registration ()
+    {
+        Gempic::Io::FieldRegistry fieldRegistry;
+        // labels for the output state in the diagnostics
+        Gempic::Io::register_form(fieldRegistry, "Q", m_fields->m_q);
+        Gempic::Io::register_form(fieldRegistry, "B", m_fields->m_b);
+
+        return fieldRegistry;
+    }
+
+    MHDDiscretization() :
+        m_drc{std::make_shared<MHDDeRham>(m_compDom, s_hodgeOrder, s_maxSplineDegree)},
         m_iopar(),
-        m_myfields(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD, outputFields)),
-        m_myfieldsTmpEx(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
-        m_myfieldsDtEx(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
-        m_myfieldsDtIm(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
-        m_myfieldsTmpIm(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
-        m_myfieldsNew(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
-        m_myfieldsTilde(std::make_shared<MHDFieldsHandlerStruct>(m_drc, nVarMHD)),
-        m_diagn(m_compDom, m_drc, m_particles),
+        m_fields(std::make_shared<MHDFieldsHandlerStruct>(m_drc)), // this has to be registered
+        m_fieldsTmpEx(std::make_shared<MHDFieldsHandlerStruct>(m_drc)),
+        m_fieldsDtEx(std::make_shared<MHDFieldsHandlerStruct>(m_drc)),
+        m_fieldsDtIm(std::make_shared<MHDFieldsHandlerStruct>(m_drc)),
+        m_fieldsTmpIm(std::make_shared<MHDFieldsHandlerStruct>(m_drc)),
+        m_fieldsNew(std::make_shared<MHDFieldsHandlerStruct>(m_drc)),
+        m_fieldsTilde(std::make_shared<MHDFieldsHandlerStruct>(m_drc)),
+        m_fieldRegistry(mhd_field_registration()),
+        m_diagn(m_compDom, m_drc, m_fieldRegistry, m_particles),
         m_nGhosts{m_drc->get_n_ghost()},
         m_v(m_drc, nVarMHD),
         m_fluxes(m_drc, nVarMHD),
@@ -344,8 +326,6 @@ public:
             m_dr[idim] = m_compDom.m_geom.CellSize()[idim];
             m_idr[idim] = 1.0 / m_compDom.m_geom.CellSize()[idim];
             m_r0[idim] = m_compDom.m_geom.ProbLo()[idim];
-            //dr = {infra.m_geom.CellSize()[xDir], infra.m_geom.CellSize()[yDir],
-            //      infra.m_geom.CellSize()[zDir]};
         }
         m_dVol = GEMPIC_D_MULT(m_dr[xDir], m_dr[yDir], m_dr[zDir]);
         m_idVol = 1.0 / m_dVol;

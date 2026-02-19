@@ -15,13 +15,13 @@
 class GempicMaxwellMatOp
 {
 public:
-    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> m_drc;
+    std::shared_ptr<MaxwellDeRham> m_drc;
     amrex::Real m_dtLocal{0.0};
 
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::edge> V1field;
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::face> V2field;
-    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::face> V1field_dual;
-    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::edge> V2field_dual;
+    using V1field = MaxwellDeRham::Primal1Form;
+    using V2field = MaxwellDeRham::Primal2Form;
+    using V1field_dual = MaxwellDeRham::Dual2Form;
+    using V2field_dual = MaxwellDeRham::Dual1Form;
 
     V1field_dual m_estar;
     V2field_dual m_bstar;
@@ -117,8 +117,8 @@ public:
 class MaxwellNumericalScheme : public NumericalScheme<MaxwellFieldsHandlerStruct>
 {
 public:
-    typedef Gempic::Forms::DeRhamField<Grid::primal, Space::edge> V1field;
-    typedef Gempic::Forms::DeRhamField<Grid::dual, Space::face> V1field_dual;
+    using V1field = MaxwellDeRham::Primal1Form;
+    using V1field_dual = MaxwellDeRham::Dual2Form;
 
     MaxwellDiscretization m_disc;
     GempicMaxwellMatOp m_maxwell;
@@ -140,25 +140,25 @@ public:
     std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_initial_field_explicit ()
         override
     {
-        return m_disc.m_myfieldsTmpEx;
+        return m_disc.m_fieldsTmpEx;
     }
 
     std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_initial_field_implicit ()
         override
     {
-        return m_disc.m_myfieldsTmpIm;
+        return m_disc.m_fieldsTmpIm;
     }
 
     std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_time_derivative_explicit ()
         override
     {
-        return m_disc.m_myfieldsDtEx;
+        return m_disc.m_fieldsDtEx;
     }
 
     std::shared_ptr<MaxwellFieldsHandlerStruct> const& get_pointer_time_derivative_implicit ()
         override
     {
-        return m_disc.m_myfieldsDtIm;
+        return m_disc.m_fieldsDtIm;
     }
 
     void set_initial_condition () override
@@ -177,7 +177,7 @@ public:
      */
     void update_qold_implicit ()
     {
-        m_disc.m_myfieldsTmpIm = m_disc.m_myfields;
+        m_disc.m_fieldsTmpIm = m_disc.m_fields;
         return;
     }
 
@@ -193,9 +193,9 @@ public:
         // - an input timestep, that can be rescaled by the RK coefficient! (because we first solve
         // for q, then evaluate dqdt)
         // FIRST: fill boundary
-        m_disc.m_myfieldsTmpIm->fill_boundary();
-        m_maxwell.rhs_op(m_rhs, m_disc.m_myfieldsTmpIm->m_e, m_disc.m_myfieldsTmpIm->m_b, dtLoc);
-        m_myCg2->solve(m_disc.m_myfieldsNew->m_e, m_rhs);
+        m_disc.m_fieldsTmpIm->fill_boundary();
+        m_maxwell.rhs_op(m_rhs, m_disc.m_fieldsTmpIm->m_e, m_disc.m_fieldsTmpIm->m_b, dtLoc);
+        m_myCg2->solve(m_disc.m_fieldsNew->m_e, m_rhs);
 
         if (Gempic::Utils::Verbosity::level() > 0)
         {
@@ -203,8 +203,8 @@ public:
                            << "CG iter:" << m_myCg2->get_iter() << std::endl;
         }
 
-        copy(m_disc.m_myfieldsNew->m_b, m_disc.m_myfieldsTmpIm->m_b);
-        m_maxwell.update_b(m_disc.m_myfieldsNew->m_e, m_disc.m_myfieldsNew->m_b, dtLoc);
+        copy(m_disc.m_fieldsNew->m_b, m_disc.m_fieldsTmpIm->m_b);
+        m_maxwell.update_b(m_disc.m_fieldsNew->m_e, m_disc.m_fieldsNew->m_b, dtLoc);
     }
 
     /**
@@ -235,34 +235,34 @@ public:
     {
         for (int idir = 0; idir < 3; ++idir)
         {
-            for (amrex::MFIter mfi(m_disc.m_myfieldsDtIm->m_b.m_data[idir], true); mfi.isValid();
+            for (amrex::MFIter mfi(m_disc.m_fieldsDtIm->m_b.m_data[idir], true); mfi.isValid();
                  ++mfi)
             {
                 amrex::Box const& bx = mfi.tilebox(); // OPENMP valid box is for real cells.
                 // creating pointer to data for GPU:
                 amrex::Array4<amrex::Real> const& dBdt =
-                    (m_disc.m_myfieldsDtIm->m_b.m_data[idir])[mfi].array();
+                    (m_disc.m_fieldsDtIm->m_b.m_data[idir])[mfi].array();
                 amrex::Array4<amrex::Real> const& bnew =
-                    (m_disc.m_myfieldsNew->m_b.m_data[idir])[mfi].array();
+                    (m_disc.m_fieldsNew->m_b.m_data[idir])[mfi].array();
                 amrex::Array4<amrex::Real> const& bold =
-                    (m_disc.m_myfieldsTmpIm->m_b.m_data[idir])[mfi].array();
+                    (m_disc.m_fieldsTmpIm->m_b.m_data[idir])[mfi].array();
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                             { dBdt(i, j, k) = (bnew(i, j, k) - bold(i, j, k)) / dtLoc; });
             }
         }
         for (int idir = 0; idir < 3; ++idir)
         {
-            for (amrex::MFIter mfi(m_disc.m_myfieldsDtIm->m_e.m_data[idir], true); mfi.isValid();
+            for (amrex::MFIter mfi(m_disc.m_fieldsDtIm->m_e.m_data[idir], true); mfi.isValid();
                  ++mfi)
             {
                 amrex::Box const& bx = mfi.tilebox(); // OPENMP valid box is for real cells.
                 // creating pointer to data for GPU:
                 amrex::Array4<amrex::Real> const& dEdt =
-                    (m_disc.m_myfieldsDtIm->m_e.m_data[idir])[mfi].array();
+                    (m_disc.m_fieldsDtIm->m_e.m_data[idir])[mfi].array();
                 amrex::Array4<amrex::Real> const& enew =
-                    (m_disc.m_myfieldsNew->m_e.m_data[idir])[mfi].array();
+                    (m_disc.m_fieldsNew->m_e.m_data[idir])[mfi].array();
                 amrex::Array4<amrex::Real> const& eold =
-                    (m_disc.m_myfieldsTmpIm->m_e.m_data[idir])[mfi].array();
+                    (m_disc.m_fieldsTmpIm->m_e.m_data[idir])[mfi].array();
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k)
                             { dEdt(i, j, k) = (enew(i, j, k) - eold(i, j, k)) / dtLoc; });
             }
@@ -298,7 +298,7 @@ public:
      */
     void print_now ()
     {
-        m_disc.m_myfields->fill_boundary();
+        m_disc.m_fields->fill_boundary();
         m_disc.m_diagn.compute_and_write_to_file(m_disc.m_timeStep, m_disc.m_time);
     }
 
@@ -331,8 +331,8 @@ public:
      */
     amrex::Periodicity get_periodicity () override { return m_disc.m_compDom.m_geom.periodicity(); }
 
-    MaxwellNumericalScheme(std::array<std::string, 2> const& outputFields) :
-        m_disc(outputFields),
+    MaxwellNumericalScheme() :
+        m_disc(),
         m_maxwell(m_disc),
         m_myCg2{std::make_unique<
             Gempic::FieldSolvers::ConjugateGradient<V1field_dual, V1field, GempicMaxwellMatOp>>(

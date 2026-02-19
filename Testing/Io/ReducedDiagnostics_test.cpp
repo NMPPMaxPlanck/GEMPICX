@@ -5,6 +5,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
 #include "GEMPIC_MultiReducedDiagnostics.H"
@@ -143,21 +144,29 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
 
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
-
+    Gempic::Io::FieldRegistry fieldRegistry;
     [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
     [[maybe_unused]] auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
-    DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
-    DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
-    DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
-    DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
-    DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
-    DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
-    DeRhamField<Grid::primal, Space::edge> jField(deRham, funcE, "JField");
-    DeRhamField<Grid::dual, Space::face> jFieldT(deRham, funcE, "JFieldT");
+    auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(fieldRegistry, "B",
+                                                                                 deRham, funcB);
+    auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(fieldRegistry, "H",
+                                                                               deRham, funcB);
+    auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry, "E",
+                                                                                 deRham, funcE);
+    auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry, "D",
+                                                                               deRham, funcE);
+    auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                 "rho", deRham);
+    auto divD = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                  "divD", deRham);
+    auto jField = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        fieldRegistry, "JField", deRham, funcE);
+    auto jFieldT = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(
+        fieldRegistry, "JFieldT", deRham, funcE);
 
     // Initialize reduced diagnostics
-    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham);
+    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham, fieldRegistry);
     // Compute and write reduced diagnostics
     rho.m_data.setVal(m_backgroundDensity); // give some non zero value to rho
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);
@@ -283,17 +292,20 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingPrimalFields)
 
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
-
+    Gempic::Io::FieldRegistry fieldRegistry;
     [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
     [[maybe_unused]] auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
-    DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
-    DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
-    DeRhamField<Grid::dual, Space::face> jFieldT(deRham, funcE, "JFieldT");
-    DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
-
+    auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(fieldRegistry, "H",
+                                                                               deRham, funcB);
+    auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry, "D",
+                                                                               deRham, funcE);
+    auto jFieldT = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(
+        fieldRegistry, "JFieldT", deRham, funcE);
+    auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                 "rho", deRham);
     // Initialize reduced diagnostics
-    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn{deRham};
+    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn{deRham, fieldRegistry};
 
     // Compute and write reduced diagnostics
     rho.m_data.setVal(m_backgroundDensity); // give some non zero value to rho
@@ -392,17 +404,21 @@ TEST_F(ReducedDiagnosticsMissingFieldsTest, ReducedDiagsMissingDualFields)
 
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
                                                     HodgeScheme::FDHodge);
-
+    Gempic::Io::FieldRegistry fieldRegistry;
     [[maybe_unused]] auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
     [[maybe_unused]] auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
 
-    DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
-    DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
-    DeRhamField<Grid::primal, Space::edge> jField(deRham, funcE, "JField");
-    DeRhamField<Grid::dual, Space::cell> rho(deRham, "rho");
+    auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(fieldRegistry, "B",
+                                                                                 deRham, funcB);
+    auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry, "E",
+                                                                                 deRham, funcE);
+    auto jField = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+        fieldRegistry, "JField", deRham, funcE);
+    auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                 "rho", deRham);
 
     // Initialize reduced diagnostics
-    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham);
+    Io::MultiReducedDiagnostics<s_vdim, s_degX, s_degY, s_degZ, 1> redDiagn(deRham, fieldRegistry);
     // Compute and write reduced diagnostics
     rho.m_data.setVal(m_backgroundDensity); // give some non zero value to rho
     redDiagn.compute_and_write_to_file(0, 1.0, m_infra, m_particles);

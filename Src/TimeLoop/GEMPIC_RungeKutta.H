@@ -115,11 +115,11 @@ inline AMREX_GPU_HOST_DEVICE void dxvpardt_drift_kinetic (
 
     // Evaluate the electric field at the particle's position
     amrex::GpuArray<amrex::Real, 3> ep =
-        spline.template eval_spline_field<Field::PrimalOneForm>(eA);
+        spline.template eval_spline_field<Forms::Field::PrimalOneForm>(eA);
 
     // Evaluate the magnetic field at the particle's position
     amrex::GpuArray<amrex::Real, 3> bp =
-        spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
+        spline.template eval_spline_field<Forms::Field::PrimalTwoForm>(bA);
 
     // compute guiding center velocity and acceleration
     velGC[0] = (V[2] * bp[0] + ep[1]) / bp[2];
@@ -145,8 +145,8 @@ private:
     // amrex::Vector<amrex::Real> m_dtSequence;
     ComputationalDomain m_infra;
     std::shared_ptr<Gempic::Forms::FDDeRhamComplex> m_deRham;
-    Gempic::Forms::DeRhamField<Grid::dual, Space::face> m_s2D;
-    Gempic::Forms::DeRhamField<Grid::primal, Space::face> m_s2B;
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> m_s2D;
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face> m_s2B;
 
 public:
     /**
@@ -161,25 +161,27 @@ public:
 
     inline double get_coeff_b (int stageIndex) const { return m_coeffsB[stageIndex]; }
 
-    void lsrk_stage_ampere(Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::edge> const& H,
-                           Gempic::Forms::DeRhamField<Grid::dual, Space::face> const& J,
-                           amrex::Real dt,
-                           int stageIndex);
+    void lsrk_stage_ampere(
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge> const& H,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> const& J,
+        amrex::Real dt,
+        int stageIndex);
 
-    void lsrk_stage_faraday(Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-                            Gempic::Forms::DeRhamField<Grid::primal, Space::edge> const& E,
-                            amrex::Real dt,
-                            int stageIndex);
+    void lsrk_stage_faraday(
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge> const& E,
+        amrex::Real dt,
+        int stageIndex);
 
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_vlasov_maxwell (
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         amrex::Real dt)
     {
         BL_PROFILE("GEMPIC::RungeKutta::lsrk_vlasov_maxwell()");
@@ -206,12 +208,12 @@ public:
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_dk_vlasov_maxwell (
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& tensor,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& tensor,
         amrex::Real dt)
     {
         BL_PROFILE("GEMPIC::RungeKutta::lsrk_dk_vlasov_maxwell()");
@@ -237,12 +239,12 @@ public:
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_de_fi_vlasov_maxwell (
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& D,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::edge>& H,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& tensor,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& tensor,
         amrex::Real dt)
     {
         BL_PROFILE("GEMPIC::RungeKutta::lsrk_DeFi_vlasov_maxwell()");
@@ -268,9 +270,9 @@ public:
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_push_particle_deposit_j (
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         amrex::Real dt,
         amrex::Real coeffsAStageIndex,
         amrex::Real coeffsBStageIndex)
@@ -292,9 +294,9 @@ public:
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_dk_push_particle_deposit_j (
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         amrex::Real dt,
         amrex::Real const coeffsAStageIndex,
         amrex::Real const coeffsBStageIndex)
@@ -316,9 +318,9 @@ public:
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_de_fi_push_particle_deposit_j (
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& particles,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         amrex::Real dt,
         amrex::Real const coeffsAStageIndex,
         amrex::Real const coeffsBStageIndex)
@@ -348,9 +350,9 @@ public:
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_push_particle_deposit_j_fully_kinetic (
         std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>& particleSpecies,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         amrex::Real dt,
         amrex::Real coeffsAStageIndex,
         amrex::Real coeffsBStageIndex)
@@ -402,10 +404,10 @@ public:
                     Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(R, plo,
                                                                                       dxInverse);
                     amrex::GpuArray<amrex::Real, vDim> efield =
-                        spline.template eval_spline_field<Field::PrimalOneForm>(eA);
+                        spline.template eval_spline_field<Forms::Field::PrimalOneForm>(eA);
                     // evaluate the magnetic field at the particle position
                     amrex::GpuArray<amrex::Real, vDim> bfield =
-                        spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
+                        spline.template eval_spline_field<Forms::Field::PrimalTwoForm>(bA);
 
                     Impl::lsrk_stage_kinetic_particle(R, V, s2R, s2V, efield, bfield, chargeMass,
                                                       dt, coeffsAStageIndex, coeffsBStageIndex);
@@ -438,9 +440,9 @@ public:
     template <int degx, int degy, int degz, unsigned int vDim, unsigned int nData>
     void lsrk_stage_push_particle_deposit_j_drift_kinetic (
         std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>& particleSpecies,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::edge>& E,
-        Gempic::Forms::DeRhamField<Grid::primal, Space::face>& B,
-        Gempic::Forms::DeRhamField<Grid::dual, Space::face>& J,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         amrex::Real dt,
         amrex::Real const coeffsAStageIndex,
         amrex::Real const coeffsBStageIndex)
@@ -791,7 +793,7 @@ struct BaseFieldsHandlerStruct
  * @param FieldsHandler: physical state handler
  * @tparam userRkTag : Runge Kutta enum class
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 class ExplicitRK
 {
 public:
@@ -821,7 +823,7 @@ public:
      */
     ExplicitRK(std::shared_ptr<FieldsHandler>& solutionInOutSrc,
                NumericalScheme<FieldsHandler>& numSchemeSrc,
-               std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
+               std::shared_ptr<DRC>& drc,
                selectedRK_Tableau const& rKreference) :
         m_solutionInOut(solutionInOutSrc), m_scheme(numSchemeSrc)
 
@@ -830,7 +832,7 @@ public:
         m_timeDerivative = m_scheme.get_pointer_time_derivative_explicit();
         for (int i = 0; i < s_nRKstages; ++i)
         {
-            m_timeDerivativeStages[i] = std::make_shared<FieldsHandler>(drc, m_scheme.get_ncomp());
+            m_timeDerivativeStages[i] = std::make_shared<FieldsHandler>(drc);
             *(m_timeDerivativeStages[i]) = *m_timeDerivative;
         }
 
@@ -859,8 +861,8 @@ private:
  * @brief compute the time derivative of the explicit terms for a single step (e.g. a RK stage)
  * @param rkTime : time, typically corresponds to the RK stage.
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
-void ExplicitRK<FieldsHandler, userRkTag>::one_step_solve_dqdt_explicit (amrex::Real rkTime)
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
+void ExplicitRK<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_explicit (amrex::Real rkTime)
 {
     BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::one_step_solve_dqdt_explicit()");
     m_scheme.one_step_solve_dqdt_explicit(rkTime);
@@ -872,10 +874,10 @@ void ExplicitRK<FieldsHandler, userRkTag>::one_step_solve_dqdt_explicit (amrex::
  * @param dst : destination FieldsHandler
  * @param srcArray : array of FieldsHandler with the RK stages
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
-void ExplicitRK<FieldsHandler, userRkTag>::finalize_rk (amrex::Real const dt,
-                                                       std::shared_ptr<FieldsHandler>& dst,
-                                                       RKStagesArray const& srcArray)
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
+void ExplicitRK<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const dt,
+                                                            std::shared_ptr<FieldsHandler>& dst,
+                                                            RKStagesArray const& srcArray)
 {
     BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::finalize_rk()");
     for (int r = 0; r < s_nRKstages; r++)
@@ -891,9 +893,9 @@ void ExplicitRK<FieldsHandler, userRkTag>::finalize_rk (amrex::Real const dt,
  * @param time : actual time
  * @param dt : time-step size
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
-void ExplicitRK<FieldsHandler, userRkTag>::integrate_step (amrex::Real const time,
-                                                          amrex::Real const dt)
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
+void ExplicitRK<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real const time,
+                                                               amrex::Real const dt)
 {
     BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::integrate_step()");
     for (int s = 0; s < s_nRKstages; s++)
@@ -921,7 +923,7 @@ void ExplicitRK<FieldsHandler, userRkTag>::integrate_step (amrex::Real const tim
  * @param FieldsHandler : physical state handler
  * @tparam userRkTag : Runge Kutta enum class
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 class ImexRk
 {
 public:
@@ -947,7 +949,7 @@ public:
 
     ImexRk(std::shared_ptr<FieldsHandler>& solutionInOutSrc,
            NumericalScheme<FieldsHandler>& numSchemeSrc,
-           std::shared_ptr<Gempic::Forms::FDDeRhamComplex>& drc,
+           std::shared_ptr<DRC>& drc,
            selectedRK_Tableau const& rKreference) :
         m_solutionInOut(solutionInOutSrc), // initial and final solution handler
         m_scheme(numSchemeSrc)
@@ -959,7 +961,7 @@ public:
 
         for (int i = 0; i < s_nRKstages; ++i)
         {
-            m_timeDerivativeStages[i] = std::make_shared<FieldsHandler>(drc, m_scheme.get_ncomp());
+            m_timeDerivativeStages[i] = std::make_shared<FieldsHandler>(drc);
             *m_timeDerivativeStages[i] = *m_timeDerivative;
         }
         for (int i = 0; i < s_nRKstages; ++i)
@@ -1009,11 +1011,9 @@ private:
  * @param timeE : time of the explicit step
  * @param dtE : time-step size of the explicit step
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
-void ImexRk<FieldsHandler, userRkTag>::one_step_solve_dqdt_semiimplicit (amrex::Real const timeI,
-                                                                        amrex::Real const dtI,
-                                                                        amrex::Real const timeE,
-                                                                        amrex::Real const dtE)
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
+void ImexRk<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_semiimplicit (
+    amrex::Real const timeI, amrex::Real const dtI, amrex::Real const timeE, amrex::Real const dtE)
 {
     BL_PROFILE("GEMPIC::RungeKutta::ImexRk::one_step_solve_dqdt_semiimplicit()");
     m_scheme.one_step_solve_dqdt_semiimplicit(timeI, dtI, timeE, dtE);
@@ -1025,10 +1025,10 @@ void ImexRk<FieldsHandler, userRkTag>::one_step_solve_dqdt_semiimplicit (amrex::
  * @param dst : destination FieldsHandler
  * @param srcArray : array of FieldsHandler with the RK stages
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
-void ImexRk<FieldsHandler, userRkTag>::finalize_rk (amrex::Real const dt,
-                                                   std::shared_ptr<FieldsHandler>& dst,
-                                                   RKStagesArray const& srcArray)
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
+void ImexRk<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const dt,
+                                                        std::shared_ptr<FieldsHandler>& dst,
+                                                        RKStagesArray const& srcArray)
 {
     BL_PROFILE("GEMPIC::RungeKutta::ImexRk::finalize_rk()");
     for (int r = 0; r < s_nRKstages; r++)
@@ -1044,8 +1044,9 @@ void ImexRk<FieldsHandler, userRkTag>::finalize_rk (amrex::Real const dt,
  * @param time : actual time
  * @param dt : time-step size
  */
-template <class FieldsHandler, RungeKuttaTag userRkTag>
-void ImexRk<FieldsHandler, userRkTag>::integrate_step (amrex::Real const time, amrex::Real const dt)
+template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
+void ImexRk<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real const time,
+                                                           amrex::Real const dt)
 {
     BL_PROFILE("GEMPIC::RungeKutta::ImexRk::integrate_step()");
     // use  the multi components to cast the multi-stage vectors;

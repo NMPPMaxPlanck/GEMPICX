@@ -12,6 +12,7 @@
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
@@ -51,7 +52,7 @@ int main (int argc, char* argv[])
         // Initialize the De Rham Complex
         auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, maxSplineDegree,
                                                         HodgeScheme::FDHodge);
-
+        Gempic::Io::FieldRegistry fieldRegistry;
         // "HamiltonianSplittingExact", "HamiltonianSplittingNested" or
         // "HamiltonianSplittingNestedRelativistic"
         std::string simType{"HamiltonianSplittingExact"};
@@ -82,20 +83,26 @@ int main (int argc, char* argv[])
 
         auto [parseB, funcB] = Utils::parse_functions<3>({"Bx", "By", "Bz"});
         auto [parseE, funcE] = Utils::parse_functions<3>({"Ex", "Ey", "Ez"});
-
-        DeRhamField<Grid::primal, Space::edge> E(deRham, funcE, "E");
+        auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
+            fieldRegistry, "E", deRham, funcE);
         DeRhamField<Grid::primal, Space::edge> eFiltered(deRham);
-        DeRhamField<Grid::dual, Space::face> D(deRham, funcE, "D");
-        DeRhamField<Grid::primal, Space::face> B(deRham, funcB, "B");
-        DeRhamField<Grid::dual, Space::edge> H(deRham, funcB, "H");
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        DeRhamField<Grid::dual, Space::face> jFiltered(deRham, "J"); // Filtered J for diagnostics
-        DeRhamField<Grid::dual, Space::cell> rho(deRham);
-        DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham,
-                                                         "rho"); // Filtered rho for diagnostics
-        DeRhamField<Grid::primal, Space::node> phi(deRham, "phi");
+        auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(
+            fieldRegistry, "D", deRham, funcE);
+        auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
+            fieldRegistry, "B", deRham, funcB);
+        auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(
+            fieldRegistry, "H", deRham, funcB);
+        auto J = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
+                                                                                   "J", deRham);
+        DeRhamField<Grid::dual, Space::face> jFiltered(deRham); // Filtered J for diagnostics
+        auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
+                                                                                     "rho", deRham);
+        DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham); // Filtered rho for diagnostics
+        auto phi = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::node>>(
+            fieldRegistry, "phi", deRham);
         DeRhamField<Grid::primal, Space::edge> ephi(deRham);
-        DeRhamField<Grid::dual, Space::cell> divD(deRham, "divD");
+        auto divD = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(
+            fieldRegistry, "divD", deRham);
 
         std::vector<std::shared_ptr<ParticleSpecies<vdim>>> particles;
         init_particles(particles, infra);
@@ -118,7 +125,8 @@ int main (int argc, char* argv[])
             int nSteps;
             params.get("nSteps", nSteps);
 
-            auto diagnostics = Io::make_diagnostics<degx, degy, degz>(infra, deRham, particles);
+            auto diagnostics =
+                Io::make_diagnostics<degx, degy, degz>(infra, deRham, fieldRegistry, particles);
 
             // Deposit initial charge
             rho.m_data.setVal(0.0);
