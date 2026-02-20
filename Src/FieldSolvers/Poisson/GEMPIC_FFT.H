@@ -35,6 +35,8 @@ class FFTSolver : public PoissonSolverMethod
 {
 private:
     std::unique_ptr<amrex::FFT::R2C<amrex::Real>> m_r2c;
+    amrex::MultiFab m_rhoFft;
+    amrex::MultiFab m_phiFft;
 
     ComputationalDomain m_compDom;
     amrex::Gpu::DeviceVector<amrex::Real> m_eigenvalues0xGpu;

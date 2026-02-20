@@ -21,7 +21,7 @@
 \begin{document}
 
 
-Currently only a bilinear filter is available (See \ref{sec:FilterInput} for the controls).
+Currently a bilinear and a Fourier filter are available (See \ref{sec:FilterInput} for the controls).
 
 \section{Bilinear Filter}\label{sec:BilinearFilter}
 The multi-pass bilinear filter (cf.~\cite{vay2011}) interpolates the input using $N$ one-dimensional stencils, where $N$ is the dimension of the simulation. The stencils themselves can be iteratively calculated by \lstinline{nPass} convolutions with themselves according to the formula:
@@ -34,4 +34,8 @@ In 2D, with two stencils $f_x$, $f_y$ the application of the filter is then
 \begin{multline}
     out[i,j] = \sum_{i_f=0}^{f_{x_{len}}}\sum_{j_f=0}^{f_{y_{len}}} f_x[i_f]f_y[j_f]\big(in[i-i_f,j-j_f] + in[i-i_f,j+j_f]\\ + in[i+i_f,j-j_f] + in[i+i_f,j+j_f]\big)
 \end{multline}
+
+\section{Fourier Filter}\label{sec:FourierFilter}
+In contrast to local real-space filters such as bilinear smoothing, which damp all wavelengths, the Fourier band-pass filter provides explicit control over which spectral modes are retained or removed. The filter applies a rectangular band-pass mask in the frequency domain. The mask is configured by specifying its lowest and highest mode number in each direction. Due to limitations in AMReX's FFT interface, the filter is currently limited to fully periodic domains.
+
 \end{document}

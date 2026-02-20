@@ -84,13 +84,6 @@ public:
 
         amrex::Real mass{3.0};
         parameters.set("Particle.species0.mass", mass);
-
-        // Filter
-        int filter{1};
-        parameters.set("Filter.enable", filter);
-
-        amrex::Vector<int> nPass{{3, 3, 3}};
-        parameters.set("Filter.nPass", nPass);
     }
 
     template <int n>

@@ -7,13 +7,13 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_AmrexInit.H"
-#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Filter.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
@@ -104,7 +104,7 @@ int main (int argc, char* argv[])
         init_particles(ions, infra);
 
         // Initializing filter
-        std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
+        std::unique_ptr<Filter::Filter> filter = Filter::make_filter(infra);
 
         // For the moment we consider only a constant background field.
         amrex::Real Bz = funcB[zDir](AMREX_D_DECL(0., 0., 0.), 0.);
@@ -128,7 +128,7 @@ int main (int argc, char* argv[])
                 get_and_apply_neutralizing_background(rho, infra, parameters);
 
             // Apply filter and compute phi with filtered rho
-            biFilter->apply_stencil(rhoFiltered, rho);
+            filter->apply(rhoFiltered, rho);
             if (simType == "QuasiNeutral")
             {
                 hodge(phi, rhoFiltered);
@@ -198,7 +198,7 @@ int main (int argc, char* argv[])
                 rho += rhoBackground * infra.cell_volume();
 
                 // Apply filter and compute phi with filtered rho
-                biFilter->apply_stencil(rhoFiltered, rho);
+                filter->apply(rhoFiltered, rho);
                 if (simType == "QuasiNeutral")
                 {
                     hodge(phi, rhoFiltered);

@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Filter.H"
 #include "GEMPIC_Parameters.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
@@ -43,8 +43,6 @@ public:
     // Initialize computational_domain
     ComputationalDomain m_infra;
 
-    int m_nComps{1};
-
     static constexpr int s_gSize{5};
     static constexpr int s_maxSplineDegree{1};
 
@@ -53,6 +51,8 @@ public:
         amrex::Real k1D{2 * M_PI / s_gSize};
         amrex::Vector<amrex::Real> k{AMREX_D_DECL(k1D, k1D, k1D)};
         m_parameters.set("k", k);
+        std::string filterType = "Bilinear";
+        m_parameters.set("Filter.type", filterType);
     }
 };
 
@@ -83,10 +83,8 @@ TEST_P(BilinearFilterTestParameter, ConstantTest)
     double constVal{5.0};
     rhoIn.m_data.setVal(constVal);
 
-    std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
-    int srcCompBegIn{0};
-    int dstCompBegIn{0};
-    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
+    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
+    biFilter->apply(rhoOut, rhoIn);
 
     for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
@@ -118,10 +116,8 @@ TEST_F(BilinearFilterTest, LinearTest)
     DeRhamField<Grid::dual, Space::cell> rhoIn(deRham, funcRho);
     DeRhamField<Grid::dual, Space::cell> rhoOut(deRham, funcRho);
 
-    std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
-    int srcCompBegIn{0};
-    int dstCompBegIn{0};
-    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
+    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
+    biFilter->apply(rhoOut, rhoIn);
 
     for (amrex::MFIter mfi(rhoIn.m_data); mfi.isValid(); ++mfi)
     {
@@ -146,10 +142,8 @@ TEST_F(BilinearFilterTest, NoFilter)
     double constVal{5.0};
     rhoIn.m_data.setVal(constVal);
 
-    std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
-    int srcCompBegIn{0};
-    int dstCompBegIn{0};
-    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
+    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
+    biFilter->apply(rhoOut, rhoIn);
 
     for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
@@ -175,9 +169,7 @@ TEST_F(BilinearFilterTest, OneNonZeroValueTest)
     std::vector<int> filterNpass{AMREX_D_DECL(1, 0, 0)};
     m_parameters.set("Filter.nPass", filterNpass);
 
-    std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
-    int srcCompBegIn{0};
-    int dstCompBegIn{0};
+    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
 
     for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
@@ -188,7 +180,7 @@ TEST_F(BilinearFilterTest, OneNonZeroValueTest)
         set_rho_parallel_for(rhoInArr, rhoOutExpArr, bx);
     }
 
-    biFilter->apply_stencil(rhoOut, rhoIn, srcCompBegIn, dstCompBegIn, m_nComps);
+    biFilter->apply(rhoOut, rhoIn);
 
     for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
     {
@@ -228,10 +220,8 @@ TEST_F(BilinearFilterTest, AnalyticalTest)
     m_parameters.set("Filter.nPass", filterNpass);
 
     // Test uncompensated filter
-    std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
-    int srcCompBegIn{0};
-    int dstCompBegIn{0};
-    biFilter->apply_stencil(rhoTemp, rho, srcCompBegIn, dstCompBegIn, m_nComps);
+    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
+    biFilter->apply(rhoTemp, rho);
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
@@ -270,10 +260,8 @@ TEST_F(BilinearFilterTest, CompensatedAnalyticalTest)
     // Test compensated filter
     m_parameters.set("Filter.compensate", true);
 
-    std::unique_ptr<Filter::Filter> biFilterComp = std::make_unique<Filter::BilinearFilter>();
-    int srcCompBegin{0};
-    int dstCompBegin{0};
-    biFilterComp->apply_stencil(rhoTemp, rho, srcCompBegin, dstCompBegin, m_nComps);
+    std::unique_ptr<Filter::Filter> biFilterComp = Filter::make_filter(m_infra);
+    biFilterComp->apply(rhoTemp, rho);
 
     for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
     {
@@ -281,4 +269,96 @@ TEST_F(BilinearFilterTest, CompensatedAnalyticalTest)
         COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSolComp.m_data.array(mfi), bx);
     }
 }
+
+#ifdef AMREX_USE_FFT
+class FourierFilterTest : public testing::TestWithParam<std::string>
+{
+public:
+    Io::Parameters m_parameters{};
+
+    // Initialize computational_domain
+    ComputationalDomain m_infra;
+    static constexpr int s_hodgeDegree{2};
+    static constexpr int s_maxSplineDegree{1};
+
+    FourierFilterTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
+    {
+#if AMREX_SPACEDIM == 1
+        std::string analyticalInit{"1 + sin(x) + cos(2*x)"};
+#elif AMREX_SPACEDIM == 2
+        std::string analyticalInit{"1 + sin(x)*cos(2*y) + cos(2*x)*sin(3*y)"};
+#else
+        std::string analyticalInit{"1 + sin(x)*cos(2*y)*sin(3*z) + cos(2*x)*sin(3*y)*cos(4*z)"};
+#endif
+        std::string analyticalSol;
+        std::vector<int> nMin{};
+        std::vector<int> nMax{};
+        bool enable = true;
+
+        std::string scenario{GetParam()};
+        if (scenario == "NoFilter")
+        {
+            analyticalSol = analyticalInit;
+            enable = false;
+        }
+        else if (scenario == "Identity")
+        {
+            analyticalSol = analyticalInit;
+            nMin = {0, 0, 0};
+            nMax = {10, 10, 10};
+        }
+        else if (scenario == "Constant")
+        {
+            analyticalSol = "1";
+            nMin = {0, 0, 0};
+            nMax = {0, 0, 0};
+        }
+        else if (scenario == "SingleMode")
+        {
+#if AMREX_SPACEDIM == 1
+            analyticalSol = "sin(x)";
+#elif AMREX_SPACEDIM == 2
+            analyticalSol = "sin(x)*cos(2*y)";
+#else
+            analyticalSol = "sin(x)*cos(2*y)*sin(3*z)";
+#endif
+            nMin = {1, 2, 3};
+            nMax = {1, 2, 3};
+        }
+
+        std::string filterType = "Fourier";
+        m_parameters.set("Filter.type", filterType);
+        m_parameters.set("Function.rhoInit", analyticalInit);
+        m_parameters.set("Function.rhoAnal", analyticalSol);
+        m_parameters.set("Filter.enable", enable);
+        m_parameters.set("Filter.nMin", nMin);
+        m_parameters.set("Filter.nMax", nMax);
+    }
+};
+
+TEST_P(FourierFilterTest, AnalyticalTest)
+{
+    [[maybe_unused]] auto [parserInit, funcInit] = Utils::parse_function("rhoInit");
+    [[maybe_unused]] auto [parserSol, funcSol] = Utils::parse_function("rhoAnal");
+
+    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree);
+    DeRhamField<Grid::primal, Space::node> rho(deRham, funcInit);
+    DeRhamField<Grid::primal, Space::node> rhoTemp(deRham);
+    DeRhamField<Grid::primal, Space::node> rhoSol(deRham, funcSol);
+
+    // Test filter
+    std::unique_ptr<Filter::Filter> filter = Filter::make_filter(m_infra);
+    filter->apply(rhoTemp, rho);
+
+    for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
+    {
+        amrex::Box const& bx = mfi.tilebox();
+        COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSol.m_data.array(mfi), bx);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(FilterScenarios,
+                         FourierFilterTest,
+                         testing::Values("NoFilter", "Identity", "Constant", "SingleMode"));
+#endif
 } // namespace

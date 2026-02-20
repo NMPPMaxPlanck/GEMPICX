@@ -7,13 +7,13 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_AmrexInit.H"
-#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Filter.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
@@ -115,7 +115,7 @@ int main (int argc, char* argv[])
         Gempic::TimeLoop::OperatorHamilton<vdim, degx, degy, degz> operatorHamilton;
 
         // Initializing filter
-        std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
+        std::unique_ptr<Filter::Filter> filter = Gempic::Filter::make_filter(infra);
 
         { //"Time Loop" scope
 
@@ -137,7 +137,7 @@ int main (int argc, char* argv[])
                 get_and_apply_neutralizing_background(rho, infra, parameters);
 
             // Apply filter and compute phi with filtered rho
-            biFilter->apply_stencil(rhoFiltered, rho);
+            filter->apply(rhoFiltered, rho);
 
             // solve Poisson
             poisson->solve(phi, rhoFiltered);
@@ -166,7 +166,7 @@ int main (int argc, char* argv[])
 
                 // Filtered E needed for pushing the particles (for symmetry with J filtering
                 // needed for energy conservation)
-                biFilter->apply_stencil(eFiltered, E);
+                filter->apply(eFiltered, E);
 
                 // Initialize rho and J to 0 for particle loop
                 rho.m_data.setVal(0.0);
@@ -194,13 +194,13 @@ int main (int argc, char* argv[])
                 }
 
                 // Apply filter and compute D with filtered J
-                biFilter->apply_stencil(jFiltered, J);
+                filter->apply(jFiltered, J);
                 // Update D (field part of H_p_i)
                 D -= jFiltered;
 
                 // Filtered E needed for pushing the particles
                 hodge(E, D, deRham->scaling_dto_e());
-                biFilter->apply_stencil(eFiltered, E);
+                filter->apply(eFiltered, E);
 
                 // Second particle loop for particle part from H_E
                 for (auto const& particleSpecies : particles)
@@ -260,7 +260,7 @@ int main (int argc, char* argv[])
                 // Add background charge (needs to be done after post_particle_loop_sync)
                 rho += rhoBackground * infra.cell_volume();
                 // Filtered rho used for diagnostics
-                biFilter->apply_stencil(rhoFiltered, rho);
+                filter->apply(rhoFiltered, rho);
 
                 // Solve the Faraday equation
                 // This step is equivalent to the apply_h_e_field step

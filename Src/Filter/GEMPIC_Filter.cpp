@@ -2,58 +2,62 @@
 
 #include <AMReX.H>
 
-#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Filter.H"
 
-void Gempic::Filter::Filter::do_filter (amrex::Box const& tbx,
-                                       amrex::Array4<amrex::Real const> const& src,
-                                       amrex::Array4<amrex::Real> const& dst,
-                                       int scomp,
-                                       int dcomp,
-                                       int ncomp)
+namespace Gempic::Filter
 {
-    BL_PROFILE("Gempic::Filter::Filter::do_filter()");
-    // src and dst are of type Array4 (Fortran ordering)
-    AMREX_D_TERM(amrex::Real const* AMREX_RESTRICT sx = m_stencilX.data();
-                 , amrex::Real const* AMREX_RESTRICT sy = m_stencilY.data();
-                 , amrex::Real const* AMREX_RESTRICT sz = m_stencilZ.data();)
+namespace Impl
+{
+void apply_stencil (amrex::MultiFab& dstmf,
+                    amrex::MultiFab const& srcmf,
+                    AMREX_D_DECL(amrex::Gpu::DeviceVector<amrex::Real> stencilX,
+                                 amrex::Gpu::DeviceVector<amrex::Real> stencilY,
+                                 amrex::Gpu::DeviceVector<amrex::Real> stencilZ))
+{
+    BL_PROFILE("Gempic::Filter::Impl::apply_stencil()");
+    AMREX_D_TERM(amrex::Real const* AMREX_RESTRICT sx = stencilX.data();
+                 , amrex::Real const* AMREX_RESTRICT sy = stencilY.data();
+                 , amrex::Real const* AMREX_RESTRICT sz = stencilZ.data();)
 
-    amrex::Dim3 slen{GEMPIC_D_PAD(static_cast<int>(m_stencilX.size()),
-                                  static_cast<int>(m_stencilY.size()),
-                                  static_cast<int>(m_stencilZ.size()))};
+    amrex::Dim3 slen{GEMPIC_D_PAD(static_cast<int>(stencilX.size()),
+                                  static_cast<int>(stencilY.size()),
+                                  static_cast<int>(stencilZ.size()))};
 
-    GEMPIC_D_EXCL(int iy{0};, int iz{0};, )
-    amrex::ParallelFor(tbx, ncomp,
-                       [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
-                       {
-                           amrex::Real d{0.0};
+    for (amrex::MFIter mfi(dstmf); mfi.isValid(); ++mfi)
+    {
+        // src and dst are of type Array4 (Fortran ordering)
+        auto const& src = srcmf.array(mfi);
+        auto const& dst = dstmf.array(mfi);
 
-                           // 3 nested loop on 3D stencil
-                           GEMPIC_D_LOOP_BEGIN(for (int ix{0}; ix < slen.x; ++ix),
-                                               for (int iy{0}; iy < slen.y; ++iy),
-                                               for (int iz{0}; iz < slen.z; ++iz))
-                               amrex::Real sss = GEMPIC_D_MULT(sx[ix], sy[iy], sz[iz]);
+        GEMPIC_D_EXCL(int iy{0};, int iz{0};, )
+        amrex::ParallelFor(
+            mfi.validbox(), srcmf.nComp(),
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+            {
+                amrex::Real d{0.0};
 
-                               d +=
-                                   sss * (GEMPIC_D_ADD(src(i - ix, j - iy, k - iz, scomp + n) +
-                                                           src(i + ix, j - iy, k - iz, scomp + n),
-                                                       src(i - ix, j + iy, k - iz, scomp + n) +
-                                                           src(i + ix, j + iy, k - iz, scomp + n),
-                                                       src(i - ix, j - iy, k + iz, scomp + n) +
-                                                           src(i + ix, j - iy, k + iz, scomp + n) +
-                                                           src(i - ix, j + iy, k + iz, scomp + n) +
-                                                           src(i + ix, j + iy, k + iz, scomp + n)));
-                           GEMPIC_D_LOOP_END
+                // 3 nested loop on 3D stencil
+                GEMPIC_D_LOOP_BEGIN(for (int ix{0}; ix < slen.x; ++ix),
+                                    for (int iy{0}; iy < slen.y; ++iy),
+                                    for (int iz{0}; iz < slen.z; ++iz))
+                    amrex::Real sss = GEMPIC_D_MULT(sx[ix], sy[iy], sz[iz]);
 
-                           dst(i, j, k, dcomp + n) = d;
-                       });
+                    d += sss *
+                         (GEMPIC_D_ADD(
+                             src(i - ix, j - iy, k - iz, n) + src(i + ix, j - iy, k - iz, n),
+                             src(i - ix, j + iy, k - iz, n) + src(i + ix, j + iy, k - iz, n),
+                             src(i - ix, j - iy, k + iz, n) + src(i + ix, j - iy, k + iz, n) +
+                                 src(i - ix, j + iy, k + iz, n) + src(i + ix, j + iy, k + iz, n)));
+                GEMPIC_D_LOOP_END
+
+                dst(i, j, k, n) = d;
+            });
+    }
 }
 
-namespace Gempic::Filter::Impl
-{
 // Only needs newS for optimization reasons that are a bit excessive
 void convolve_filter (amrex::Vector<amrex::Real>& oldS,
                       amrex::Vector<amrex::Real>& newS,
@@ -110,9 +114,9 @@ void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
     /// https://amrex-codes.github.io/amrex/docs_html/GPU.html#stream-and-synchronization
     amrex::Gpu::synchronize();
 }
-} //namespace Gempic::Filter::Impl
+} //namespace Impl
 
-Gempic::Filter::BilinearFilter::BilinearFilter()
+BilinearFilter::BilinearFilter()
 {
     BL_PROFILE("Gempic::Filter::BilinearFilter::BilinearFilter()");
     Io::Parameters params("Filter", "class BilinearFilter");
@@ -140,10 +144,17 @@ Gempic::Filter::BilinearFilter::BilinearFilter()
     }
 }
 
-void Gempic::Filter::BilinearFilter::compute_stencils ()
+void BilinearFilter::do_filter (amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf)
+{
+    AMREX_ALWAYS_ASSERT(dstmf.nComp() == srcmf.nComp());
+    Impl::apply_stencil(dstmf, srcmf, AMREX_D_DECL(m_stencilX, m_stencilY, m_stencilZ));
+}
+
+void BilinearFilter::compute_stencils ()
 {
     BL_PROFILE("Gempic::Filter::BilinearFilter::compute_stencils()");
     AMREX_D_DECL(Impl::compute_stencil(m_stencilX, m_nPass[xDir], m_alpha, m_compensate),
                  Impl::compute_stencil(m_stencilY, m_nPass[yDir], m_alpha, m_compensate),
                  Impl::compute_stencil(m_stencilZ, m_nPass[zDir], m_alpha, m_compensate));
 }
+} //namespace Gempic::Filter

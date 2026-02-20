@@ -133,19 +133,36 @@ ComputationalDomain.domainHi = 10.0 10.0 5.0 # Real vector of AMReX_SPACEDIM ent
 
 \subsection{Filter}\label{sec:FilterInput}
 Controls the filtering behaviour of the simulation (assuming your simulation has this option).
-See \ref{sec:BilinearFilter} for details.
 \begin{lstlisting}[language=pkgconfig]
 # Filter class options
 
 # To filter or not to filter 
 Filter.enable = 1 # Boolean (1/0). Default 0.
+Filter.type = Bilinear # String. Default Bilinear
+\end{lstlisting}
+
+Specific settings for the bilinear filter. See \ref{sec:BilinearFilter} for details.
+\begin{lstlisting}[language=pkgconfig]
+Filter.type = Bilinear
 
 # How many times to pass the filter in each direction
 Filter.nPass = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. No default.
-
+     
 # Whether or not to do an extra compensation step when calculating the filter stencil
 Filter.compensate = 1 # Boolean (1/0). Default 0.
 \end{lstlisting}
+
+Specific settings for the Fourier filter. This filter is only implemented for fully periodic domains. See \ref{sec:FourierFilter} for details.
+\begin{lstlisting}[language=pkgconfig]
+Filter.type = Fourier
+
+# The minimum Fourier mode number that should be kept in each direction
+Filter.nMin = 0 0 0 # Integer vector of AMReX_SPACEDIM entries. No default.
+
+# The maximum Fourier mode number that should be kept in each direction
+Filter.nMax = 10 10 10 # Integer vector of AMReX_SPACEDIM entries. No default.
+\end{lstlisting}
+
 
 \subsection{FullDiagnostics}
 Controls the behaviour of the full diagnostics module (assuming your simulation has this option).

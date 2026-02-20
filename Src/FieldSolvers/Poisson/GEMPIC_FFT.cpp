@@ -26,6 +26,10 @@ FFTSolver::FFTSolver(ComputationalDomain const& compDom,
     }
 
     m_r2c = std::make_unique<amrex::FFT::R2C<amrex::Real>>(compDom.box());
+    // define cell-centered containers for storing data, declaring 1 ghost cell to be able to
+    // copy back to the node-centered MultiFab, phi, without data loss.
+    m_rhoFft.define(compDom.m_grid, compDom.m_distriMap, 1, 1);
+    m_phiFft.define(compDom.m_grid, compDom.m_distriMap, 1, 1);
 
     //dimensions in x, y and z directions
     GEMPIC_D_EXCL(int Ny = 0;, int Nz = 0;, ) // nvcc issues a warning when using const
@@ -94,7 +98,7 @@ FFTSolver::FFTSolver(ComputationalDomain const& compDom,
             }
             break;
         default:
-            AMREX_ASSERT("Degree not implemented for three dimensional Hodge in FFT");
+            GEMPIC_ERROR("Degree not implemented for three dimensional Hodge in FFT");
             break;
     }
 
@@ -138,37 +142,31 @@ void FFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
 {
     BL_PROFILE("Gempic::FieldSolvers::FFTSolver::solve()");
 
+    AMREX_ALWAYS_ASSERT(phi.m_data.nComp() == rho.m_data.nComp());
     check_charge_neutrality(rho, m_compDom);
 
-    // define cell-centered containers for storing data, declaring 1 ghost cell to be able to
-    // copy back to the node-centered MultiFab, phi, without data loss.
-    amrex::MultiFab rhoFft(m_compDom.m_grid, m_compDom.m_distriMap, rho.m_data.nComp(), 1);
-    amrex::MultiFab phiFft(m_compDom.m_grid, m_compDom.m_distriMap, phi.m_data.nComp(), 1);
-
-    // assign values to containers from rho.m_data
-    for (amrex::MFIter mfi(rhoFft); mfi.isValid(); ++mfi)
-    {
-        auto const& rhoFftPtr = rhoFft.array(mfi);
-
-        auto const& rhoMDataPtr = rho.m_data.array(mfi);
-
-        amrex::Box const& bx = mfi.fabbox();
-
-        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
-                           { rhoFftPtr(i, j, k) = rhoMDataPtr(i, j, k); });
-    }
-
-    // local variables necessary for CUDA
-    AMREX_D_TERM(amrex::Real* eigenvalues0x = m_eigenvalues0x;
-                 , amrex::Real* eigenvalues0y = m_eigenvalues0y;
-                 , amrex::Real* eigenvalues0z = m_eigenvalues0z;)
-    int cellNum = m_compDom.box().length3d().product();
-    // Amrex FFT only fourier transforms the first component, so we need to do hacks
     for (int comp{0}; comp < rho.m_data.nComp(); ++comp)
     {
-        amrex::MultiFab rhoFftComp(rhoFft, amrex::make_alias, comp, 1);
-        amrex::MultiFab phiFftComp(phiFft, amrex::make_alias, comp, 1);
-        m_r2c->forwardThenBackward(rhoFftComp, phiFftComp,
+        // assign values to containers from rho.m_data
+        for (amrex::MFIter mfi(m_rhoFft); mfi.isValid(); ++mfi)
+        {
+            auto const& rhoFftPtr = m_rhoFft.array(mfi);
+
+            auto const& rhoMDataPtr = rho.m_data.array(mfi);
+
+            amrex::Box const& bx = mfi.fabbox();
+
+            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+                               { rhoFftPtr(i, j, k) = rhoMDataPtr(i, j, k, comp); });
+        }
+
+        // local variables necessary for CUDA
+        AMREX_D_TERM(amrex::Real* eigenvalues0x = m_eigenvalues0x;
+                     , amrex::Real* eigenvalues0y = m_eigenvalues0y;
+                     , amrex::Real* eigenvalues0z = m_eigenvalues0z;)
+        int cellNum = m_compDom.box().length3d().product();
+
+        m_r2c->forwardThenBackward(m_rhoFft, m_phiFft,
                                    [=] AMREX_GPU_DEVICE(int i, int j, int k, auto& sp)
                                    {
                                        auto eigenvalueSum{GEMPIC_D_ADD(
@@ -182,22 +180,20 @@ void FFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
                                            sp /= eigenvalueSum * cellNum;
                                        }
                                    });
+
+        //boundary handling
+        m_phiFft.FillBoundary(rho.m_deRham->get_periodicity());
+
+        for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
+        {
+            auto const& phiFftPtr = m_phiFft.array(mfi);
+
+            auto const& phiMDataPtr = phi.m_data.array(mfi);
+
+            amrex::Box const& bx = mfi.validbox();
+
+            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+                               { phiMDataPtr(i, j, k, comp) = phiFftPtr(i, j, k); });
+        }
     }
-
-    //boundary handling
-    phiFft.FillBoundary(rho.m_deRham->get_periodicity());
-
-    for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
-    {
-        auto const& phiFftPtr = phiFft.array(mfi);
-
-        auto const& phiMDataPtr = phi.m_data.array(mfi);
-
-        amrex::Box const& bx = mfi.validbox();
-
-        amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
-                           { phiMDataPtr(i, j, k) = phiFftPtr(i, j, k); });
-    }
-
-    phi.fill_boundary();
 }
