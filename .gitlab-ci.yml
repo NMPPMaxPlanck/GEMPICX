@@ -171,8 +171,7 @@ build-test_cuda_1D:
 .mpcdf-clang-env:
   extends:
     - .unit-test-setup
-  # N.B. clang/17+ needs gcc/13 libraries to run
-  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc_14-openmpi_5_0:2025
+  image: gitlab-registry.mpcdf.mpg.de/mpcdf/ci-module-image/gcc-openmpi:latest
   tags:
     - cpu
   stage: test

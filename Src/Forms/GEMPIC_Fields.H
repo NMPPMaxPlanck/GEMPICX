@@ -492,7 +492,6 @@ namespace Impl
 amrex::Real dot(DiscreteField& a, DiscreteField& b);
 amrex::Real dot(DiscreteVectorField& a, DiscreteVectorField& b);
 } // namespace Impl
-
 } //namespace Gempic
 
 namespace Gempic::Forms
