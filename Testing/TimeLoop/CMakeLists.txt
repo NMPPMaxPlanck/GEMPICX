@@ -6,3 +6,15 @@ target_sources(GtestTests PRIVATE
     TimeLoop_test.cpp
     TimeLoopOrder_test.cpp
     )
+
+add_executable(
+  TimeStepper_test
+  TimeStepper_test.cpp)
+
+target_link_libraries(
+  TimeStepper_test
+  GEMPICX_TIMESTEPPER)
+
+add_test(
+  NAME TS_test
+  COMMAND TimeStepper_test TSTest00)
