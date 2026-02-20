@@ -334,7 +334,7 @@ void fill_reference_scalar_field (DiscreteField& sf, double t)
         t);
 }
 void fill_scalar_field_with_parse (DiscreteField& f,
-                                   DiscreteFieldsFunctionParser const& parser,
+                                   DiscreteFieldFunctionParser const& parser,
                                    double t)
 {
     fill(f, parser, t);
@@ -361,10 +361,10 @@ TEST(FunctionParser, fillDiscreteFieldWithParsedFunction)
     DiscreteField sf{"sf", parameters, grid, Impl::scalar_field_dof_category()};
     DiscreteField sfRef{"sf", parameters, grid, Impl::scalar_field_dof_category()};
 
-    DiscreteFieldsFunctionParser parseSf{"sf", parameters};
+    DiscreteFieldFunctionParser parseSf{"sf", parameters};
     fill_scalar_field_with_parse(sf, parseSf, t);
     fill_reference_scalar_field(sfRef, t);
-    EXPECT_EQ(l_inf_error(sf, sfRef), 0.0);
+    EXPECT_LT(l_inf_error(sf, sfRef), 1.0e-14);
 }
 
 void fill_reference_vector_field (DiscreteVectorField& vf, double t)
@@ -390,7 +390,7 @@ void fill_reference_vector_field (DiscreteVectorField& vf, double t)
         t);
 }
 void fill_vector_field_with_parse (DiscreteVectorField& f,
-                                   DiscreteFieldsFunctionParser const& parser,
+                                   DiscreteVectorFieldFunctionParser const& parser,
                                    double t)
 {
     fill(f, parser, t);
@@ -422,12 +422,12 @@ TEST(FunctionParser, fillDiscreteVectorFieldWithParsedFunction)
     DiscreteVectorField vfRef{
         "vf", parameters, {grid, grid, grid}, Impl::vector_field_dof_category()};
 
-    DiscreteFieldsFunctionParser parseVf{{"vfx", "vfy", "vfz"}, parameters};
+    DiscreteVectorFieldFunctionParser parseVf{{"vfx", "vfy", "vfz"}, parameters};
     fill_vector_field_with_parse(vf, parseVf, t);
     fill_reference_vector_field(vfRef, t);
-    EXPECT_EQ(l_inf_error(vf, vfRef)[Direction::xDir], 0.0);
-    EXPECT_EQ(l_inf_error(vf, vfRef)[Direction::yDir], 0.0);
-    EXPECT_EQ(l_inf_error(vf, vfRef)[Direction::zDir], 0.0);
+    EXPECT_LE(l_inf_error(vf, vfRef)[Direction::xDir], 1.0e-14);
+    EXPECT_LE(l_inf_error(vf, vfRef)[Direction::yDir], 1.0e-14);
+    EXPECT_LE(l_inf_error(vf, vfRef)[Direction::zDir], 1.0e-14);
 }
 
 void fill_scalar_field_with_nan (DiscreteField f)

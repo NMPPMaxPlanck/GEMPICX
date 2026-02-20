@@ -24,7 +24,7 @@ void fill_with_integrated_edges (DiscreteVectorField& field,
         std::array<amrex::Real, 3> dx{GEMPIC_D_PAD_ONE(field.discrete_grid(xDir).dx(xDir),
                                                        field.discrete_grid(yDir).dx(yDir),
                                                        field.discrete_grid(zDir).dx(zDir))};
-        auto f1D = [=] (amrex::Real val)
+        auto f1D = [&, r] (amrex::Real val)
         {
             std::array<amrex::Real, 3> tmp{r};
             tmp[dir] = val;
@@ -44,7 +44,7 @@ void fill_with_integrated_faces (DiscreteVectorField& field,
                                        AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         std::array<amrex::Real, 3> r{GEMPIC_D_PAD(x, y, z)};
-        auto f2D = [=] (amrex::Real val1, amrex::Real val2)
+        auto f2D = [&, r] (amrex::Real val1, amrex::Real val2)
         {
             std::array<amrex::Real, 3> tmp{r};
             switch (dir)
@@ -110,7 +110,7 @@ void fill_with_integrated_cells (DiscreteField& field,
     for (int i = 0; i < 3; i++) dx[i] = dx[i] / 2.0;
     auto f = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
-        auto f3D = [=] (amrex::Real x, amrex::Real y, amrex::Real z)
+        auto f3D = [&] (amrex::Real x, amrex::Real y, amrex::Real z)
         { return funcs(AMREX_D_DECL(x, y, z)); };
         return integrate.volume({GEMPIC_D_PAD(x, y, z)}, dx, f3D);
     };
@@ -243,9 +243,9 @@ template <typename FDForm, ScalarAnalyticalExpressionSpaceTime F>
              std::is_same_v<FDForm, DualZeroForm> || std::is_same_v<FDForm, DualThreeForm>
 void project (FDForm& field, F const& f, amrex::Real const& time)
 {
-    auto timeIndependent =
-        [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
-    { f(AMREX_D_DECL(x, y, z), time); };
+    auto timeIndependent = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y,
+                                                                  amrex::Real z)) -> amrex::Real
+    { return f(AMREX_D_DECL(x, y, z), time); };
     project(field, timeIndependent);
 }
 template <typename FDForm, VectorAnalyticalExpressionSpaceTime F>
@@ -254,8 +254,8 @@ template <typename FDForm, VectorAnalyticalExpressionSpaceTime F>
 void project (FDForm& field, F const& f, amrex::Real const& time)
 {
     auto timeIndependent =
-        [=] AMREX_GPU_HOST_DEVICE(Direction dir,
-                                  AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+        [=] AMREX_GPU_HOST_DEVICE(
+            Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z)) -> amrex::Real
     { return f(dir, AMREX_D_DECL(x, y, z), time); };
     project(field, timeIndependent);
 }
