@@ -60,16 +60,6 @@ endif()
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
 
-# Define cmake to use libraries from gcc-module not default gcc
-# This section is specific for MPCDF-Cluster configurations
-if(   ($ENV{HOST} MATCHES "raven*")
-   OR ($ENV{HOST} MATCHES "viper*")
-   OR (DEFINED ENV{MPCDF_RUNNER})
-   )
-  set(CMAKE_BUILD_RPATH $ENV{GCC_HOME}/lib64)
-  set(CMAKE_INSTALL_RPATH $ENV{GCC_HOME}/lib64)
-endif()
-
 include(cmake/gempic_AMReXConfig.cmake)
 
 add_library(GEMPICX STATIC)
