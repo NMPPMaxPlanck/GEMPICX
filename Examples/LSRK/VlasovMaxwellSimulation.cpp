@@ -8,13 +8,13 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_AmrexInit.H"
-#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Filter.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
@@ -193,7 +193,7 @@ int main (int argc, char* argv[])
         init_particles(particles, infra);
 
         // Initializing filter
-        std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
+        std::unique_ptr<Filter::Filter> filter = Gempic::Filter::make_filter(infra);
 
         { // "Time Loop" scope. Should be a separate function
 
@@ -367,11 +367,10 @@ int main (int argc, char* argv[])
             J.post_particle_loop_sync();
 
             // Add background charge (needs to be done after post_particle_loop_sync)
-            amrex::Real rhoBackground =
-                get_and_apply_neutralizing_background(rho, infra, parameters);
+            std::ignore = get_and_apply_neutralizing_background(rho, infra, parameters);
 
             // Apply filter and compute phi with filtered rho
-            biFilter->apply_stencil(rhoFiltered, rho);
+            filter->apply(rhoFiltered, rho);
             poisson->solve(phi, rhoFiltered);
             grad(E, phi);
             E *= -1.0;

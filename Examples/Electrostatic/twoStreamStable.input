@@ -33,6 +33,7 @@ TimeLoop.dt = 0.025
 
 # Filter
 Filter.enable = 1
+Filter.type = Bilinear
 Filter.nPass = 2 2 2
 
 # Function parameters

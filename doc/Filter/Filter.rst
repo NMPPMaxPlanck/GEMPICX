@@ -1,6 +1,6 @@
 Filters
 =======
-Spline filters applicable to smoothe fields as an anti-aliasing measure.
+Filters applicable to smooth fields as an anti-aliasing measure.
 
 .. toctree::
    :maxdepth: 2

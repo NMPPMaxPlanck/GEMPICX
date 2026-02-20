@@ -6,7 +6,6 @@
 #include <AMReX.H>
 #include <AMReX_Particles.H>
 
-#include "GEMPIC_BilinearFilter.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"

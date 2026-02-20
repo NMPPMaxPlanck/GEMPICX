@@ -31,6 +31,7 @@ Sim.Te = 10
 
 # Filter
 Filter.enable = 1
+Filter.type = Bilinear
 Filter.nPass = 3 3 3
 
 # Function parameters
