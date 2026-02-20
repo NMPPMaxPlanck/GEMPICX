@@ -4,6 +4,7 @@
 #include "GEMPIC_BoundaryConditions.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_FunctionParse.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
 #include "GEMPIC_Parameters.H"
 
@@ -328,36 +329,26 @@ void fill_zero (DiscreteVectorField& field)
     Gempic::fill(field, zero);
 }
 
-DiscreteFieldsFunctionParser::DiscreteFieldsFunctionParser(std::array<std::string, 3> const& label,
-                                                           Io::Parameters& params)
+DiscreteFieldFunctionParser::DiscreteFieldFunctionParser(std::string const& label,
+                                                         Io::Parameters& params)
 {
-    for (auto const& direction : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        std::string parseString{};
-        params.get("FunctionParser." + label[direction], parseString);
-        m_parser.push_back(amrex::Parser(parseString));
-        m_parser[direction].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        m_hFunction.push_back(m_parser[direction].template compile<AMREX_SPACEDIM + 1>());
-    }
-    m_dFunction =
-        amrex::Gpu::DeviceVector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>(m_hFunction.size());
-    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_hFunction.begin(), m_hFunction.end(),
-                          m_dFunction.begin());
-    m_dFunctionPtr = m_dFunction.data();
+    std::string fullLabel{"FunctionParser." + label};
+    auto [parser, function] = Utils::parse_function(fullLabel, params);
+    m_parser = parser;
+    m_function = function;
 }
-DiscreteFieldsFunctionParser::DiscreteFieldsFunctionParser(std::string const& label,
-                                                           Io::Parameters& params)
+
+DiscreteVectorFieldFunctionParser::DiscreteVectorFieldFunctionParser(
+    std::array<std::string, 3> const& label, Io::Parameters& params)
 {
-    std::string parseString{};
-    params.get("FunctionParser." + label, parseString);
-    m_parser.push_back(amrex::Parser(parseString));
-    m_parser[0].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-    m_hFunction.push_back(m_parser[0].template compile<AMREX_SPACEDIM + 1>());
-    m_dFunction =
-        amrex::Gpu::DeviceVector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>>(m_hFunction.size());
-    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_hFunction.begin(), m_hFunction.end(),
-                          m_dFunction.begin());
-    m_dFunctionPtr = m_dFunction.data();
+    std::array<std::string, 3> fullLabels{};
+    for (auto const& dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        fullLabels[dir] = "FunctionParser." + label[dir];
+    }
+    auto [parser, function] = Utils::parse_functions(fullLabels, params);
+    m_parser = parser;
+    m_function = function;
 }
 
 bool is_nan (DiscreteField& a)

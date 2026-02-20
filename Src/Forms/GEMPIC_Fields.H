@@ -414,67 +414,72 @@ void fill_zero(DiscreteVectorField&);
 
 /**
  * @brief Provide an interface for functions parsed from the input file to
- *        @ref fill(DiscreteField&, F const&) and @ref fill(DiscreteVectorField&, F const&)
+ *        @ref fill(DiscreteField&, F const&)
  */
-class DiscreteFieldsFunctionParser
+class DiscreteFieldFunctionParser
 {
 public:
     //!@cond EXCLUDE_API_DOC
-    DiscreteFieldsFunctionParser() = delete;
+    DiscreteFieldFunctionParser() = delete;
     //!@endcond
     /**
      * @brief Create a function parser to fill a @ref DiscreteField
      *
      * @param label The identifier of a function in the parameter file parsed through
-     *        `Io::Parameters`
+     *              `Io::Parameters`
      */
-    DiscreteFieldsFunctionParser(std::string const& label, Io::Parameters& params);
-    /**
-     * @brief Create a function parser to fill a @ref DiscreteVectorField
-     *
-     * @param label The identifier of three functions in the parameter file parsed through
-     *              `Io::Parameters.` where the position of the string in the array
-     *              corresponds to @ref Direction of the @ref DiscreteVectorField
-     */
-    DiscreteFieldsFunctionParser(std::array<std::string, 3> const& label, Io::Parameters& params);
+    DiscreteFieldFunctionParser(std::string const& label, Io::Parameters& params);
     /**
      * @brief Provide an interface for functions parsed from the input file to
      *        @ref fill(DiscreteField&, F const&)
      */
-    // **NOTE** 2025-11-17 Chichi Lalescu
-    // We would prefer to only use AMREX_GPU_DEVICE here, but
-    // doing that would complicate the definition of "Analytical Expression"
-    // concepts when compiling with LLVM-based compilers (see
-    // https://github.com/llvm/llvm-project/issues/69956).
-    // To make things work I rely on AMREX_IF_ON_DEVICE/AMREX_IF_ON_HOST, and
-    // I think this describes what we want (but it's a fairly blunt workaround)
-    AMREX_GPU_HOST_DEVICE amrex::Real operator()(
-        AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z), amrex::Real t) const
+    AMREX_GPU_HOST_DEVICE
+    amrex::Real operator()(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                           amrex::Real t) const
     {
-        AMREX_IF_ON_DEVICE(return m_dFunctionPtr[0](AMREX_D_DECL(x, y, z), t););
-        AMREX_IF_ON_HOST(return m_hFunction[0](AMREX_D_DECL(x, y, z), t););
+        return m_function(AMREX_D_DECL(x, y, z), t);
+        ;
     }
+
+private:
+    amrex::ParserExecutor<AMREX_SPACEDIM + 1> m_function{};
+    amrex::Parser m_parser{};
+};
+
+/**
+ * @brief Provide an interface for functions parsed from the input file to
+ *        @ref fill(DiscreteVectorField&, F const&)
+ */
+class DiscreteVectorFieldFunctionParser
+{
+public:
+    //!@cond EXCLUDE_API_DOC
+    DiscreteVectorFieldFunctionParser() = delete;
+    //!@endcond
+    /**
+     * @brief Create a function parser to fill a @ref DiscreteVectorField
+     *
+     * @param label The identifier of three functions in the parameter file parsed through
+     *              `Io::Parameters` where the position of the string in the array
+     *              corresponds to @ref Direction of the @ref DiscreteVectorField
+     */
+    DiscreteVectorFieldFunctionParser(std::array<std::string, 3> const& label,
+                                      Io::Parameters& params);
     /**
      * @brief Provide an interface for functions parsed from the input file to
      *        @ref fill(DiscreteVectorField&, F const&)
      */
-    AMREX_GPU_HOST_DEVICE amrex::Real operator()(Direction dir,
-                                                 AMREX_D_DECL(amrex::Real x,
-                                                              amrex::Real y,
-                                                              amrex::Real z),
-                                                 amrex::Real t) const
+    AMREX_GPU_HOST_DEVICE
+    amrex::Real operator()(Direction dir,
+                           AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
+                           amrex::Real t) const
     {
-        AMREX_IF_ON_DEVICE(return m_dFunctionPtr[dir](AMREX_D_DECL(x, y, z), t););
-        AMREX_IF_ON_HOST(return m_hFunction[dir](AMREX_D_DECL(x, y, z), t););
+        return m_function[dir](AMREX_D_DECL(x, y, z), t);
     }
 
 private:
-    std::vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> m_hFunction{};
-    amrex::Gpu::DeviceVector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> m_dFunction{};
-    // amrex::Gpu::DeviceVector has no __host__ __device__ annotations
-    // so the pointer needs to be used to access the function
-    amrex::ParserExecutor<AMREX_SPACEDIM + 1>* m_dFunctionPtr{};
-    std::vector<amrex::Parser> m_parser{};
+    std::array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> m_function{};
+    std::array<amrex::Parser, 3> m_parser{};
 };
 
 bool is_nan(DiscreteField&);

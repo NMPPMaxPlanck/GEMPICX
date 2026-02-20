@@ -20,7 +20,8 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
 .. doxygenclass:: Gempic::DiscreteVectorField
    :members:
 
-.. doxygenclass:: Gempic::DiscreteFieldsFunctionParser
+.. doxygenclass:: Gempic::DiscreteFieldFunctionParser
+.. doxygenclass:: Gempic::DiscreteVectorFieldFunctionParser
 
 .. doxygenfile:: GEMPIC_FDDeRhamComplex.H
 .. doxygenfile:: GEMPIC_ExtDerivatives.cpp
