@@ -273,9 +273,9 @@ public:
      *     * s2X                     = rdata(AMREX_SPACEDIM + vDim + 1)
      *     * s2Y                     = rdata(AMREX_SPACEDIM + vDim + 2)
      *     * s2Z                     = rdata(AMREX_SPACEDIM + vDim + 3)
-     *     * s2Vx                    = rdata(AMREX_SPACEDIM + vDim + 4)
-     *     * s2Vy                    = rdata(AMREX_SPACEDIM + vDim + 5)
-     *     * s2Vz                    = rdata(AMREX_SPACEDIM + vDim + 6)
+     *     * s2Vx                    = rdata(2 * AMREX_SPACEDIM + vDim + 1)
+     *     * s2Vy                    = rdata(2 * AMREX_SPACEDIM + vDim + 2)
+     *     * s2Vz                    = rdata(2 * AMREX_SPACEDIM + vDim + 3)
      *
      * See also `GEMPIC_ParticleDataIndices.H`.
      */
@@ -311,23 +311,26 @@ public:
         if (nData > 2)
         {
             dd.m_isqrtf0 = AMREX_SPACEDIM + vDim + 2;
-            dd.m_is2Y = AMREX_SPACEDIM + vDim + 2;
+            if (AMREX_SPACEDIM > 1)
+            {
+                dd.m_is2Y = AMREX_SPACEDIM + vDim + 2;
+            }
         }
-        if (nData > 3)
+        if (nData > 3 and AMREX_SPACEDIM > 2)
         {
             dd.m_is2Z = AMREX_SPACEDIM + vDim + 3;
         }
-        if (nData > 4)
+        if (nData > AMREX_SPACEDIM + 1 and vDim > 0)
         {
-            dd.m_is2Vx = AMREX_SPACEDIM + vDim + 4;
+            dd.m_is2Vx = 2 * AMREX_SPACEDIM + vDim + 1;
         }
-        if (nData > 5)
+        if (nData > AMREX_SPACEDIM + 2 and vDim > 1)
         {
-            dd.m_is2Vy = AMREX_SPACEDIM + vDim + 5;
+            dd.m_is2Vy = 2 * AMREX_SPACEDIM + vDim + 2;
         }
-        if (nData > 6)
+        if (nData > AMREX_SPACEDIM + 3 and vDim > 2)
         {
-            dd.m_is2Vz = AMREX_SPACEDIM + vDim + 6;
+            dd.m_is2Vz = 2 * AMREX_SPACEDIM + vDim + 3;
         }
         return dd;
     }
