@@ -100,7 +100,7 @@ int main (int argc, char* argv[])
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     constexpr int vdim{3};
-    constexpr int ndata{7}; // Weight + 6 auxilary variables
+    constexpr int ndata{1 + AMREX_SPACEDIM + vdim}; // Weight + auxilary variables in phase space
     // Spline degrees
     constexpr int degx{3};
     constexpr int degy{3};
