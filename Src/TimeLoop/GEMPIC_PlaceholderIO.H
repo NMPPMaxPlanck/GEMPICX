@@ -101,7 +101,7 @@ public:
         for (auto i = 0; i < m_ds.size(); i++)
         {
             auto result = m_ds[i]->read(baseName / m_name[i]);
-            handle_io_call(result, "read " + std::string(baseName / m_name[i]));
+            handle_io_call(result, "read " + (baseName / m_name[i]).string());
             if (result != EXIT_SUCCESS) globalResult = EXIT_FAILURE;
         }
         return globalResult;
@@ -113,7 +113,7 @@ public:
         for (auto i = 0; i < m_ds.size(); i++)
         {
             auto result = m_ds[i]->write(baseName / m_name[i]);
-            handle_io_call(result, "write " + std::string(baseName / m_name[i]));
+            handle_io_call(result, "write " + (baseName / m_name[i]).string());
             if (result != EXIT_SUCCESS) globalResult = EXIT_FAILURE;
         }
         return globalResult;
@@ -125,7 +125,7 @@ public:
         for (auto i = 0; i < m_ds.size(); i++)
         {
             auto result = m_ds[i]->write_diagnostics(baseName / m_name[i]);
-            handle_io_call(result, "write_diagnostics " + std::string(baseName / m_name[i]));
+            handle_io_call(result, "write_diagnostics " + (baseName / m_name[i]).string());
             if (result != EXIT_SUCCESS) globalResult = EXIT_FAILURE;
         }
         return globalResult;
