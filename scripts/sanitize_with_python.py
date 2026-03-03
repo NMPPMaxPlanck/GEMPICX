@@ -53,6 +53,42 @@ def convert_to_test_name(arg: str) -> str:
     arg = convert_to_camel_case(arg) + '_test'
     return arg
 
+def get_license(lineWidth=100) -> str:
+    """ Return license text """
+    licenseHead = '/' + (lineWidth - 2) * '*' +'\n'
+    licenseFoot = ' ' + (lineWidth - 2) * '*' + '/\n'
+    lineBegin = ' * '
+    lineEnd = ' *\n'
+    #SPDX header https://spdx.dev/learn/handling-license-info/#where
+    licenseText = ['Copyright (c) 2021 GEMPICX',
+                   'SPDX-License-Identifier: BSD-3-Clause']
+    padLength = lineWidth - len(lineBegin) - len(lineEnd)
+    licenseBody = [lineBegin + line.ljust(padLength) + lineEnd for line in licenseText]
+    return licenseHead + ''.join(licenseBody) + licenseFoot
+
+def is_licensed(file: pathlib.Path) -> bool:
+    """ Checks the file for the license string. """
+    licenseStrings = get_license().splitlines(keepends=True)
+    matchIndex = 0
+    with open(file, 'r') as f:
+        for line in f:
+            if matchIndex < len(licenseStrings):
+                if line != licenseStrings[matchIndex]:
+                    return False
+                matchIndex += 1
+            else:
+                return True
+    # Either nothing was found or file ends when license does. Either way:
+    return matchIndex == len(licenseStrings)
+
+def add_license(file: pathlib.Path):
+    """ Adds the license string to top of file. No check for outdated license strings. """
+    with open(file, 'r') as fin:
+        text = fin.read()
+    text = get_license() + text
+    with open(file, 'w') as fout:
+        fout.write(text)
+
 def execute_git_mv(source, destination, forceMove=False):
     """
     Moves a file or folder (source) to destination using git.
@@ -215,6 +251,8 @@ def fix_files_syntax(folders, forceMove=False):
     A) GEMPIC_CamelCase.H or GEMPIC_CamelCase.cpp
     B) CamelCase_test.cpp
     C) test_aNy_StYlE.cpp (deprecated)
+    D) CamelCase.H or CamelCase.cpp (for files outside Src and Testing)
+    Add license to A), B) and D)
     """
     if isinstance(folders, str) or isinstance(folders, pathlib.Path):
         folders = [folders]
@@ -229,12 +267,16 @@ def fix_files_syntax(folders, forceMove=False):
         folderName = pathlib.Path(folderName).resolve()
         for file in folderName.rglob('*.H'):
             if gempicCamelCase.fullmatch(file.stem):
+                if not is_licensed(file):
+                    add_license(file)
                 continue
             # Filename does not match gempic file name pattern and is in source folders
             elif (folderName.resolve().is_relative_to(srcFolder) or folderName.resolve().is_relative_to(testingFolder)):
                 newName = convert_to_gempic_name(file.stem) + file.suffix
             # Filename is outside gempic source folders and CamelCase
             elif nameCamelCase.fullmatch(file.stem):
+                if not is_licensed(file):
+                    add_license(file)
                 continue
             # Filename is outside gempic source folders and not CamelCase
             else:
@@ -252,8 +294,12 @@ def fix_files_syntax(folders, forceMove=False):
         outdatedTestCase = re.compile(r'^test\w*$')
         for file in folderName.rglob('*.cpp'):
             if gempicCamelCase.fullmatch(file.stem):
+                if not is_licensed(file):
+                    add_license(file)
                 continue
             elif testCase.fullmatch(file.stem):
+                if not is_licensed(file):
+                    add_license(file)
                 continue
             elif outdatedTestCase.fullmatch(file.stem):
                 warnings.warn(f"The naming (and probably type) of the test file '{str(file)}' is deprecated.")
@@ -265,6 +311,8 @@ def fix_files_syntax(folders, forceMove=False):
                 newName = convert_to_test_name(file.stem) + file.suffix
             # Filename is outside gempic source folders and CamelCase
             elif nameCamelCase.fullmatch(file.stem):
+                if not is_licensed(file):
+                    add_license(file)
                 continue
             # Filename is outside gempic source folders and not CamelCase
             else:

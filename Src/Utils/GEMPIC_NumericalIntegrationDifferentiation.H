@@ -1,3 +1,7 @@
+/**************************************************************************************************
+ * Copyright (c) 2021 GEMPICX                                                                     *
+ * SPDX-License-Identifier: BSD-3-Clause                                                          *
+ **************************************************************************************************/
 #ifndef GEMPIC_NUMERICALINTEGRATIONDIFFERENTIATION_H_
 #define GEMPIC_NUMERICALINTEGRATIONDIFFERENTIATION_H_
 

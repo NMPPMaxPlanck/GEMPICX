@@ -1,3 +1,7 @@
+/**************************************************************************************************
+ * Copyright (c) 2021 GEMPICX                                                                     *
+ * SPDX-License-Identifier: BSD-3-Clause                                                          *
+ **************************************************************************************************/
 #include "GEMPIC_CustomDiagnosticStrategies.H"
 
 //STRATEGY: free registry function + public static API on the class

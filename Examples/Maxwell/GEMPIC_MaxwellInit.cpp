@@ -1,3 +1,7 @@
+/**************************************************************************************************
+ * Copyright (c) 2021 GEMPICX                                                                     *
+ * SPDX-License-Identifier: BSD-3-Clause                                                          *
+ **************************************************************************************************/
 #include "GEMPIC_MaxwellInit.H"
 
 AMREX_GPU_HOST_DEVICE inline amrex::GpuArray<amrex::Real, 3> initial_e (
