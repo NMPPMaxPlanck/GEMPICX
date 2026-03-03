@@ -1,3 +1,7 @@
+/**************************************************************************************************
+ * Copyright (c) 2021 GEMPICX                                                                     *
+ * SPDX-License-Identifier: BSD-3-Clause                                                          *
+ **************************************************************************************************/
 #ifndef GEMPICX_FULLDIAGNOSTICS_H_
 #define GEMPICX_FULLDIAGNOSTICS_H_
 

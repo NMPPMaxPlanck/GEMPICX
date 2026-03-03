@@ -1,3 +1,7 @@
+/**************************************************************************************************
+ * Copyright (c) 2021 GEMPICX                                                                     *
+ * SPDX-License-Identifier: BSD-3-Clause                                                          *
+ **************************************************************************************************/
 #ifndef GEMPIC_PARTICLE_UTILS_H_
 #define GEMPIC_PARTICLE_UTILS_H_
 #define _USE_MATH_DEFINES

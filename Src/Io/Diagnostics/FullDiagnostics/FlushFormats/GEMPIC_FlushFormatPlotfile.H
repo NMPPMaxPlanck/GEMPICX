@@ -1,3 +1,7 @@
+/**************************************************************************************************
+ * Copyright (c) 2021 GEMPICX                                                                     *
+ * SPDX-License-Identifier: BSD-3-Clause                                                          *
+ **************************************************************************************************/
 #ifndef GEMPICX_FLUSHFORMATPLOTFILE_H_
 #define GEMPICX_FLUSHFORMATPLOTFILE_H_
 
