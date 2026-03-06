@@ -602,5 +602,65 @@ ReducedDiagnostics.GaussErr.types = GaussError
 Function.Bz = "1e-3 * cos(kvarx * x)"
 \end{lstlisting}
 
+\subsection{Advanced Input File Features}
+\subsubsection{Math expressions}
+\begin{lstlisting}[language=pkgconfig]
+ComputationalDomain.domainHi = sqrt(2/3) exp((-1)^2) sin(3+1)
+ComputationalDomain.domainHi = "sqrt( 2 / 3 )" "exp( (-1) ^ 2)" "sin(3 + 1)"
+ComputationalDomain.domainHi = "sqrt( 2 / 3 )"  \
+							   "exp( (-1) ^ 2)" \
+							   "sin(3 + 1)"
+\end{lstlisting}
+For lists/vectors of values, whitespaces are important. Whitespaces inside \verb|""| are okay.
+
+\subsubsection{Variables and mathematical constants}
+\begin{lstlisting}[language=pkgconfig]
+factor = 2
+ComputationalDomain.nCells = 16*factor 8*factor 8*factor
+ComputationalDomain.nCells = "16 * factor" "8 * factor" "8 * factor"
+TimeLoop.dt = 0.1/factor
+\end{lstlisting}
+Such variables cannot be used in expressions that are parsed like \verb|Function.Ex = "sin(x)"|.
+
+In contrast, the constants \verb|pi| and \verb|e| can be used in mathematical expressions as well as parsed function strings. It is possible to define custom constants by using the prefix \verb|constants|
+\begin{lstlisting}[language=pkgconfig]
+Constants.a = 5
+b = a # no prefix needed when referencing the constant
+Function.Ex = "a * pi" # constants can be used in parsed expressions
+\end{lstlisting}
+
+\subsubsection{Overwriting values}
+If a variable is defined multiple times, the last occurrence will override previous ones even if it appears after the variable has been referenced.
+\begin{lstlisting}[language=pkgconfig]
+a = 5
+b = a
+a = 42
+\end{lstlisting}
+will result in \verb|a = 42, b = 42|.
+
+\subsubsection{Overwriting values from CLI}
+\begin{lstlisting}[language=pkgconfig]
+./vlasovmaxwell weibel.input factor=2
+\end{lstlisting}
+The values take precedence over those in the input file. One possible application are scaling studies where one can easily adjust problem size and distribution with a single parameter.
+
+\subsubsection{Dimension dependent values}
+\begin{lstlisting}[language=pkgconfig]
+#if AMREX_SPACEDIM == 1
+Particle.ions.nPartPerCell = 1000
+#elif (AMREX_SPACEDIM == 2)
+Particle.ions.nPartPerCell = 100
+#else
+Particle.ions.nPartPerCell = 10
+#endif
+\end{lstlisting}
+The parantheses around the condition are optional. The available relation operators are \verb|<, >, <=, >=|. From AMReX version 26.03 there will also be support for the \verb|AMREX_USE_GPU| macro with operators \verb|#ifdef, #ifndef|.
+
+\subsubsection{Including files}
+\begin{lstlisting}[language=pkgconfig]
+FILE = base.input
+\end{lstlisting}
+Includes a named file at the current position of the input file. The extension can be arbitary and the file location can be given relative or absolute.
+
 \end{document}
 

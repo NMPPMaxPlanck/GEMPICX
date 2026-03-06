@@ -258,6 +258,11 @@ private:
     bool m_hideOutput{false};
 
     /**
+     * @brief Storage for named constants
+     */
+    inline static std::vector<std::pair<std::string, amrex::Real>> s_namedConstants;
+
+    /**
      * @brief Structure of a shared parameter
      *
      * @param ref Direct reference to parameter value
@@ -554,6 +559,14 @@ public:
      * instead of implementing logic based on this return value.
      */
     std::string has_been_set_by(std::string const& variableName);
+
+    /**
+     * @brief Return named constants
+     *
+     * @details This function returns a list of named constants (either default like $\pi$ or user
+     * defined from the input file) to be registered to function parsers.
+     */
+    static std::vector<std::pair<std::string, amrex::Real>> get_named_constants();
 
 private:
     /**

@@ -54,6 +54,10 @@ auto parse_functions (amrex::Array<std::string, functionNumber> const& variableS
                          , parseArray[index].setConstant("kvary", k[yDir]);
                          , parseArray[index].setConstant("kvarz", k[zDir]);)
         }
+        for (auto const& [name, value] : params.get_named_constants())
+        {
+            parseArray[index].setConstant(name, value);
+        }
         parseArray[index].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
         evalArray[index] = parseArray[index].template compile<AMREX_SPACEDIM + 1>();
         ++index;

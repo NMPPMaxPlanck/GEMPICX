@@ -2,6 +2,7 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <numbers>
 #include <type_traits>
 
 #include <AMReX_ParallelDescriptor.H>
@@ -152,6 +153,21 @@ Parameters::Parameters()
 
     if (s_numParameterInstances == 0)
     {
+        amrex::ParmParse::SetParserPrefix("Constants");
+        amrex::Real pi = std::numbers::pi_v<amrex::Real>;
+        get_or_set("Constants.pi", pi);
+        amrex::Real e = std::numbers::e_v<amrex::Real>;
+        get_or_set("Constants.e", e);
+
+        auto const& constantNames = amrex::ParmParse::getEntries("Constants");
+        s_namedConstants.reserve(constantNames.size());
+        for (auto const& fullName : constantNames)
+        {
+            amrex::Real constantValue;
+            get(fullName, constantValue);
+            s_namedConstants.emplace_back(fullName.substr(10), constantValue);
+        }
+
         m_isIOProcess = amrex::ParallelDescriptor::IOProcessor();
         if (s_printOutput && m_isIOProcess)
         {
@@ -182,6 +198,7 @@ Parameters::~Parameters()
             // (e.g. for testing)
             *variable.get() = SharedParam{};
         }
+        s_namedConstants.clear();
         // N.B. This might be unexpected to users running several different parameter sets in the
         // same program
         s_printOutput = false;
@@ -289,6 +306,11 @@ std::string Parameters::has_been_set_by (std::string const& variableName)
         std::cerr << variableName << " is not a shared parameter!\n";
         return "";
     }
+}
+
+std::vector<std::pair<std::string, amrex::Real>> Parameters::get_named_constants()
+{
+    return s_namedConstants;
 }
 
 } // namespace Gempic::Io
