@@ -34,10 +34,10 @@ using namespace Forms;
 int main_new_mhdpde ()
 {
     BL_PROFILE_VAR("mainNewMHDPDE()", pmain2);
+    Gempic::Utils::Verbosity::set_level(1);
     int myrank, nMPIranks;
     mpi_debugging(myrank, nMPIranks);
 
-    Gempic::Utils::Verbosity::set_level(1);
     // Add my new custom strategy
     std::string mIOcustomId{"HighResSubcellOutputProcessor"};
     Gempic::Io::add_output_processor<Gempic::Io::HighResSubcellOutputProcessor>(mIOcustomId);
