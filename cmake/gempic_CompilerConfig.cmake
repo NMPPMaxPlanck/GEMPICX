@@ -20,8 +20,8 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang.*")
   endif()
   # MPCDF environments only provide full c++ std support for GCC.
   # Point the clang implementation to the correct toolchain
-  if(   ($ENV{HOST} MATCHES "raven*")
-     OR ($ENV{HOST} MATCHES "viper*")
+  if(   ($ENV{HOSTNAME} MATCHES "raven*")
+     OR ($ENV{HOSTNAME} MATCHES "viper*")
      OR (DEFINED ENV{MPCDF_RUNNER}))
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} --gcc-toolchain=$ENV{GCC_HOME}")
     set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} --gcc-toolchain=$ENV{GCC_HOME}")

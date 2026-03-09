@@ -16,7 +16,10 @@ load_viper_gpu () {
     module load amd-llvm/7.1
     module load openmpi/5.0 openmpi_gpu/5.0
     module load mkl/2025.2
+    module load gcc/15
     export GEMPIC_VIPER_LOADED="true"
+    # see https://docs.mpcdf.mpg.de/doc/computing/software/compilers_languages.html#compiling-and-linking-against-a-more-recent-c-standard-library
+    export LDFLAGS="$LDFLAGS -L${GCC_HOME}/lib64 -Wl,-rpath,${GCC_HOME}/lib64"
 }
 string_matches() {
     big_string="$1"
@@ -44,10 +47,10 @@ elif string_matches ${CLUSTER} "VIPER"; then
     #          viper-gpu (as of 2025-05-20).
     #          We need different modules on the different clusters.
     #          So we test the hostname.
-    # "viper12" --- viper-gpu login node
+    # "viper[11-13]" --- viper-gpu login node
     # "vipa*"   --- viper-gpu compute node
     export GEMPIC_VIPER_LOADED="false"
-    if string_matches ${HOSTNAME} "viper12"; then
+    if string_matches ${HOSTNAME} "viper1[1-3]"; then
         load_viper_gpu
     fi
     if string_matches ${HOSTNAME} "vipa"; then
