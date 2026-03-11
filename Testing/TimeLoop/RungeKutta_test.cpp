@@ -465,14 +465,6 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell)
         eError -= eSolution;
     }
 
-    amrex::Real errorMax = 0;
-    auto dr{m_infra.cell_size_array()};
-    for (int comp = 0; comp < 3; ++comp)
-    {
-        errorMax += max_error_midpoint<hodgeDegree>(m_geom, funcE[comp], E.m_data[comp], dr, 1,
-                                                    false, comp, nSteps * dt);
-    }
-
     eSolution -= E;
     ASSERT_NEAR(0, Utils::gempic_norm(eSolution.m_data[xDir], m_infra, 0), 10 * 1e-2);
     ASSERT_NEAR(0, Utils::gempic_norm(E.m_data[yDir], m_infra, 0), 1e-10);
@@ -585,15 +577,7 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell_hodgeDK)
         eError -= eSolution;
     }
 
-    amrex::Real errorMax = 0;
-    auto dr{m_infra.cell_size_array()};
-    for (int comp = 0; comp < 3; ++comp)
-    {
-        errorMax += max_error_midpoint<hodgeDegree>(m_geom, funcE[comp], E.m_data[comp], dr, 1,
-                                                    false, comp, nSteps * dt);
-    }
     eSolution -= E;
-
     ASSERT_NEAR(0, Utils::gempic_norm(eSolution.m_data[xDir], m_infra, 0), 10 * 1e-2);
     ASSERT_NEAR(0, Utils::gempic_norm(E.m_data[yDir], m_infra, 0), 1e-10);
     ASSERT_NEAR(0, Utils::gempic_norm(E.m_data[zDir], m_infra, 0), 1e-10);

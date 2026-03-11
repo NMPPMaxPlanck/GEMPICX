@@ -1162,6 +1162,8 @@ void interpolate_field_to_multifab (
             interpolate_field_to_multifab<SrcFormType, degree, zDir>(mfDst, srcForm, scaling,
                                                                      dcomp);
             break;
+        default:
+            GEMPIC_ERROR("Unknown direction.");
     }
 }
 

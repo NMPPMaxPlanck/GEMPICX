@@ -2532,7 +2532,7 @@ inline void eval_form_direction_selector (
             eval_form_degree_selector<zDir>(field, evalShift, pointValues);
             break;
         default:
-            AMREX_ASSERT("Unrecognized direction passed to eval_form");
+            AMREX_ALWAYS_ASSERT("Unrecognized direction passed to eval_form");
             break;
     }
 }

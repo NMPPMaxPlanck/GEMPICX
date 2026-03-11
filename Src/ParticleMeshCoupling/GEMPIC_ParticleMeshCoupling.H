@@ -321,16 +321,18 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_y (
     for (int ii = 0; ii <= degX; ++ii)
     {
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
-        amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
 
-        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii, 0, 0};
 
         amrex::HostDevice::Atomic::Add(jArray[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
                                        chargeWeight * dtv * xNodeVal);
 
         fields[0] += xNodeVal * (bArray[xDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
-
-        fields[1] += xCellVal * (bArray[zDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+        if (ii < degX)
+        {
+            amrex::Real xCellVal = spline.m_cellSplineVals[xDir][ii];
+            fields[1] += xCellVal * (bArray[zDir])(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+        }
     }
 }
 #endif
@@ -374,7 +376,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
     {
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
 
-        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii, 0, 0};
 
         double sCoeff = chargeWeight * dtv * xNodeVal;
 
@@ -398,8 +400,8 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
         for (int jj = 0; jj <= degY; ++jj)
         {
             amrex::Real yNodeVal = spline.m_nodeSplineVals[yDir][jj];
-            amrex::Dim3 cellIndex = {
-                GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii, spline.m_firstIndex[yDir] + jj, 0)};
+            amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii, spline.m_firstIndex[yDir] + jj,
+                                     0};
 
             double sCoeff = chargeWeight * dtv * xNodeVal * yNodeVal;
 
@@ -1332,7 +1334,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_euler_y (
     for (int ii = 0; ii <= degX; ++ii)
     {
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
-        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii, 0, 0};
 
         amrex::HostDevice::Atomic::Add(jArray[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
                                        chargeWeight * dtv * xNodeVal);
@@ -1369,7 +1371,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_euler_z (
     for (int ii = 0; ii <= degX; ++ii)
     {
         amrex::Real xNodeVal = spline.m_nodeSplineVals[xDir][ii];
-        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii};
+        amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii, 0, 0};
 
         double sCoeff = chargeWeight * dtv * xNodeVal;
         amrex::HostDevice::Atomic::Add(jArray[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
@@ -1385,8 +1387,8 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_euler_z (
         for (int jj = 0; jj <= degY; ++jj)
         {
             amrex::Real yNodeVal = spline.m_nodeSplineVals[yDir][jj];
-            amrex::Dim3 cellIndex = {
-                GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii, spline.m_firstIndex[yDir] + jj, 0)};
+            amrex::Dim3 cellIndex = {spline.m_firstIndex[xDir] + ii, spline.m_firstIndex[yDir] + jj,
+                                     0};
 
             double sCoeff = chargeWeight * dtv * xNodeVal * yNodeVal;
             amrex::HostDevice::Atomic::Add(

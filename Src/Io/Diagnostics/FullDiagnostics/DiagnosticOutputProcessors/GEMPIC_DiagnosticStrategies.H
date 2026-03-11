@@ -49,7 +49,7 @@ protected:
 
 private:
     /** Number of components of mfDst that this outputProcessor updates. */
-    int m_ncomp;
+    [[maybe_unused]] int m_ncomp;
 };
 
 namespace Impl
@@ -115,7 +115,7 @@ private:
      */
     AnyFieldPtr const* m_dataSrc;
 
-    amrex::Real m_ishift{0}, m_jshift{0}, m_kshift{0};
+    amrex::Real AMREX_D_DECL(m_ishift{0}, m_jshift{0}, m_kshift{0});
 };
 
 } //namespace Impl

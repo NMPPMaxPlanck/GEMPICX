@@ -29,8 +29,8 @@ std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM> scalar_field_dof_category
 std::array<std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM>, 3> vector_field_dof_category ()
 {
     using Category = DiscreteField::DOFCategory;
-    return {AMREX_D_DECL(Category::CenteredLineIntegral, Category::CenteredLineIntegral,
-                         Category::CenteredLineIntegral)};
+    return {{{AMREX_D_DECL(Category::CenteredLineIntegral, Category::CenteredLineIntegral,
+                           Category::CenteredLineIntegral)}}};
 }
 } //namespace Impl
 

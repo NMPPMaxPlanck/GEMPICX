@@ -71,6 +71,10 @@ void fill_with_integrated_faces (DiscreteVectorField& field,
                     tmp[Direction::yDir] = val2;
                     break;
                 }
+                default:
+                {
+                    AMREX_ALWAYS_ASSERT_WITH_MESSAGE(false, "Unknown direction.");
+                }
             }
             return funcs(dir, AMREX_D_DECL(tmp[xDir], tmp[yDir], tmp[zDir]));
         };

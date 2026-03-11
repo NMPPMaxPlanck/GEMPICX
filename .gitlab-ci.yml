@@ -183,27 +183,53 @@ build-test_cuda_1D:
     - module load clang 
     - module load fftw-mpi
     - module list
+  artifacts:
+    paths:
+      - build.err
 
 build-test_clang_cpu_3D:
   extends:
     - .mpcdf-clang-env
   script:
-    - configure_build_test "cpu-release-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - configure_build_test "cpu-debug-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_2D:
   extends:
     - .mpcdf-clang-env
   script:
-    - configure_build_test "cpu-release-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - configure_build_test "cpu-debug-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_1D:
   extends:
     - .mpcdf-clang-env
   script:
-    - configure_build_test "cpu-release-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - configure_build_test "cpu-debug-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
   needs: ["build-test_gcc_3D"]
+
+.warning-check:
+  image: debian:stable-slim
+  tags:
+    - cpu
+  stage: test
+  allow_failure: true
+  script: '! grep -E "warning:" build.err | grep -v "third_party"'
+
+warning-check_clang_cpu_3D:
+  extends:
+    - .warning-check
+  needs: ["build-test_clang_cpu_3D"]
+
+warning-check_clang_cpu_2D:
+  extends:
+    - .warning-check
+  needs: ["build-test_clang_cpu_2D"]
+
+warning-check_clang_cpu_1D:
+  extends:
+    - .warning-check
+  needs: ["build-test_clang_cpu_1D"]
 
 build-test_mac_3D:
   extends:

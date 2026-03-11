@@ -146,13 +146,13 @@ AMREX_GPU_DEVICE GEMPIC_FORCE_INLINE constexpr int get_idx_shift_dual2primal_spa
 /**
  * @brief helper object to map the data structure to the primal or dual grid
  */
-template <typename SrcFormType, Direction dir = Direction::DirectionCount>
+template <typename SrcFormType, Direction dir = Direction::noDir>
 struct StaggeredDofMapping;
 
 template <Gempic::Forms::OneTwoFormC SrcFormType, Direction dir>
 struct StaggeredDofMapping<SrcFormType, dir>
 {
-    static_assert(dir < Direction::DirectionCount,
+    static_assert(dir < Direction::noDir,
                   "StaggeredDofMapping: OneTwoForm requires dir in {0,1,2}");
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> m_r;
     amrex::GpuArray<int, 3>
@@ -198,8 +198,8 @@ struct StaggeredDofMapping<SrcFormType, dir>
 template <Gempic::Forms::ZeroThreeFormC SrcFormType, Direction dir>
 struct StaggeredDofMapping<SrcFormType, dir>
 {
-    static_assert(dir == Direction::DirectionCount,
-                  "StaggeredDofMapping: ZeroThreeForm must use dir = DirectionCount");
+    static_assert(dir == Direction::noDir,
+                  "StaggeredDofMapping: ZeroThreeForm must use dir = noDir");
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> m_r;
     amrex::GpuArray<int, 3> m_shiftDualGridIdx;
     static constexpr std::array<int, 3> s_mDirShift{make_dir_shift<SrcFormType>()};

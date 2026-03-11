@@ -9,12 +9,12 @@ function(add_executable_input_to_tests DIR)
     foreach(INPUT IN LISTS inputs)
       if(GEMPIC_USE_CUDA OR GEMPIC_USE_HIP) # use one process for GPU pipeline runners with a single logical GPU
         add_test(NAME RunTest.Example.${MODEL}.${INPUT}
-          COMMAND mpirun -np 1 -wdir ${RUN_DIR} ${RUN_DIR}/${TGT} ${target_folder}/${INPUT} TimeLoop.nSteps=1
+          COMMAND mpirun -np 1 -wdir ${RUN_DIR} ${RUN_DIR}/${TGT} ${target_folder}/${INPUT} TimeLoop.nSteps=1 TimeLoop.nmaxSteps=1
         )
       else()
         add_test(NAME RunTest.Example.${MODEL}.${INPUT}
           COMMAND mpirun -np 2  -wdir ${RUN_DIR} ${RUN_DIR}/${TGT} ${target_folder}/${INPUT}
-          TimeLoop.nSteps=1
+          TimeLoop.nSteps=1 TimeLoop.nmaxSteps=1
           ReducedDiagnostics.saveFolder=ReducedDiagnostics/${INPUT} # ensure that parallel tests do not write to the same file
           FullDiagnostics.saveFolder=FullDiagnostics/${INPUT}
         )

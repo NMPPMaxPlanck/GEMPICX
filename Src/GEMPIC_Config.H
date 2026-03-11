@@ -231,7 +231,7 @@ enum Direction : unsigned int
     xDir = 0,
     yDir = 1,
     zDir = 2,
-    DirectionCount
+    noDir
 };
 
 // deRham enum

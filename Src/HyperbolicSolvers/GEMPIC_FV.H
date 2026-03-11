@@ -1483,10 +1483,9 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
     m_nodesGLegTable.initialize_from_vectors(mNodesGLeg);
     m_weightsGLegTable.initialize_from_vectors(mWeightsGLeg);
 
-    amrex::Real xL, xR, xM;
+    amrex::Real xL, xR;
     xL = 0.0;
     xR = 1.0;
-    xM = 0.5;
     legendre_interpolating_g_leg_nodes_mp<polyrecDegreeFv>(m_phiN1, m_phiNXi1, xR);
     legendre_interpolating_g_leg_nodes_mp<polyrecDegreeFv>(m_phiN0, m_phiNXi0, xL);
     legendre_interpolating_g_leg_nodes_mp<polyrecDegreeFv + 1>(m_phiM1, m_phiMXi1, xR);

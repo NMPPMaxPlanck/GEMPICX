@@ -216,9 +216,10 @@ TEST(ParticleIOTest, SolverCheckpoint)
     // normal distributions with mean center of box and sigma quarter of the box
     // I'm trying to ensure that not too many leave the box during the test, I don't want AMReX to
     // get upset during redistribute.
-    std::normal_distribution<amrex::Real> rdistx(p0[xDir] + 0.5 * pL[xDir], 0.25 * pL[xDir]);
-    std::normal_distribution<amrex::Real> rdisty(p0[yDir] + 0.5 * pL[yDir], 0.25 * pL[yDir]);
-    std::normal_distribution<amrex::Real> rdistz(p0[zDir] + 0.5 * pL[zDir], 0.25 * pL[zDir]);
+    AMREX_D_TERM(
+        std::normal_distribution<amrex::Real> rdistx(p0[xDir] + 0.5 * pL[xDir], 0.25 * pL[xDir]);
+        , std::normal_distribution<amrex::Real> rdisty(p0[yDir] + 0.5 * pL[yDir], 0.25 * pL[yDir]);
+        , std::normal_distribution<amrex::Real> rdistz(p0[zDir] + 0.5 * pL[zDir], 0.25 * pL[zDir]);)
     rgen.seed(37); // most random number as explained by veritasium
     for (auto pp = 0; pp < numParticles; pp++)
     {

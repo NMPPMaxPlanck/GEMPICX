@@ -95,8 +95,7 @@ template <>
 AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void pde_get_fluxes<nVarMHD, MhdPdeParameters, MhdPdeTag>(
     varArray<nVarMHD> const& Q, fluxArray<nVarMHD>& f, MhdPdeParameters const& params)
 {
-    amrex::Real rho{Q[rhoIdx]}, u, v, w, p, Bx, By, Bz, b2, vB, b28P, rhok, iPi4,
-        gamma{params.m_gamma};
+    amrex::Real rho{Q[rhoIdx]}, u, v, w, p, Bx, By, Bz, b2, b28P, rhok, gamma{params.m_gamma};
     rho = Q[rhoIdx];
     u = Q[mxIdx] / rho;
     v = Q[myIdx] / rho;
@@ -105,12 +104,10 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void pde_get_fluxes<nVarMHD, MhdPdePar
     By = Q[byIdx];
     Bz = Q[bzIdx];
     b2 = Bx * Bx + By * By + Bz * Bz;
-    vB = u * Bx + v * By + w * Bz;
 
     b28P = b2 / (8 * M_PI);
     rhok = 0.5 * rho * (u * u + v * v + w * w);
     p = (gamma - 1) * (Q[eIdx] - rhok - b28P);
-    iPi4 = 1 / (4 * M_PI);
 
     // x flux
     f[xDir][rhoIdx] = Q[mxIdx];
@@ -143,33 +140,6 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void pde_get_fluxes<nVarMHD, MhdPdePar
     f[zDir][byIdx] = 0.0;
     f[zDir][bzIdx] = 0.0;
 #endif
-}
-
-// NOT YET USED
-template <>
-AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void
-pde_get_jacobian<nVarMHD, MhdPdeParameters, MhdPdeTag>(varArray<nVarMHD> const& Q,
-                                                       AMREX_D_DECL(varArray2D<nVarMHD>& Ax,
-                                                                    varArray2D<nVarMHD>& Ay,
-                                                                    varArray2D<nVarMHD>& Az),
-                                                       MhdPdeParameters const& params)
-{
-    amrex::Real rho{Q[rhoIdx]}, u, v, w, p, Bx, By, Bz, b2, vB, b28P, rhok, iPi4,
-        gamma{params.m_gamma};
-    rho = Q[rhoIdx];
-    u = Q[mxIdx] / rho;
-    v = Q[myIdx] / rho;
-    w = Q[mzIdx] / rho;
-    Bx = Q[bxIdx];
-    By = Q[byIdx];
-    Bz = Q[bzIdx];
-    b2 = Bx * Bx + By * By + Bz * Bz;
-    vB = u * Bx + v * By + w * Bz;
-
-    b28P = b2 / (8 * M_PI);
-    rhok = 0.5 * rho * (u * u + v * v + w * w);
-    p = (gamma - 1) * (Q[eIdx] - rhok - b28P);
-    iPi4 = 1 / (4 * M_PI);
 }
 
 template <>
