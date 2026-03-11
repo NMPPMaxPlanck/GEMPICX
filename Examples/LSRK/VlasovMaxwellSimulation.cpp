@@ -158,9 +158,7 @@ int main (int argc, char* argv[])
         // initialize LSRKsolver
         RungeKutta rkSolver(infra, deRham);
 
-        amrex::Real scalingV;
         amrex::Real scalingOmega;
-        scalingV = deRham->get_s_v();
         scalingOmega = deRham->get_s_omega();
 
         // initialize fields

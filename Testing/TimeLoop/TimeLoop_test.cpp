@@ -86,15 +86,12 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
     amrex::Real chargeWeight = 2.0;
     AMREX_D_TERM(amrex::Real xPosOld = 2.5;, amrex::Real yPosOld = 3.7;, amrex::Real zPosOld = 2.2;)
     AMREX_D_TERM(amrex::Real xPosNew = 2.6;, amrex::Real yPosNew = 4.2;, amrex::Real zPosNew = 2.0;)
-
-    amrex::Real primDiffRef = 0;
-    amrex::Real yNodeVal = 0;
-    amrex::Real zNodeVal = 0;
+    AMREX_D_TERM(amrex::Real primDiffRef = 0;, amrex::Real yNodeVal = 0;, amrex::Real zNodeVal = 0;)
 
     // Adding particle to one cell
     unsigned int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -138,8 +135,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
             m_infra.geometry().CellSizeArray(), 0);
         primDiffRef = primitiveDifference;
 
-        yNodeVal = spline.m_nodeSplineVals[yDir][0];
-        zNodeVal = spline.m_nodeSplineVals[zDir][0];
+        AMREX_D_TERM(, yNodeVal = spline.m_nodeSplineVals[yDir][0];
+                     , zNodeVal = spline.m_nodeSplineVals[zDir][0];)
     }
     for (amrex::MFIter mfi(J.m_data[0]); mfi.isValid(); ++mfi)
     {
@@ -186,8 +183,8 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
             m_infra.geometry().CellSizeArray(), 1);
         primDiffRef = primitiveDifference;
 
-        xNodeVal = spline.m_nodeSplineVals[xDir][0];
-        zNodeVal = spline.m_nodeSplineVals[zDir][0];
+        AMREX_D_TERM(xNodeVal = spline.m_nodeSplineVals[xDir][0];
+                     , , zNodeVal = spline.m_nodeSplineVals[zDir][0];)
     }
     for (amrex::MFIter mfi(J.m_data[1]); mfi.isValid(); ++mfi)
     {
@@ -255,7 +252,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -350,7 +347,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
     // Adding a few particles
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -458,7 +455,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -567,7 +564,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -576,9 +573,9 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
     amrex::Real valBz = 5.0;
 
     amrex::Real dtv = 0;
-    AMREX_D_TERM(amrex::Real nodeSumX = 0; amrex::Real cellSumXhalf = 0; amrex::Real cellSumX = 0;
-                 , amrex::Real nodeSumY = 0; amrex::Real cellSumYhalf = 0; amrex::Real cellSumY = 0;
-                 , )
+    AMREX_D_TERM(amrex::Real nodeSumX = 0; amrex::Real cellSumXhalf = 0;
+                 [[maybe_unused]] amrex::Real cellSumX = 0;, amrex::Real nodeSumY = 0;
+                 amrex::Real cellSumYhalf = 0; [[maybe_unused]] amrex::Real cellSumY = 0;, )
 
     // Initialize the De Rham Complex
     auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree,
@@ -635,9 +632,9 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
         for (int i = 0; i <= s_degX; ++i)
         {
             nodeSumX += spline.m_nodeSplineVals[xDir][i];
-            cellSumX += spline.m_cellSplineVals[xDir][i];
             if (i < s_degX)
             {
+                cellSumX += spline.m_cellSplineVals[xDir][i];
                 cellSumXhalf += spline.m_cellSplineVals[xDir][i];
             }
         }
@@ -666,9 +663,9 @@ TEST_F(HamiltonianSplittingTest, IntegrateBEulerTest)
         for (int j = 0; j <= s_degY; ++j)
         {
             nodeSumY += spline.m_nodeSplineVals[yDir][j];
-            cellSumY += spline.m_cellSplineVals[yDir][j];
             if (j < s_degY)
             {
+                cellSumY += spline.m_cellSplineVals[yDir][j];
                 cellSumYhalf += spline.m_cellSplineVals[yDir][j];
             }
         }
@@ -696,7 +693,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -797,8 +794,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx, vel[yDir], 1e-12);
 
 #elif AMREX_SPACEDIM == 2
-        amrex::Real cellSumX = 0.0;
-        amrex::Real cellSumY = 0.0;
+        [[maybe_unused]] amrex::Real cellSumX = 0.0;
+        [[maybe_unused]] amrex::Real cellSumY = 0.0;
         amrex::Real cellSumXhalf = 0.0;
         amrex::Real cellSumYhalf = 0.0;
         amrex::Real nodeSumX = 0.0;
@@ -829,9 +826,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         for (int i = 0; i <= s_degX; ++i)
         {
             nodeSumX += spline.m_nodeSplineVals[xDir][i];
-            cellSumX += spline.m_cellSplineVals[xDir][i];
             if (i < s_degX)
             {
+                cellSumX += spline.m_cellSplineVals[xDir][i];
                 cellSumXhalf += spline.m_cellSplineVals[xDir][i];
             }
         }
@@ -839,9 +836,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         for (int j = 0; j <= s_degY; ++j)
         {
             nodeSumY += spline.m_nodeSplineVals[yDir][j];
-            cellSumY += spline.m_cellSplineVals[yDir][j];
             if (j < s_degY)
             {
+                cellSumY += spline.m_cellSplineVals[yDir][j];
                 cellSumYhalf += spline.m_cellSplineVals[yDir][j];
             }
         }
@@ -867,9 +864,9 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         for (int i = 0; i <= s_degX; ++i)
         {
             nodeSumX += spline.m_nodeSplineVals[xDir][i];
-            cellSumX += spline.m_cellSplineVals[xDir][i];
             if (i < s_degX)
             {
+                cellSumX += spline.m_cellSplineVals[xDir][i];
                 cellSumXhalf += spline.m_cellSplineVals[xDir][i];
             }
         }
@@ -909,7 +906,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHeParticleTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -994,7 +991,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpireluPositionTest)
     // Adding particle to one cell using these position
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -1094,7 +1091,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpireluRotationMatrixTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 
@@ -1218,7 +1215,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpireluRotationDirectionTest)
     // Adding particle to one cell
     int const numParticles{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{
-        AMREX_D_DECL(xPosOld, yPosOld, zPosOld)};
+        {{AMREX_D_DECL(xPosOld, yPosOld, zPosOld)}}};
     amrex::Array<amrex::Real, numParticles> weights{1};
     Gempic::Test::Utils::add_single_particles(m_particles[0].get(), m_infra, weights, positions);
 

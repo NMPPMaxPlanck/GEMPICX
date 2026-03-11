@@ -5,6 +5,8 @@
 #ifndef GEMPIC_SPLITTING_
 #define GEMPIC_SPLITTING_
 
+#include <utility>
+
 #include <AMReX.H>
 #include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
@@ -796,7 +798,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=, c = c, bA = bA, jA = jA, *this] AMREX_GPU_DEVICE(long pp)
+                    [=, bA = bA, jA = jA, *this] AMREX_GPU_DEVICE(long pp)
                     {
                         // Read out particle position and compute according
                         // splines
@@ -816,6 +818,7 @@ public:
                         apply_h_e_particle(vel, eA, spline, chargeOverMass, 0.5 * dt);
 
                         amrex::Real chargeWeight = charge * ptd.rdata(ii.m_iweight)[pp];
+                        std::ignore = c; // To avoid warnings in non-relativistic cases
 
                         if constexpr (splittingScheme == SplittingScheme::HamiltonianSplittingExact)
                         {

@@ -38,18 +38,13 @@ void update_rho_parallel_for (amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& p
     // Ideally we would use the ParticleSpecies->get_data_indices method,
     // but we don't have access to a ParticleSpecies object.
     auto const partData = tile.getParticleTileData();
-    amrex::Real* xx = nullptr;
-    amrex::Real* yy = nullptr;
-    amrex::Real* zz = nullptr;
-    xx = particleGrid.GetStructOfArrays().GetRealData(0).data();
-    if (AMREX_SPACEDIM > 1)
-    {
-        yy = particleGrid.GetStructOfArrays().GetRealData(1).data();
-    }
-    if (AMREX_SPACEDIM > 2)
-    {
-        zz = particleGrid.GetStructOfArrays().GetRealData(2).data();
-    }
+    auto* xx = particleGrid.GetStructOfArrays().GetRealData(0).data();
+#if AMREX_SPACEDIM > 1
+    auto* yy = particleGrid.GetStructOfArrays().GetRealData(1).data();
+#endif
+#if AMREX_SPACEDIM > 2
+    auto* zz = particleGrid.GetStructOfArrays().GetRealData(2).data();
+#endif
     auto const weight{particleGrid.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + vDim).data()};
     amrex::Array4<amrex::Real> const& rhoarr{rho[particleGrid].array()};
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};

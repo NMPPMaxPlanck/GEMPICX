@@ -302,8 +302,7 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -496,8 +495,7 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -707,8 +705,7 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1014,8 +1011,7 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1127,8 +1123,7 @@ public:
             static_cast<HYPRE_Real>(GEMPIC_D_MULT(dx[xDir], dx[yDir], dxi[zDir]))};
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
         // the matrix.
@@ -1181,8 +1176,7 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1191,9 +1185,9 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
-                                                 amrex::Array4<HYPRE_Int const> const* gid,
-                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                           amrex::Array4<HYPRE_Int const> const* gid,
+                                           HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
             //
             if (i == 0 && j == 0 && k == 0)
@@ -1277,8 +1271,7 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1417,8 +1410,7 @@ public:
 
         // Is variable n at (i,j,k) in Box boxno (local index) valid?
         // (i.e., not exactly on Dirichlet boundary)
-        auto marker = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k,
-                                                 int /*n*/) -> bool
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
         { return nddom.contains(i, j, k); };
 
         // For variable n at (i,j,k) in Box boxno (local index), fill its row in
@@ -1487,10 +1479,8 @@ public:
         {
             int in = (ndir == xDir);
             int jn = (ndir == yDir);
+#if AMREX_SPACEDIM == 3
             int kn = (ndir == zDir);
-
-#if AMREX_SPACEDIM == 2
-            kn = 0;
 #endif
 
             GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ1f[xDir][ndir]; ++ii),
@@ -1746,7 +1736,7 @@ public:
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
                 amrex::ParallelFor(np,
-                                   [=, this] AMREX_GPU_DEVICE(long pp)
+                                   [=] AMREX_GPU_DEVICE(long pp)
                                    {
                                        amrex::GpuArray<amrex::Real, vdim> vel{
                                            ptd.rdata(ii.m_ivelx)[pp], ptd.rdata(ii.m_ively)[pp],

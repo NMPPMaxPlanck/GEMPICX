@@ -60,7 +60,11 @@ void do_filter (amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf, FourierFil
 
         f.m_r2c->forwardThenBackward(
             f.m_tmpsrc, f.m_tmpdst,
+#if AMREX_SPACEDIM == 1
+            [nMin = f.m_nMin, nMax = f.m_nMax, numCells = f.m_numCells] AMREX_GPU_DEVICE(
+#else
             [n = f.m_n, nMin = f.m_nMin, nMax = f.m_nMax, numCells = f.m_numCells] AMREX_GPU_DEVICE(
+#endif
                 int nx, int j, int k, auto& sp)
             {
                 // do actual filtering

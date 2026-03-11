@@ -23,7 +23,7 @@ configure_build_test () {
   cmake -S . -B $build_dir --preset $preset
   end_details configure
   start_details build "CMake Build Step"
-  cmake --build $build_dir -j $numprocs
+  bash -c 'cmake --build "$1" -j "$2" > >(tee build.out) 2> >(tee build.err >&2)' _ "$build_dir" "$numprocs"
   end_details build
   start_details test "Test Step"
   cd $build_dir
