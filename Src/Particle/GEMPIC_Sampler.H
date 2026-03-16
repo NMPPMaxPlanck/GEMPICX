@@ -66,11 +66,9 @@ inline void calculate_sobol_values (std::array<amrex::Real, numValues>& randomAr
 template <std::size_t vDim>
 class VelocityInitializer;
 
-template <template <std::size_t> class VInit, std::size_t vDim, std::size_t numVal>
-AMREX_GPU_HOST_DEVICE inline int get_gauss_id (VInit<vDim> const& vIniter,
-                                               std::array<amrex::Real, numVal> const& randomArray)
+template <template <std::size_t> class VInit, std::size_t vDim>
+AMREX_GPU_HOST_DEVICE inline int get_gauss_id (VInit<vDim> const& vIniter, amrex::Real gaussChoice)
 {
-    amrex::Real gaussChoice = randomArray[AMREX_SPACEDIM + 2 * vDim]; // uniform in [0, 1]
     int gaussIdx = 0;
 
     for (int gg = 1; gg < vIniter.m_numGauss; gg++)
@@ -124,7 +122,7 @@ AMREX_GPU_HOST_DEVICE inline void get_velocities (
     std::array<amrex::Real, numValues> const& randomArray,
     std::array<amrex::Real, AMREX_SPACEDIM> const& location)
 {
-    int gaussIdx{get_gauss_id(vIniter, randomArray)};
+    int gaussIdx{get_gauss_id(vIniter, randomArray[AMREX_SPACEDIM + 2 * vDim])};
 
     auto epsilon{std::numeric_limits<amrex::Real>::epsilon()};
     for (int cc = 0; cc < vDim; cc++)
@@ -515,7 +513,7 @@ private:
                        long long int& sobolSeed);
     void direct_maxwellian_kernel();
     bool rejection_maxwellian_kernel();
-    bool rejection_juettner_kernel();
+    bool rejection_juettner_kernel(int const gaussId);
 
     amrex::Geometry m_geom;
     int m_species;
@@ -537,6 +535,7 @@ private:
     int m_nMaxRejections{100};
     int m_nTargetHigherThanProposal{0};
     int m_nSamples{0};
+    std::vector<Direction> m_boostDir{};
     amrex::Real m_c{1.0};
     amrex::Real m_rejectionScaling{1};
     amrex::Real m_minRejectionScaling{0};
@@ -574,8 +573,8 @@ ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::ParticleSamp
             "Cannot apply rejection sampling with more than one Gaussian as proposal");
 
         // read in additional information for rejection samplers
-        params.get("nMaxRejections", m_nMaxRejections);
-        params.get("rejectionScaling", m_rejectionScaling);
+        params.get_or_set("nMaxRejections", m_nMaxRejections);
+        params.get_or_set("rejectionScaling", m_rejectionScaling);
         std::string parseString;
         params.get("rejectionDistribution", parseString);
         m_rejectionParse = amrex::Parser(parseString);
@@ -590,17 +589,57 @@ ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::ParticleSamp
         }
         m_rejectionEval = m_rejectionParse.template compile<AMREX_SPACEDIM + 3>();
     }
-
     else if constexpr (type == SamplerType::rejectionJuettner)
     {
-        AMREX_ALWAYS_ASSERT_WITH_MESSAGE(
-            m_vInit.m_numGauss == 1,
-            "Cannot apply Juettner rejection sampling with more than one Gaussian");
-
+        static_assert(vDim == 3, "Maxwell-Juettner sampler only available for vDim=3.");
         // read in additional information for relativistic samplers
-        params.get("nMaxRejections", m_nMaxRejections);
-        // read in speed of light from input file
-        params.get("c", m_c);
+        params.get_or_set("nMaxRejections", m_nMaxRejections);
+        // read in speed of light in terms of reference velocity
+        params.get_or_set("sV", m_c);
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+            m_c == 1, "Maxwell-Juettner sampler not implemented for c = sV != 1.");
+
+        // for each distribution only one direction can have a non-zero shift
+        Direction boostDir;
+        std::array<amrex::Real, AMREX_SPACEDIM> testPosition{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        for (int i = 0; i < m_vInit.m_numGauss; i++)
+        {
+            // isotropic thermal velocity required, x direction value will be used in the sampler
+            amrex::Real vThermalX =
+                get_function_or_constant(m_vInit.m_vDevSchemePtr[i], m_vInit.m_vDevPtr[i][xDir],
+                                         m_vInit.m_funcvDevPtr[i][xDir], testPosition);
+            boostDir = noDir;
+            for (auto dir : {xDir, yDir, zDir})
+            {
+                amrex::Real beta = get_function_or_constant(
+                    m_vInit.m_vMeanSchemePtr[i], m_vInit.m_vMeanPtr[i][dir],
+                    m_vInit.m_funcvMeanPtr[i][dir], testPosition);
+                amrex::Real vThermal =
+                    get_function_or_constant(m_vInit.m_vDevSchemePtr[i], m_vInit.m_vDevPtr[i][dir],
+                                             m_vInit.m_funcvDevPtr[i][dir], testPosition);
+
+                GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+                    vThermal == vThermalX,
+                    "Relativistic Maxwell-Juettner distribution needs isotropic vThermal.");
+
+                if (beta > 0)
+                {
+                    if (boostDir != noDir)
+                    {
+                        GEMPIC_ERROR(
+                            "Relativistic Maxwell-Juettner distributions only allow non-zero vMean "
+                            "in a single direction.");
+                    }
+                    boostDir = dir;
+                }
+            }
+            if (boostDir == noDir)
+            {
+                // default to xDir if vMean == 0
+                boostDir = xDir;
+            }
+            m_boostDir.push_back(boostDir);
+        }
     }
 }
 
@@ -739,14 +778,19 @@ void ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::sample_
         }
         else if constexpr (type == SamplerType::rejectionJuettner)
         {
+            int gaussId = get_gauss_id(m_vInit, unif(gen));
             bool accepted = false;
             for (int i = 0; i < m_nMaxRejections; i++)
             {
-                static_assert(scheme == RandomScheme::pseudo,
-                              "Only the pseudorandom scheme is "
-                              "implemented for Juettner rejection sampling.");
-                calculate_random_values(m_randArray, unif, gen);
-                accepted = rejection_juettner_kernel();
+                if constexpr (scheme == RandomScheme::pseudo)
+                {
+                    calculate_random_values(m_randArray, unif, gen);
+                }
+                else if constexpr (scheme == RandomScheme::sobol)
+                {
+                    calculate_sobol_values(m_randArray, sobolSeed);
+                }
+                accepted = rejection_juettner_kernel(gaussId);
                 if (accepted)
                 {
                     m_nSamples += i + 1;
@@ -835,7 +879,8 @@ template <RandomScheme scheme,
           std::size_t extraRandomVar,
           std::size_t vDim,
           std::size_t nData>
-bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::rejection_juettner_kernel ()
+bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::rejection_juettner_kernel (
+    int const gaussId)
 {
     // position and density same as for the direct kernel
     for (int i = 0; i < AMREX_SPACEDIM; i++)
@@ -848,45 +893,38 @@ bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::rejecti
 
     Io::Parameters params("Particle");
 
-    amrex::Real eta{0.0};
-    amrex::Real u{2.0};
-    amrex::Real checksum{0.0};
-    amrex::Real gamma{0.0};
-    std::array<amrex::Real, vDim> vThermal, vMean;
+    int boostDir = m_boostDir[gaussId];
+    amrex::Real vThermal =
+        get_function_or_constant(m_vInit.m_vDevSchemePtr[gaussId], m_vInit.m_vDevPtr[gaussId][xDir],
+                                 m_vInit.m_funcvDevPtr[gaussId][xDir], m_position);
+    amrex::Real beta = get_function_or_constant(
+        m_vInit.m_vMeanSchemePtr[gaussId], m_vInit.m_vMeanPtr[gaussId][boostDir],
+        m_vInit.m_funcvMeanPtr[gaussId][boostDir], m_position);
 
-    // implementation for now: just one Maxwell-Juettner sampling
-    for (int cc = 0; cc < vDim; cc++)
+    amrex::Real u = -vThermal * vThermal *
+                    log(m_randArray[AMREX_SPACEDIM] * m_randArray[AMREX_SPACEDIM + 1] *
+                        m_randArray[AMREX_SPACEDIM + 2]);
+    amrex::Real eta = -vThermal * vThermal *
+                      log(m_randArray[AMREX_SPACEDIM] * m_randArray[AMREX_SPACEDIM + 1] *
+                          m_randArray[AMREX_SPACEDIM + 2] * m_randArray[AMREX_SPACEDIM + 3]);
+
+    if (eta * eta - u * u > 1)
     {
-        vMean[cc] = get_function_or_constant(m_vInit.m_vMeanSchemePtr[0], m_vInit.m_vMeanPtr[0][cc],
-                                             m_vInit.m_funcvMeanPtr[0][cc], m_position);
-        vThermal[cc] =
-            get_function_or_constant(m_vInit.m_vDevSchemePtr[0], m_vInit.m_vDevPtr[0][cc],
-                                     m_vInit.m_funcvDevPtr[0][cc], m_position);
-    }
+        m_velocity[xDir] = u * (2 * m_randArray[AMREX_SPACEDIM + 4] - 1);
+        m_velocity[yDir] =
+            2 * u * sqrt(m_randArray[AMREX_SPACEDIM + 4] * (1 - m_randArray[AMREX_SPACEDIM + 4]));
+        m_velocity[zDir] = m_velocity[yDir] * sin(2 * M_PI * m_randArray[AMREX_SPACEDIM + 5]);
+        m_velocity[yDir] = m_velocity[yDir] * cos(2 * M_PI * m_randArray[AMREX_SPACEDIM + 5]);
 
-    // always use the x-value for vThermal
-    u = -vThermal[xDir] * vThermal[xDir] * log(m_randArray[3] * m_randArray[4] * m_randArray[5]);
-    eta = -vThermal[xDir] * vThermal[xDir] *
-          log(m_randArray[3] * m_randArray[4] * m_randArray[5] * m_randArray[6]);
+        // Lorentz transformation in boostDir
+        amrex::Real gamma = sqrt(1 + u * u / (m_c * m_c));
 
-    checksum = eta * eta - u * u;
-
-    if (checksum > 1)
-    {
-        m_velocity[xDir] = u * (2 * m_randArray[7] - 1);
-        m_velocity[yDir] = 2 * u * sqrt(m_randArray[7] * (1 - m_randArray[7]));
-        m_velocity[zDir] = m_velocity[yDir] * sin(2 * M_PI * m_randArray[8]);
-        m_velocity[yDir] = m_velocity[yDir] * cos(2 * M_PI * m_randArray[8]);
-
-        gamma = sqrt(1 + u * u / (m_c * m_c));
-
-        if (-vMean[xDir] * m_velocity[xDir] / gamma > m_randArray[9])
+        if (-beta * m_velocity[boostDir] / gamma > m_randArray[AMREX_SPACEDIM + 6])
         {
-            m_velocity[xDir] = -m_velocity[xDir];
+            m_velocity[boostDir] *= -1;
         }
 
-        m_velocity[xDir] =
-            (m_velocity[xDir] + vMean[0] * gamma) / sqrt(1 - vMean[0] * vMean[0] / (m_c * m_c));
+        m_velocity[boostDir] = (m_velocity[boostDir] + beta * gamma) / sqrt(1 - beta * beta);
 
         return true;
     }
@@ -1107,10 +1145,17 @@ void sample_species (std::shared_ptr<ParticleSpecies<vDim, nData>>& particles,
             sampler(particles, geom, species, rSeed);
         sampler.sample(particles);
     }
-    else if (samplerName == "RejectionJuettner")
+    else if (samplerName == "Juettner")
     {
-        ParticleSampler<RandomScheme::pseudo, SamplerRegion::global, SamplerType::rejectionJuettner,
-                        0, vDim, nData>
+        ParticleSampler<RandomScheme::pseudo, SamplerRegion::box, SamplerType::rejectionJuettner, 0,
+                        vDim, nData>
+            sampler(particles, geom, species, rSeed);
+        sampler.sample(particles);
+    }
+    else if (samplerName == "JuettnerSobol")
+    {
+        ParticleSampler<RandomScheme::sobol, SamplerRegion::box, SamplerType::rejectionJuettner, 0,
+                        vDim, nData>
             sampler(particles, geom, species, rSeed);
         sampler.sample(particles);
     }

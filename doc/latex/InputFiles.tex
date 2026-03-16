@@ -317,6 +317,14 @@ Particle.{speciesName}.rejectionScaling = 2.0 # Real. Default 1.0.
 Particle.{speciesName}.nMaxRejections = 100 # Integer. Default 100.
 \end{lstlisting}
 
+For relativistic sampling, one has to be careful with the exact meaning of \verb|vMean| and \verb|vThermal|. See \ref{sec:JuettnerSampler} for details.
+\begin{lstlisting}[language=pkgconfig]
+Particle.{speciesName}.sampler = Juettner
+Particle.{speciesName}.G0.vMean = 0 0.5 0 # Beta for Lorentz transformation. Non-zero in at most one direction.
+Particle.{speciesName}.G0.vThermal = 1 1 1 # sqrt(T / mc^2). Needs to be isotropic.
+Particle.{speciesName}.nMaxRejections = 100 # Integer. Default 100.
+\end{lstlisting}
+
 In case of a one-species simulation, it is sometimes necessary to add a background to rho to guarantee a neutral plasma. This can be achieved via the input parameter 
 
 \begin{lstlisting}

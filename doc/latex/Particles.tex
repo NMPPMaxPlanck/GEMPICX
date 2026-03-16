@@ -121,7 +121,7 @@ but functions can be more involved like a spatial temperature profile at the gyr
     rejectionDistribution = "1 / sqrt(2*3.14159265*(1+0.5*cos(kvarx*(x-vy))))^3 * exp(-(vx^2 + vy^2 + vz^2)/(2*(1+0.5* cos(kvarx*(x-vy)))))"
 \end{lstlisting}
 
-To ensure that $target <= proposal$, the proposal is scaled by \verb|Particle.species.rejectionScaling|. To avoid infinite loops, the sampling aborts if \verb|Particle.species.nMaxRejections| samples get rejected in a row. After sampling, some diagnostic information is returned. In addition to the acceptance rate it contains the minimal scaling factor $s$ such that $target <= s \cdot proposal$:
+To ensure that \textit{target <= proposal}, the proposal is scaled by \verb|Particle.species.rejectionScaling|. To avoid infinite loops, the sampling aborts if \verb|Particle.species.nMaxRejections| samples get rejected in a row. After sampling, some diagnostic information is returned. In addition to the acceptance rate it contains the minimal scaling factor \textit{s} such that \textit{target <= s * proposal}:
 
 \begin{lstlisting}
     Rejection sampling: Acceptance rate                = 0.03997958542
@@ -142,5 +142,31 @@ When using parallelization, each process samples globally followed by a particle
 
 \subsection{Sampler: RejectionSobol}
 Same as \verb|Rejection| but using quasi-random values from the Sobol sequence.
+
+\subsection{Sampler: Juettner}\label{sec:JuettnerSampler}
+In the relativistic case, we sample the spatial components of the 4-velocity $\mathbf{u} = \gamma \mathbf{v}$ that follow the Maxwell-Jüttner distribution
+$$ f(\mathbf{u}) = \frac{1}{4\pi m^2 c T K_2(mc^2/T)} \exp\left(- \frac{\gamma m c^2}{T}\right)$$
+where $\gamma = 1 / \sqrt{1 - \mathbf{v}^2 / c^2}$ is the Lorentz factor, and $K_2(x)$ is the modified Bessel function of the second kind.
+
+The sampling follows the approach from \cite{zenitani2015} (Sobol method + flipping method):
+\begin{enumerate}
+    \item Sampling the magnitude $|\mathbf{u}|$ by rejection from a gamma proposal distribution
+    \item Random scattering on the corresponding surface in momentum space
+    \item Applying a Lorentz transformation to shift the distribution
+\end{enumerate}
+
+The variables used in the input file are \verb|vThermal|$= \sqrt{T / mc^2}$ and \verb|vMean|$= \beta = v/c$.
+
+\begin{note}
+    There are a number of limitations due to the sampling strategy and implementation:
+    \begin{itemize}
+        \item The temperatures / thermal velocities have to be isotropic
+        \item The distribution can only be shifted in a single coordinate direction
+        \item The rejecion sampling is very inefficient for weakly relativistic distributions close to a Maxwellian
+    \end{itemize}
+\end{note}
+
+\subsection{Sampler: JuettnerSobol}
+Same as \verb|Juettner| but using quasi-random values from the Sobol sequence.
 
 \end{document}
