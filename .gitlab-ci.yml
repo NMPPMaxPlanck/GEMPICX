@@ -209,6 +209,8 @@ build-test_clang_cpu_1D:
   needs: ["build-test_gcc_3D"]
 
 .warning-check:
+  extends:
+    - .unit-test-setup
   image: debian:stable-slim
   tags:
     - cpu
