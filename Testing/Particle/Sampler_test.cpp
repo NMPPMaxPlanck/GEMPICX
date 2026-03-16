@@ -426,4 +426,72 @@ TEST_F(SamplerTestMultiLevel, CompareMoments)
     EXPECT_NEAR(compute_v_moment_2(particles.get()), mom2, tol)
         << "2nd order velocity moment false!";
 }
+
+class RelativisticSamplerTest : public testing::Test
+{
+protected:
+    Io::Parameters m_parameters{};
+    ComputationalDomain m_infra;
+    amrex::Real m_tol{1e-1};
+
+    RelativisticSamplerTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
+    {
+        std::string const speciesName = "species0";
+        m_parameters.set("Particle.speciesNames", speciesName);
+        amrex::Real c = 1;
+        m_parameters.set("c", c);
+        std::string const particleInputScope{"Particle." + speciesName};
+        Gempic::Io::Parameters partparams{particleInputScope};
+        std::string sampler = "Juettner";
+        partparams.set("sampler", sampler);
+        int const nPartPerCell = 1000;
+        partparams.set("nPartPerCell", nPartPerCell);
+        amrex::Real const charge = 1.0;
+        partparams.set("charge", charge);
+        amrex::Real const mass = 1.0;
+        partparams.set("mass", mass);
+        std::string const density = "1";
+        partparams.set("density", density);
+        int const numGaussians = 1;
+        partparams.set("numGaussians", numGaussians);
+        amrex::Vector<amrex::Real> const vMean = {0.5, 0.0, 0.0};
+        partparams.set("G0.vMean", vMean);
+        amrex::Vector<amrex::Real> const vThermal = {1.1, 1.1, 1.1};
+        partparams.set("G0.vThermal", vThermal);
+        amrex::Real const vWeight = 1;
+        partparams.set("G0.vWeight", vWeight);
+    }
+};
+
+TEST_F(RelativisticSamplerTest, CompareMoments)
+{
+    // Initialize particles
+    constexpr int vDim{3};
+    std::vector<std::shared_ptr<ParticleSpecies<vDim>>> particles;
+    init_particles(particles, this->m_infra);
+
+    std::array<amrex::Real, vDim> mom1;
+    amrex::Real mom2 = 0;
+
+    double volumeFactor = this->m_infra.geometry().ProbSize();
+    amrex::Real tol{this->m_tol * volumeFactor};
+
+    // In case of rejection sampling, use second/last particle species (real) to compute actual
+    // moments of sampled particles
+    EXPECT_NEAR(compute_v_moment_0(particles.back().get()), volumeFactor, tol)
+        << "0th order velocity moment false!";
+
+    // moments are obtained from a numerical integration of the analytical distribution function
+    // in the python file RelativisticDistribution.py
+    amrex::GpuArray<amrex::Real, vDim> vMoments1;
+    compute_v_moments_1(particles.back().get(), vMoments1);
+    EXPECT_NEAR(vMoments1[xDir], volumeFactor * 2.9816739396049625, tol)
+        << "1st order velocity moment x-dir false!";
+    EXPECT_NEAR(vMoments1[yDir], 0, tol) << "1st order velocity moment y-dir false!";
+    EXPECT_NEAR(vMoments1[zDir], 0, tol) << "1st order velocity moment z-dir false!";
+
+    EXPECT_NEAR(compute_v_moment_2(particles.back().get()),
+                volumeFactor * (2 * 6.248937013549826 + 19.080144373982794), tol)
+        << "2nd order velocity moment false!";
+}
 } // namespace

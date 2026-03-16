@@ -108,12 +108,12 @@ int main (int argc, char* argv[])
         auto divD = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(
             fieldRegistry, "divD", deRham);
 
+        // Speed of light in terms of the reference velocity
+        amrex::Real c{1.0};
+        parameters.get_or_set("sV", c);
+
         std::vector<std::shared_ptr<ParticleSpecies<vdim>>> particles;
         init_particles(particles, infra);
-
-        amrex::Real c{1.0};
-        // if nothing else is defined in the input file, the speed of light is set to one
-        parameters.get_or_set("c", c);
 
         auto poisson{make_poisson_solver(deRham, infra)};
         Gempic::TimeLoop::OperatorHamilton<vdim, degx, degy, degz> operatorHamilton;

@@ -64,7 +64,7 @@
 
 \maketitle
 
-\section{Code Units: Normalization in GEMPIC}
+\section{Code Units: Normalization}
 
 \subsection{The Vlasov-Maxwell Model}
 
@@ -129,14 +129,12 @@ Plugging these expressions into the Vlasov-Maxwell system, we get the dimensionl
 	\partial_{\tht} \fht_s + \frac{\vr\tr}{\xr}\vht \cdot \nablaxht \fht_s + \frac{\qr\Br\tr}{\mr} \frac{\qht_s}{\mht_s} \left( \frac{\Er}{\vr\Br}\Eht + \vht \times \Bht \right) \cdot \nablavht \fht_s = 0
 \end{equation}
 and Maxwell's equations
-\begin{subequations}
-	\begin{align}
-		\frac{\partial \Bht}{\partial \tht} + \frac{\tr \Er}{\Br\xr}\nablaht \times \Eht  & = 0 ,                                         \\
-		-  \frac{\partial \Eht}{\partial t} + \frac{\tr\Br}{\xr\Er} c^2\nabla \times \Bht & = \frac{\qr\nr\vr\tr}{\varepsilon_0\Er}\Jht , \\
-		\nablaht \cdot \Eht                                                               & = \frac{\qr\nr\xr}{\varepsilon_0\Er}\rhoht,   \\
-		\nablaht \cdot \Bht                                                               & = 0.
-	\end{align}
-\end{subequations}
+\begin{align}
+	\frac{\partial \Bht}{\partial \tht} + \frac{\tr \Er}{\Br\xr}\nablaht \times \Eht  & = 0 ,                                         \\
+	-  \frac{\partial \Eht}{\partial t} + \frac{\tr\Br}{\xr\Er} c^2\nabla \times \Bht & = \frac{\qr\nr\vr\tr}{\varepsilon_0\Er}\Jht , \\
+	\nablaht \cdot \Eht                                                               & = \frac{\qr\nr\xr}{\varepsilon_0\Er}\rhoht,   \\
+	\nablaht \cdot \Bht                                                               & = 0.
+\end{align}
 
 Using the relation between $\fr$ and $\nr$, the dimensionless Maxwellian is
 \begin{equation}\label{eq:maxwellianD}
@@ -162,23 +160,19 @@ Finally, the dimensionless Vlasov-Maxwell system reads
 \begin{equation}\label{eq:Vlasovt}
 	\partial_{\tht} \fht_s + \vht \cdot \nablaxht \fht_s +  \frac{\qht_s}{\mht_s} \left( \Eht + \vht \times \Bht \right) \cdot \nablavht \fht_s = 0
 \end{equation}
-\begin{subequations}
-	\begin{align}
-		\frac{\partial \Bht}{\partial \tht} + \nablaht \times \Eht      & = 0 ,               \\
-		-  \frac{\partial \Eht}{\partial t} + s_v^2\nablaht \times \Bht & = s_\omega^2\Jht ,  \\
-		\nablaht \cdot \Eht                                             & = s_\omega^2\rhoht, \\
-		\nablaht \cdot \Bht                                             & = 0.
-	\end{align}
-\end{subequations}
+\begin{align}
+	\frac{\partial \Bht}{\partial \tht} + \nablaht \times \Eht      & = 0 ,               \\
+	-  \frac{\partial \Eht}{\partial t} + s_v^2\nablaht \times \Bht & = s_\omega^2\Jht ,  \\
+	\nablaht \cdot \Eht                                             & = s_\omega^2\rhoht, \\
+	\nablaht \cdot \Bht                                             & = 0.
+\end{align}
 Dividing Amp\`ere's equation by $s_\omega^2$ and defining $\Dht := \frac{1}{s_\omega^2} \Eht$, $\Hht := \frac{s_v^2}{s_\omega^2} \Bht$ allows us to write the equations in a four-field formulation suitable for our dual grid discretization. The scaling parameters are hidden in constitutive relations which become discrete Hodge operators in the numerical scheme. With these definitions, Maxwell's equations write
-\begin{subequations}
-	\begin{align}
-		\frac{\partial \Bht}{\partial \tht} + \nablaht \times \Eht & = 0 ,     \\
-		-  \frac{\partial \Dht}{\partial t} + \nablaht \times \Hht & = \Jht ,  \\
-		\nablaht \cdot \Dht                                        & = \rhoht, \\
-		\nablaht \cdot \Bht                                        & = 0.
-	\end{align}
-\end{subequations}
+\begin{align}
+	\frac{\partial \Bht}{\partial \tht} + \nablaht \times \Eht & = 0 ,     \\
+	-  \frac{\partial \Dht}{\partial t} + \nablaht \times \Hht & = \Jht ,  \\
+	\nablaht \cdot \Dht                                        & = \rhoht, \\
+	\nablaht \cdot \Bht                                        & = 0.
+\end{align}
 The source terms of the Maxwell's equation are given by the velocity moments of the distribution function: the charge density
 \begin{align*}
 	\rhoht= \sum_s Z_s \int \fht_s \du\vht
