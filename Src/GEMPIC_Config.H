@@ -5,10 +5,11 @@
 #ifndef GEMPIC_CONFIG_H_
 #define GEMPIC_CONFIG_H_
 #include <math.h>
+#include <numbers>
 #include <variant>
 
-#ifndef M_PI /// M_PI is gnu @todo: switch to c++20 and std::numbers::pi_v<amrex::Real>
-#define M_PI 3.14159265358979323846
+#ifndef M_PI /// M_PI is gnu
+#define M_PI std::numbers::pi_v<amrex::Real>
 #endif
 
 #if defined(_DEBUG) || defined(DEBUG)
@@ -269,5 +270,11 @@ template <typename T, typename... Ts>
 struct is_variant_member<T, std::variant<Ts...>> : std::disjunction<std::is_same<T, Ts>...>
 {
 };
+
+template <std::size_t... i, typename Func>
+constexpr void ct_for_index_sequence (std::index_sequence<i...>, Func&& f)
+{
+    ((f(std::integral_constant<std::size_t, i>{})), ...);
+}
 
 #endif

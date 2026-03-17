@@ -156,16 +156,11 @@ template <int points>
 class GaussQuadratureUnit
 {
 public:
-    std::array<amrex::Real, points> m_nodes;
-    std::array<amrex::Real, points> m_weights;
-    int get_n_nodes () { return m_points; };
-    std::array<amrex::Real, points> get_quadrature_nodes () { return m_nodes; };
-    std::array<amrex::Real, points> get_quadrature_weights () { return m_weights; };
-
-    GaussQuadratureUnit() { gauleg<points>(m_nodes, m_weights, 0.0, 1.0); };
-
-private:
-    int m_points{points};
+    static constexpr int s_points{points};
+    static constexpr auto s_gl = gauss_legendre<points, 0.0, 1.0>();
+    static constexpr std::array<amrex::Real, points> const& s_nodes = s_gl.first;
+    static constexpr std::array<amrex::Real, points> const& s_weights = s_gl.second;
+    static constexpr int get_n_nodes () { return s_points; };
 };
 
 } // namespace Gempic

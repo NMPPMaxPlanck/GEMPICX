@@ -149,12 +149,12 @@ ComputationalDomain get_compdom ()
     return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
 }
 
-template <typename Form>
+template <typename FormType>
 class FDDeRhamComplexEvalFormTest : public testing::Test
 {
 protected:
-    static constexpr Grid s_grid{Form::s_grid};
-    static constexpr Space s_space{Form::s_space};
+    static constexpr Grid s_grid{FormType::s_grid};
+    static constexpr Space s_space{FormType::s_space};
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     // Spline degreesx
@@ -361,8 +361,8 @@ TYPED_TEST(FDDeRhamComplexEvalFormTest, EvalFormMultivaluedZeroThreeForm)
     ASSERT_TRUE(loopRun);
 }
 
-template <typename Form>
-class FDDeRhamComplexEvalFormTest2 : public FDDeRhamComplexEvalFormTest<Form>
+template <typename FormType>
+class FDDeRhamComplexEvalFormTest2 : public FDDeRhamComplexEvalFormTest<FormType>
 {
 };
 

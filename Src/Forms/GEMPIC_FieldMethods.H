@@ -1187,6 +1187,7 @@ auto inline compute_v0_mass_matrix_1d_stencil_gdec()
     static constexpr int nDofs{intDegree + 1};
     static constexpr int nQuadraturePoints{nDofs};
     static constexpr int leftStencilIdx{-intDegree};
+    using GL = Gempic::GaussQuadratureUnit<nQuadraturePoints>;
     // polynomial indexes goes from {-n,...,0,...,n+1}, in total 2n+2 values.  n = (intDegree - 1) /
     // 2. cell indexes goes from {-n - 1,...,0,...,n}, in total 2n+2 values.
     static constexpr int nShift{(intDegree - 1) / 2};
@@ -1205,7 +1206,6 @@ auto inline compute_v0_mass_matrix_1d_stencil_gdec()
 
     std::array<amrex::Real, massStencilLength> stencil1d;
     // quadrature on unit domain [0,1]
-    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
 
     // a: stencil index
     for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
@@ -1228,9 +1228,9 @@ auto inline compute_v0_mass_matrix_1d_stencil_gdec()
             amrex::Real val{0.0};
             for (int g = 0; g < nQuadraturePoints; ++g)
             {
-                amrex::Real lambda0 = eval_lagrange<intDegree + 1>(polyIndex0, gl.m_nodes[g]);
-                amrex::Real lambdaJ = eval_lagrange<intDegree + 1>(polyIndexJ, gl.m_nodes[g]);
-                val += gl.m_weights[g] * lambda0 * lambdaJ;
+                amrex::Real lambda0 = eval_lagrange<intDegree + 1>(polyIndex0, GL::s_nodes[g]);
+                amrex::Real lambdaJ = eval_lagrange<intDegree + 1>(polyIndexJ, GL::s_nodes[g]);
+                val += GL::s_weights[g] * lambda0 * lambdaJ;
             }
             stencil1d[a] += val;
         }
@@ -1253,6 +1253,7 @@ compute_v0_weighted_mass_matrix_1d_stencil_gdec ()
     // Select stencil according to degree
     static constexpr int massStencilLength{2 * intDegree + 1};
     static constexpr int nQuadraturePoints{intDegree + 1};
+    using GL = Gempic::GaussQuadratureUnit<nQuadraturePoints>;
     static constexpr int leftStencilIdx{-intDegree};
     static constexpr int nShift{
         (intDegree - 1) /
@@ -1273,8 +1274,6 @@ compute_v0_weighted_mass_matrix_1d_stencil_gdec ()
     std::array<std::array<std::array<amrex::Real, nQuadraturePoints>, intDegree + 1>,
                massStencilLength>
         stencil1d;
-    // reference unit domain [0,1]
-    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
     // a: stencil index
     for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
     {
@@ -1298,9 +1297,9 @@ compute_v0_weighted_mass_matrix_1d_stencil_gdec ()
                                       // polyIndex for eval_form
             for (int g = 0; g < nQuadraturePoints; ++g)
             {
-                amrex::Real lambda0 = eval_lagrange<intDegree + 1>(polyIndex0, gl.m_nodes[g]);
-                amrex::Real lambdaJ = eval_lagrange<intDegree + 1>(polyIndexJ, gl.m_nodes[g]);
-                stencil1d[a][cellIdx][g] = gl.m_weights[g] * lambda0 * lambdaJ;
+                amrex::Real lambda0 = eval_lagrange<intDegree + 1>(polyIndex0, GL::s_nodes[g]);
+                amrex::Real lambdaJ = eval_lagrange<intDegree + 1>(polyIndexJ, GL::s_nodes[g]);
+                stencil1d[a][cellIdx][g] = GL::s_weights[g] * lambda0 * lambdaJ;
             }
         }
     }
@@ -1322,6 +1321,7 @@ auto inline compute_v1_mass_matrix_1d_stencil_gdec()
     constexpr int massStencilLength{2 * intDegree - 1};
     constexpr int nDofs{intDegree};
     constexpr int nQuadraturePoints{nDofs};
+    using GL = Gempic::GaussQuadratureUnit<nQuadraturePoints>;
     constexpr int leftStencilIdx{-degree};
     // polynomial indexes goes from {-n,...,0,...,n}, in total 2n+1 values.  n = (intDegree - 1) / 2
     // = degree / 2. cell indexes goes from {-n,...,0,...,n}, in total 2n+2 values.
@@ -1341,8 +1341,6 @@ auto inline compute_v1_mass_matrix_1d_stencil_gdec()
     // i-th cell, and zero otherwise.
 
     std::array<amrex::Real, massStencilLength> stencil1d;
-    // shift and rescale to reference unit domain [0,1]
-    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
     // a: stencil index
     for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
     {
@@ -1364,9 +1362,9 @@ auto inline compute_v1_mass_matrix_1d_stencil_gdec()
             amrex::Real val{0.0};
             for (int g = 0; g < nQuadraturePoints; ++g)
             {
-                amrex::Real lambda0 = eval_edge<degree + 2>(polyIndex0, gl.m_nodes[g]);
-                amrex::Real lambdaJ = eval_edge<degree + 2>(polyIndexJ, gl.m_nodes[g]);
-                val += gl.m_weights[g] * lambda0 * lambdaJ;
+                amrex::Real lambda0 = eval_edge<degree + 2>(polyIndex0, GL::s_nodes[g]);
+                amrex::Real lambdaJ = eval_edge<degree + 2>(polyIndexJ, GL::s_nodes[g]);
+                val += GL::s_weights[g] * lambda0 * lambdaJ;
             }
             stencil1d[a] += val;
         }
@@ -1390,6 +1388,7 @@ compute_v1_weighted_mass_matrix_1d_stencil_gdec ()
     constexpr int degree{intDegree - 1};
     constexpr int massStencilLength{2 * intDegree - 1};
     constexpr int nQuadraturePoints{intDegree + 1};
+    using GL = Gempic::GaussQuadratureUnit<nQuadraturePoints>;
     constexpr int leftStencilIdx{-degree};
     constexpr int nShift{degree /
                          2}; // polyIndexes goes from {-n,...,0,...,n}, in total 2n+1 values.
@@ -1409,8 +1408,6 @@ compute_v1_weighted_mass_matrix_1d_stencil_gdec ()
     std::array<std::array<std::array<amrex::Real, nQuadraturePoints>, degree + 1>,
                massStencilLength>
         stencil1d;
-    // reference unit domain [0,1]
-    Gempic::GaussQuadratureUnit<nQuadraturePoints> gl;
     // a: stencil index
     for (int a = 0, sigma = leftStencilIdx; a < massStencilLength; ++a, ++sigma)
     {
@@ -1434,9 +1431,9 @@ compute_v1_weighted_mass_matrix_1d_stencil_gdec ()
                                       // polyIndex for eval_form
             for (int g = 0; g < nQuadraturePoints; ++g)
             {
-                amrex::Real lambda0 = eval_edge<degree + 2>(polyIndex0, gl.m_nodes[g]);
-                amrex::Real lambdaJ = eval_edge<degree + 2>(polyIndexJ, gl.m_nodes[g]);
-                stencil1d[a][cellIdx][g] = gl.m_weights[g] * lambda0 * lambdaJ;
+                amrex::Real lambda0 = eval_edge<degree + 2>(polyIndex0, GL::s_nodes[g]);
+                amrex::Real lambdaJ = eval_edge<degree + 2>(polyIndexJ, GL::s_nodes[g]);
+                stencil1d[a][cellIdx][g] = GL::s_weights[g] * lambda0 * lambdaJ;
             }
         }
     }

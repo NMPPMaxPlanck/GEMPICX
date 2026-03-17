@@ -73,6 +73,7 @@ public:
 
     dofArray2D<s_intDegree, s_nVarPde> nodes_to_gl_reconstruction ()
     {
+        using GL = Gempic::GaussQuadratureUnit<s_intDegree + 1>;
         // first get stencil nodes
         stencilArray2Dnode<s_histDegree, s_nVarPde> stencilVector1d;
         dofArray2D<s_intDegree, s_nVarPde> interpolatedValues;
@@ -86,12 +87,11 @@ public:
 
         amrex::Real xk = {0.0};
         // now interpolate nodes to local GL quadrature points
-        GaussQuadratureUnit<s_intDegree + 1> gL1;
         for (int ivar = 0; ivar < s_nVarPde; ++ivar)
         {
             for (int igl = 0; igl < s_intDegree + 1; ++igl)
             {
-                amrex::Real x{xk + gL1.m_nodes[igl]};
+                amrex::Real x{xk + GL::s_nodes[igl]};
 
                 amrex::Real fval = 0.0;
                 for (int a = s_1dNodeStencilLo; a < s_1dNodeStencilHi + 1; ++a)
@@ -109,9 +109,9 @@ public:
 
     dofArray2D<s_histDegree, s_nVarPde> cells_to_gl_reconstruction ()
     {
+        using GL = Gempic::GaussQuadratureUnit<s_histDegree + 1>;
         stencilArray2D<s_histDegree, s_nVarPde> stencilVector1d;
         dofArray2D<s_histDegree, s_nVarPde> interpolatedValues;
-        GaussQuadratureUnit<s_histDegree + 1> gL1;
         for (int iVar = 0; iVar < s_nVarPde; iVar++)
         {
             for (int ix = s_1dCellStencilLo, iloc = 0; ix < s_1dCellStencilHi + 1; ++ix, ++iloc)
@@ -120,8 +120,8 @@ public:
                 amrex::Real intVal{0.0};
                 for (int igl = 0; igl < s_histDegree + 1; ++igl)
                 {
-                    amrex::Real locVal{reference_function(m_xMesh[iloc] + gL1.m_nodes[igl], iVar)};
-                    intVal += locVal * gL1.m_weights[igl];
+                    amrex::Real locVal{reference_function(m_xMesh[iloc] + GL::s_nodes[igl], iVar)};
+                    intVal += locVal * GL::s_weights[igl];
                 }
                 stencilVector1d(iVar, iloc) = intVal * m_dx;
             }
@@ -133,7 +133,7 @@ public:
         {
             for (int igl = 0; igl < s_histDegree + 1; ++igl)
             {
-                amrex::Real x{xk + gL1.m_nodes[igl]};
+                amrex::Real x{xk + GL::s_nodes[igl]};
 
                 amrex::Real fval = 0.0;
                 for (int a = s_1dCellStencilLo; a < s_1dCellStencilHi + 1; ++a)
@@ -168,7 +168,7 @@ TYPED_TEST(PolynomialReconstructionTest, InterpolationTest)
     constexpr int nVarPde{TestFixture::s_nVarPde};
     dofArray2D<intDegree, nVarPde> intReconstructionGl{this->nodes_to_gl_reconstruction()};
     amrex::Real linfIntError{0.0};
-    GaussQuadratureUnit<intDegree + 1> gL1;
+    using GL = Gempic::GaussQuadratureUnit<intDegree + 1>;
     for (int igl = 0; igl < intDegree + 1; ++igl)
     {
         for (int ivar = 0; ivar < intDegree + 1; ++ivar)
@@ -176,7 +176,7 @@ TYPED_TEST(PolynomialReconstructionTest, InterpolationTest)
             linfIntError =
                 std::max(linfIntError,
                          std::abs(intReconstructionGl(ivar, igl) -
-                                  this->reference_function(this->m_dx * gL1.m_nodes[igl], ivar)));
+                                  this->reference_function(this->m_dx * GL::s_nodes[igl], ivar)));
         }
     }
 
@@ -190,11 +190,11 @@ TYPED_TEST(PolynomialReconstructionTest, HistopolationTest)
     amrex::Real tol = 1e-6;
     constexpr int histDegree{TestFixture::s_histDegree};
     constexpr int nVarPde{TestFixture::s_nVarPde};
+    using GL = Gempic::GaussQuadratureUnit<histDegree + 1>;
 
     dofArray2D<histDegree, nVarPde> histReconstructionGl{this->cells_to_gl_reconstruction()};
     amrex::Real linfIntError{0.0};
     // Access the Gauss-Legendre nodes for this degree from fixed arrays
-    GaussQuadratureUnit<histDegree + 1> gL1;
     for (int igl = 0; igl < histDegree + 1; ++igl)
     {
         for (int ivar = 0; ivar < histDegree + 1; ++ivar)
@@ -202,7 +202,7 @@ TYPED_TEST(PolynomialReconstructionTest, HistopolationTest)
             linfIntError =
                 std::max(linfIntError,
                          std::abs(histReconstructionGl(ivar, igl) -
-                                  this->reference_function(this->m_dx * gL1.m_nodes[igl], ivar)));
+                                  this->reference_function(this->m_dx * GL::s_nodes[igl], ivar)));
         }
     }
 

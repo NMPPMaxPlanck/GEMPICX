@@ -2,8 +2,10 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <array>
 #include <chrono>
 #include <type_traits>
+#include <utility>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,14 +39,17 @@ public:
     static constexpr int s_massStencilLength1{2 * s_intDegree - 1};
     static constexpr int s_leftStencilIdx1{-s_histDegree};
 
-    std::array<amrex::Real, s_massStencilLength0> m_hstencil0;
-    std::array<amrex::Real, s_massStencilLength0> m_hstencilref0;
+    using stencilType0 = std::array<amrex::Real, s_massStencilLength0>;
+    using stencilType1 = std::array<amrex::Real, s_massStencilLength1>;
+
+    stencilType0 m_hstencil0;
+    stencilType0 m_hstencilref0;
     std::array<std::array<std::array<amrex::Real, s_intDegree + 1>, s_intDegree + 1>,
                2 * s_intDegree + 1>
         m_wMassV0Stencil;
 
-    std::array<amrex::Real, s_massStencilLength1> m_hstencil1;
-    std::array<amrex::Real, s_massStencilLength1> m_hstencilref1;
+    stencilType1 m_hstencil1;
+    stencilType1 m_hstencilref1;
     std::array<std::array<std::array<amrex::Real, s_intDegree + 1>, s_intDegree>,
                2 * s_intDegree - 1>
         m_wMassV1Stencil;
@@ -77,14 +82,14 @@ TYPED_TEST(MatchGDECweightedMassMatrixTest, WeigthedMassV0Test)
 
     for (int a = 0, sigma = this->s_leftStencilIdx0; a < this->s_massStencilLength0; ++a, ++sigma)
     {
-        this->m_hstencilref0[a] = 0;
+        this->m_hstencil0[a] = 0;
         for (int iCell = -this->s_nShift - 1, cellIdx = 0; iCell <= this->s_nShift;
              ++iCell, ++cellIdx)
         {
             //amrex::Real val{0.0};
             for (int g = 0; g < this->s_nQuadraturePoints; ++g)
             {
-                this->m_hstencilref0[a] += this->m_wMassV0Stencil[a][cellIdx][g];
+                this->m_hstencil0[a] += this->m_wMassV0Stencil[a][cellIdx][g];
             }
         }
     }
@@ -105,13 +110,13 @@ TYPED_TEST(MatchGDECweightedMassMatrixTest, WeigthedMassV1Test)
 
     for (int a = 0, sigma = this->s_leftStencilIdx1; a < this->s_massStencilLength1; ++a, ++sigma)
     {
-        this->m_hstencilref1[a] = 0;
+        this->m_hstencil1[a] = 0;
         for (int iCell = -this->s_nShift, cellIdx = 0; iCell <= this->s_nShift; ++iCell, ++cellIdx)
         {
             //amrex::Real val{0.0};
             for (int g = 0; g < this->s_nQuadraturePoints; ++g)
             {
-                this->m_hstencilref1[a] += this->m_wMassV1Stencil[a][cellIdx][g];
+                this->m_hstencil1[a] += this->m_wMassV1Stencil[a][cellIdx][g];
             }
         }
     }
@@ -122,6 +127,54 @@ TYPED_TEST(MatchGDECweightedMassMatrixTest, WeigthedMassV1Test)
         maxError = std::max(maxError, std::abs(this->m_hstencilref1[a] - this->m_hstencil1[a]));
     }
     amrex::Print() << "error_GDEC_weightedMassMatrix_v1_test (hist polynomial degree "
+                   << this->s_histDegree << ')' << maxError << "\n";
+    EXPECT_NEAR(maxError, 0.0, tol);
+}
+
+template <typename IntDegreeWrapper>
+class MatchGDECdefaultMassMatrixTest : public MatchGDECweightedMassMatrixTest<IntDegreeWrapper>
+{
+};
+
+using MyTypes2 =
+    ::testing::Types<std::integral_constant<int, 1>,
+                     std::integral_constant<int, 3>,
+                     std::integral_constant<int, 5>,
+                     std::integral_constant<int, 7>>; // at this degree this is just a sanity check.
+
+TYPED_TEST_SUITE(MatchGDECdefaultMassMatrixTest, MyTypes2);
+
+TYPED_TEST(MatchGDECdefaultMassMatrixTest, MatchDefaulMassV0Test)
+{
+    constexpr amrex::Real tol = 1e-13;
+    auto [stencildefault0, stencildefault1] =
+        get_hodge_stencils<TestFixture::s_intDegree + 1, HodgeScheme::GDECHodge>();
+
+    amrex::Real maxError{0.0};
+    for (int a = 0, sigma = this->s_leftStencilIdx0; a < this->s_massStencilLength0; ++a, ++sigma)
+    {
+        maxError = std::max(maxError, std::abs(this->m_hstencilref0[a] - stencildefault0[a]));
+    }
+    amrex::Print() << "error_GDEC_defaultMassMatrix_v0_test (int polynomial degree "
+                   << this->s_intDegree << ')' << maxError << "\n";
+    EXPECT_NEAR(maxError, 0.0, tol);
+}
+
+TYPED_TEST(MatchGDECdefaultMassMatrixTest, MatchDefaulMassV1Test)
+{
+    constexpr amrex::Real tol = 1e-13;
+    constexpr unsigned int stencilLength{2 * TestFixture::s_intDegree + 1};
+    constexpr int gap = (stencilLength - TestFixture::s_massStencilLength1) / 2;
+
+    auto [stencildefault0, stencildefault1] =
+        get_hodge_stencils<TestFixture::s_intDegree + 1, HodgeScheme::GDECHodge>();
+
+    amrex::Real maxError{0.0};
+    for (int a = 0, sigma = this->s_leftStencilIdx1; a < this->s_massStencilLength1; ++a, ++sigma)
+    {
+        maxError = std::max(maxError, std::abs(this->m_hstencilref1[a] - stencildefault1[gap + a]));
+    }
+    amrex::Print() << "error_GDEC_defaultMassMatrix_v1_test (hist polynomial degree "
                    << this->s_histDegree << ')' << maxError << "\n";
     EXPECT_NEAR(maxError, 0.0, tol);
 }

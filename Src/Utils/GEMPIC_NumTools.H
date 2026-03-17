@@ -14,6 +14,7 @@
 #endif
 #include <type_traits>
 #include <typeindex>
+#include <utility>
 #include <vector>
 
 #include <AMReX.H>
@@ -302,61 +303,165 @@ amrex::Real multi_fab_wgt_dot(amrex::MultiFab const& wgt,
                               int nghost,
                               bool local);
 
-/**
- * @brief computes n Gauss-Legendre quadrature nodes x in [x1,x2] and the corresponding quadrature
- * weights w. The algorithm comes from numerical recipies.
- * @tparam n int, number of quadrature points
- * @param x array, quadrature nodes
- * @param w array, quadrature weights
- * @param x1 amrex::Real, left endpoint
- * @param x2 amrex::Real, right endpoint
- */
-template <int n>
-void gauleg (std::array<amrex::Real, n>& x,
-             std::array<amrex::Real, n>& w,
-             amrex::Real const x1,
-             amrex::Real const x2)
+namespace Impl
 {
-    // Ensure valid inputs
-    static_assert(n > 0);                             // n must be greater than zero.
-    AMREX_ASSERT(x.size() == static_cast<size_t>(n)); // x must have size n.
-    AMREX_ASSERT(w.size() == static_cast<size_t>(n)); // w must have size n.
-    // Given the lower and upper limits of integration x1 and x2, this routine returns arrays
-    // x[0..n-1] and w[0..n-1] of length n, containing the abscissas and weights of the
-    // Gauss-Legendre n-point quadrature formula.
-    constexpr amrex::Real eps = 1.0e-15; // EPS is the relative precision.
-    amrex::Real z1, z, xm, xl, pp, p3, p2, p1;
-    int m = (n + 1) / 2;  // The roots are symmetric in the interval, so
-    xm = 0.5 * (x2 + x1); // we only have to find half of them.
-    xl = 0.5 * (x2 - x1);
-    amrex::Real const factor = M_PI / (n + 0.5);
-    for (int i = 0; i < m; i++)
-    {                                 // Loop over the desired roots.
-        z = cos(factor * (i + 0.75)); // Starting with this approximation to the ith
-                                      // root, we enter the main
-                                      // loop of refinement
-        do
+
+// Runtime Functor for Legendre polynomial of degree N
+struct LegendrePolyRuntime
+{
+    int m_degree;
+
+    AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE std::pair<amrex::Real, amrex::Real> operator()(
+        amrex::Real z) const
+    {
+        amrex::Real p0 = 1.0;
+        amrex::Real p1 = z;
+        for (int j = 2; j <= m_degree; ++j)
         {
-            p1 = 1.0;
-            p2 = 0.0;
-            for (int j = 0; j < n; j++)
-            {            // Loop up the recurrence relation to get the
-                p3 = p2; // Legendre polynomial evaluated at z.
-                p2 = p1;
-                p1 = ((2.0 * j + 1.0) * z * p2 - j * p3) / (j + 1);
-            }
-            // p1 is now the desired Legendre polynomial.We next compute pp, its derivative,
-            //     by a standard relation involving also p2,
-            //     the polynomial of one lower order.
-            pp = n * (z * p1 - p2) / (z * z - 1.0);
-            z1 = z;
-            z = z1 - p1 / pp; // Newton's method.
-        } while (std::abs(z - z1) > eps);
-        x[i] = xm - xl * z;                          // Scale the root to the desired interval,
-        x[n - 1 - i] = xm + xl * z;                  // and put in its symmetric counterpart.
-        w[i] = 2.0 * xl / ((1.0 - z * z) * pp * pp); // Compute the weight
-        w[n - 1 - i] = w[i];                         // and its symmetric counterpart.
+            amrex::Real pj = ((2 * j - 1) * z * p1 - (j - 1) * p0) / j;
+            p0 = p1;
+            p1 = pj;
+        }
+        amrex::Real dP = m_degree * (z * p1 - p0) / (z * z - 1.0);
+        return {p1, dP};
     }
+};
+
+// Compile-time Functor for Legendre polynomial of order N
+template <int n>
+struct LegendrePoly
+{
+    // Evaluate P_N(z) and derivative
+    AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr std::pair<amrex::Real, amrex::Real>
+    operator()(amrex::Real z) const
+    {
+        amrex::Real p0 = 1.0;
+        amrex::Real p1 = z;
+        for (int j = 2; j <= n; ++j)
+        {
+            amrex::Real pj = ((2 * j - 1) * z * p1 - (j - 1) * p0) / j;
+            p0 = p1;
+            p1 = pj;
+        }
+        amrex::Real dP = n * (z * p1 - p0) / (z * z - 1.0);
+        return {p1, dP};
+    }
+};
+
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr amrex::Real abs_constexpr (amrex::Real x)
+{
+    return x < 0 ? -x : x;
+}
+
+// Generic Newton solver for any functor
+template <typename Func>
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr amrex::Real newton_solver (
+    amrex::Real z0, Func f, int maxIter = 20, amrex::Real tol = 1e-15)
+{
+    amrex::Real z = z0;
+    for (int iter = 0; iter < maxIter; ++iter)
+    {
+        auto [fz, dfz] = f(z);
+        amrex::Real dz = fz / dfz;
+        z -= dz;
+        if (abs_constexpr(dz) < tol) break;
+    }
+    return z;
+}
+
+constexpr amrex::Real cos_constexpr (amrex::Real x, int terms = 10)
+{
+    amrex::Real result = 1.0;
+    amrex::Real xPow = 1.0;
+    amrex::Real fact = 1.0;
+    int sign = -1;
+    for (int n = 1; n <= terms; ++n)
+    {
+        xPow *= x * x;
+        fact *= (2 * n - 1) * (2 * n);
+        result += sign * xPow / fact;
+        sign *= -1;
+    }
+    return result;
+}
+
+// Runtime Gauss-Legendre quadrature returning vectors
+GEMPIC_FORCE_INLINE
+std::pair<std::vector<amrex::Real>, std::vector<amrex::Real>> gauss_legendre (amrex::Real a,
+                                                                              amrex::Real b,
+                                                                              int N)
+{
+    std::vector<amrex::Real> nodes(N);
+    std::vector<amrex::Real> weights(N);
+
+    int half = (N + 1) / 2;
+    amrex::Real center = 0.5 * (a + b);
+    amrex::Real halfLength = 0.5 * (b - a);
+
+    LegendrePolyRuntime P{N};
+
+    for (int i = 0; i < half; ++i)
+    {
+        amrex::Real zi0 = std::cos(M_PI * (i + 0.75) / (N + 0.5));
+        amrex::Real zi = newton_solver(zi0, P);
+
+        nodes[i] = center - halfLength * zi;
+        nodes[N - 1 - i] = center + halfLength * zi;
+
+        auto [_, dP] = P(zi);
+        amrex::Real wi = 2.0 * halfLength / ((1.0 - zi * zi) * dP * dP);
+        weights[i] = wi;
+        weights[N - 1 - i] = wi;
+    }
+
+    return {nodes, weights};
+}
+
+// Compile-time Gauss-Legendre quadrature
+template <int n, amrex::Real a, amrex::Real b>
+consteval auto gauss_legendre ()
+{
+    std::array<amrex::Real, n> nodes{};
+    std::array<amrex::Real, n> weights{};
+    constexpr int half = (n + 1) / 2;
+    constexpr amrex::Real factor{M_PI / (n + 0.5)};
+    constexpr amrex::Real center = 0.5 * (a + b);
+    constexpr amrex::Real halfLength = 0.5 * (b - a);
+
+    LegendrePoly<n> P{};
+    // Iterate over half the points at compile-time
+    ct_for_index_sequence(std::make_index_sequence<half>{},
+                          [&] (auto I)
+                          {
+                              constexpr std::size_t i = I;
+                              constexpr auto zi0 = cos_constexpr(factor * (i + 0.75));
+                              auto zi = newton_solver(zi0, P);
+
+                              nodes[i] = center - halfLength * zi;
+                              nodes[n - 1 - i] = center + halfLength * zi;
+
+                              auto [_, dP] = P(zi);
+
+                              auto wi = 2.0 * halfLength / ((1.0 - zi * zi) * dP * dP);
+                              weights[i] = wi;
+                              weights[n - 1 - i] = wi;
+                          });
+
+    return std::pair{nodes, weights};
+}
+
+} //namespace Impl
+
+template <int n, amrex::Real a, amrex::Real b>
+consteval std::pair<std::array<amrex::Real, n>, std::array<amrex::Real, n>> gauss_legendre ()
+{
+    return Impl::template gauss_legendre<n, a, b>();
+}
+
+GEMPIC_FORCE_INLINE std::pair<std::vector<amrex::Real>, std::vector<amrex::Real>> gauss_legendre (
+    amrex::Real a, amrex::Real b, int N)
+{
+    return Impl::gauss_legendre(a, b, N);
 }
 
 /**
@@ -401,11 +506,6 @@ public:
 
     virtual amrex::Periodicity get_periodicity() = 0;
 };
-void gauleg(std::vector<amrex::Real>& x,
-            std::vector<amrex::Real>& w,
-            amrex::Real const x1,
-            amrex::Real const x2,
-            int n);
 
 bool is_inverse_matrix_correct(std::vector<std::vector<double>>& iA,
                                std::vector<std::vector<double>> const& A,
