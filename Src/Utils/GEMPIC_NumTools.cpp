@@ -357,64 +357,6 @@ amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
     return sm;
 }
 
-/**
- * computes n Gauss-Legendre quadrature nodes x in [x1,x2] and the corresponding quadrature weights
- * w this comes directly from numerical recipies, pdf free available on the website. this comes
- * directly from numerical recipies, pdf free available on the website.
- *
- * \param x1
- * \param x2
- * \param x
- * \param w
- */
-void gauleg (std::vector<amrex::Real>& x,
-             std::vector<amrex::Real>& w,
-             amrex::Real const x1,
-             amrex::Real const x2,
-             int n)
-{
-    // Ensure valid inputs
-    BL_ASSERT(n > 0);                              // n must be greater than zero.
-    BL_ASSERT(x.size() == static_cast<size_t>(n)); // x must have size n.
-    BL_ASSERT(w.size() == static_cast<size_t>(n)); // w must have size n.
-    // Given the lower and upper limits of integration x1 and x2, this routine returns arrays
-    // x[0..n-1] and w[0..n-1] of length n, containing the abscissas and weights of the
-    // Gauss-Legendre n-point quadrature formula.
-    constexpr amrex::Real eps = 1.0e-15; // EPS is the relative precision.
-    amrex::Real z1, z, xm, xl, pp, p3, p2, p1;
-    int m = (n + 1) / 2;  // The roots are symmetric in the interval, so
-    xm = 0.5 * (x2 + x1); // we only have to find half of them.
-    xl = 0.5 * (x2 - x1);
-    amrex::Real const factor = M_PI / (n + 0.5);
-    for (int i = 0; i < m; i++)
-    {                                 // Loop over the desired roots.
-        z = cos(factor * (i + 0.75)); // Starting with this approximation to the ith
-                                      // root, we enter the main
-                                      // loop of refinement
-        do
-        {
-            p1 = 1.0;
-            p2 = 0.0;
-            for (int j = 0; j < n; j++)
-            {            // Loop up the recurrence relation to get the
-                p3 = p2; // Legendre polynomial evaluated at z.
-                p2 = p1;
-                p1 = ((2.0 * j + 1.0) * z * p2 - j * p3) / (j + 1);
-            }
-            // p1 is now the desired Legendre polynomial.We next compute pp, its derivative,
-            //     by a standard relation involving also p2,
-            //     the polynomial of one lower order.
-            pp = n * (z * p1 - p2) / (z * z - 1.0);
-            z1 = z;
-            z = z1 - p1 / pp; // Newton's method.
-        } while (std::abs(z - z1) > eps);
-        x[i] = xm - xl * z;                          // Scale the root to the desired interval,
-        x[n - 1 - i] = xm + xl * z;                  // and put in its symmetric counterpart.
-        w[i] = 2.0 * xl / ((1.0 - z * z) * pp * pp); // Compute the weight
-        w[n - 1 - i] = w[i];                         // and its symmetric counterpart.
-    }
-}
-
 #ifdef USE_MKL
 #include <vector>
 

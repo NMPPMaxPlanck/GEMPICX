@@ -385,14 +385,14 @@ private:
     static constexpr amrex::Real s_wenoLambdaC = 1e5;
 
 public:
-    static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real get_weno_lambda (int ind)
+    static AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr amrex::Real get_weno_lambda (int ind)
     {
         constexpr std::array<amrex::Real, 3> wenoLambda = {
             s_wenoLambdaC, 1.0, 1.0}; // must be defined here for device code
         return wenoLambda[ind];
     }
 
-    static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real
+    static AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr amrex::Real
     compute_oscillation_indicator_to_weight (amrex::Real oscillationIndicator, int iStencil)
     {
         AMREX_ASSERT_WITH_MESSAGE(iStencil >= 0 && iStencil < s_nStencil,
@@ -634,7 +634,7 @@ public:
 
     amrex::GpuArray<amrex::Real, s_wenoHistNDof + 1> m_wenoStencilLocNodes;
 
-    static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real get_weno_shift (int ind)
+    static AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr amrex::Real get_weno_shift (int ind)
     {
         constexpr amrex::GpuArray<amrex::Real, s_wenoNStencil> wenoShift = {
             0.0, static_cast<amrex::Real>(s_wenoHistNDof / 2),
@@ -652,7 +652,7 @@ public:
      * @return int, the left index of the ind-th local stencil with respect to the large WENO
      * stencil.
      */
-    static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE int get_weno_left (int ind)
+    static AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr int get_weno_left (int ind)
     {
         constexpr amrex::GpuArray<int, s_wenoNStencil> wenoLeft = {-(s_wenoHistNDof) / 2,
                                                                    -s_wenoHistNDof + 1, 0};
@@ -678,7 +678,7 @@ public:
      * normal.
      * @return The index (0=x, 1=y, 2=z) of the chosen integration direction.
      */
-    static constexpr AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE int get_face_integral_idxs (int ind)
+    static AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE constexpr int get_face_integral_idxs (int ind)
     {
         constexpr amrex::GpuArray<int, 6> faceIntegralIdxs = {1, 2, 0, 2, 0, 1};
         return faceIntegralIdxs[ind];
@@ -1459,7 +1459,8 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
         xR = 1.0;
 
         // compute the Gauss-Legendre quadrature nodes and weights
-        gauleg(mNodesGLeg[i], mWeightsGLeg[i], xL, xR, iDOF);
+        std::tie(mNodesGLeg[i], mWeightsGLeg[i]) = gauss_legendre(xL, xR, iDOF);
+
         // Initialize the elements of the 2D vector
         for (int j = 0; j < iDOF; j++)
         {
