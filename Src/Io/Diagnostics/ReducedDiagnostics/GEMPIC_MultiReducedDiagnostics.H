@@ -31,7 +31,6 @@
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_ParticleDiags.H"
 #include "GEMPIC_ReducedDiagnostics.H"
-
 namespace Gempic::Io
 {
 /**
@@ -233,6 +232,19 @@ private:
             std::vector<std::string> rdTypes;
             ppRdName.get("types", rdTypes);
 
+            // check for ParticleVariance, delete entry, put in all Particle.speciesNames instead
+            if (auto const ind{std::find(rdTypes.begin(), rdTypes.end(), "ParticleVariance")};
+                ind != rdTypes.end())
+            {
+                Parameters otherParams;
+                std::vector<std::string> speciesNames;
+                otherParams.get("Particle.speciesNames", speciesNames);
+                std::transform(speciesNames.begin(), speciesNames.end(), speciesNames.begin(),
+                               [] (std::string& s) { return s + "Variance"; });
+                rdTypes.erase(ind);
+                rdTypes.insert(ind, speciesNames.begin(), speciesNames.end());
+            }
+
             size_t const numTypes{rdTypes.size()};
             int indexNum{0};
             size_t typeNum{0};
@@ -289,6 +301,12 @@ private:
         {
             using Part = ParticleRelativistic<vdim, degx, degy, degz, ndata>;
             return std::make_unique<Part>(name, indexNum, isLastType, fileName);
+        }
+        else if (diagType.ends_with("Variance"))
+        {
+            auto particleName = diagType.substr(0, diagType.find("Variance"));
+            using Var = ParticleVariance<vdim, degx, degy, degz, ndata>;
+            return std::make_unique<Var>(particleName, name, indexNum, isLastType, fileName);
         }
         else
         {

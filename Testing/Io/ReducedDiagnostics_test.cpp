@@ -124,13 +124,14 @@ protected:
 
         // Parse reduced diagnostics
         Io::Parameters ppRedDiag("ReducedDiagnostics");
-        amrex::Vector<std::string> reducedDiagsNames{"PartDiag", "FieldElec", "FieldMag",
-                                                     "FieldCurrent", "GaussError"};
+        amrex::Vector<std::string> reducedDiagsNames{
+            "PartDiag", "FieldElec", "FieldMag", "FieldCurrent", "GaussError", "ParticleVariance"};
         int saveReduced{1};
         std::string fieldElecType{"ElecFieldEnergy"};
         std::string fieldMagType{"MagFieldEnergy"};
         std::string fieldCurrentType{"CurrentFieldEnergy"};
         std::string partDiagType{"Particle"};
+        std::string partVarianceDiagType{"ParticleVariance"};
         std::string gaussErrorType{"GaussError"};
         ppRedDiag.set("groupNames", reducedDiagsNames);
         ppRedDiag.set("saveInterval", saveReduced);
@@ -138,6 +139,7 @@ protected:
         ppRedDiag.set("FieldMag.types", fieldMagType);
         ppRedDiag.set("FieldCurrent.types", fieldCurrentType);
         ppRedDiag.set("PartDiag.types", partDiagType);
+        ppRedDiag.set("ParticleVariance.types", partVarianceDiagType);
         ppRedDiag.set("GaussError.types", gaussErrorType);
     }
 };
@@ -227,6 +229,27 @@ TEST_F(ReducedDiagnosticsTest, ReducedDiags)
     EXPECT_NEAR(py, 1.0, 0.1);
     EXPECT_NEAR(pz, 2.0, 0.1);
     EXPECT_NEAR(kin, 10.0, 0.1);
+
+    // check variance diagnostics
+    std::ifstream inputVariance("ReducedDiagnostics/ParticleVariance.txt");
+    std::getline(inputVariance, line); // first line not used
+    std::getline(inputVariance, line);
+    std::stringstream splitLineVariance(line);
+    double varN, varNuX, varNuY, varNuZ, varKinX, varKinY, varKinZ, varNmode1, varNmode2;
+    splitLineVariance >> step >> t >> varN >> varNuX >> varNuY >> varNuZ >> varKinX >> varKinY >>
+        varKinZ >> varNmode1 >> varNmode2;
+    // Get total number of particles for normalization.
+    long const np = m_particles[0]->TotalNumberOfParticles();
+    EXPECT_NEAR(varN * sqrt(np), 0.0, 0.1);
+    EXPECT_NEAR(varNuX * sqrt(np), 1.0, 0.1); // VmeanX
+    EXPECT_NEAR(varNuY * sqrt(np), 2.0, 0.1); // VmeanY
+    EXPECT_NEAR(varNuZ * sqrt(np), 3.0, 0.1); // VmeanZ
+    // Variance of v**2 is 2*vth^4 + 4 * vth^2 * Vmean^2
+    // We print out the root of the variance
+    EXPECT_NEAR(varKinX * sqrt(np), sqrt(6.0), 0.1);    // vth=1, vmean=-1 => sqrt(6)
+    EXPECT_NEAR(varKinY * sqrt(np), sqrt(48.0), 0.1);   // vth=2, vmean=1 => sqrt(48)
+    EXPECT_NEAR(varKinZ * sqrt(np), sqrt(306.0), 0.25); // vth=3, vmean=2 => sqrt(306)
+    EXPECT_NEAR(varNmode1 * sqrt(np), sqrt(0.5), 0.1);
 
     // Test Gauss error (only that terms are correctly written)
     std::ifstream inputGauss("ReducedDiagnostics/GaussError.txt");
