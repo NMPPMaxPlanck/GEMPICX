@@ -275,7 +275,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
 
     DeRhamField<Grid::primal, Space::face> B(deRham);
     DeRhamField<Grid::dual, Space::face> J(deRham);
-    DeRhamField<Grid::dual, Space::face> Jrel(deRham);
+    DeRhamField<Grid::dual, Space::face> jrel(deRham);
 
     // TEST FOR X DIRECTION
     for (auto& particleGrid : *m_particles[s_spec])
@@ -291,7 +291,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
         {
             bA[cc] = (B.m_data[cc])[particleGrid].array();
             jA[cc] = (J.m_data[cc])[particleGrid].array();
-            jArel[cc] = (Jrel.m_data[cc])[particleGrid].array();
+            jArel[cc] = (jrel.m_data[cc])[particleGrid].array();
         }
 
         // initialization: oldSpline = newSpline -> first PrimDiff = 0
@@ -327,9 +327,9 @@ TEST_F(HamiltonianSplittingTest, AccumulateJEulerTest)
                         {chargeWeight * dtv * GEMPIC_D_MULT(xNodeVal, yNodeVal, 1.0)}, {}, 1e-12);
         }
 
-        for (amrex::MFIter mfi(Jrel.m_data[dir]); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(jrel.m_data[dir]); mfi.isValid(); ++mfi)
         {
-            CHECK_FIELD(Jrel.m_data[dir].array(mfi), mfi.validbox(),
+            CHECK_FIELD(jrel.m_data[dir].array(mfi), mfi.validbox(),
                         {[] (AMREX_D_DECL(int i, int j, int k))
                          { return AMREX_D_TERM(i == 7, &&j == 11, &&k == 0); }},
                         {chargeWeight * dtv * GEMPIC_D_MULT(xNodeVal, yNodeVal, 1.0)}, {}, 1e-12);
