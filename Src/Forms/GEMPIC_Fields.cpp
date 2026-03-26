@@ -291,33 +291,6 @@ void DiscreteVectorField::apply_boundary_conditions (std::array<size_t, AMREX_SP
     }
 };
 
-void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
-{
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
-        {
-            field.select_box(mfi);
-            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                               { field(dir, ix, iy, iz) *= scalar; });
-        }
-    }
-}
-
-void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
-{
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        for (amrex::MFIter mfi{a.multi_fab(dir)}; mfi.isValid(); ++mfi)
-        {
-            a.select_box(mfi);
-            auto const& otherView{b.multi_fab(dir).array(mfi)};
-            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                               { a(dir, ix, iy, iz) += otherView(ix, iy, iz); });
-        }
-    }
-}
-
 void fill_zero (DiscreteField& field)
 {
     auto zero = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(
@@ -375,6 +348,34 @@ bool is_nan (DiscreteField& a)
     return amrex::get<0>(isNan);
 }
 
+/**
+ * Utility functions for DiscreteField and DiscreteVectorField
+ */
+void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
+{
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
+        {
+            field.select_box(mfi);
+            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                               { field(dir, ix, iy, iz) *= scalar; });
+        }
+    }
+}
+void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
+{
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        for (amrex::MFIter mfi{a.multi_fab(dir)}; mfi.isValid(); ++mfi)
+        {
+            a.select_box(mfi);
+            auto const& otherView{b.multi_fab(dir).array(mfi)};
+            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                               { a(dir, ix, iy, iz) += otherView(ix, iy, iz); });
+        }
+    }
+}
 amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
 {
     auto ma = a.multi_fab().const_arrays();
@@ -406,13 +407,11 @@ amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
                   amrex::ParallelContext::CommunicatorAll());
     return norm;
 }
-
 std::array<bool, 3> is_nan (DiscreteVectorField& a)
 {
     return std::array<bool, 3>{is_nan(a[Direction::xDir]), is_nan(a[Direction::yDir]),
                                is_nan(a[Direction::zDir])};
 }
-
 std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorField& b)
 {
     return std::array<amrex::Real, 3>{l_inf_error(a[Direction::xDir], b[Direction::xDir]),
