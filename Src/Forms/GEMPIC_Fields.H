@@ -296,9 +296,6 @@ private:
     std::array<DiscreteField, 3> m_fields;
 };
 
-void operator*=(DiscreteVectorField&, amrex::Real const&);
-void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
-
 template <typename F>
 concept ScalarAnalyticalExpressionSpace =
     std::is_invocable_r_v<amrex::Real, F, AMREX_D_DECL(amrex::Real, amrex::Real, amrex::Real)>;
@@ -414,6 +411,10 @@ void fill (DiscreteVectorField& field, F const& f, double time)
     { return f(dir, AMREX_D_DECL(x, y, z), time); };
     fill(field, timeIndependent);
 }
+
+/**
+ * Start utility functions for DiscreteFields
+ */
 void fill_zero(DiscreteVectorField&);
 
 /**
@@ -486,10 +487,15 @@ private:
     std::array<amrex::Parser, 3> m_parser{};
 };
 
+void operator*=(DiscreteVectorField&, amrex::Real const&);
+void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
 bool is_nan(DiscreteField&);
 amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
 std::array<bool, 3> is_nan(DiscreteVectorField&);
 std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
+/**
+ * Finish utility functions for DiscreteFields
+ */
 
 namespace Impl
 {
