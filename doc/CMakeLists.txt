@@ -79,6 +79,7 @@ add_custom_command(OUTPUT ${GEMPIC_SPHINX_INDEX_FILE}
   COMMAND ${Python3_EXECUTABLE} ${GEMPIC_DOC_SOURCE}/callSphinxDuplicateNamespaceWarningSilenced.py
           -m sphinx -b html
           -Dbreathe_projects.gempic=${GEMPIC_DOXYGEN_OUTPUT_DIR}
+          -Drelease=${GEMPICX_PKG_VERSION}
           ${GEMPIC_DOC_SOURCE} ${GEMPIC_SPHINX_BUILD}
   WORKING_DIRECTORY ${GEMPIC_DOC_SOURCE}
   DEPENDS ${GEMPIC_RST_TEX_FILES} ${GEMPIC_DOC_SOURCE}/index.rst ${GEMPIC_DOXYGEN_INDEX_FILE}

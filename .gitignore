@@ -1,5 +1,6 @@
 # CMake Ignores
 CMakeUserPresets.json
+Src/Utils/GEMPIC_CMakeConstants.H
 
 # Dot files/folders
 **/.*
