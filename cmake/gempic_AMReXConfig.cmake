@@ -40,9 +40,6 @@ gempic_FetchContent_Declare(AMReX
 if(NOT ${AMReX_FOUND}) # AMReX_FOUND is only true if the package was installed
   set_amrex_options_from_gempic() # and only if not do the settings matter.
   FetchContent_MakeAvailable(AMReX)
-  set(AMReX_VERSION_USED ${AMReX_GIT_TAG})
-else()
-  set(AMReX_VERSION_USED ${AMReX_VERSION})
 endif()
 
 if(GEMPIC_USE_CUDA)

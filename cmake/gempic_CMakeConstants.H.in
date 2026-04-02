@@ -1,0 +1,20 @@
+/**************************************************************************************************
+ * Copyright (c) 2021 GEMPICX                                                                     *
+ * SPDX-License-Identifier: BSD-3-Clause                                                          *
+ **************************************************************************************************/
+/*
+ * This file was automagically generated from
+ * @PRECONFIG_INPUT@ 
+ * by filling in with CMake variables at the time of configuration, using configure_file
+ */
+#ifndef GEMPIC_CMAKECONSTANTS_H_
+#define GEMPIC_CMAKECONSTANTS_H_
+
+#cmakedefine GEMPICX_GIT_VERSION "@GEMPICX_GIT_VERSION@"
+#cmakedefine GEMPICX_PKG_VERSION "@GEMPICX_PKG_VERSION@"
+#cmakedefine GEMPICX_RELEASE_NUMBER "@GEMPICX_RELEASE_NUMBER@"
+
+#cmakedefine GEMPICX_AMReX_VERSION "@GEMPICX_AMReX_VERSION@"
+#cmakedefine GEMPICX_HYPRE_VERSION "@GEMPICX_HYPRE_VERSION@"
+
+#endif
