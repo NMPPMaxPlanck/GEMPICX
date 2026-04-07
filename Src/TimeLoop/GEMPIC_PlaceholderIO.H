@@ -102,7 +102,7 @@ public:
     int read (std::filesystem::path const baseName)
     {
         int globalResult = EXIT_SUCCESS;
-        for (auto i = 0; i < m_ds.size(); i++)
+        for (unsigned int i = 0; i < m_ds.size(); i++)
         {
             auto result = m_ds[i]->read(baseName / m_name[i]);
             handle_io_call(result, "read " + (baseName / m_name[i]).string());
@@ -114,7 +114,7 @@ public:
     int write (std::filesystem::path const baseName)
     {
         int globalResult = EXIT_SUCCESS;
-        for (auto i = 0; i < m_ds.size(); i++)
+        for (unsigned int i = 0; i < m_ds.size(); i++)
         {
             auto result = m_ds[i]->write(baseName / m_name[i]);
             handle_io_call(result, "write " + (baseName / m_name[i]).string());
@@ -126,7 +126,7 @@ public:
     int write_diagnostics (std::filesystem::path const baseName)
     {
         int globalResult = EXIT_SUCCESS;
-        for (auto i = 0; i < m_ds.size(); i++)
+        for (unsigned int i = 0; i < m_ds.size(); i++)
         {
             auto result = m_ds[i]->write_diagnostics(baseName / m_name[i]);
             handle_io_call(result, "write_diagnostics " + (baseName / m_name[i]).string());

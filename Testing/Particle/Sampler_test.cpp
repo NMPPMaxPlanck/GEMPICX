@@ -47,7 +47,7 @@ void compute_v_moments_1 (ParticleSpecies<vDim> const* particles,
     auto const indices = particles->get_data_indices();
     auto const idxw = indices.m_iweight;
     auto const idxv = indices.m_ivelx;
-    for (int cmp = 0; cmp < vDim; cmp++)
+    for (unsigned int cmp = 0; cmp < vDim; cmp++)
     {
         // reduce sum over one MPI rank
         amrex::Real vMomentTmp = amrex::ReduceSum(
@@ -80,7 +80,7 @@ amrex::Real compute_v_moment_2 (ParticleSpecies<vDim> const* particles)
                          {
                              auto const w = ptd.rdata(idxw)[pp]; // particle weight
                              amrex::Real v2{0};
-                             for (int cmp{0}; cmp < vDim; ++cmp)
+                             for (unsigned int cmp{0}; cmp < vDim; ++cmp)
                              {
                                  v2 += ptd.rdata(idxv + cmp)[pp] * ptd.rdata(idxv + cmp)[pp];
                              }
@@ -285,7 +285,7 @@ TYPED_TEST(SamplerTest, CompareMoments)
 #ifndef NDEBUG
     GEMPIC_DEBUG("Writing particles from test " + testInfo->name() + " of test suite " +
                  testInfo->test_suite_name() + ".");
-    for (int gg = 0; gg < particles.size(); gg++)
+    for (unsigned int gg = 0; gg < particles.size(); gg++)
     {
         particles[gg]->WritePlotFile(
             ("particle_test_" + std::string(testInfo->name()) + "_group" + std::to_string(gg)),
@@ -305,10 +305,10 @@ TYPED_TEST(SamplerTest, CompareMoments)
     // assuming constant vThermal functions (if they even exist);
     std::array<amrex::Real, AMREX_SPACEDIM> const location{AMREX_D_DECL(0.0, 0.0, 0.0)};
     amrex::Real vWeight;
-    for (int i = 0; i < vDim; i++)
+    for (unsigned int i = 0; i < vDim; i++)
     {
         mom1[i] = 0;
-        for (int j = 0; j < vInit.m_numGauss; j++)
+        for (unsigned int j = 0; j < vInit.m_numGauss; j++)
         {
             params.get("G" + std::to_string(j) + ".vWeight", vWeight);
             amrex::Real vMean = vInit.m_vMeanPtr[j][i];
@@ -399,7 +399,7 @@ TEST_F(SamplerTestMultiLevel, CompareMoments)
     for (int i = 0; i < vDim; i++)
     {
         mom1[i] = 0;
-        for (int j = 0; j < vInit.m_numGauss; j++)
+        for (unsigned int j = 0; j < vInit.m_numGauss; j++)
         {
             params.get("G" + std::to_string(j) + ".vWeight", vWeight);
             amrex::Real vMean = vInit.m_vMeanPtr[j][i];
@@ -469,9 +469,6 @@ TEST_F(RelativisticSamplerTest, CompareMoments)
     constexpr int vDim{3};
     std::vector<std::shared_ptr<ParticleSpecies<vDim>>> particles;
     init_particles(particles, this->m_infra);
-
-    std::array<amrex::Real, vDim> mom1;
-    amrex::Real mom2 = 0;
 
     double volumeFactor = this->m_infra.geometry().ProbSize();
     amrex::Real tol{this->m_tol * volumeFactor};

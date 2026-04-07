@@ -52,7 +52,7 @@ void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face>& D,
                                  DeRhamField<Grid::primal, Space::edge>& E,
                                  std::shared_ptr<Gempic::Forms::FDDeRhamComplex> deRham,
                                  amrex::Real vAlfven,
-                                 amrex::Real somega)
+                                 amrex::Real /*somega*/)
 {
     BL_PROFILE("Gempic::Forms::getDfromE_DriftKinetic()");
     // Compute the dielectric tensor to convert electric field E to D.

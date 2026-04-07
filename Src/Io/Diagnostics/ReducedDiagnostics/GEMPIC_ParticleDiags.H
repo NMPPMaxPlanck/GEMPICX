@@ -89,7 +89,7 @@ public:
      * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
      */
     void compute_diags (
-        ComputationalDomain const& infra,
+        ComputationalDomain const& /*infra*/,
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles) final
     {
@@ -193,7 +193,7 @@ public:
      * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
      */
     void compute_diags (
-        ComputationalDomain const& infra,
+        ComputationalDomain const& /*infra*/,
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles) final
     {
@@ -202,7 +202,7 @@ public:
 
         std::shared_ptr<Gempic::Particle::ParticleSpeciesLinVlasov<vdim, ndata>> particlesLinVlasov;
 
-        for (int spec = 0; spec < particles.size(); spec++)
+        for (unsigned int spec = 0; spec < particles.size(); spec++)
         {
             particlesLinVlasov =
                 std::dynamic_pointer_cast<Gempic::Particle::ParticleSpeciesLinVlasov<vdim, ndata>>(
@@ -302,7 +302,7 @@ public:
      * This function computes the Momentum (Particle momentum) and Particle Kinetic energy
      */
     void compute_diags (
-        ComputationalDomain const& infra,
+        ComputationalDomain const& /*infra*/,
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles) final
     {

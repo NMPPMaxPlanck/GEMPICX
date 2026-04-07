@@ -333,7 +333,6 @@ public:
 
         for (int i = 0; i < s_pointsFiner; ++i)
         {
-            amrex::Real fval = 0.0;
             // test the local histopolation functions in the cell on a fine grid
             for (int a = s_1dCellStencilLo; a < s_1dCellStencilHi + 1; ++a)
             {
@@ -354,7 +353,6 @@ public:
 
         for (int i = 0; i < s_pointsFiner; ++i)
         {
-            amrex::Real fval = 0.0;
             // test the local histopolation functions in the cell on a fine grid
             for (int a = s_1dCellStencilLo; a < s_1dCellStencilHi + 1; ++a)
             {
@@ -375,7 +373,6 @@ public:
 
         for (int i = 0; i < s_pointsFiner; ++i)
         {
-            amrex::Real fval = 0.0;
             // test the local histopolation functions in the cell on a fine grid
             for (int a = s_1dCellStencilLo; a < s_1dCellStencilHi + 1; ++a)
             {
@@ -395,7 +392,6 @@ public:
 
         for (int i = 0; i < s_pointsFiner; ++i)
         {
-            amrex::Real fval = 0.0;
             // test the local histopolation functions in the cell on a fine grid
             for (int a = s_1dCellStencilLo; a < s_1dCellStencilHi + 1; ++a)
             {

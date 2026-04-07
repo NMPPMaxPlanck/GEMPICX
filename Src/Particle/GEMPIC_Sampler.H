@@ -45,7 +45,7 @@ inline void calculate_random_values (std::array<amrex::Real, numValues>& randomA
                                      RandomDistribution&& rnd,
                                      RandomGenerator& gen)
 {
-    for (int i = 0; i < numValues; i++)
+    for (unsigned int i = 0; i < numValues; i++)
     {
         randomArray[i] = rnd(gen);
     }
@@ -57,7 +57,7 @@ inline void calculate_sobol_values (std::array<amrex::Real, numValues>& randomAr
 {
     double quasi[numValues];
     Gempic::Particle::sobol(numValues, &seed, quasi);
-    for (int i = 0; i < numValues; i++)
+    for (unsigned int i = 0; i < numValues; i++)
     {
         randomArray[i] = quasi[i];
     }
@@ -71,7 +71,7 @@ AMREX_GPU_HOST_DEVICE inline int get_gauss_id (VInit<vDim> const& vIniter, amrex
 {
     int gaussIdx = 0;
 
-    for (int gg = 1; gg < vIniter.m_numGauss; gg++)
+    for (unsigned int gg = 1; gg < vIniter.m_numGauss; gg++)
     {
         if ((vIniter.m_velCumPtr[gg - 1] - gaussChoice < 0) &&
             (vIniter.m_velCumPtr[gg] - gaussChoice >= 0))
@@ -125,7 +125,7 @@ AMREX_GPU_HOST_DEVICE inline void get_velocities (
     int gaussIdx{get_gauss_id(vIniter, randomArray[AMREX_SPACEDIM + 2 * vDim])};
 
     auto epsilon{std::numeric_limits<amrex::Real>::epsilon()};
-    for (int cc = 0; cc < vDim; cc++)
+    for (unsigned int cc = 0; cc < vDim; cc++)
     {
         amrex::Real u1 = randomArray[AMREX_SPACEDIM + 2 * cc];
         amrex::Real u2 = randomArray[AMREX_SPACEDIM + 2 * cc + 1];
@@ -212,7 +212,7 @@ inline void read_function_or_constant (
     {
         scheme = VelocityInitScheme::constant;
         params.get(inputString, vm);
-        for (int i{0}; i < vDim; ++i) constant[i] = vm[i];
+        for (unsigned int i{0}; i < vDim; ++i) constant[i] = vm[i];
     }
 }
 
@@ -347,12 +347,12 @@ public:
             m_pos[cc].push_back(position[cc]);
         }
 
-        for (int cc = 0; cc < vDim; cc++)
+        for (unsigned int cc = 0; cc < vDim; cc++)
         {
             m_rdata[cc].push_back(velocity[cc]);
         }
         m_rdata[vDim].push_back(weight);
-        for (int nd = 1; nd < nData; nd++)
+        for (unsigned int nd = 1; nd < nData; nd++)
         {
             m_rdata[vDim + nd].push_back(0.0);
         }
@@ -399,7 +399,7 @@ public:
                                   soa.GetRealData(cc).begin() + oldSize);
         }
         // velocity
-        for (int cc = 0; cc < vDim; cc++)
+        for (unsigned int cc = 0; cc < vDim; cc++)
         {
             amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_rdata[cc].begin(), m_rdata[cc].end(),
                                   soa.GetRealData(cc + AMREX_SPACEDIM).begin() + oldSize);
@@ -408,7 +408,7 @@ public:
         amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_rdata[vDim].begin(), m_rdata[vDim].end(),
                               soa.GetRealData(vDim + AMREX_SPACEDIM).begin() + oldSize);
         // everything else
-        for (int cc = 1; cc < nData; cc++)
+        for (unsigned int cc = 1; cc < nData; cc++)
         {
             amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, m_rdata[cc + vDim].begin(),
                                   m_rdata[cc + vDim].end(),
@@ -426,7 +426,7 @@ public:
         {
             m_pos[comp].reserve(numParticles);
         }
-        for (int comp = 0; comp < vDim + nData; comp++)
+        for (unsigned int comp = 0; comp < vDim + nData; comp++)
         {
             m_rdata[comp].reserve(numParticles);
         }
@@ -440,7 +440,7 @@ public:
         {
             m_pos[comp].clear();
         }
-        for (int comp = 0; comp < vDim + nData; comp++)
+        for (unsigned int comp = 0; comp < vDim + nData; comp++)
         {
             m_rdata[comp].clear();
         }
@@ -602,7 +602,7 @@ ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::ParticleSamp
         // for each distribution only one direction can have a non-zero shift
         Direction boostDir;
         std::array<amrex::Real, AMREX_SPACEDIM> testPosition{AMREX_D_DECL(0.0, 0.0, 0.0)};
-        for (int i = 0; i < m_vInit.m_numGauss; i++)
+        for (unsigned int i = 0; i < m_vInit.m_numGauss; i++)
         {
             // isotropic thermal velocity required, x direction value will be used in the sampler
             amrex::Real vThermalX =
@@ -838,7 +838,7 @@ bool ParticleSampler<scheme, region, type, extraRandomVar, vDim, nData>::
 {
     direct_maxwellian_kernel(); // calculate position, Gaussian velocities, and density
     std::array<amrex::Real, vDim> vMean, vDev;
-    for (int cc = 0; cc < vDim; cc++)
+    for (unsigned int cc = 0; cc < vDim; cc++)
     {
         vMean[cc] = get_function_or_constant(m_vInit.m_vMeanSchemePtr[0], m_vInit.m_vMeanPtr[0][cc],
                                              m_vInit.m_funcvMeanPtr[0][cc], m_position);
@@ -1070,7 +1070,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleSpecies<vDim, nData
                     AMREX_D_TERM(pstruct.pos(xDir, localidx) = position[xDir];
                                  , pstruct.pos(yDir, localidx) = position[yDir];
                                  , pstruct.pos(zDir, localidx) = position[zDir];)
-                    for (int i = 0; i < vDim; i++)
+                    for (unsigned int i = 0; i < vDim; i++)
                     {
                         velArray[i][localidx] = velocity[i];
                     }

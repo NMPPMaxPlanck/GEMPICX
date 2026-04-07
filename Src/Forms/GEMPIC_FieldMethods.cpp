@@ -30,7 +30,7 @@ void projection (amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const&
 {
     BL_PROFILE("Gempic::Forms::projection(DeRhamField<primal, node>)");
     size_t nComps{static_cast<size_t>(funcs.size())};
-    int nCompField{field.m_data.nComp()};
+    size_t nCompField{static_cast<size_t>(field.m_data.nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
         nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
                                   ") doesn't correspond to the number of DeRhamField components (" +
@@ -285,7 +285,7 @@ void projection (
 {
     BL_PROFILE("Gempic::Forms::projection(DeRhamField<dual, edge>)");
     auto nComps{static_cast<size_t>(funcs.size())};
-    int nCompField{field.m_data[xDir].nComp()};
+    auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
         nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
                                   ") doesn't correspond to the number of DeRhamField components (" +
@@ -385,7 +385,7 @@ void projection (
 {
     BL_PROFILE("Gempic::Forms::projection(DeRhamField<primal, face>)");
     auto nComps{static_cast<size_t>(funcs.size())};
-    int nCompField{field.m_data[xDir].nComp()};
+    auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
         nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
                                   ") doesn't correspond to the number of DeRhamField components (" +
@@ -510,7 +510,7 @@ void projection (
 {
     BL_PROFILE("Gempic::Forms::projection(DeRhamField<primal, edge>)");
     auto nComps{static_cast<size_t>(funcs.size())};
-    int nCompField{field.m_data[xDir].nComp()};
+    auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
         nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
                                   ") doesn't correspond to the number of DeRhamField components (" +
@@ -610,7 +610,7 @@ void projection (
 {
     BL_PROFILE("Gempic::Forms::projection(DeRhamField<dual, face>)");
     auto nComps{static_cast<size_t>(funcs.size())};
-    int nCompField{field.m_data[xDir].nComp()};
+    auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
         nCompField == nComps, "The number of functions (" + std::to_string(nComps) +
                                   ") doesn't correspond to the number of DeRhamField components (" +

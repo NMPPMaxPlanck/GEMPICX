@@ -105,7 +105,7 @@ public:
 
 private:
     // Called after each test suite ends
-    void OnTestSuiteEnd (testing::TestSuite const& testSuite) override
+    void OnTestSuiteEnd (testing::TestSuite const& /*testSuite*/) override
     {
         if (!m_keepParameters)
         {
@@ -114,7 +114,7 @@ private:
     }
 
     // Called after each test ends
-    void OnTestEnd (testing::TestInfo const& testInfo) override
+    void OnTestEnd (testing::TestInfo const& /*testInfo*/) override
     {
         if (!m_keepParameters)
         {

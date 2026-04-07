@@ -127,7 +127,8 @@ template <typename DataStruct, int nDim>
 void aos2soa_fab (amrex::Array<amrex::MultiFab, nDim>& soaMFA,
                   amrex::Array<amrex::FabArray<amrex::BaseFab<DataStruct>>, nDim>& aosMFA)
 {
-    constexpr unsigned int size = get_array_size<DataStruct>::s_myValue;
+    // using signed int because `nComp` always returns an `int`
+    constexpr int size = int(get_array_size<DataStruct>::s_myValue);
     BL_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
 #if nDim > 1
     BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
@@ -202,7 +203,8 @@ template <typename DataStruct, int nDim>
 void soa2aos_fab (amrex::Array<amrex::FabArray<amrex::BaseFab<DataStruct>>, nDim>& aosMFA,
                   amrex::Array<amrex::MultiFab, nDim>& soaMFA)
 {
-    constexpr unsigned int size = get_array_size<DataStruct>::s_myValue;
+    // using signed int because `nComp` always returns an `int`
+    constexpr int size = get_array_size<DataStruct>::s_myValue;
     BL_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
 #if nDim > 1
     BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);

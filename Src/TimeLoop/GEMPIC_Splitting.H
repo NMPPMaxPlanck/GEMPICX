@@ -128,7 +128,7 @@ public:
             spline.template eval_spline_field<Field::PrimalOneForm>(eA);
 
         // push v with the electric field
-        for (int i = 0; i < vdim; i++)
+        for (unsigned int i = 0; i < vdim; i++)
         {
             vel[i] += dt * chargeOverMass * efield[i];
         }
@@ -405,10 +405,10 @@ public:
     template <Direction pDir, class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p_i_euler (
         amrex::GpuArray<amrex::Real, vdim>& vel,
-        ComputationalDomain const& infra,
+        ComputationalDomain const& /*infra*/,
         SplineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const /*dx*/,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -787,7 +787,7 @@ public:
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> bA;
 
-                for (int cc = 0; cc < vdim; cc++)
+                for (unsigned int cc = 0; cc < vdim; cc++)
                 {
                     jA[cc] = (J.m_data[cc])[particleGrid].array();
                     eA[cc] = (E.m_data[cc])[particleGrid].array(); // Filtered E for pushing

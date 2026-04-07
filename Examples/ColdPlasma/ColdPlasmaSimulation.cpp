@@ -106,7 +106,6 @@ int main (int argc, char* argv[])
             {
                 amrex::Box const& bx = mfi.tilebox();
                 amrex::IntVect lo = {bx.smallEnd()};
-                amrex::IntVect hi = {bx.bigEnd()};
 
                 amrex::Array4<amrex::Real> const& form = (E.m_data[comp])[mfi].array();
 

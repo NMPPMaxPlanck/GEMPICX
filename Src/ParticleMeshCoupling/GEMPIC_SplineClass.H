@@ -354,7 +354,7 @@ public:
         bool zCond{false};
 
         amrex::GpuArray<amrex::Real, vDim> fields;
-        for (int comp = 0; comp < vDim; comp++)
+        for (unsigned int comp = 0; comp < vDim; comp++)
         {
             fields[comp] = 0.;
         }
@@ -743,7 +743,7 @@ public:
      */
     template <Direction dir, Impl::PrimitiveDifferenceRegion region>
     AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx, int const index) const
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const /*dx*/, int const index) const
     {
         using namespace Impl; // utility functions for this function
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
@@ -930,7 +930,7 @@ public:
     AMREX_GPU_HOST_DEVICE void update_1d_first_derivative (amrex::Real const position,
                                                            amrex::Real const plo,
                                                            amrex::Real const dxInverseDir,
-                                                           amrex::Real const dxDir)
+                                                           amrex::Real const /*dxDir*/)
     {
         amrex::Real const refOffset =
             this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);

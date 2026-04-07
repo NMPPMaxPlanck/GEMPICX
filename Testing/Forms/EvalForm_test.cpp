@@ -119,7 +119,7 @@ void compute_analytical_vector_function_parallel_for (
         bx, nComp,
         [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
         {
-            for (int evalInd = 0; evalInd < nEvals; ++evalInd)
+            for (unsigned int evalInd = 0; evalInd < nEvals; ++evalInd)
             {
                 // Compute the position of the point i, j, k
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {AMREX_D_DECL(

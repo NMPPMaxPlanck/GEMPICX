@@ -196,11 +196,25 @@
 #define GEMPIC_D_PAD_Z(a) a
 #endif
 
+///
+///Use to avoid "unused parameter" warnings.
+///
+///If a function must have a parameter in order to respect an API, but it does not in fact use it,
+///DON'T call this macro; comment out the parameter in the function signature, e.g. replace
+///``int i,`` with ``int /*i*/,``.
+///
+///If the parameter is only used in some dimensions/constexpr decisions, then in the others,
+///DO call this macro with the parameter as an argument in order to avoid unused variable compiler
+///warnings.
+///
+
+#define UNUSED(pp) ((void)(pp))
+
 /**
  * A simple "print debug message" function.
  *
- * TODO:
- * If anyone needs to use this for a multi-process run, please note:
+ * \note
+ * If anyone needs to use this for a multi-process run:
  *
  *      * It's very useful to concatenate everything into a single
  *      string before feeding it to "std::cerr", and also to use "std::endl"

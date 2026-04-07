@@ -56,8 +56,8 @@ public:
 
 void fill_scalar_field_with_one (DiscreteField& sf)
 {
-    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(
-                        AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z)) { return 1.0; };
+    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                           amrex::Real /*z*/)) { return 1.0; };
     Gempic::fill(sf, fillFunc);
 }
 void fill_scalar_field_with_sin (DiscreteField& f)
@@ -78,8 +78,9 @@ void fill_scalar_field_with_sin (DiscreteField& f)
 }
 void fill_vector_field_with_one_two_three (DiscreteVectorField& vf)
 {
-    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(
-                        Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    auto fillFunc =
+        [=] AMREX_GPU_HOST_DEVICE(
+            Direction dir, AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/, amrex::Real /*z*/))
     {
         switch (dir)
         {
@@ -437,7 +438,7 @@ TEST(FunctionParser, fillDiscreteVectorFieldWithParsedFunction)
 void fill_scalar_field_with_nan (DiscreteField f)
 {
     auto nan = [] AMREX_GPU_HOST_DEVICE(
-                   AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z)) -> amrex::Real
+                   AMREX_D_DECL(amrex::Real x, amrex::Real /*y*/, amrex::Real /*z*/)) -> amrex::Real
     {
         if (x < 1.0)
         {
@@ -483,8 +484,9 @@ TEST_F(DiscreteFieldsTest, DiscreteFieldLInfError)
 
 void fill_vector_field_with_nan (DiscreteVectorField& f)
 {
-    auto nan = [] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y,
-                                                                    amrex::Real z)) -> amrex::Real
+    auto nan = [] AMREX_GPU_HOST_DEVICE(
+                   Direction /*dir*/,
+                   AMREX_D_DECL(amrex::Real x, amrex::Real /*y*/, amrex::Real /*z*/)) -> amrex::Real
     {
         if (x < 1.0)
         {

@@ -35,7 +35,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (std::array<amrex::Real, vDim>
     amrex::Real coeff = 1;
     constexpr amrex::Real sqrtTwoPi{2.5066282746310002};
 
-    for (int d = 0; d < vDim; ++d)
+    for (unsigned int d = 0; d < vDim; ++d)
     {
         exponent += vel[d] * vel[d];
         coeff *= vThermal * sqrtTwoPi;
@@ -67,7 +67,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_maxwellian (std::array<amrex::Real, vDim>
     amrex::Real coeff = 1;
     constexpr amrex::Real sqrtTwoPi{2.5066282746310002};
 
-    for (int d = 0; d < vDim; ++d)
+    for (unsigned int d = 0; d < vDim; ++d)
     {
         exponent += (vel[d] - vMean[d]) * (vel[d] - vMean[d]) / (vThermal[d] * vThermal[d]);
         coeff *= vThermal[d] * sqrtTwoPi;

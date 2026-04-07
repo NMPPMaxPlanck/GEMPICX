@@ -33,11 +33,9 @@ void update_rho_parallel_for (amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& p
                               amrex::Real charge)
 {
     long const np{particleGrid.numParticles()};
-    auto& tile = particleGrid.GetParticleTile();
     // note 2025-10-01:
     // Ideally we would use the ParticleSpecies->get_data_indices method,
     // but we don't have access to a ParticleSpecies object.
-    auto const partData = tile.getParticleTileData();
     auto* xx = particleGrid.GetStructOfArrays().GetRealData(0).data();
 #if AMREX_SPACEDIM > 1
     auto* yy = particleGrid.GetStructOfArrays().GetRealData(1).data();

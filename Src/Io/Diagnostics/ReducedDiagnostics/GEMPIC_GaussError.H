@@ -118,7 +118,8 @@ public:
      */
     void compute_diags (
         ComputationalDomain const& infra,
-        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles) final
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& /*particles*/)
+        final
     {
         BL_PROFILE("Gempic::Io::GaussError::compute_diags()");
 

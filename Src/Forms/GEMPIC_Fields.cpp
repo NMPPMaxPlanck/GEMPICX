@@ -34,7 +34,7 @@ amrex::Box selected_ghost_box (DiscreteField const& df,
                                Direction const& dir,
                                Impl::GhostRegion const region)
 {
-    if (df.multi_fab().nGrow(dir) < ghostSize[dir])
+    if (size_t(df.multi_fab().nGrow(dir)) < ghostSize[dir])
     {
         throw std::runtime_error (
             "Selected number of ghost cells are smaller than available number of ghost cells");
@@ -185,7 +185,7 @@ void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM
     bool increaseHalo{false};
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        if (m_data->m_haloWidth[dir] < width[dir])
+        if (size_t(m_data->m_haloWidth[dir]) < width[dir])
         {
             m_data->m_haloWidth[dir] = width[dir];
             increaseHalo = true;
@@ -293,15 +293,17 @@ void DiscreteVectorField::apply_boundary_conditions (std::array<size_t, AMREX_SP
 
 void fill_zero (DiscreteField& field)
 {
-    auto zero = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(
-                    amrex::Real x, amrex::Real y, amrex::Real z)) -> amrex::Real { return 0.0; };
+    auto zero = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                      amrex::Real /*z*/)) -> amrex::Real
+    { return 0.0; };
     Gempic::fill(field, zero);
 }
 
 void fill_zero (DiscreteVectorField& field)
 {
-    auto zero = [] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y,
-                                                                     amrex::Real z)) -> amrex::Real
+    auto zero = [] AMREX_GPU_HOST_DEVICE(Direction /*dir*/,
+                                         AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                      amrex::Real /*z*/)) -> amrex::Real
     { return 0.0; };
     Gempic::fill(field, zero);
 }
@@ -450,7 +452,7 @@ namespace Forms
 /// @param maxSplineDegree The degree of the splines, used for a lower limit of ghost cells
 DeRhamComplex::DeRhamComplex(ComputationalDomain const& infra,
                              int const hodgeDegree,
-                             int const maxSplineDegree)
+                             int const /*maxSplineDegree*/)
 /*  :
   m_fieldRegistry(std::make_unique<FieldRegistry>())*/
 {

@@ -2727,7 +2727,7 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void
 FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v3_reconstruction_primvar(
     dofXYZ_Array3D<polyrecDegreeFv, nVarFv>& whwenoxyz3d,
     amrex::Array4<amrex::Real const> const& w0,
-    ParamsClass const& myparams,
+    ParamsClass const& /*myparams*/,
     int const i,
     int const j,
     int const k) const

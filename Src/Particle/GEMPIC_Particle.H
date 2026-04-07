@@ -223,14 +223,14 @@ public:
             particles.GetStructOfArrays().GetRealData(cc)[oldNumParticles] = position[cc];
         }
         // add new velocity
-        for (int cc = 0; cc < vDim; cc++)
+        for (unsigned int cc = 0; cc < vDim; cc++)
         {
             particles.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + cc)[oldNumParticles] =
                 velocity[cc];
         }
         // add new weight
         particles.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + vDim)[oldNumParticles] = weight;
-        for (int cc = 1; cc < nData; cc++)
+        for (unsigned int cc = 1; cc < nData; cc++)
         {
             particles.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + vDim + cc)[oldNumParticles] =
                 0.0;

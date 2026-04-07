@@ -36,7 +36,7 @@ void accumulate_j_update_v_c2_parallel_for (
     auto const partData = particleGrid.GetParticleTile().getParticleTileData();
 
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
-    for (int cc = 0; cc < vDim; cc++) jA[cc] = (J.m_data[cc])[particleGrid].array();
+    for (unsigned int cc = 0; cc < vDim; cc++) jA[cc] = (J.m_data[cc])[particleGrid].array();
 
     amrex::AsyncArray aaBfields(&bfields, 1);
     auto* bfieldsGPU = aaBfields.data();
@@ -127,7 +127,7 @@ protected:
 
         // particles
         m_particles.resize(s_numSpec);
-        for (int species{0}; species < s_numSpec; species++)
+        for (unsigned int species{0}; species < s_numSpec; species++)
         {
             m_particles[species] = std::make_unique<ParticleSpecies<s_vDim>>(species, m_infra);
         }

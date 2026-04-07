@@ -20,8 +20,8 @@ namespace
 {
 
 using condLambda = bool (*)(AMREX_D_DECL(int, int, int));
-bool func_cond_x (AMREX_D_DECL(int i, int j, int k)) { return (i == 0 || i == 3); }
-bool func_cond_y (AMREX_D_DECL(int i, int j, int k))
+bool func_cond_x (AMREX_D_DECL(int i, int /*j*/, int /*k*/)) { return (i == 0 || i == 3); }
+bool func_cond_y (AMREX_D_DECL(int /*i*/, int j, int /*k*/))
 {
 #if AMREX_SPACEDIM >= 2
     return (j == 0 || j == 3);
@@ -29,7 +29,7 @@ bool func_cond_y (AMREX_D_DECL(int i, int j, int k))
     return false;
 #endif
 }
-bool func_cond_z (AMREX_D_DECL(int i, int j, int k))
+bool func_cond_z (AMREX_D_DECL(int /*i*/, int /*j*/, int k))
 {
 #if AMREX_SPACEDIM == 3
     return (k == 0 || k == 3);

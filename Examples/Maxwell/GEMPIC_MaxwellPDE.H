@@ -174,7 +174,7 @@ public:
         maxwell_initial_condition(m_disc);
     }
 
-    void one_step_solve_dqdt_explicit (amrex::Real time) override { return; }
+    void one_step_solve_dqdt_explicit (amrex::Real /*time*/) override { return; }
 
     /**
      * update old state
@@ -188,7 +188,7 @@ public:
     /**
      * solve one implicit (Euler) step
      */
-    void one_step_solve_q_implicit (amrex::Real time, amrex::Real dtLoc) override
+    void one_step_solve_q_implicit (amrex::Real /*time*/, amrex::Real dtLoc) override
     {
         m_myCg2->m_operator.update(dtLoc); // => update the matop A(Q,dt)
         // in the RHS we should consider:
@@ -219,7 +219,7 @@ public:
     void one_step_solve_dqdt_semiimplicit (amrex::Real timeI,
                                            amrex::Real dtI,
                                            amrex::Real timeE,
-                                           amrex::Real dtE) override
+                                           amrex::Real /*dtE*/) override
     {
         one_step_solve_dqdt_explicit(timeE); // this compute dQdt_ex... going in the rhs of the
                                              // implicit
