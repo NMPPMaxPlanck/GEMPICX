@@ -54,7 +54,7 @@ inline std::vector<std::string> read_boundary_condition (int numNonPeriodic,
     }
     // 2 boundary conditions needed for each non-periodic dimension
     // Either no or all non-periodic boundary conditions must be given
-    else if (userConditions < 2 * numNonPeriodic)
+    else if (userConditions < 2 * size_t(numNonPeriodic))
     {
         GEMPIC_ERROR("Not enough boundary conditions given for " + diagName);
     }
@@ -206,13 +206,13 @@ struct BoundaryCondition
     AMREX_GPU_DEVICE
     void operator()(amrex::IntVect const& iv,
                     amrex::Array4<amrex::Real> const& dest,
-                    int const dcomp,
-                    int const numcomp,
+                    int const /*dcomp*/,
+                    int const /*numComp*/,
                     amrex::GeometryData const& geom,
-                    amrex::Real const time,
+                    amrex::Real const /*time*/,
                     amrex::BCRec const* bcr,
-                    int const bcomp,
-                    int const origComp) const
+                    int const /*bcomp*/,
+                    int const /*origComp*/) const
     {
         amrex::Box const& domainBox = amrex::convert(geom.Domain(), m_idxType);
         auto const& domainLo = domainBox.loVect();

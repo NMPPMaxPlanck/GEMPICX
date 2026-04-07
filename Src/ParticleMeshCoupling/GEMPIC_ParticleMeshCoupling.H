@@ -1948,7 +1948,7 @@ void deposit_rho_weighted_electric_field (
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
-    for (int comp = 0; comp < vDim; ++comp)
+    for (unsigned int comp = 0; comp < vDim; ++comp)
     {
         rhoE.m_data[comp].setVal(0.0);
     }
@@ -1969,7 +1969,7 @@ void deposit_rho_weighted_electric_field (
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> rhoeA;
 
-            for (int cc = 0; cc < vDim; cc++)
+            for (unsigned int cc = 0; cc < vDim; cc++)
             {
                 eA[cc] = (E.m_data[cc])[pti].array();
                 rhoeA[cc] = (rhoE.m_data[cc])[pti].array();

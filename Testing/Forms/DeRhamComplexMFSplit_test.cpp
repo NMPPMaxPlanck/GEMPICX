@@ -58,9 +58,6 @@ TYPED_TEST(FDDeRhamComplexMFSplitTest, MFHodgeSplitMatrixMultTestDeg2)
     constexpr int hodgeDegree{2};
     constexpr HodgeScheme hodgeScheme{TestFixture::s_hodgeScheme};
     ComputationalDomain compDom{TestFixture::m_compDom};
-    constexpr int degX{TestFixture::s_degX};
-    constexpr int degY{TestFixture::s_degY};
-    constexpr int degZ{TestFixture::s_degZ};
     constexpr int maxSplineDegree{TestFixture::s_maxSplineDegree};
 
     std::string const analyticalFunc = "1.0";
@@ -105,9 +102,6 @@ TYPED_TEST(FDDeRhamComplexMFSplitTest, MFHodgeSplitMatrixMultTestDeg4)
     constexpr int hodgeDegree{4};
     constexpr HodgeScheme hodgeScheme{TestFixture::s_hodgeScheme};
     ComputationalDomain compDom{TestFixture::m_compDom};
-    constexpr int degX{TestFixture::s_degX};
-    constexpr int degY{TestFixture::s_degY};
-    constexpr int degZ{TestFixture::s_degZ};
     constexpr int maxSplineDegree{TestFixture::s_maxSplineDegree};
 
     std::string const analyticalFunc = "1.0";
@@ -152,9 +146,6 @@ TYPED_TEST(FDDeRhamComplexMFSplitTest, MFHodgeSplitMatrixMultTestDeg6)
     constexpr int hodgeDegree{6};
     constexpr HodgeScheme hodgeScheme{TestFixture::s_hodgeScheme};
     ComputationalDomain compDom{TestFixture::m_compDom};
-    constexpr int degX{TestFixture::s_degX};
-    constexpr int degY{TestFixture::s_degY};
-    constexpr int degZ{TestFixture::s_degZ};
     constexpr int maxSplineDegree{TestFixture::s_maxSplineDegree};
 
     std::string const analyticalFunc = "1.0";
@@ -198,9 +189,6 @@ TYPED_TEST(FDDeRhamComplexMFSplitTest, MFHodgeSplitThreeFormZeroFormTest)
     constexpr int hodgeDegree{2};
     constexpr HodgeScheme hodgeScheme{TestFixture::s_hodgeScheme};
     ComputationalDomain compDom{TestFixture::m_compDom};
-    constexpr int degX{TestFixture::s_degX};
-    constexpr int degY{TestFixture::s_degY};
-    constexpr int degZ{TestFixture::s_degZ};
     constexpr int maxSplineDegree{TestFixture::s_maxSplineDegree};
 
     // Initialize the De Rham Complex
@@ -235,9 +223,6 @@ TYPED_TEST(FDDeRhamComplexMFSplitTest, MFHodgeSplitThreeFormZeroFormTestII)
     constexpr int hodgeDegree{2};
     constexpr HodgeScheme hodgeScheme{TestFixture::s_hodgeScheme};
     ComputationalDomain compDom{TestFixture::m_compDom};
-    constexpr int degX{TestFixture::s_degX};
-    constexpr int degY{TestFixture::s_degY};
-    constexpr int degZ{TestFixture::s_degZ};
     constexpr int maxSplineDegree{TestFixture::s_maxSplineDegree};
 
     std::string const analyticalFunc = "1.0";
@@ -282,9 +267,6 @@ TYPED_TEST(FDDeRhamComplexMFSplitTest, MFHodgeSplitThreeFormZeroFormTestIII)
     constexpr int hodgeDegree{2};
     constexpr HodgeScheme hodgeScheme{TestFixture::s_hodgeScheme};
     ComputationalDomain compDom{TestFixture::m_compDom};
-    constexpr int degX{TestFixture::s_degX};
-    constexpr int degY{TestFixture::s_degY};
-    constexpr int degZ{TestFixture::s_degZ};
     constexpr int maxSplineDegree{TestFixture::s_maxSplineDegree};
 
     std::string const analyticalFunc = "1.0";

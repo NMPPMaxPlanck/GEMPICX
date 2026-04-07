@@ -84,7 +84,6 @@ protected:
         int fieldSave{1};
         m_params.set("FullDiagnostics.field.saveInterval", fieldSave);
 
-        int const hodgeDegree{2};
         int const maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
 
         // Initialize the De Rham Complex
@@ -450,8 +449,6 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell)
     double tend = 1 * T; // how many periods
     int nSteps = tend / dt;
 
-    auto nGhost = m_deRham->get_n_ghost();
-
     projection(funcE, 0, eSolution, 6);
     projection(funcB, 0, bSolution, 6);
 
@@ -561,8 +558,6 @@ TEST_F(RungeKuttaTest, test_LSRK_maxwell_hodgeDK)
     double T = 14;       //T=2*pi/w, w=0.2*pi/sqrt(2)=0.1414213562373095*pi
     double tend = 2 * T; // how many periods
     int nSteps = tend / dt;
-
-    auto nGhost = m_deRham->get_n_ghost();
 
     projection(funcE, 0, eSolution, 6);
     projection(funcB, 0, bSolution, 6);

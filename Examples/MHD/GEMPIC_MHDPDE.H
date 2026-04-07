@@ -1081,7 +1081,7 @@ public:
         m_mhd.compute_norms_reduce(); // e.g. evaluate initial time-step
     }
 
-    void one_step_solve_dqdt_explicit (amrex::Real rkTime) override
+    void one_step_solve_dqdt_explicit (amrex::Real /*rkTime*/) override
     {
         if (m_recmode == ReconstructionMode::CharacteristicVars)
         {
@@ -1103,7 +1103,7 @@ public:
      *
      * @param dtloc : time step
      */
-    void one_step_eval_dqdt_implicit (amrex::Real dtLoc) override { return; }
+    void one_step_eval_dqdt_implicit (amrex::Real /*dtLoc*/) override { return; }
 
     /** TO BE IMPLEMENTED
      * solve one implicit (Euler) step
@@ -1127,7 +1127,10 @@ public:
      *     - update Q(5)=E=rhoE
      *
      */
-    void one_step_solve_q_implicit (amrex::Real rkTime, amrex::Real dtLoc) override { return; }
+    void one_step_solve_q_implicit (amrex::Real /*rkTime*/, amrex::Real /*dtLoc*/) override
+    {
+        return;
+    }
 
     /**
      * compute time derivative for the semi-implicit solver (stored in m_fieldsDtIm).
@@ -1145,10 +1148,10 @@ public:
      *
      * @param dtloc : time step
      */
-    void one_step_solve_dqdt_semiimplicit (amrex::Real timeI,
-                                           amrex::Real dtI,
-                                           amrex::Real timeE,
-                                           amrex::Real dtE) override
+    void one_step_solve_dqdt_semiimplicit (amrex::Real /*timeI*/,
+                                           amrex::Real /*dtI*/,
+                                           amrex::Real /*timeE*/,
+                                           amrex::Real /*dtE*/) override
     {
         return;
     }
@@ -1225,7 +1228,7 @@ public:
         return m_mhd.m_disc.m_compDom.m_geom.periodicity();
     }
 
-    MhdfvNumericalScheme(int myrank, int nMPIranks) : m_mhd()
+    MhdfvNumericalScheme(int /*myrank*/, int /*nMPIranks*/) : m_mhd()
     {
         Gempic::Io::Parameters params("TimeLoop");
         amrex::Real dt;

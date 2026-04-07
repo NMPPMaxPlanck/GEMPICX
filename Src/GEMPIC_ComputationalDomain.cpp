@@ -173,7 +173,6 @@ amrex::IndexType to_amrex_idx_type (DiscreteGrid const& discreteGrid)
 amrex::Box to_amrex_box (DiscreteGrid const& discreteGrid)
 {
     amrex::IndexType idx{to_amrex_idx_type(discreteGrid)};
-    amrex::Box box;
     amrex::IntVect low(AMREX_D_DECL(0, 0, 0));
     std::array<int, AMREX_SPACEDIM> size{discreteGrid.size()};
     amrex::IntVect high(AMREX_D_DECL(size[xDir] - 1, size[yDir] - 1, size[zDir] - 1));

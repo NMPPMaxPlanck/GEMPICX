@@ -45,7 +45,7 @@ CustomOutputProcessor::CustomOutputProcessor(Io::AnyFieldPtr const& dataSrc,
  *
  * \param[out] mfDst output MultiFab where the result is written
  */
-void CustomOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dcomp*/) const
+void CustomOutputProcessor::operator ()(amrex::MultiFab& /*mfDst*/, int /*dcomp*/) const
 {
     GEMPIC_ERROR("This operator should be overridden!");
 }
@@ -156,7 +156,6 @@ HighResSubcellOutputProcessor::HighResSubcellOutputProcessor(Io::AnyFieldPtr con
     Io::Parameters paramsIO("FullDiagnostics.HighResSubcellOutputProcessor");
     amrex::IntVect sNSubCellTempvec;
     paramsIO.get("nSubCells", sNSubCellTempvec);
-    amrex::IntVect const idxTypeSrc{dataSrc.box_array().ixType().toIntVect()};
     std::array<int, 3> nSubCell3d{1, 1, 1};
     for (int idir = 0; idir < AMREX_SPACEDIM; ++idir)
     {
@@ -169,8 +168,6 @@ HighResSubcellOutputProcessor::HighResSubcellOutputProcessor(Io::AnyFieldPtr con
     params.get("maxGridSize", maxGridSizeTmp);
     // first create a coarse multifab
 
-    int nGhost = 0;
-    int nComp = dataSrc.n_comp();
     amrex::IndexType t = dataSrc.box_array().ixType();
     amrex::BoxArray ba = get_box_array(t);
     amrex::DistributionMapping const dm = dataSrc.get_distribution_mapping();

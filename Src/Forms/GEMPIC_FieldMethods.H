@@ -1612,13 +1612,13 @@ inline auto get_hodge_stencils ()
                 {
                     auto stencil0tmp = compute_v0_mass_matrix_1d_stencil_gdec<intDegree>();
                     auto stencil1tmp = compute_v1_mass_matrix_1d_stencil_gdec<intDegree>();
-                    for (int i = 0; i < stencilLength; ++i)
+                    for (unsigned int i = 0; i < stencilLength; ++i)
                     {
                         stencilHodgeV0[i] = stencil0tmp[i];
                     }
                     stencilHodgeV1[0] = 0.;
                     stencilHodgeV1[stencilLength - 1] = 0.;
-                    for (int i = 1; i < stencilLength - 1; ++i)
+                    for (unsigned int i = 1; i < stencilLength - 1; ++i)
                     {
                         stencilHodgeV1[i] = stencil1tmp[i - 1];
                     }
@@ -1756,7 +1756,7 @@ inline void apply_1d_hodge (amrex::Geometry geom,
                     {
                         amrex::Real val = 0.0;
 
-                        for (int d = 0; d < stencilLength; d++)
+                        for (unsigned int d = 0; d < stencilLength; d++)
                         {
                             int shift = d - (stencilLength + 1) / 2 + 1;
                             val += stencil[d] * vecIn(i + (direction == xDir ? shift : 0),
@@ -1771,7 +1771,7 @@ inline void apply_1d_hodge (amrex::Geometry geom,
 
 template <int hodgeDegree, HodgeScheme hodgeScheme, typename SrcForm, typename DstForm>
     requires MutualDual<SrcForm, DstForm>
-void hodge_operator (DstForm f0, SrcForm f1, amrex::Real weight = 1.0)
+void hodge_operator (DstForm /*f0*/, SrcForm /*f1*/, amrex::Real /*weight = 1.0 */)
 {
     static_assert(gempic_always_false<hodgeScheme>(),
                   "DeRhamComplexChain is not implemented for this hodgeScheme and pairs!");

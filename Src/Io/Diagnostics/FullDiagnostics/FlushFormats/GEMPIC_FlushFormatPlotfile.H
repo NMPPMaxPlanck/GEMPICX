@@ -45,12 +45,12 @@ public:
         double const time,
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles,
-        int nlev,
+        int /*nlev*/,
         std::string const& prefix,
         int fileMinDigits,
         bool plotParticles,
-        int bufferID = 1,
-        int numBuffers = 1) const override
+        int /*bufferID = 1*/,
+        int /*numBuffers = 1*/) const override
     {
         BL_PROFILE("FlushFormatPlotfile::write_to_file()");
         std::string filename{amrex::Concatenate(prefix, iteration, fileMinDigits)};
@@ -205,6 +205,9 @@ public:
     void write_warp_x_header (std::string const& name, amrex::Geometry& geom) const
     {
         BL_PROFILE("FlushFormatPlotfile::write_warp_x_header()");
+        /// @todo: Please decide whether commented out lines are needed or not.
+        /// If `geom` is not needed, it should be left unnamed and the line below removed.
+        UNUSED(geom);
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             amrex::VisMF::IO_Buffer ioBuffer(amrex::VisMF::IO_Buffer_Size);

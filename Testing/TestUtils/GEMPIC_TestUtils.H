@@ -67,7 +67,7 @@ void add_single_particles (
 
         PTType& particles{
             particleSpecies->GetParticles(0)[std::make_pair(mfi.index(), mfi.LocalTileIndex())]};
-        for (int i{0}; i < numParticles; i++)
+        for (size_t i{0}; i < numParticles; i++)
         {
             // make sure particle is within box (and not previously added? Why?)
             if (!checklist[i] AMREX_D_TERM(
@@ -83,7 +83,7 @@ void add_single_particles (
 
     // Check that all particles have been added
     amrex::ParallelDescriptor::ReduceIntSum(checklist.data(), numParticles);
-    for (int i{0}; i < numParticles; i++)
+    for (size_t i{0}; i < numParticles; i++)
     {
         if (!checklist[i])
         {

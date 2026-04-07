@@ -384,7 +384,6 @@ public:
             // loop over particles: add contribution of old particle position to J and push
             auto plo = m_infra.geometry().ProbLoArray();
             auto dxInverse = m_infra.inv_cell_size_array();
-            auto dx = m_infra.cell_size_array();
             amrex::ParallelFor(
                 np,
                 [=] AMREX_GPU_DEVICE(long pp)

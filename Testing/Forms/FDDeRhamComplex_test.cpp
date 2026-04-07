@@ -179,9 +179,9 @@ void finite_difference_de_rham_complex_grad (Gempic::FiniteDifferenceDeRhamSpace
     PrimalTwoForm zero{fdDeRhamComplex.create_primal_two_form(
         "zero", std::array<Gempic::Impl::BoundaryConditionConfiguration, 3>{})};
     fill(zero,
-         [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y,
-                                                               amrex::Real z)) -> amrex::Real
-         { return 0.0; });
+         [=] AMREX_GPU_HOST_DEVICE(Direction /*dir*/,
+                                   AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                amrex::Real /*z*/)) -> amrex::Real { return 0.0; });
     lInfError = l_inf_error(tf, zero);
     EXPECT_LE(lInfError[xDir], 1.0e-15);
     EXPECT_LE(lInfError[yDir], 1.0e-15);
@@ -219,8 +219,8 @@ void finite_difference_de_rham_complex_curl (Gempic::FiniteDifferenceDeRhamSpace
     PrimalThreeForm zero{fdDeRhamComplex.create_primal_three_form(
         "zero", Gempic::Impl::BoundaryConditionConfiguration{})};
     fill(zero,
-         [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y,
-                                                amrex::Real z)) -> amrex::Real { return 0.0; });
+         [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                amrex::Real /*z*/)) -> amrex::Real { return 0.0; });
     EXPECT_LE(l_inf_error(threeform, zero), 1.0e-15);
 }
 
@@ -315,8 +315,8 @@ void finite_difference_de_rham_complex_dual_curl (
     DualThreeForm zero{fdDeRhamComplex.create_dual_three_form(
         "zero", Gempic::Impl::BoundaryConditionConfiguration{})};
     fill(zero,
-         [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y,
-                                                amrex::Real z)) -> amrex::Real { return 0.0; });
+         [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                amrex::Real /*z*/)) -> amrex::Real { return 0.0; });
     EXPECT_LE(l_inf_error(threeform, zero), 1.0e-15);
 }
 

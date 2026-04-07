@@ -159,7 +159,7 @@ public:
      * function to initialize data after amr levels are initialized.
      */
     virtual void init_data (std::shared_ptr<Forms::DeRhamComplex> drc,
-                            Io::FieldRegistry const& reg,
+                            Io::FieldRegistry const& /*reg*/,
                             bool cmf)
     {
         BL_PROFILE("Gempic::Io::ReducedDiagnostics::init_data()");

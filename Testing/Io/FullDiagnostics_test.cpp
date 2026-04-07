@@ -78,7 +78,6 @@ protected:
     inline static int const s_maxSplineDegree{std::max(std::max(s_degX, s_degY), s_degZ)};
     // particle data
     static int const s_vdim{3};
-    static int const s_ndata{1};
 
     Io::Parameters m_parameters{set_parameters()};
     ComputationalDomain m_infra;
@@ -242,8 +241,9 @@ void add_custom_processor (std::string const& operatorId, double multiplicationF
     Gempic::Io::add_output_processor(
         operatorId,
         [=] AMREX_GPU_DEVICE(amrex::Array4<amrex::Real> dst,
-                             amrex::Array4<amrex::Real const> const src, int nSrcComp, int i, int j,
-                             int k, double scaling, double ishift, double jshift, double kshift)
+                             amrex::Array4<amrex::Real const> const src, int /*nSrcComp*/, int i,
+                             int j, int k, double scaling, double ishift, double jshift,
+                             double kshift)
         {
             dst(i, j, k) = multiplicationFactor * 0.125 * scaling *
                            (src(i + ishift, j + jshift, k + kshift) + src(i, j, k) +

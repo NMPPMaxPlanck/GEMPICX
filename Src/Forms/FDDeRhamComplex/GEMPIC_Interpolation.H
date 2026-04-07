@@ -735,10 +735,10 @@ void eval_form_component (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     SrcFormType const& srcForm,
     amrex::MultiFab& values,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dr,
-    amrex::Geometry const& geom)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& /*dr*/,
+    amrex::Geometry const& /*geom*/)
 {
-    auto nEvals{static_cast<size_t>(evalShift.size())};
+    int nEvals{static_cast<int>(evalShift.size())};
     int const nComp{srcForm.get_ncomp()};
     int outputNComp{values.nComp()};
     AMREX_ASSERT_WITH_MESSAGE(nEvals * nComp == outputNComp,
@@ -746,7 +746,8 @@ void eval_form_component (
                               "all evaluations for all field components.");
 
     // Copy evalShift to GPU array
-    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{nEvals};
+    amrex::Gpu::DeviceVector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> evalShiftGpu{
+        static_cast<size_t>(nEvals)};
     amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, evalShift.begin(), evalShift.end(),
                           evalShiftGpu.begin());
     auto* const evalShiftGpuPtr = evalShiftGpu.dataPtr();
@@ -763,7 +764,7 @@ void eval_form_component (
             bx, nComp,
             [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
-                for (int evalInd{0}; evalInd < nEvals; ++evalInd)
+                for (unsigned int evalInd{0}; evalInd < nEvals; ++evalInd)
                 {
                     // evalshift is always given with respect to primal grid
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {
@@ -794,13 +795,13 @@ void eval_form_component (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     SrcFormType const& srcForm,
     amrex::MultiFab& values,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dr,
-    amrex::Geometry const& geom)
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& /*dr*/,
+    amrex::Geometry const& /*geom*/)
 {
     auto nEvals{static_cast<size_t>(evalShift.size())};
     int nComp{srcForm.get_ncomp(dir)};
     int outputNComp{values.nComp()};
-    AMREX_ASSERT_WITH_MESSAGE(nEvals * nComp == outputNComp,
+    AMREX_ASSERT_WITH_MESSAGE(nEvals * size_t(nComp) == size_t(outputNComp),
                               "Output MultiFab of eval_form must have enough components to hold "
                               "all evaluations for all field components (in one direction).");
 
@@ -821,7 +822,7 @@ void eval_form_component (
             bx, nComp,
             [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
-                for (int evalInd{0}; evalInd < nEvals; ++evalInd)
+                for (unsigned int evalInd{0}; evalInd < nEvals; ++evalInd)
                 {
                     // dual) evalshift is always given with respect to primal grid
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {
@@ -1013,7 +1014,7 @@ template <OneTwoFormC SrcFormType, int degree, Direction dir>
 void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                     SrcFormType const& srcForm,
                                     amrex::Real scaling,
-                                    int dcomp)
+                                    int /*dcomp*/)
 {
     for (amrex::MFIter mfiSrc(srcForm.multi_fab(dir)); mfiSrc.isValid(); // don't use tiling!!
          ++mfiSrc)
@@ -1080,7 +1081,7 @@ template <ZeroThreeFormC SrcFormType, int degree>
 void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                     SrcFormType const& srcForm,
                                     amrex::Real scaling,
-                                    int dcomp)
+                                    int /*dcomp*/)
 {
     for (amrex::MFIter mfiSrc(srcForm.multi_fab()); mfiSrc.isValid(); ++mfiSrc)
     {
@@ -1169,7 +1170,7 @@ void interpolate_field_to_multifab (
 
 template <Forms::ZeroThreeFormC SrcFormType, int degree>
 void interpolate_field_to_multifab (
-    amrex::MultiFab& mfDst, SrcFormType const& srcForm, amrex::Real scaling, int dcomp, int dir)
+    amrex::MultiFab& mfDst, SrcFormType const& srcForm, amrex::Real scaling, int dcomp, int /*dir*/)
 {
     interpolate_field_to_multifab<SrcFormType, degree>(mfDst, srcForm, scaling, dcomp);
 }
@@ -1235,19 +1236,19 @@ void interpolate_field_to_multifab_degree_selector (
 }
 
 template <typename SrcFormType>
-void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
-                                 SrcFormType const& srcForm,
-                                 int dcomp,
-                                 Direction idir)
+void rawdata_field_to_multifabs (amrex::MultiFab& /*mfDst*/,
+                                 SrcFormType const& /*srcForm*/,
+                                 int /*dcomp*/,
+                                 Direction /*idir*/)
 {
     static_assert(gempic_always_false<SrcFormType>(),
                   "rawdata_field_to_multifabs is not implemented for this srcFormType!");
 }
 template <typename SrcFormType>
-void rawdata_field_to_multifabs (std::vector<amrex::MultiFab>& mfDst,
-                                 SrcFormType const& srcForm,
-                                 int dcomp,
-                                 Direction idir)
+void rawdata_field_to_multifabs (std::vector<amrex::MultiFab>& /*mfDst*/,
+                                 SrcFormType const& /*srcForm*/,
+                                 int /*dcomp*/,
+                                 Direction /*idir*/)
 {
     static_assert(gempic_always_false<SrcFormType>(),
                   "rawdata_field_to_multifabs is not implemented for this srcFormType!");
@@ -1257,7 +1258,7 @@ template <Forms::ZeroThreeFormC SrcFormType>
 void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
                                  SrcFormType const& srcForm,
                                  int dcomp,
-                                 Direction idir = xDir)
+                                 Direction /*idir = xDir*/)
 {
     // Copying raw MultiFab. You might think this a waste, but amrex's plot function does the same
     // if the MultiFab passed to it has ghost cells.
@@ -1278,11 +1279,11 @@ void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
 }
 
 template <typename SrcFormType>
-void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
-                                      SrcFormType const& srcForm,
-                                      amrex::Real scaling,
-                                      int dcomp,
-                                      Direction idir = xDir)
+void field_to_cellcentered_multifabs (amrex::MultiFab& /*mfDst*/,
+                                      SrcFormType const& /*srcForm*/,
+                                      amrex::Real /*scaling*/,
+                                      int /*dcomp*/,
+                                      Direction /*idir = xDir*/)
 {
     static_assert(gempic_always_false<SrcFormType>(),
                   "field_to_cellcentered_multifabs is not implemented for this srcFormType!");
@@ -1293,7 +1294,7 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
                                       SrcFormType const& srcForm,
                                       amrex::Real scaling,
                                       int dcomp,
-                                      Direction idir = xDir)
+                                      Direction /*idir = xDir*/)
 {
     // In cartesian geometry, interpolate from simulation MultiFab, m_dataSrc,
     // to output diagnostic MultiFab, mfDst.

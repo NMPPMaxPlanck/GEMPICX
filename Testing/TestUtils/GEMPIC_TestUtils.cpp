@@ -29,7 +29,7 @@ void check_field (char const file[],
             {
                 for (int k{lo.z}; k <= hi.z; k++)
                 {
-                    int condNum{0};
+                    unsigned int condNum{0};
                     amrex::IntVect const idx{AMREX_D_DECL(i, j, k)};
                     for (auto cond : condVec)
                     {

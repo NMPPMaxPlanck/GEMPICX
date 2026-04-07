@@ -84,7 +84,7 @@ struct TestFieldsHandlerStruct : BaseFieldsHandlerStruct<TestFieldsHandlerStruct
     /**
      * Constructor
      */
-    TestFieldsHandlerStruct(std::shared_ptr<FDDeRhamComplex>& drc) {}
+    TestFieldsHandlerStruct(std::shared_ptr<FDDeRhamComplex>& /*drc*/) {}
 
     // this is necessary to define array of this classes: first define the array, then construct
     // component by component.
@@ -254,7 +254,7 @@ public:
     void one_step_solve_dqdt_semiimplicit (amrex::Real timeI,
                                            amrex::Real dtI,
                                            amrex::Real timeE,
-                                           amrex::Real dtE) override
+                                           amrex::Real /*dtE*/) override
     {
         one_step_solve_dqdt_explicit(timeE); // this compute dQdt_ex... going in the rhs of the
                                              // implicit
