@@ -736,14 +736,12 @@ public:
      *                - noSplines: Region between splines
      *                - bothSplines: Both splines need to be taken into account
      *
-     * @param dx Cell size in all three directions x, y and z (It's an array)
      * @param index Index at which to evaluate the primitive difference
      *
      * @return The difference between primitives of the old spline and the new spline
      */
     template <Direction dir, Impl::PrimitiveDifferenceRegion region>
-    AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const /*dx*/, int const index) const
+    AMREX_GPU_HOST_DEVICE amrex::Real compute_primitive_difference (int const index) const
     {
         using namespace Impl; // utility functions for this function
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
@@ -799,14 +797,12 @@ public:
      *
      * @tparam dir The direction in which to compute
      *
-     * @param dx Cell size in all three directions x, y and z (It's an array)
      * @param index Index at which to evaluate the primitive difference
      *
      * @return The difference between primitives of the old spline and the new spline
      */
     template <Direction dir>
-    AMREX_GPU_HOST_DEVICE inline amrex::Real compute_primitive_difference (
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx, int const index) const
+    AMREX_GPU_HOST_DEVICE inline amrex::Real compute_primitive_difference (int const index) const
     {
         constexpr int deg{SplineBase<degX, degY, degZ>::s_splineDegrees[dir]};
         // Size of support of difference of primitives
@@ -818,22 +814,22 @@ public:
         else if (index < std::min(deg, localSize - deg))
         {
             constexpr auto region{Impl::PrimitiveDifferenceRegion::firstSpline};
-            return this->compute_primitive_difference<dir, region>(dx, index);
+            return this->compute_primitive_difference<dir, region>(index);
         }
         else if (index >= std::max(deg, localSize - deg))
         {
             constexpr auto region{Impl::PrimitiveDifferenceRegion::lastSpline};
-            return this->compute_primitive_difference<dir, region>(dx, index);
+            return this->compute_primitive_difference<dir, region>(index);
         }
         else if (index >= deg && index < localSize - deg)
         {
             constexpr auto region{Impl::PrimitiveDifferenceRegion::noSplines};
-            return this->compute_primitive_difference<dir, region>(dx, index);
+            return this->compute_primitive_difference<dir, region>(index);
         }
         else // (index < deg && index >= localSize - deg)
         {
             constexpr auto region{Impl::PrimitiveDifferenceRegion::bothSplines};
-            return this->compute_primitive_difference<dir, region>(dx, index);
+            return this->compute_primitive_difference<dir, region>(index);
         }
     }
     /**
@@ -877,13 +873,11 @@ public:
      * @param position Current position of the particle
      * @param plo (rename this one)
      * @param dxInverse Inverse of the cell size in all three directions x, y and z (It's an array)
-     * @param dx Cell size in all three directions x, y and z (It's an array)
      */
     AMREX_GPU_HOST_DEVICE SplineWithFirstDerivative (
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& position,
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& plo,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dxInverse,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx) :
+        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dxInverse) :
         SplineBase<degX, degY, degZ>(position, plo, dxInverse)
     {
         m_cellSplineFirstDerivs = {};
@@ -891,11 +885,11 @@ public:
         m_nodeSplineFirstDerivs = {};
 
         AMREX_D_TERM((update_1d_first_derivative<Direction::xDir>(position[xDir], plo[xDir],
-                                                                  dxInverse[xDir], dx[xDir]));
+                                                                  dxInverse[xDir]));
                      , (update_1d_first_derivative<Direction::yDir>(position[yDir], plo[yDir],
-                                                                    dxInverse[yDir], dx[yDir]));
+                                                                    dxInverse[yDir]));
                      , (update_1d_first_derivative<Direction::zDir>(position[zDir], plo[zDir],
-                                                                    dxInverse[zDir], dx[zDir])););
+                                                                    dxInverse[zDir])););
     }
 
     /**
@@ -924,13 +918,11 @@ public:
      * @param position Current position of the particle
      * @param plo low end of the problem domain
      * @param dxInverseDir inverse of the cell size in the given direction
-     * @param dxDir cell size in the given direction
      */
     template <Direction dir>
     AMREX_GPU_HOST_DEVICE void update_1d_first_derivative (amrex::Real const position,
                                                            amrex::Real const plo,
-                                                           amrex::Real const dxInverseDir,
-                                                           amrex::Real const /*dxDir*/)
+                                                           amrex::Real const dxInverseDir)
     {
         amrex::Real const refOffset =
             this->template init_b_splines_at_positions<dir>(position, plo, dxInverseDir);

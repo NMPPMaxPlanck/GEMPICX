@@ -512,7 +512,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
             fields, spline, chargeWeight, primitiveDifference, bArray, jArray, ii);
@@ -523,7 +523,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
             fields, spline, chargeWeight, primitiveDifference, bArray, jArray, ii);
@@ -534,7 +534,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
             fields, spline, chargeWeight, primitiveDifference, bArray, jArray, ii);
@@ -545,7 +545,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_integrate_b_loop<pDir, pDir1, pDir2, degP1, degP2>(
             fields, spline, chargeWeight, primitiveDifference, bArray, jArray, ii);
@@ -579,7 +579,7 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
                                                             primitiveDifference, ii);
@@ -590,7 +590,7 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
                                                             primitiveDifference, ii);
@@ -601,7 +601,7 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
                                                             primitiveDifference, ii);
@@ -612,7 +612,7 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         accumulate_j_loop<pDir, pDir1, pDir2, degP1, degP2>(jArray, spline, chargeWeight,
                                                             primitiveDifference, ii);
@@ -702,7 +702,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+                spline.template compute_primitive_difference<xDir, region>(ii);
 
             accumulate_j_integrate_b_loop<xDir, degY>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -713,7 +713,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+                spline.template compute_primitive_difference<xDir, region>(ii);
 
             accumulate_j_integrate_b_loop<xDir, degY>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -724,7 +724,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<pDir, region>(dx, ii);
+                spline.template compute_primitive_difference<pDir, region>(ii);
 
             accumulate_j_integrate_b_loop<xDir, degY>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -735,7 +735,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<pDir, region>(dx, ii);
+                spline.template compute_primitive_difference<pDir, region>(ii);
 
             accumulate_j_integrate_b_loop<xDir, degY>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -754,7 +754,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             accumulate_j_integrate_b_loop<yDir, degX>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -765,7 +765,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             accumulate_j_integrate_b_loop<yDir, degX>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -776,7 +776,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             accumulate_j_integrate_b_loop<yDir, degX>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -787,7 +787,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             accumulate_j_integrate_b_loop<yDir, degX>(fields, spline, chargeWeight,
                                                       primitiveDifference, bArray, jArray, ii);
@@ -872,7 +872,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         accumulate_j_integrate_b_loop<xDir>(fields, spline, chargeWeight, primitiveDifference,
                                             bArray, jArray, ii);
@@ -883,7 +883,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         accumulate_j_integrate_b_loop<xDir>(fields, spline, chargeWeight, primitiveDifference,
                                             bArray, jArray, ii);
@@ -893,7 +893,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         accumulate_j_integrate_b_loop<xDir>(fields, spline, chargeWeight, primitiveDifference,
                                             bArray, jArray, ii);
@@ -904,7 +904,7 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
 
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         accumulate_j_integrate_b_loop<xDir>(fields, spline, chargeWeight, primitiveDifference,
                                             bArray, jArray, ii);
@@ -962,7 +962,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         for (int j = 0; j <= degP1; ++j)
         {
@@ -981,7 +981,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         for (int j = 0; j <= degP1; ++j)
         {
@@ -1000,7 +1000,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         for (int j = 0; j <= degP1; ++j)
         {
@@ -1019,7 +1019,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<pDir, region>(dx, ii);
+            spline.template compute_primitive_difference<pDir, region>(ii);
 
         for (int j = 0; j <= degP1; ++j)
         {
@@ -1082,7 +1082,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+                spline.template compute_primitive_difference<xDir, region>(ii);
 
             for (int j = 0; j <= degY; ++j)
             {
@@ -1098,7 +1098,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+                spline.template compute_primitive_difference<xDir, region>(ii);
 
             for (int j = 0; j <= degY; ++j)
             {
@@ -1114,7 +1114,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+                spline.template compute_primitive_difference<xDir, region>(ii);
 
             for (int j = 0; j <= degY; ++j)
             {
@@ -1130,7 +1130,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<xDir, region>(dx, ii);
+                spline.template compute_primitive_difference<xDir, region>(ii);
 
             for (int j = 0; j <= degY; ++j)
             {
@@ -1153,7 +1153,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             for (int k = 0; k <= degX; ++k)
             {
@@ -1169,7 +1169,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             for (int k = 0; k <= degX; ++k)
             {
@@ -1185,7 +1185,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             for (int k = 0; k <= degX; ++k)
             {
@@ -1201,7 +1201,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
         {
             constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
             amrex::Real primitiveDifference =
-                spline.template compute_primitive_difference<yDir, region>(dx, ii);
+                spline.template compute_primitive_difference<yDir, region>(ii);
 
             for (int k = 0; k <= degX; ++k)
             {
@@ -1258,7 +1258,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::firstSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
 
@@ -1271,7 +1271,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::noSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
 
@@ -1284,7 +1284,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::bothSplines};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
 
@@ -1297,7 +1297,7 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     {
         constexpr PrimitiveDifferenceRegion region{PrimitiveDifferenceRegion::lastSpline};
         amrex::Real primitiveDifference =
-            spline.template compute_primitive_difference<xDir, region>(dx, ii);
+            spline.template compute_primitive_difference<xDir, region>(ii);
 
         amrex::Dim3 cellIndex = spline.template select_primitive_cellindex<xDir>(ii, 0, 0);
 
@@ -2061,8 +2061,7 @@ void deposit_rho_j_jcrossb_deldots (
                     SplineBase<degX, degY, degZ> spline(positionParticle, plo,
                                                         compDom.inv_cell_size_array());
                     SplineWithFirstDerivative<degX, degY, degZ> splineWithDeriv(
-                        positionParticle, plo, compDom.inv_cell_size_array(),
-                        compDom.cell_size_array());
+                        positionParticle, plo, compDom.inv_cell_size_array());
 
                     amrex::GpuArray<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
                                                            ptd.rdata(ii.m_ively)[pp],

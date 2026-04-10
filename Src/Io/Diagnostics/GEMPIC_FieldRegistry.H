@@ -114,7 +114,7 @@ struct AnyFieldPtr
     AnyFieldPtr() = default;
 
     template <typename T>
-    explicit AnyFieldPtr(T* f, amrex::Real scaling = 1.0, Direction dir = xDir) :
+    explicit AnyFieldPtr(T* f, amrex::Real scaling = 1.0, Direction dir = noDir) :
         m_self(std::make_shared<Model<T>>(f)), m_scaling(scaling), m_dir(dir)
     {
     }
@@ -188,7 +188,7 @@ inline bool register_field (FieldRegistry& registry, Key const& name, AnyFieldPt
 // Overload for raw pointer + scaling/direction
 template <typename T>
 inline bool register_field (
-    FieldRegistry& registry, Key const& name, T* ptr, amrex::Real scaling, Direction dir = xDir)
+    FieldRegistry& registry, Key const& name, T* ptr, amrex::Real scaling, Direction dir = noDir)
 {
     return register_field(registry, name, AnyFieldPtr{ptr, scaling, dir});
 }

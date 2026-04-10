@@ -722,21 +722,16 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
  * @brief Function that computes the interpolant for a given component of a 0-/3-form.
  *
  * @tparam degree order or Lagrange interpolation (only even order implemented)
- * @tparam grid primal or dual
- * @tparam space node or cell, corresponding to 0- or 3-forms
+ * @tparam SrcFormType either a zero- or a three-form field
  * @param evalShift shift from lower corner of primal cell (between 0 and 1)
- * @param data multifab containing degrees of freedom of form to be evaluated
+ * @param srcForm field containing degrees of freedom of form to be evaluated
  * @param values cell centered multifab returning the values at points defined by evalShift
- * @param dr cell size
- * @param geom
  */
 template <int degree, ZeroThreeFormC SrcFormType>
 void eval_form_component (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     SrcFormType const& srcForm,
-    amrex::MultiFab& values,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& /*dr*/,
-    amrex::Geometry const& /*geom*/)
+    amrex::MultiFab& values)
 {
     int nEvals{static_cast<int>(evalShift.size())};
     int const nComp{srcForm.get_ncomp()};
@@ -781,22 +776,17 @@ void eval_form_component (
  * @brief Function that computes the interpolant for a given component of a 1-/2-form.
  *
  * @tparam degree order or Lagrange interpolation (only even order implemented)
- * @tparam grid primal or dual
- * @tparam space edge or face, corresponding to 1- or 2-forms
- * @tparam dir xDir, yDir, zDir
+ * @tparam SrcFormType either a one- or a two-form field
+ * @tparam dir direction of the field (xDir, yDir, zDir)
  * @param evalShift shift from lower corner of primal cell (between 0 and 1)
- * @param data multifab containing degrees of freedom of form to be evaluated
+ * @param srcForm multifab containing degrees of freedom of form to be evaluated
  * @param values cell centered multifab returning the values at points defined by evalShift
- * @param dr cell size
- * @param geom
  */
 template <int degree, OneTwoFormC SrcFormType, Direction dir>
 void eval_form_component (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     SrcFormType const& srcForm,
-    amrex::MultiFab& values,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& /*dr*/,
-    amrex::Geometry const& /*geom*/)
+    amrex::MultiFab& values)
 {
     auto nEvals{static_cast<size_t>(evalShift.size())};
     int nComp{srcForm.get_ncomp(dir)};
@@ -1014,7 +1004,7 @@ template <OneTwoFormC SrcFormType, int degree, Direction dir>
 void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                     SrcFormType const& srcForm,
                                     amrex::Real scaling,
-                                    int /*dcomp*/)
+                                    int dcomp)
 {
     for (amrex::MFIter mfiSrc(srcForm.multi_fab(dir)); mfiSrc.isValid(); // don't use tiling!!
          ++mfiSrc)
@@ -1023,6 +1013,8 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
         // change box upper limits to compute only the cell-centered output multifab:
         amrex::IntVect shiftCellIVect{AMREX_D_DECL(shiftCell[0], shiftCell[1], shiftCell[2])};
         int nComp = srcForm.get_ncomp(dir);
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dcomp + nComp,
+                                          "Insufficient space in destination multifab");
         amrex::Box const& bxSrc = mfiSrc.tilebox(shiftCellIVect);
 
         amrex::Array4 dst = mfDst[mfiSrc].array();
@@ -1065,10 +1057,11 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                         AMREX_D_DECL((iSub + 0.5) / sNSubCellLoc[xDir],
                                                      (jSub + 0.5) / sNSubCellLoc[yDir],
                                                      (kSub + 0.5) / sNSubCellLoc[zDir])};
-                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, n) =
+                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) =
                                         eval_form_component_local<degree, SrcFormType, dir>(
                                             src, r, i, j, k, n);
-                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, n) *= scaling;
+                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) *=
+                                        scaling;
                                 }
                             }
                         }
@@ -1081,7 +1074,7 @@ template <ZeroThreeFormC SrcFormType, int degree>
 void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                     SrcFormType const& srcForm,
                                     amrex::Real scaling,
-                                    int /*dcomp*/)
+                                    int dcomp)
 {
     for (amrex::MFIter mfiSrc(srcForm.multi_fab()); mfiSrc.isValid(); ++mfiSrc)
     {
@@ -1089,6 +1082,8 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
         // change box upper limits to compute only the cell-centered output multifab:
         amrex::IntVect shiftCellIVect{AMREX_D_DECL(shiftCell[0], shiftCell[1], shiftCell[2])};
         int nComp = srcForm.get_ncomp();
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dcomp + nComp,
+                                          "Insufficient space in destination multifab");
         amrex::Box const& bxSrc = mfiSrc.tilebox(shiftCellIVect);
 
         amrex::Array4 dst = mfDst[mfiSrc].array();
@@ -1117,31 +1112,31 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                                        sNSubCellLoc[zDir] == sNSubCellLoc2[zDir]),
                                           "Warning: aspect ratios don't match");
 
-        ParallelFor(bxSrc, nComp,
-                    [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
-                    {
-                        int const iloc = sNSubCellLoc[xDir] * i;
-                        int const jloc = sNSubCellLoc[yDir] * j;
-                        int const kloc = sNSubCellLoc[zDir] * k;
+        ParallelFor(
+            bxSrc, nComp,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
+            {
+                int const iloc = sNSubCellLoc[xDir] * i;
+                int const jloc = sNSubCellLoc[yDir] * j;
+                int const kloc = sNSubCellLoc[zDir] * k;
 
-                        for (int iSub = 0; iSub < sNSubCellLoc[xDir]; ++iSub)
+                for (int iSub = 0; iSub < sNSubCellLoc[xDir]; ++iSub)
+                {
+                    for (int jSub = 0; jSub < sNSubCellLoc[yDir]; ++jSub)
+                    {
+                        for (int kSub = 0; kSub < sNSubCellLoc[zDir]; ++kSub)
                         {
-                            for (int jSub = 0; jSub < sNSubCellLoc[yDir]; ++jSub)
-                            {
-                                for (int kSub = 0; kSub < sNSubCellLoc[zDir]; ++kSub)
-                                {
-                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {
-                                        AMREX_D_DECL((iSub + 0.5) / sNSubCellLoc[xDir],
-                                                     (jSub + 0.5) / sNSubCellLoc[yDir],
-                                                     (kSub + 0.5) / sNSubCellLoc[zDir])};
-                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, n) =
-                                        eval_form_component_local<degree, SrcFormType>(src, r, i, j,
-                                                                                       k, n);
-                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, n) *= scaling;
-                                }
-                            }
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r = {
+                                AMREX_D_DECL((iSub + 0.5) / sNSubCellLoc[xDir],
+                                             (jSub + 0.5) / sNSubCellLoc[yDir],
+                                             (kSub + 0.5) / sNSubCellLoc[zDir])};
+                            dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) =
+                                eval_form_component_local<degree, SrcFormType>(src, r, i, j, k, n);
+                            dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) *= scaling;
                         }
-                    });
+                    }
+                }
+            });
     }
 }
 
@@ -1258,7 +1253,7 @@ template <Forms::ZeroThreeFormC SrcFormType>
 void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
                                  SrcFormType const& srcForm,
                                  int dcomp,
-                                 Direction /*idir = xDir*/)
+                                 Direction /*idir*/)
 {
     // Copying raw MultiFab. You might think this a waste, but amrex's plot function does the same
     // if the MultiFab passed to it has ghost cells.
@@ -1270,7 +1265,7 @@ template <Forms::OneTwoFormC SrcFormType>
 void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
                                  SrcFormType const& srcForm,
                                  int dcomp,
-                                 Direction idir = xDir)
+                                 Direction idir = noDir)
 {
     // Copying raw MultiFab. You might think this a waste, but amrex's plot function does the same
     // if the MultiFab passed to it has ghost cells.
@@ -1283,7 +1278,7 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& /*mfDst*/,
                                       SrcFormType const& /*srcForm*/,
                                       amrex::Real /*scaling*/,
                                       int /*dcomp*/,
-                                      Direction /*idir = xDir*/)
+                                      Direction /*idir*/)
 {
     static_assert(gempic_always_false<SrcFormType>(),
                   "field_to_cellcentered_multifabs is not implemented for this srcFormType!");
@@ -1294,7 +1289,7 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
                                       SrcFormType const& srcForm,
                                       amrex::Real scaling,
                                       int dcomp,
-                                      Direction /*idir = xDir*/)
+                                      Direction /*idir*/)
 {
     // In cartesian geometry, interpolate from simulation MultiFab, m_dataSrc,
     // to output diagnostic MultiFab, mfDst.
@@ -1335,7 +1330,7 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
                                       SrcFormType const& srcForm,
                                       amrex::Real scaling,
                                       int dcomp,
-                                      Direction idir = xDir)
+                                      Direction idir = noDir)
 {
     // In cartesian geometry, interpolate from simulation MultiFab, m_dataSrc,
     // to output diagnostic MultiFab, mfDst.

@@ -220,12 +220,10 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir] - spline.m_firstIndex[xDir]);
 
-        amrex::Real primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 0);
+        amrex::Real primitiveDifference = spline.template compute_primitive_difference<xDir>(0);
         EXPECT_EQ(-1, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 1);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(1);
         EXPECT_EQ(0, primitiveDifference);
         spline.template update_1d_splines<xDir>(
             m_infra.geometry().ProbLo(xDir) + 0.5 * m_infra.geometry().CellSize(xDir),
@@ -234,12 +232,10 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferencexDirTest)
         EXPECT_EQ(0, spline.m_firstIndexOld[xDir]);
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 1);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(1);
         EXPECT_EQ(0, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 0);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(0);
         EXPECT_EQ(0.5, primitiveDifference);
     }
     ASSERT_TRUE(particleLoopRun);
@@ -278,12 +274,10 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
         EXPECT_EQ(0, spline.m_firstIndex[yDir]);
         EXPECT_EQ(0, spline.m_firstIndexOld[yDir] - spline.m_firstIndex[yDir]);
 
-        amrex::Real primitiveDifference = spline.template compute_primitive_difference<yDir>(
-            m_infra.geometry().CellSizeArray(), 1);
+        amrex::Real primitiveDifference = spline.template compute_primitive_difference<yDir>(1);
         EXPECT_EQ(0, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<yDir>(
-            m_infra.geometry().CellSizeArray(), 0);
+        primitiveDifference = spline.template compute_primitive_difference<yDir>(0);
         EXPECT_EQ(-1, primitiveDifference);
 
         spline.template update_1d_splines<yDir>(
@@ -293,12 +287,10 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceyDirTest)
         EXPECT_EQ(0, spline.m_firstIndexOld[yDir]);
         EXPECT_EQ(0, spline.m_firstIndex[yDir]);
 
-        primitiveDifference = spline.template compute_primitive_difference<yDir>(
-            m_infra.geometry().CellSizeArray(), 1);
+        primitiveDifference = spline.template compute_primitive_difference<yDir>(1);
         EXPECT_EQ(0, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<yDir>(
-            m_infra.geometry().CellSizeArray(), 0);
+        primitiveDifference = spline.template compute_primitive_difference<yDir>(0);
         EXPECT_EQ(0.5, primitiveDifference);
     }
     ASSERT_TRUE(particleLoopRun);
@@ -337,12 +329,10 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
         EXPECT_EQ(-1, spline.m_firstIndex[xDir]);
         EXPECT_EQ(1, spline.m_firstIndexOld[xDir] - spline.m_firstIndex[xDir]);
 
-        amrex::Real primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 0);
+        amrex::Real primitiveDifference = spline.template compute_primitive_difference<xDir>(0);
         EXPECT_EQ(-0.125, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 2);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(2);
         EXPECT_EQ(-1, primitiveDifference);
 
         spline.template update_1d_splines<xDir>(
@@ -353,16 +343,13 @@ TEST_F(SplineWithPrimitiveTest, SplineComputePrimitiveDifferenceDegreeTwoTest)
         EXPECT_EQ(0, spline.m_firstIndex[xDir]);
         EXPECT_EQ(-1, spline.m_firstIndexOld[xDir] - spline.m_firstIndex[xDir]);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 1);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(1);
         EXPECT_EQ(0.375, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 0);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(0);
         EXPECT_EQ(0.125, primitiveDifference);
 
-        primitiveDifference = spline.template compute_primitive_difference<xDir>(
-            m_infra.geometry().CellSizeArray(), 2);
+        primitiveDifference = spline.template compute_primitive_difference<xDir>(2);
         EXPECT_EQ(0, primitiveDifference);
     }
     ASSERT_TRUE(particleLoopRun);

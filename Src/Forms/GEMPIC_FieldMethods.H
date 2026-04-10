@@ -2456,8 +2456,7 @@ void eval_form_degree_selector (
         {
             constexpr int degree = validDegreesArray[testDegInd];
             // 0-/3-form call
-            eval_form_component<degree, SrcFormType>(
-                evalShift, field, pointValues, field.m_deRham->get_dx(), field.m_deRham->m_geom);
+            eval_form_component<degree, SrcFormType>(evalShift, field, pointValues);
         }
         else
         {
@@ -2485,8 +2484,7 @@ void eval_form_degree_selector (
         {
             constexpr int degree = validDegreesArray[testDegInd];
             // 1-/2-form call
-            eval_form_component<degree, SrcFormType, dir>(
-                evalShift, field, pointValues, field.m_deRham->get_dx(), field.m_deRham->m_geom);
+            eval_form_component<degree, SrcFormType, dir>(evalShift, field, pointValues);
         }
         else
         {

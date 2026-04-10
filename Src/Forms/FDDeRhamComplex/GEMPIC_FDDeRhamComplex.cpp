@@ -673,7 +673,7 @@ FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& infra,
                                  int const maxSplineDegree,
                                  HodgeScheme hodgeScheme,
                                  int nComp) :
-    DeRhamComplex::DeRhamComplex{infra, hodgeDegree, maxSplineDegree}
+    DeRhamComplex::DeRhamComplex{infra, hodgeDegree}
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::FDDeRhamComplex()");
     Io::Parameters params("DeRhamComplex");
