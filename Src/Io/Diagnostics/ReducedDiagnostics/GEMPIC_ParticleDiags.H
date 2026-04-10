@@ -2,15 +2,6 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
-/* Copyright 2019-2020 Yinjian Zhao
- *
- * This file is part of WarpX.
- *
- * License: BSD-3-Clause-LBNL
- */
-/*
- * Modified for GEMPICX
- */
 
 #ifndef REDUCEDDIAGS_PARTICLE_H_
 #define REDUCEDDIAGS_PARTICLE_H_

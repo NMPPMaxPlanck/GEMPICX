@@ -237,7 +237,7 @@ public:
                                      positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
                         SplineWithFirstDerivative<s_degX, s_degY, s_degZ> splineDeriv(
-                            positionParticle, plo, infra.inv_cell_size_array(), dx);
+                            positionParticle, plo, infra.inv_cell_size_array());
 
                         amrex::GpuArray<amrex::Real, s_vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
                                                                  ptd.rdata(ii.m_ively)[pp],

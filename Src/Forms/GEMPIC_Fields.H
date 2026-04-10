@@ -710,15 +710,13 @@ protected:
     amrex::IntVect m_nGhostRequired;
 
 public:
-    // ToDo: Temporary moved to be public until ComputationalDomain is removed
+    /// @todo: Temporary moved to be public until ComputationalDomain is removed
     amrex::Geometry m_geom;
+
     /// Constructor for the DeRhamComplex class
     /// @param infra The computational domain needed to construct the class correctly
     /// @param hodgeDegree The degree of the Hodge scheme, used for a lower limit of ghost cells
-    /// @param maxSplineDegree The degree of the splines, used for a lower limit of ghost cells
-    DeRhamComplex(ComputationalDomain const& infra,
-                  int const hodgeDegree,
-                  int const maxSplineDegree);
+    DeRhamComplex(ComputationalDomain const& infra, int const hodgeDegree);
 
     virtual HodgeScheme get_hodge_scheme() const = 0;
     virtual amrex::MultiFab& get_temp_primal_zero_form() = 0;

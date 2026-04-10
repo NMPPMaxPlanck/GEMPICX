@@ -131,8 +131,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // setup is in a way, that the first spline is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
-            xDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::bothSplines>(
-            m_infra.geometry().CellSizeArray(), 0);
+            xDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::bothSplines>(0);
         primDiffRef = primitiveDifference;
 
         AMREX_D_TERM(, yNodeVal = spline.m_nodeSplineVals[yDir][0];
@@ -179,8 +178,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // setup is in a way, that the second index is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
-            yDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::bothSplines>(
-            m_infra.geometry().CellSizeArray(), 1);
+            yDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::bothSplines>(1);
         primDiffRef = primitiveDifference;
 
         AMREX_D_TERM(xNodeVal = spline.m_nodeSplineVals[xDir][0];
@@ -224,8 +222,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         // setup is in a way, that the first spline is in the "firstSpline" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
-            zDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::firstSpline>(
-            m_infra.geometry().CellSizeArray(), 0);
+            zDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::firstSpline>(0);
         primDiffRef = primitiveDifference;
 
         xNodeVal = spline.m_nodeSplineVals[xDir][0];

@@ -446,13 +446,7 @@ amrex::Real dot (DiscreteVectorField& a, DiscreteVectorField& b)
 
 namespace Forms
 {
-/// Constructor for the DeRhamComplex class
-/// @param infra The computational domain needed to construct the class correctly
-/// @param hodgeDegree The degree of the Hodge scheme, used for a lower limit of ghost cells
-/// @param maxSplineDegree The degree of the splines, used for a lower limit of ghost cells
-DeRhamComplex::DeRhamComplex(ComputationalDomain const& infra,
-                             int const hodgeDegree,
-                             int const /*maxSplineDegree*/)
+DeRhamComplex::DeRhamComplex(ComputationalDomain const& infra, int const hodgeDegree)
 /*  :
   m_fieldRegistry(std::make_unique<FieldRegistry>())*/
 {

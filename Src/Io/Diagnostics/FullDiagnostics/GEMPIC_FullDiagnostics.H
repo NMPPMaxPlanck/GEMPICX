@@ -178,11 +178,7 @@ private:
         }
         else if (m_format == "openpmd")
         {
-#ifdef WARPX_USE_OPENPMD
-            m_flushFormat = std::make_unique<FlushFormatOpenPMD>(m_diagName);
-#else
-            GEMPIC_ERROR("To use openpmd output format, need to compile with USE_OPENPMD=TRUE");
-#endif
+            GEMPIC_ERROR("openpmd is not implemented");
         }
         else
         {
