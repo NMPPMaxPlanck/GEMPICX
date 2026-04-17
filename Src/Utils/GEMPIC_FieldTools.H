@@ -66,7 +66,7 @@ AMREX_GPU_HOST_DEVICE consteval std::array<int, 3> make_dir_shift ()
  * @brief make a shift array
  */
 template <Gempic::Forms::ZeroThreeFormC SrcFormType>
-GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE constexpr std::array<int, 3> make_dir_shift ()
+AMREX_GPU_HOST_DEVICE consteval std::array<int, 3> make_dir_shift ()
 {
     if constexpr (SrcFormType::s_space == Gempic::Forms::Space::node)
     {
@@ -158,7 +158,7 @@ struct StaggeredDofMapping<SrcFormType, dir>
     amrex::GpuArray<int, 3>
         m_shiftDualGridIdx; // for node-based staggered grid (grid shift 0.5*(dx,dy,dz)), a single
                             // integer is probably enough.
-    static constexpr std::array<int, 3> s_mDirShift{make_dir_shift<SrcFormType, dir>()};
+    inline static constexpr std::array<int, 3> s_mDirShift{make_dir_shift<SrcFormType, dir>()};
 
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     StaggeredDofMapping (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& rIn)
@@ -202,7 +202,7 @@ struct StaggeredDofMapping<SrcFormType, dir>
                   "StaggeredDofMapping: ZeroThreeForm must use dir = noDir");
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> m_r;
     amrex::GpuArray<int, 3> m_shiftDualGridIdx;
-    static constexpr std::array<int, 3> s_mDirShift{make_dir_shift<SrcFormType>()};
+    inline static constexpr std::array<int, 3> s_mDirShift{make_dir_shift<SrcFormType>()};
 
     AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
     StaggeredDofMapping (amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& rIn)

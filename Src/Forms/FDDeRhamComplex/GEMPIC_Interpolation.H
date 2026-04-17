@@ -622,6 +622,7 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     int n = 0)
 {
     constexpr int sigma{nNodes / 2 - 1};
+    static constexpr std::array<int, 3> dirShift{StaggeredDofMapping<SrcFormType>::s_mDirShift};
 
     StaggeredDofMapping<SrcFormType> stagMap(r);
     //m_shiftDualGridIdx add a shift in the indices for dual to primal evaluation
@@ -632,9 +633,9 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
     // m_dirShift add eventually a degree of freedom to the reconsctruction stencil
-    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.s_mDirShift[xDir]; ++a),
-                        for (int b = -sigma; b < sigma + 1 + stagMap.s_mDirShift[yDir]; ++b),
-                        for (int c = -sigma; c < sigma + 1 + stagMap.s_mDirShift[zDir]; ++c))
+    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + dirShift[xDir]; ++a),
+                        for (int b = -sigma; b < sigma + 1 + dirShift[yDir]; ++b),
+                        for (int c = -sigma; c < sigma + 1 + dirShift[zDir]; ++c))
         fval +=
             funcMF(i + a, j + b, k + c, n) *
             GEMPIC_D_MULT((Gempic::Forms::choose_eval<nNodes, SrcFormType>(a, stagMap.m_r[xDir])),
@@ -697,6 +698,8 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     int n = 0)
 {
     constexpr int sigma{nNodes / 2 - 1};
+    static constexpr std::array<int, 3> dirShift{
+        StaggeredDofMapping<SrcFormType, dir>::s_mDirShift};
 
     StaggeredDofMapping<SrcFormType, dir> stagMap(r);
 
@@ -707,9 +710,9 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
 
-    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.s_mDirShift[xDir]; ++a),
-                        for (int b = -sigma; b < sigma + 1 + stagMap.s_mDirShift[yDir]; ++b),
-                        for (int c = -sigma; c < sigma + 1 + stagMap.s_mDirShift[zDir]; ++c))
+    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + dirShift[xDir]; ++a),
+                        for (int b = -sigma; b < sigma + 1 + dirShift[yDir]; ++b),
+                        for (int c = -sigma; c < sigma + 1 + dirShift[zDir]; ++c))
         fval += funcMF(i + a, j + b, k + c, n) *
                 GEMPIC_D_MULT((choose_eval<nNodes, SrcFormType, dir, xDir>(a, stagMap.m_r[xDir])),
                               (choose_eval<nNodes, SrcFormType, dir, yDir>(b, stagMap.m_r[yDir])),
