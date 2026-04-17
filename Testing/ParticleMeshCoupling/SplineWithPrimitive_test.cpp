@@ -7,8 +7,6 @@
 
 #include <AMReX.H>
 
-#include "GEMPIC_FDDeRhamComplex.H"
-#include "GEMPIC_Fields.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_SplineClass.H"

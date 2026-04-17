@@ -367,6 +367,7 @@ private:
 public:
     /**
      * constructor
+     * @param[in] speciesName name of particle species
      * @param[in] rdName reduced diags names
      * @param[in] indexNum the index of the print field in the header
      * @param[in] isLastType is this the last type in the group?

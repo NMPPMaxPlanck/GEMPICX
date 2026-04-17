@@ -64,7 +64,7 @@ std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask(amrex::MultiFab& thisMF,
 /**
  * @brief like SumBoundary or WeightedSync, but for amrex::FabArray<amrex::BaseFab<dataStruct>>
  * objects.
- * @tparam dataStruct a data structure having a fill(amrex::Real) function, and an associated
+ * @tparam DataStruct a data structure having a fill(amrex::Real) function, and an associated
  * amrex::FabArrayBase::ADD function
  * @param thisMF a FabArray of BaseFab of dataStruc. (like a generalized MultiFab)
  * @param period amrex::Periodicity
@@ -258,6 +258,7 @@ void mult_and_add(amrex::MultiFab& dst,
 
 /**
  * @brief Compute dot products of two FabArrays: this comes from amrex function
+ * @verbatim
 template <typename FAB, std::enable_if_t<IsBaseFab<FAB>::value, int> FOO = 0>
 typename FAB::value_type Dot (FabArray<FAB> const& x,
                               int xcomp,
@@ -266,6 +267,7 @@ typename FAB::value_type Dot (FabArray<FAB> const& x,
                               int ncomp,
                               IntVect const& nghost,
                               bool local = false)
+ * @endverbatim
  *
  * @param wgt    weight, single component
  * @param x      first FabArray

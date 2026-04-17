@@ -563,8 +563,8 @@ public:
     /**
      * @brief Return named constants
      *
-     * @details This function returns a list of named constants (either default like $\pi$ or user
-     * defined from the input file) to be registered to function parsers.
+     * @details This function returns a list of named constants (either default like \f$\pi\f$ or
+     * user defined from the input file) to be registered to function parsers.
      */
     static std::vector<std::pair<std::string, amrex::Real>> get_named_constants();
 

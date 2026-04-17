@@ -131,8 +131,8 @@ public:
     /**
      * the mult_and_add method
      *
-     * @param alpha : real scaling parameter
-     * @param other : the source of the assign
+     * @param alpha real scaling parameter
+     * @param other the source of the assign
      */
     void mult_and_add (amrex::Real alpha, std::shared_ptr<MHDFieldsHandlerStruct> const& other)
     {
@@ -161,7 +161,7 @@ public:
     /**
      * Explicitly define copy assignment operator to avoid default deletion (from DeRhamFields)
      *
-     * @param other : source
+     * @param other source
      */
     MHDFieldsHandlerStruct& operator=(MHDFieldsHandlerStruct const& other)
     {

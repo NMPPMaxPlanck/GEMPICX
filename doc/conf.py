@@ -42,7 +42,7 @@ def configureDoxyfile(input_dir, output_dir):
 
 # -- Project information -----------------------------------------------------
 
-project = 'gempic'
+project = 'GEMPICX'
 copyright = '2022, See License'
 author = 'See Authors'
 

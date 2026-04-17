@@ -145,7 +145,7 @@ RECURSIVE              = YES
 #
 # Examples: ANamespace, AClass, ANamespace::AClass, ANamespace::*Test
 
-EXCLUDE_SYMBOLS        = Impl::*, *::Impl::*
+EXCLUDE_SYMBOLS        = Impl, Impl::*, *::Impl::*
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -251,12 +251,6 @@ GENERATE_XML           = YES
 
 XML_OUTPUT             = ./
 
-# Ensure all generated files are encoded in UTF-8
-# This prevents errors in Sphinx when parsing non-ASCII characters
-# such as accented letters, smart quotes, or other symbols.
-
-UTF8_ENCODING = YES
-
 #---------------------------------------------------------------------------
 # Configuration options related to the preprocessor
 #---------------------------------------------------------------------------
@@ -288,7 +282,12 @@ EXPAND_ONLY_PREDEF     = YES
 
 PREDEFINED             = "AMREX_GPU_HOST_DEVICE= " \
                          "AMREX_GPU_DEVICE= " \
-                         "AMREX_INLINE=inline"
+                         "AMREX_INLINE=inline" \
+                         "AMREX_FORCE_INLINE=inline" \
+                         "GEMPIC_FORCE_INLINE=inline" \
+                         "AMREX_USE_FFT" \
+                         "AMREX_USE_HYPRE" \
+                         "AMREX_SPACEDIM=3"
 
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool

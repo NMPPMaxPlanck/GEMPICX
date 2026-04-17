@@ -41,12 +41,11 @@ namespace Gempic::Forms
  *
  * @param funcs ParserExecutor, functions to be projected
  * @param t Real, time at which func is to be evaluated
- * @param field Gempic::Forms::DeRhamField<primal, Space::node>, 0-form \f$u^0\f$ holding the node
- * values
+ * @param field 0-form \f$u^0\f$ holding the node values
  */
 void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                 amrex::Real t,
-                Gempic::Forms::DeRhamComplex::Primal0Form& field);
+                DeRhamField<Grid::primal, Space::node>& field);
 
 inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                         amrex::Real t,
@@ -68,13 +67,12 @@ inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
  *
  * @param funcs ParserExecutor, functions to be projected
  * @param t Real, time at which func is to be evaluated
- * @param field Gempic::Forms::DeRhamField<primal, Space::cell>, 3-form \f$u^3\f$ holding the cell
- * integrals
+ * @param field 3-form \f$u^3\f$ holding the cell integrals
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                 amrex::Real t,
-                Gempic::Forms::DeRhamComplex::Primal3Form& field,
+                DeRhamField<Grid::primal, Space::cell>& field,
                 int gaussNodes = 6);
 
 inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
@@ -87,23 +85,21 @@ inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
 }
 
 /**
-* @brief Computes the Restriction operator \f$\tilde{R}_0\f$
-*
-* @details
-* Using the geometric degrees of freedom:
-* Evaluates func at time t on the nodes of the dual grid
-*
-* For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
-*
-
-* @param funcs ParserExecutor, functions to be projected
-* @param t Real, time at which func is to be evaluated
-* @param field Gempic::Forms::DeRhamField<dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the
-node values
-*/
+ * @brief Computes the Restriction operator \f$\tilde{R}_0\f$
+ *
+ * @details
+ * Using the geometric degrees of freedom:
+ * Evaluates func at time t on the nodes of the dual grid
+ *
+ * For dimensions 1 and 2, the 0-form is taken from the "stacked" de Rham complex
+ *
+ * @param funcs ParserExecutor, functions to be projected
+ * @param t Real, time at which func is to be evaluated
+ * @param dualField 0-form \f$\tilde{u}^0\f$ holding the node values
+ */
 void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                 amrex::Real t,
-                Gempic::Forms::DeRhamComplex::Dual0Form& field);
+                DeRhamField<Grid::dual, Space::node>& dualField);
 
 inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
                         amrex::Real t,
@@ -125,13 +121,12 @@ inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
  *
  * @param funcs ParserExecutor, functions to be projected
  * @param t Real, time at which func is to be evaluated
- * @param field Gempic::Forms::DeRhamField<dual, Space::cell>, 3-form \f$\tilde{u}^3\f$ holding the
- * cell integrals
+ * @param field 3-form \f$\tilde{u}^3\f$ holding the cell integrals
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void projection(amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
                 amrex::Real t,
-                Gempic::Forms::DeRhamComplex::Dual3Form& field,
+                DeRhamField<Grid::dual, Space::cell>& field,
                 int gaussNodes = 6);
 
 inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
@@ -155,14 +150,13 @@ inline void projection (amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
  *
  * @param funcs ParserExecutor, functions to be projected
  * @param t Real, time at which func is to be evaluated
- * @param field Gempic::Forms::DeRhamField<dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the
- * edge integrals
+ * @param field 1-form \f$\tilde{u}^1\f$ holding the edge integrals
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void projection(
     amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
-    Gempic::Forms::DeRhamComplex::Dual1Form& field,
+    DeRhamField<Grid::dual, Space::edge>& field,
     int gaussNodes = 6);
 
 inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
@@ -186,14 +180,13 @@ inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 
  *
  * @param funcs ParserExecutor, functions to be projected
  * @param t Real, time at which func is to be evaluated
- * @param field Gempic::Forms::DeRhamField<primal, Space::face>, 2-form \f$u^2\f$ holding the face
- * integrals
+ * @param field 2-form \f$u^2\f$ holding the face integrals
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void projection(
     amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
-    Gempic::Forms::DeRhamComplex::Primal2Form& field,
+    DeRhamField<Grid::primal, Space::face>& field,
     int gaussNodes = 6);
 
 inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
@@ -217,14 +210,13 @@ inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 
  *
  * @param funcs ParserExecutor, functions to be projected
  * @param t Real, time at which func is to be evaluated
- * @param field Gempic::Forms::DeRhamField<primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
- * integrals
+ * @param field 1-form \f$u^1\f$ holding the edge integrals
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void projection(
     amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
-    Gempic::Forms::DeRhamComplex::Primal1Form& field,
+    DeRhamField<Grid::primal, Space::edge>& field,
     int gaussNodes = 6);
 
 inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
@@ -240,7 +232,7 @@ inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 
  * @brief Computes the Restriction operator \f$\tilde{R}_2\f$
  *
  * @details
- * Using the geometric degrees of freedeom:
+ * Using the geometric degrees of freedom:
  * Integrates func at time t over the faces of the dual grid by using a Gauss-Legendre quadrature
  * rule
  *
@@ -248,14 +240,14 @@ inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 
  *
  * @param funcs ParserExecutor, functions to be projected
  * @param t Real, time at which func is to be evaluated
- * @param field Gempic::Forms::DeRhamField<dual, Space::face>, 2-form \f$\tilde{u}^2\f$ holding the
+ * @param field 2-form \f$\tilde{u}^2\f$ holding the
  * face integrals
  * @param gaussNodes int, number of Gauss nodes to be used for quadrature
  */
 void projection(
     amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
     amrex::Real t,
-    Gempic::Forms::DeRhamComplex::Dual2Form& field,
+    DeRhamField<Grid::dual, Space::face>& field,
     int gaussNodes = 6);
 
 inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
@@ -274,7 +266,7 @@ inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 
 template <OneTwoFormC OneTwoFormOut, OneTwoFormC OneTwoFormIn>
 inline void copy (OneTwoFormOut& fieldOut, OneTwoFormIn const& fieldIn)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::copy");
+    BL_PROFILE("DeRhamField<isOneOrTwoForm>::copy");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -286,7 +278,7 @@ inline void copy (OneTwoFormOut& fieldOut, OneTwoFormIn const& fieldIn)
 template <ZeroThreeFormC ZeroThreeFormOut, ZeroThreeFormC ZeroThreeFormIn>
 inline void copy (ZeroThreeFormOut& fieldOut, ZeroThreeFormIn const& fieldIn)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::copy");
+    BL_PROFILE("DeRhamField<isZeroOrThreeForm>::copy");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
     amrex::Copy(fieldOut.m_data, fieldIn.m_data, 0, 0, fieldIn.m_data.nComp(), nGhost);
 }
@@ -437,8 +429,8 @@ inline amrex::Real dot_product (ZeroThreeForm1 const& field1, ZeroThreeForm2 con
  * @param oneForm DeRhamField<Grid::primal, Space::edge>, 1-form \f$u^1\f$ holding the edge
  * integrals
  */
-template <PrimalTwoFormC TwoFormType, PrimalOneFormC OneFormType>
-void curl (TwoFormType& twoForm, OneFormType const& oneForm)
+template <PrimalTwoFormC PrimalTwoFormType, PrimalOneFormC PrimalOneFormType>
+void curl (PrimalTwoFormType& twoForm, PrimalOneFormType const& oneForm)
 {
     BL_PROFILE("Gempic::Forms::curl(primal,face,primal,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
@@ -531,8 +523,8 @@ void curl (TwoFormType& twoForm, OneFormType const& oneForm)
  * integrals
  * @param dt time step by which curl is multiplied. Can be negative for subtraction.
  */
-template <PrimalTwoFormC TwoFormType, PrimalOneFormC OneFormType>
-void add_dt_curl (TwoFormType& twoForm, OneFormType const& oneForm, amrex::Real dt)
+template <PrimalTwoFormC PrimalTwoFormType, PrimalOneFormC PrimalOneFormType>
+void add_dt_curl (PrimalTwoFormType& twoForm, PrimalOneFormType const& oneForm, amrex::Real dt)
 {
     BL_PROFILE("Gempic::Forms::add_dt_curl(primal,face,primal,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
@@ -624,8 +616,8 @@ void add_dt_curl (TwoFormType& twoForm, OneFormType const& oneForm, amrex::Real 
  * @param oneForm DeRhamField<Grid::dual, Space::edge>, 1-form \f$\tilde{u}^1\f$ holding the edge
  * integrals
  */
-template <DualTwoFormC TwoFormType, DualOneFormC OneFormType>
-void curl (TwoFormType& twoForm, OneFormType const& oneForm)
+template <DualTwoFormC DualTwoFormType, DualOneFormC DualOneFormType>
+void curl (DualTwoFormType& twoForm, DualOneFormType const& oneForm)
 {
     BL_PROFILE("Gempic::Forms::curl(dual,face,dual,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
@@ -721,8 +713,8 @@ void curl (TwoFormType& twoForm, OneFormType const& oneForm)
  * integrals
  * @param dt time step by which curl is multiplied. Can be negative for subtraction.
  */
-template <DualTwoFormC TwoFormType, DualOneFormC OneFormType>
-void add_dt_curl (TwoFormType& twoForm, OneFormType const& oneForm, amrex::Real dt)
+template <DualTwoFormC DualTwoFormType, DualOneFormC DualOneFormType>
+void add_dt_curl (DualTwoFormType& twoForm, DualOneFormType const& oneForm, amrex::Real dt)
 {
     BL_PROFILE("Gempic::Forms::add_dt_curl(dual,face,dual,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
@@ -817,8 +809,8 @@ void add_dt_curl (TwoFormType& twoForm, OneFormType const& oneForm, amrex::Real 
  * @param zeroForm DeRhamField<Grid::primal, Space::node>, 0-form \f$u^0\f$ holding the node
  * values
  */
-template <PrimalOneFormC OneFormType, PrimalZeroFormC ZeroFormType>
-void grad (OneFormType& oneForm, ZeroFormType const& zeroForm)
+template <PrimalOneFormC PrimalOneFormType, PrimalZeroFormC PrimalZeroFormType>
+void grad (PrimalOneFormType& oneForm, PrimalZeroFormType const& zeroForm)
 {
     BL_PROFILE("Gempic::Forms::grad(primal,edge,primal,node)");
     int nComps{zeroForm.m_data.nComp()};
@@ -884,8 +876,8 @@ void grad (OneFormType& oneForm, ZeroFormType const& zeroForm)
  * values
  * @param a amrex::Real, constant to be multiplied with the gradient
  */
-template <PrimalOneFormC OneFormType, PrimalZeroFormC ZeroFormType>
-void a_times_grad (OneFormType& oneForm, ZeroFormType const& zeroForm, amrex::Real a)
+template <PrimalOneFormC PrimalOneFormType, PrimalZeroFormC PrimalZeroFormType>
+void a_times_grad (PrimalOneFormType& oneForm, PrimalZeroFormType const& zeroForm, amrex::Real a)
 {
     BL_PROFILE("Gempic::Forms::a_times_grad(primal,edge,primal,node)");
     int nComps{zeroForm.m_data.nComp()};
@@ -954,8 +946,8 @@ void a_times_grad (OneFormType& oneForm, ZeroFormType const& zeroForm, amrex::Re
  * @param zeroForm DeRhamField<Grid::dual, Space::node>, 0-form \f$\tilde{u}^0\f$ holding the node
  * values
  */
-template <DualOneFormC OneFormType, DualZeroFormC ZeroFormType>
-void grad (OneFormType& oneForm, ZeroFormType const& zeroForm)
+template <DualOneFormC DualOneFormType, DualZeroFormC DualZeroFormType>
+void grad (DualOneFormType& oneForm, DualZeroFormType const& zeroForm)
 {
     BL_PROFILE("Gempic::Forms::grad(dual,edge,dual,node)");
     int nComps{zeroForm.m_data.nComp()};
@@ -1009,7 +1001,7 @@ void grad (OneFormType& oneForm, ZeroFormType const& zeroForm)
 }
 
 /**
- * @brief Computes a times the discrete gradient \f$a \mathbb{G}\f$ on the dual grid
+ * @brief Computes a times the discrete gradient \f$ a \mathbb{G}\f$ on the dual grid
  *
  * @details
  * Using the geometric degrees of freedom. No approximations involved.
@@ -1022,8 +1014,8 @@ void grad (OneFormType& oneForm, ZeroFormType const& zeroForm)
  * values
  * @param a Multiplication factor
  */
-template <DualOneFormC OneFormType, DualZeroFormC ZeroFormType>
-void a_times_grad (OneFormType& oneForm, ZeroFormType const& zeroForm, amrex::Real a)
+template <DualOneFormC DualOneFormType, DualZeroFormC DualZeroFormType>
+void a_times_grad (DualOneFormType& oneForm, DualZeroFormType const& zeroForm, amrex::Real a)
 {
     BL_PROFILE("Gempic::Forms::a_times_grad(dual,edge,dual,node)");
     int nComps{zeroForm.m_data.nComp()};
@@ -1093,8 +1085,8 @@ void a_times_grad (OneFormType& oneForm, ZeroFormType const& zeroForm, amrex::Re
  * @param twoForm DeRhamField<Grid::primal, Space::face>, 2-form \f$u^2\f$ holding the face
  * integrals
  */
-template <PrimalThreeFormC ThreeFormType, PrimalTwoFormC TwoFormType>
-void div (ThreeFormType& threeForm, TwoFormType const& twoForm)
+template <PrimalThreeFormC PrimalThreeFormType, PrimalTwoFormC PrimalTwoFormType>
+void div (PrimalThreeFormType& threeForm, PrimalTwoFormType const& twoForm)
 {
     BL_PROFILE("Gempic::Forms::div(primal,cell,primal,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
@@ -1139,8 +1131,8 @@ void div (ThreeFormType& threeForm, TwoFormType const& twoForm)
  * @param[out] threeForm DeRhamField<Grid::primal, Space::dual>, 3-form \f$\tilde{D}
  * \tilde{u}^2\f$ holding the resulting cell integrals
  */
-template <DualThreeFormC ThreeFormType, DualTwoFormC TwoFormType>
-void div (ThreeFormType& threeForm, TwoFormType const& twoForm)
+template <DualThreeFormC DualThreeFormType, DualTwoFormC DualTwoFormType>
+void div (DualThreeFormType& threeForm, DualTwoFormType const& twoForm)
 {
     BL_PROFILE("Gempic::Forms::div(dual,cell,dual,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
@@ -2251,14 +2243,14 @@ void hodge_operator (typename DRC::Dual3Form& threeForm,
  * Recursively calls itself until the runtime Hodge degree == validDegrees[hodgeDegreeIdx],
  * then calls hodge<hodgeDegree, hodgeScheme>.
  *
- * @tparam FieldRef type of the destination Form (parameter deduction)
- * @tparam FieldConstRef type of the source Form (parameter deduction)
+ * @tparam DstFormType type of the destination Form (parameter deduction)
+ * @tparam SrcFormType type of the source Form (parameter deduction)
  * @tparam hodgeScheme    Hodge scheme as found by hodge_scheme_selector
  * @tparam hodgeDegreeIdx Not the Hodge degree! The index of the validDegrees array
  * corresponding to the Hodge scheme.
  *
- * @param hodgeSrc const source field
- * @param hodgeDst destination field
+ * @param dstForm destination field
+ * @param srcForm const source field
  * @param weight optional weight for the hodge
  */
 template <HodgeScheme hodgeScheme,
@@ -2298,8 +2290,8 @@ void hodge_degree_selector (DstFormType& dstForm, SrcFormType& srcForm, amrex::R
  *
  * @tparam DstFormType type of the destination form (parameter deduction)
  * @tparam SrcFormType type of the source form (parameter deduction)
- * @param f2 destination form
- * @param f1 const source form
+ * @param dstForm destination form
+ * @param srcForm const source form
  * @param weight optional weight for the Hodge
  */
 template <typename DstFormType, typename SrcFormType>

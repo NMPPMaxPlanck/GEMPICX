@@ -106,6 +106,7 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real update_integrated_b_component (
  * @param primitiveDifference The difference of the primitves at the current and previous time step
  * @param bArray Degrees of freedom of B as primal 2-form
  * @param jArray Degrees of freedom of J as dual 2-form
+ * @param i index in the pDir direction
  *
  * @todo vDim is not always the nb of components of B: (if vDim == 2, then B has 1 component), this
  * should be fixed
@@ -1462,7 +1463,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const&
 }
 
 /**
- * @brief
+ * @brief deposits coeff*depVector[dir] to a 2-form for all directions dir
  *
  * @tparam degX Spline degree in x
  * @tparam degY Spline degree in y
@@ -1470,7 +1471,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const&
  *
  * @param[out] twoForm generic twoForm field to be computed
  * @param spline Splines evaluated at given particle position
- * @param dep_vector The deposit vector
+ * @param depVector The deposition vector
  * @param coeff
  */
 template <int degX, int degY, int degZ, unsigned int vDim>
@@ -1478,7 +1479,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_twoform (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& twoForm,
     SplineBase<degX, degY, degZ> const& spline,
     amrex::GpuArray<amrex::Real, vDim> const& depVector,
-    amrex::Real chargeWeight)
+    amrex::Real coeff)
 {
     BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_twoform()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
@@ -1495,7 +1496,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_twoform (
                 spline.template eval_b_spline<Forms::Field::DualTwoForm, xDir>(ii, jj, kk);
             amrex::HostDevice::Atomic::Add(
                 twoForm[xDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                sCoeff * chargeWeight * depVector[xDir]);
+                sCoeff * coeff * depVector[xDir]);
         }
 
         if constexpr (vDim > 1)
@@ -1507,7 +1508,7 @@ AMREX_GPU_HOST_DEVICE inline void deposit_twoform (
                     spline.template eval_b_spline<Forms::Field::DualTwoForm, yDir>(ii, jj, kk);
                 amrex::HostDevice::Atomic::Add(
                     twoForm[yDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                    sCoeff * chargeWeight * depVector[yDir]);
+                    sCoeff * coeff * depVector[yDir]);
             }
         }
         if constexpr (vDim == 3)
@@ -1519,24 +1520,11 @@ AMREX_GPU_HOST_DEVICE inline void deposit_twoform (
                     spline.template eval_b_spline<Forms::Field::DualTwoForm, zDir>(ii, jj, kk);
                 amrex::HostDevice::Atomic::Add(
                     twoForm[zDir].ptr(cellIndex.x, cellIndex.y, cellIndex.z, 0),
-                    sCoeff * chargeWeight * depVector[zDir]);
+                    sCoeff * coeff * depVector[zDir]);
             }
         }
     GEMPIC_D_LOOP_END
 }
-
-/**
- * @brief
- *
- * @tparam degX Spline degree in x
- * @tparam degY Spline degree in y
- * @tparam degZ Spline degree in z
- *
- * @param[out] currentDensity current density to be computed
- * @param spline Splines evaluated at given particle position
- * @param vel The velocity vector
- * @param coeff
- */
 
 template <Direction dir, int degX, int degY, int degZ, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_deldot_s_coefficient (

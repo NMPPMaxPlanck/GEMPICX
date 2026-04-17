@@ -534,7 +534,7 @@ public:
 /**
  * Runge Kutta Butcher Tableau handler
  *
- * @param nRKstages : number of stages (dof).
+ * @param nRKstages number of stages (dof).
  */
 template <int nRKstages>
 struct RkButcherTableau
@@ -693,11 +693,12 @@ enum class RungeKuttaTag
 
 /**
  * @brief Type Selector for the Runge Kutta Butcher Tableau for RK_ButcherTableau
- * @tparam RungeKuttaTag : Runge Kutta enum class
+ * @tparam RungeKuttaTag Runge Kutta enum class
  */
 template <RungeKuttaTag>
 struct RKTypeSelector;
 
+/// @cond  EXCLUDE_API_DOC
 //structure specialization
 template <>
 struct RKTypeSelector<RungeKuttaTag::ExplicitEuler>
@@ -761,11 +762,12 @@ struct RKTypeSelector<RungeKuttaTag::SASPImExRK3>
     static constexpr int s_order{2};
     static constexpr RungeKuttaTimeMode s_timeMode{RungeKuttaTimeMode::ImEx};
 };
+/// @endcond
 
 /**
  * Base Handler structure for the physical state
  *
- * @param Derived : using CRTP
+ * @tparam Derived using CRTP
  */
 template <typename Derived>
 struct BaseFieldsHandlerStruct
@@ -782,7 +784,8 @@ struct BaseFieldsHandlerStruct
     /**
      * Addition and scaling function using CRTP
      *
-     * @param Derived : using CRTP
+     * @param alpha Multiplication parameter
+     * @param other Different BaseFieldsHandlerStruct
      */
     void mult_and_add (amrex::Real alpha, std::shared_ptr<BaseFieldsHandlerStruct> const& other)
     {
@@ -791,10 +794,11 @@ struct BaseFieldsHandlerStruct
 };
 
 /**
- * Explicit Runkge Kutta Class.
+ * Explicit Runge Kutta Class.
  *
- * @param FieldsHandler: physical state handler
- * @tparam userRkTag : Runge Kutta enum class
+ * @tparam FieldsHandler physical state handler
+ * @tparam userRkTag Runge Kutta enum class
+ * @tparam DRC de Rham Complex
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 class ExplicitRK
@@ -818,11 +822,11 @@ public:
                      RKStagesArray const& srcArray);
     /**
      * @brief constructor of the ExplicitRK class
-     * @param solutionInOutSrc : field struct, handling the initial and final state for the RK
+     * @param solutionInOutSrc field struct, handling the initial and final state for the RK
      * time-step.
-     * @param numSchemeSrc : numerical scheme struct, to be correctly designed.
-     * @param drc : deRham complex used only to define the DeRhamFields.
-     * @param rKreference : selected type for the RK Butcher Tableau.
+     * @param numSchemeSrc numerical scheme struct, to be correctly designed.
+     * @param drc deRham complex used only to define the DeRhamFields.
+     * @param rKreference selected type for the RK Butcher Tableau.
      */
     ExplicitRK(std::shared_ptr<FieldsHandler>& solutionInOutSrc,
                NumericalScheme<FieldsHandler>& numSchemeSrc,
@@ -862,7 +866,7 @@ private:
 
 /**
  * @brief compute the time derivative of the explicit terms for a single step (e.g. a RK stage)
- * @param rkTime : time, typically corresponds to the RK stage.
+ * @param rkTime time, typically corresponds to the RK stage.
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 void ExplicitRK<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_explicit (amrex::Real rkTime)
@@ -873,9 +877,9 @@ void ExplicitRK<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_explicit (am
 
 /**
  * @brief compute final state from the RK stages
- * @param dt : time step size
- * @param dst : destination FieldsHandler
- * @param srcArray : array of FieldsHandler with the RK stages
+ * @param dt time step size
+ * @param dst destination FieldsHandler
+ * @param srcArray array of FieldsHandler with the RK stages
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 void ExplicitRK<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const dt,
@@ -893,8 +897,8 @@ void ExplicitRK<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const d
 /**
  * @brief run RK method: evolve the field struct of a time-step 'dt' at time 'time' using the
  * specified RK algorithm
- * @param time : actual time
- * @param dt : time-step size
+ * @param time actual time
+ * @param dt time-step size
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 void ExplicitRK<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real const time,
@@ -923,8 +927,8 @@ void ExplicitRK<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real cons
 /**
  * Implicit-Explicit Runkge Kutta Class.
  *
- * @param FieldsHandler : physical state handler
- * @tparam userRkTag : Runge Kutta enum class
+ * @tparam FieldsHandler physical state handler
+ * @tparam userRkTag Runge Kutta enum class
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 class ImexRk
@@ -1009,10 +1013,10 @@ private:
 
 /**
  * @brief compute the time derivative of the semi-implicit terms for a single step.
- * @param timeI : time of the implicit step
- * @param dtI : time-step size of the implicit step
- * @param timeE : time of the explicit step
- * @param dtE : time-step size of the explicit step
+ * @param timeI time of the implicit step
+ * @param dtI time-step size of the implicit step
+ * @param timeE time of the explicit step
+ * @param dtE time-step size of the explicit step
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 void ImexRk<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_semiimplicit (
@@ -1024,9 +1028,9 @@ void ImexRk<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_semiimplicit (
 
 /**
  * @brief compute final state from the IMEX RK stages
- * @param dt : time step size
- * @param dst : destination FieldsHandler
- * @param srcArray : array of FieldsHandler with the RK stages
+ * @param dt time step size
+ * @param dst destination FieldsHandler
+ * @param srcArray array of FieldsHandler with the RK stages
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 void ImexRk<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const dt,
@@ -1044,8 +1048,8 @@ void ImexRk<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const dt,
 /**
  * @brief run IMEX RK method: evolve the field struct of a time-step 'dt' at time 'time' using the
  * specified RK algorithm
- * @param time : actual time
- * @param dt : time-step size
+ * @param time actual time
+ * @param dt time-step size
  */
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 void ImexRk<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real const time,

@@ -221,45 +221,46 @@ private:
     DOFCategories const cell_centered_integral() const;
 };
 
-template <typename FDForm, ScalarAnalyticalExpressionSpace F>
-    requires std::is_same_v<FDForm, PrimalZeroForm> || std::is_same_v<FDForm, DualZeroForm>
-void project (FDForm& field, F const& f)
+template <typename FDZeroForm, ScalarAnalyticalExpressionSpace SF>
+    requires std::is_same_v<FDZeroForm, PrimalZeroForm> || std::is_same_v<FDZeroForm, DualZeroForm>
+void project (FDZeroForm& field, SF const& f)
 {
     fill(field, f);
 }
-template <typename FDForm, VectorAnalyticalExpressionSpace F>
-    requires std::is_same_v<FDForm, PrimalOneForm> || std::is_same_v<FDForm, DualOneForm>
-void project (FDForm& field, F const& f)
+template <typename FDOneForm, VectorAnalyticalExpressionSpace VF>
+    requires std::is_same_v<FDOneForm, PrimalOneForm> || std::is_same_v<FDOneForm, DualOneForm>
+void project (FDOneForm& field, VF const& f)
 {
     Impl::fill_with_integrated_edges(field, f, field.integrator());
 }
-template <typename FDForm, VectorAnalyticalExpressionSpace F>
-    requires std::is_same_v<FDForm, PrimalTwoForm> || std::is_same_v<FDForm, DualTwoForm>
-void project (FDForm& field, F const& f)
+template <typename FDTwoForm, VectorAnalyticalExpressionSpace VF>
+    requires std::is_same_v<FDTwoForm, PrimalTwoForm> || std::is_same_v<FDTwoForm, DualTwoForm>
+void project (FDTwoForm& field, VF const& f)
 {
     Impl::fill_with_integrated_faces(field, f, field.integrator());
 }
-template <typename FDForm, ScalarAnalyticalExpressionSpace F>
-    requires std::is_same_v<FDForm, PrimalThreeForm> || std::is_same_v<FDForm, DualThreeForm>
-void project (FDForm& field, F const& f)
+template <typename FDThreeForm, ScalarAnalyticalExpressionSpace SF>
+    requires std::is_same_v<FDThreeForm, PrimalThreeForm> ||
+             std::is_same_v<FDThreeForm, DualThreeForm>
+void project (FDThreeForm& field, SF const& f)
 {
     Impl::fill_with_integrated_cells(field, f, field.integrator());
 }
 
-template <typename FDForm, ScalarAnalyticalExpressionSpaceTime F>
+template <typename FDForm, ScalarAnalyticalExpressionSpaceTime SF>
     requires std::is_same_v<FDForm, PrimalZeroForm> || std::is_same_v<FDForm, PrimalThreeForm> ||
              std::is_same_v<FDForm, DualZeroForm> || std::is_same_v<FDForm, DualThreeForm>
-void project (FDForm& field, F const& f, amrex::Real const& time)
+void project (FDForm& field, SF const& f, amrex::Real const& time)
 {
     auto timeIndependent = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y,
                                                                   amrex::Real z)) -> amrex::Real
     { return f(AMREX_D_DECL(x, y, z), time); };
     project(field, timeIndependent);
 }
-template <typename FDForm, VectorAnalyticalExpressionSpaceTime F>
+template <typename FDForm, VectorAnalyticalExpressionSpaceTime VF>
     requires std::is_same_v<FDForm, PrimalOneForm> || std::is_same_v<FDForm, PrimalTwoForm> ||
              std::is_same_v<FDForm, DualOneForm> || std::is_same_v<FDForm, DualTwoForm>
-void project (FDForm& field, F const& f, amrex::Real const& time)
+void project (FDForm& field, VF const& f, amrex::Real const& time)
 {
     auto timeIndependent =
         [=] AMREX_GPU_HOST_DEVICE(
@@ -321,11 +322,13 @@ private:
 
 public:
     /// FDDeRhamComplex constructor
-    /// @param infra
-    /// @param hodgeDegree
-    /// @param maxSplineDegree
-    /// @param hodgeScheme
-    FDDeRhamComplex(ComputationalDomain const& infra,
+    /// @param compDom         The computational domain for the underlying geometry of the complex
+    /// @param hodgeDegree     Degree of Hodge operations. Used to calculate necessary ghost cells
+    /// @param maxSplineDegree Spline degree used for calculation of necessary ghost cells
+    /// @param hodgeScheme     Finite difference Hodge scheme
+    /// @param nComp           Number of components of temporary multifabs. Needed for Hodge
+    ///                        operations on multi-component fields.
+    FDDeRhamComplex(ComputationalDomain const& compDom,
                     int const hodgeDegree,
                     int const maxSplineDegree,
                     HodgeScheme const hodgeScheme = HodgeScheme::FDHodge,
@@ -380,6 +383,7 @@ class DeRhamFieldMF
                   "DeRhamFieldMF is not implemented for this TagType!");
 };
 
+/// @cond EXCLUDE_API_DOC
 template <Grid grid, Space space>
 class DeRhamFieldMF<HodgeScheme::FDHodge, grid, space> : public DeRhamField<grid, space>
 {
@@ -411,6 +415,7 @@ public:
     // Inherit all constructors from DeRhamField<Grid, Space>
     using DeRhamField<grid, space>::DeRhamField;
 };
+/// @endcond
 
 /**
  * @brief Actual specialization of FDDeRhamComplex class for specific hodge
@@ -424,6 +429,7 @@ class DeRhamComplexMF
                   "DeRhamComplexMF is not implemented for this TagType!");
 };
 
+//!@cond EXCLUDE_API_DOC
 template <>
 class DeRhamComplexMF<HodgeScheme::FDHodge>
     : public FDDeRhamComplex,
@@ -497,6 +503,7 @@ public:
         FDDeRhamComplex::FDDeRhamComplex(
             infra, hodgeDegree, maxSplineDegree, s_hodgeScheme, nComp) {};
 };
+/// @endcond
 
 // alias for MF deRham complexes
 using FDDeRhamComplexMF = DeRhamComplexMF<HodgeScheme::FDHodge>;

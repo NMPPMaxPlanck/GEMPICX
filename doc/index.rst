@@ -1,6 +1,6 @@
-GEMPIC
-======
-Geometric Electro-Magnetic Particle-In-Cell
+GEMPICX (|release|)
+===================
+Geometric Electro-Magnetic Particle-In-Cell for eXascale
 
 .. toctree::
    :maxdepth: 2
@@ -33,5 +33,6 @@ Table of Contents
    latex/Diagnostics
    FieldSolvers/FieldSolvers
    Utils/Utils
+   Config
    ForDevelopers/ForDevelopers
    Versioning/Versioning

@@ -69,9 +69,8 @@ std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask (amrex::MultiFab& thisMF,
 
 /**
  * @brief overload from
-template <typename dataStruct>
-void sum_boundary_sync (amrex::FabArray<amrex::BaseFab<dataStruct>>& thisMF,
-                            amrex::Periodicity const& period)
+ * @ref sum_boundary_sync (amrex::FabArray<amrex::BaseFab<dataStruct>>& thisMF,
+ *                         amrex::Periodicity const& period)
  */
 void sum_boundary_sync (amrex::MultiFab& thisMF, amrex::Periodicity const& period)
 {
@@ -194,27 +193,6 @@ void mult_and_add (amrex::MultiFab& dst,
     }
 }
 
-// from
-// template <typename FAB, std::enable_if_t<IsBaseFab<FAB>::value, int> FOO = 0>
-// typename FAB::value_type Dot (FabArray<FAB> const& x,
-//                               int xcomp,
-//                               FabArray<FAB> const& y,
-//                               int ycomp,
-//                               int ncomp,
-//                               IntVect const& nghost,
-//                               bool local = false)
-/**
- * \brief Compute dot products of two FabArrays
- *
- * \param wgt    weight (single component) FabArray
- * \param x      first FabArray
- * \param xcomp  starting component of x
- * \param y      second FabArray
- * \param ycomp  starting component of y
- * \param ncomp  number of components
- * \param nghost number of ghost cells
- * \param local  If true, MPI communication is skipped.
- */
 template <typename FAB, std::enable_if_t<amrex::IsBaseFab<FAB>::value, int> foo>
 typename FAB::value_type wgt_dot (amrex::FabArray<FAB> const& wgt,
                                   amrex::FabArray<FAB> const& x,

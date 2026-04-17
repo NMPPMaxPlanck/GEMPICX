@@ -150,7 +150,7 @@ including the last equation using the definition of $\tilde{\arrJ}_z$.
 
 In one space dimension, the same also applies to the previous step.
 
-\paragraph{Algorithm for the $\cH_p$ Part}
+\paragraph{Algorithm for the $\cH_p$ Part (Exact)}
 \label{sec:splitting_vlasovmaxwell_algo}
 
 As we just saw, the  $\cH_p$ part of the Hamiltonian splitting can be solved exactly by splitting each of the components of the particle kinetic energy. This yields three further parts, that will be solved in the innermost loop by a Strang splitting.
@@ -260,7 +260,7 @@ $$
 where $\mathcal{R}(\arrX, \arrB)$ denotes the rotation of the positions according to the magnetic field.
 In contrast to the non-relativistic case, this Hamiltonian cannot be split any further, and we need to apply a different strategy. 
 
-\paragraph{Algorithm for the $\cH_p$ Part}
+\paragraph{Algorithm for the $\cH_p$ Part (Nested Relativistic)}
 The implemented algorithm conserves Gauss' law, but not the full Poisson structure. We split $\cH_p$ into the subsystems $\cH_{p,d}$ and $\cH_{p,u}$, which are
 
 

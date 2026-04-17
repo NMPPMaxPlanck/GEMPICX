@@ -34,12 +34,10 @@ public:
     /**
      * compute right hand side for Maxwell.
      *
-     * @param[out] rhs : the right hand side
-     * @param E : electric field as V1field
-     * @param B : magnetic field as V2field
-     * @param dtin : time step
-     *
-     * @return : $RETURN
+     * @param[out] rhs the right hand side
+     * @param E electric field as V1field
+     * @param B magnetic field as V2field
+     * @param dtin time step
      */
     void rhs_op (V1field_dual& rhs, V1field& E, V2field& B, amrex::Real dtin)
     {
@@ -56,11 +54,9 @@ public:
     /**
      * update B.
      *
-     * @param [out] B : magnetic field as V2field
-     * @param E : electric field as V1field
-     * @param dtin : time step
-     *
-     * @return : $RETURN
+     * @param [out] B magnetic field as V2field
+     * @param E electric field as V1field
+     * @param dtin time step
      */
     void update_b (V1field& E, V2field& B, amrex::Real dtin)
     {
@@ -71,16 +67,15 @@ public:
     /**
      * update Matop.
      *
-     * @param dtin : time step
-     *
+     * @param dtin time step
      */
     void update (amrex::Real dtIn) { m_dtLocal = dtIn; }
 
     /**
      * MatOp operator: compute matrix vector product.
      *
-     * @param[out] : matrix vector product
-     * @param : x vector
+     * @param[out] matrix vector product
+     * @param x vector
      *
      */
     void operator()(V1field_dual& Ax, V1field const& x)
@@ -103,7 +98,7 @@ public:
 
     /**
      *
-     * @param TypeDiscPde: Numerical discretization type
+     * @param TypeDiscPde Numerical discretization type
      *
      */
     GempicMaxwellMatOp(MaxwellDiscretization& disc) :
@@ -214,7 +209,7 @@ public:
     /**
      * compute time derivative for the semi-implicit solver.
      *
-     * @param dtloc : time step
+     * @param dtloc time step
      */
     void one_step_solve_dqdt_semiimplicit (amrex::Real timeI,
                                            amrex::Real dtI,
@@ -233,7 +228,7 @@ public:
     /**
      * compute time derivative for the implicit solver.
      *
-     * @param dtloc : time step
+     * @param dtloc time step
      */
     void one_step_eval_dqdt_implicit (amrex::Real dtLoc) override
     {
