@@ -223,7 +223,7 @@ public:
             particles.GetStructOfArrays().GetRealData(cc)[oldNumParticles] = position[cc];
         }
         // add new velocity
-        for (unsigned int cc = 0; cc < vDim; cc++)
+        for (int cc = 0; cc < static_cast<int>(vDim); cc++)
         {
             particles.GetStructOfArrays().GetRealData(AMREX_SPACEDIM + cc)[oldNumParticles] =
                 velocity[cc];

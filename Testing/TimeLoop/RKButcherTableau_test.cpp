@@ -37,7 +37,7 @@ struct TestFieldsHandlerStruct : BaseFieldsHandlerStruct<TestFieldsHandlerStruct
     /**
      * the assign method
      *
-     * @param other : the source of the assign
+     * @param other the source of the assign
      */
     void assign (TestFieldsHandlerStruct const& other) // now we can use the = operator of the
                                                        // base class to call the assign...
@@ -51,8 +51,8 @@ struct TestFieldsHandlerStruct : BaseFieldsHandlerStruct<TestFieldsHandlerStruct
     /**
      * the mult_and_add method
      *
-     * @param alpha : real scaling parameter
-     * @param other : the source of the assign
+     * @param alpha real scaling parameter
+     * @param other the source of the assign
      */
     void mult_and_add (amrex::Real alpha, std::shared_ptr<TestFieldsHandlerStruct> const& other)
     {
@@ -70,7 +70,7 @@ struct TestFieldsHandlerStruct : BaseFieldsHandlerStruct<TestFieldsHandlerStruct
     /**
      * Explicitly define copy assignment operator to avoid default deletion (from DeRhamFields)
      *
-     * @param other : source
+     * @param other source
      */
     TestFieldsHandlerStruct& operator=(TestFieldsHandlerStruct const& other)
     {
@@ -248,17 +248,14 @@ public:
 
     /**
      * compute time derivative for the semi-implicit solver.
-     *
-     * @param dtloc : time step
      */
     void one_step_solve_dqdt_semiimplicit (amrex::Real timeI,
                                            amrex::Real dtI,
                                            amrex::Real timeE,
                                            amrex::Real /*dtE*/) override
     {
-        one_step_solve_dqdt_explicit(timeE); // this compute dQdt_ex... going in the rhs of the
-                                             // implicit
-                                             // system.
+        one_step_solve_dqdt_explicit(timeE); // this computes dQdt_ex... going in the rhs of the
+                                             // implicit system.
         one_step_solve_q_implicit(
             timeI, dtI); // using dQdt_ex and q_tmp_im to solve for q_i and evaluate dqdt_implicit
         one_step_eval_dqdt_implicit(
@@ -268,7 +265,7 @@ public:
     /**
      * compute time derivative for the implicit solver.
      *
-     * @param dtloc : time step
+     * @param dtloc time step
      */
     void one_step_eval_dqdt_implicit (amrex::Real dtLoc) override
     {

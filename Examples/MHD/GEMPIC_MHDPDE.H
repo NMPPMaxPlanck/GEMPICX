@@ -333,6 +333,7 @@ pde_get_eigenvectors<nVarMHD, MhdPdeParameters, MhdPdeTag>(varArray<nVarMHD> con
     }
     return;
 
+    /*
     varArray2D<nVarMHD> rm;
     for (int i = 0; i < nVarMHD; ++i)
     {
@@ -438,6 +439,7 @@ pde_get_eigenvectors<nVarMHD, MhdPdeParameters, MhdPdeTag>(varArray<nVarMHD> con
     }
 
     return;
+    */
 }
 
 template <>
@@ -1101,7 +1103,7 @@ public:
     /**
      * compute time derivative for the implicit solver.
      *
-     * @param dtloc : time step
+     * @param dtloc time step
      */
     void one_step_eval_dqdt_implicit (amrex::Real /*dtLoc*/) override { return; }
 
@@ -1146,7 +1148,7 @@ public:
      *  iii. evaluate k_i := (qImplicit - qStar)/dtLoc.
      *  => continue with the RK algorithm.
      *
-     * @param dtloc : time step
+     * @param dtloc time step
      */
     void one_step_solve_dqdt_semiimplicit (amrex::Real /*timeI*/,
                                            amrex::Real /*dtI*/,

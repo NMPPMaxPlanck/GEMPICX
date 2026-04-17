@@ -478,17 +478,17 @@ enum class SamplerType
 /**
  * @brief Particle sampler class
  *
- * @tparam RandomScheme : Switching between pseudo and quasi random number generator
- * @tparam SamplerRegion : Sampling on local boxes or on the full domain followed by communication
- * @tparam SamplerType : Selecting the type of sampling, e.g., rejection
- * @tparam extraRandomVar : Number of additional random variables
- * @tparam vDim : Number of velocity components associated with the particles
- * @tparam nData : Number of further amount of data components to be stored, e.g. particle weight
+ * @tparam RandomScheme Switching between pseudo and quasi random number generator
+ * @tparam SamplerRegion Sampling on local boxes or on the full domain followed by communication
+ * @tparam SamplerType Selecting the type of sampling, e.g., rejection
+ * @tparam extraRandomVar Number of additional random variables
+ * @tparam vDim Number of velocity components associated with the particles
+ * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] ppg : Particle species
- * @param geom : Geometry
- * @param species : Species number
- * @param rSeed : Random seed
+ * @param[out] ppg Particle species
+ * @param geom Geometry
+ * @param species Species number
+ * @param rSeed Random seed
  *
  */
 template <RandomScheme scheme,
@@ -1086,8 +1086,8 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleSpecies<vDim, nData
 /**
  * @brief
  *
- * @tparam vDim : Number of velocity components associated with the particles
- * @tparam nData : Number of further amount of data components to be stored, e.g. particle
+ * @tparam vDim Number of velocity components associated with the particles
+ * @tparam nData Number of further amount of data components to be stored, e.g. particle
  * weight
  *
  * @param[out] particles Particle species
@@ -1173,18 +1173,18 @@ void sample_species (std::shared_ptr<ParticleSpecies<vDim, nData>>& particles,
 /**
  * @brief particle initializer
  *
- * @tparam vdim : Number of velocity components associated with the particles
- * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ * @tparam vDim Number of velocity components associated with the particles
+ * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] particles : particles that are initialised
- * @param geom : Geometry
+ * @param[out] particles particles that are initialised
+ * @param compDom Geometry
  *
  */
 template <unsigned int vDim, unsigned int nData>
 void init_particles (std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>& particles,
-                     ComputationalDomain infra)
+                     ComputationalDomain compDom)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(particles,infra)");
+    BL_PROFILE("Gempic::Particle::init_particles(particles,compDom)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);
@@ -1199,9 +1199,9 @@ void init_particles (std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>&
     for (int species{0}; species < speciesNames.size(); ++species)
     {
         particles[species] =
-            std::make_shared<ParticleSpecies<vDim, nData>>(speciesNames[species], infra);
+            std::make_shared<ParticleSpecies<vDim, nData>>(speciesNames[species], compDom);
 
-        Impl::sample_species(particles[species], infra.geometry(), species, globalSamplerName,
+        Impl::sample_species(particles[species], compDom.geometry(), species, globalSamplerName,
                              rSeed);
         GEMPIC_DEBUG("species " + std::to_string(species) + " has " +
                      std::to_string(particles[species]->TotalNumberOfParticles()) + " particles");
@@ -1214,21 +1214,21 @@ void init_particles (std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>&
 /**
  * @brief particle initializer
  *
- * @tparam vdim : Number of velocity components associated with the particles
- * @tparam ndata : Number of further amount of data components to be stored, e.g. particle weight
+ * @tparam vDim Number of velocity components associated with the particles
+ * @tparam nData Number of further amount of data components to be stored, e.g. particle weight
  *
- * @param[out] particles : particles that are initialised
- * @param[out] particlesLinVlasov :
- * @param geom : Geometry
+ * @param[out] particles particles that are initialised
+ * @param[out] particlesLinVlasov
+ * @param compDom Geometry
  *
  */
 template <unsigned int vDim, unsigned int nData>
 void init_particles (
     std::vector<std::shared_ptr<ParticleSpeciesLinVlasov<vDim, nData>>>& particlesLinVlasov,
     std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>& particles,
-    ComputationalDomain infra)
+    ComputationalDomain compDom)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(particlesLinVlasov,particles,infra)");
+    BL_PROFILE("Gempic::Particle::init_particles(particlesLinVlasov,particles,compDom)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);
@@ -1244,11 +1244,11 @@ void init_particles (
     for (int species{0}; species < speciesNames.size(); ++species)
     {
         particlesLinVlasov[species] =
-            std::make_shared<ParticleSpeciesLinVlasov<vDim, nData>>(speciesNames[species], infra);
+            std::make_shared<ParticleSpeciesLinVlasov<vDim, nData>>(speciesNames[species], compDom);
         particles[species] =
             std::static_pointer_cast<ParticleSpecies<vDim, nData>>(particlesLinVlasov[species]);
 
-        Impl::sample_species(particles[species], infra.geometry(), species, globalSamplerName,
+        Impl::sample_species(particles[species], compDom.geometry(), species, globalSamplerName,
                              rSeed);
     }
 }

@@ -41,9 +41,8 @@ CustomOutputProcessor::CustomOutputProcessor(Io::AnyFieldPtr const& dataSrc,
     BL_PROFILE("ComputeDiagOutputProcessor::ComputeDiagOutputProcessor()");
 }
 
-/** \brief copy m_dataSrc to mfDst.
- *
- * \param[out] mfDst output MultiFab where the result is written
+/** \brief Overridable custom operator that should store results in mfDst starting from component
+ *         dcomp.
  */
 void CustomOutputProcessor::operator ()(amrex::MultiFab& /*mfDst*/, int /*dcomp*/) const
 {

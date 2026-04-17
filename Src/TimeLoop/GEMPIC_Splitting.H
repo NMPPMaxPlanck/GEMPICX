@@ -390,11 +390,11 @@ public:
      * @tparam dir direction of the splitting (starting at dir = 0)
      *
      * @param[out] vel velocity of the given particle
-     * @param infra computational domain
+     * @p compDom computational domain. Unused in this function.
      * @param spline object containing the values of non-zero grid splines at the particle
      * position
      * @param bfields temporary array to store the values of the integrated B field
-     * @param dx cell size in every direction
+     * @p dx cell size in every direction. Unused in this function.
      * @param jA array of J density coefficients (dual face dofs)
      * @param bA array of B field coefficients (primal face dofs)
      * @param chargeOverMass (q/m)_p ratio
@@ -405,7 +405,7 @@ public:
     template <Direction pDir, class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
     AMREX_GPU_HOST_DEVICE inline void apply_h_p_i_euler (
         amrex::GpuArray<amrex::Real, vdim>& vel,
-        ComputationalDomain const& /*infra*/,
+        ComputationalDomain const& /*compDom*/,
         SplineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const /*dx*/,

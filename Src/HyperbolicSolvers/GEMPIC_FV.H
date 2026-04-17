@@ -11,7 +11,7 @@
 
 #include <AMReX_VisMF.H>
 
-#include "GEMPIC_Array.H"
+#include "GEMPIC_Array4D.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_MatrixOperations.H"
 #include "GEMPIC_NumTools.H"
@@ -57,7 +57,7 @@ constexpr int var_pad_0 (int const idx)
 
 ////V3-weno RECONSTRUCTION - local dofs
 //template <int deg, int nvar>
-//using dofX_stencilYZ_Array3D = Gempic::Array4D<amrex::Real,
+//using dofX_stencilYZ_Array3D = Gempic::Utils::Array4D<amrex::Real,
 //                                               -var_pad_0<deg>(zDir),
 //                                               var_pad_0<deg>(zDir),
 //                                               -var_pad_0<deg>(yDir),
@@ -68,7 +68,7 @@ constexpr int var_pad_0 (int const idx)
 //                                               nvar - 1,
 //                                               amrex::Order::C>;
 //template <int deg, int nvar>
-//using dofXY_stencilZ_Array3D = Gempic::Array4D<amrex::Real,
+//using dofXY_stencilZ_Array3D = Gempic::Utils::Array4D<amrex::Real,
 //                                               -var_pad_0<deg>(zDir),
 //                                               var_pad_0<deg>(zDir),
 //                                               0,
@@ -79,7 +79,7 @@ constexpr int var_pad_0 (int const idx)
 //                                               nvar - 1,
 //                                               amrex::Order::C>;
 //template <int deg, int nvar>
-//using dofXYZ_Array3D = Gempic::Array4D<amrex::Real,
+//using dofXYZ_Array3D = Gempic::Utils::Array4D<amrex::Real,
 //                                       0,
 //                                       var_pad_0<deg>(zDir),
 //                                       0,
@@ -179,38 +179,38 @@ constexpr int var_pad_0 (int const idx)
 
 //V3-weno RECONSTRUCTION - local dofs
 template <int deg, int nvar>
-using dofX_stencilYZ_Array3D = Gempic::Array4D<amrex::Real,
-                                               -GEMPIC_D_PAD_Z(deg),
-                                               GEMPIC_D_PAD_Z(deg),
-                                               -GEMPIC_D_PAD_Y(deg),
-                                               GEMPIC_D_PAD_Y(deg),
-                                               0,
-                                               GEMPIC_D_PAD_X(deg),
-                                               0,
-                                               nvar - 1,
-                                               amrex::Order::C>;
+using dofX_stencilYZ_Array3D = Gempic::Utils::Array4D<amrex::Real,
+                                                      -GEMPIC_D_PAD_Z(deg),
+                                                      GEMPIC_D_PAD_Z(deg),
+                                                      -GEMPIC_D_PAD_Y(deg),
+                                                      GEMPIC_D_PAD_Y(deg),
+                                                      0,
+                                                      GEMPIC_D_PAD_X(deg),
+                                                      0,
+                                                      nvar - 1,
+                                                      amrex::Order::C>;
 template <int deg, int nvar>
-using dofXY_stencilZ_Array3D = Gempic::Array4D<amrex::Real,
-                                               -GEMPIC_D_PAD_Z(deg),
-                                               GEMPIC_D_PAD_Z(deg),
-                                               0,
-                                               GEMPIC_D_PAD_Y(deg),
-                                               0,
-                                               GEMPIC_D_PAD_X(deg),
-                                               0,
-                                               nvar - 1,
-                                               amrex::Order::C>;
+using dofXY_stencilZ_Array3D = Gempic::Utils::Array4D<amrex::Real,
+                                                      -GEMPIC_D_PAD_Z(deg),
+                                                      GEMPIC_D_PAD_Z(deg),
+                                                      0,
+                                                      GEMPIC_D_PAD_Y(deg),
+                                                      0,
+                                                      GEMPIC_D_PAD_X(deg),
+                                                      0,
+                                                      nvar - 1,
+                                                      amrex::Order::C>;
 template <int deg, int nvar>
-using dofXYZ_Array3D = Gempic::Array4D<amrex::Real,
-                                       0,
-                                       GEMPIC_D_PAD_Z(deg),
-                                       0,
-                                       GEMPIC_D_PAD_Y(deg),
-                                       0,
-                                       GEMPIC_D_PAD_X(deg),
-                                       0,
-                                       nvar - 1,
-                                       amrex::Order::C>;
+using dofXYZ_Array3D = Gempic::Utils::Array4D<amrex::Real,
+                                              0,
+                                              GEMPIC_D_PAD_Z(deg),
+                                              0,
+                                              GEMPIC_D_PAD_Y(deg),
+                                              0,
+                                              GEMPIC_D_PAD_X(deg),
+                                              0,
+                                              nvar - 1,
+                                              amrex::Order::C>;
 
 //V2-weno RECONSTRUCTION - local dofs
 // V2x
@@ -2442,12 +2442,12 @@ void FVreconstruction<nVarFv, polyrecDegreeFv>::legendre_interpolating_vec (
 }
 
 /**
- * Legendre intepolating polynomial phi of degree polyrec_degree_FV and its derivative (phi_xi),
+ * Legendre intepolating polynomial phi of degree polyrec_degree_FV and its derivative (phiXi),
  * passing through the weno_nDof2  local weno-stencil nodes  weno_stencil_loc_nodes[:]),
  * evaluated at point xi.
  *
  * \param phi
- * \param phi_xi
+ * \param phiXi
  * \param xi
  */
 template <int nVarFv, int polyrecDegreeFv>

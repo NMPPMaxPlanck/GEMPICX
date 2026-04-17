@@ -10,12 +10,12 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
 .. doxygenclass:: Gempic::DiscreteGrid
    :members:
 
-.. doxygenfunction:: Gempic::fill(DiscreteField&, F const&)
+.. doxygenfunction:: Gempic::fill(DiscreteField&, SF const&)
 
 .. doxygenclass:: Gempic::DiscreteField
    :members:
 
-.. doxygenfunction:: Gempic::fill(DiscreteVectorField&, F const&)
+.. doxygenfunction:: Gempic::fill(DiscreteVectorField&, VF const&)
 
 .. doxygenclass:: Gempic::DiscreteVectorField
    :members:
@@ -24,7 +24,6 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
 .. doxygenclass:: Gempic::DiscreteVectorFieldFunctionParser
 
 .. doxygenfile:: GEMPIC_FDDeRhamComplex.H
-.. doxygenfile:: GEMPIC_ExtDerivatives.cpp
    
 .. doxygenstruct:: Gempic::Forms::DeRhamField
    :members:
@@ -33,6 +32,9 @@ by their degrees of freedom on a (primal or dual) cartesian grid.
    :members:
 
 .. doxygenfile:: GEMPIC_BoundaryConditions.H
+
+.. doxygenfile:: GEMPIC_Interpolation.H
+
 .. doxygenclass:: Gempic::GaussLegendreQuadrature
 
 .. toctree::

@@ -668,12 +668,12 @@ void hodge (DualThreeForm& d, PrimalZeroForm& p)
 namespace Gempic::Forms
 {
 
-FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& infra,
+FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& compDom,
                                  int const hodgeDegree,
                                  int const maxSplineDegree,
                                  HodgeScheme hodgeScheme,
                                  int nComp) :
-    DeRhamComplex::DeRhamComplex{infra, hodgeDegree}
+    DeRhamComplex::DeRhamComplex{compDom, hodgeDegree}
 {
     BL_PROFILE("Gempic::Forms::FDDeRhamComplex::FDDeRhamComplex()");
     Io::Parameters params("DeRhamComplex");
@@ -733,13 +733,13 @@ FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& infra,
     // unexpectedly.
     for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
     {
-        if (infra.geometry().isPeriodic(dir))
+        if (compDom.geometry().isPeriodic(dir))
         {
             GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
-                nGhost <= infra.m_nCell[dir],
+                nGhost <= compDom.m_nCell[dir],
                 "Number of valid cells in a periodic direction cannot be smaller than the "
                 "number of essential + extra ghost cells: " +
-                    std::to_string(infra.m_nCell[dir]) + " valid < " + std::to_string(nGhost) +
+                    std::to_string(compDom.m_nCell[dir]) + " valid < " + std::to_string(nGhost) +
                     " ghost cells");
         }
     }
@@ -772,7 +772,7 @@ FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& infra,
     // Parameters used in the projection and hodge
     for (size_t dir = 0; dir < AMREX_SPACEDIM; dir++)
     {
-        m_dr[dir] = infra.geometry().CellSize(dir);
+        m_dr[dir] = compDom.geometry().CellSize(dir);
     }
     m_hodgeScheme = hodgeScheme;
 

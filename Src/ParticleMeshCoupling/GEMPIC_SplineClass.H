@@ -6,6 +6,7 @@
 #define SPLINE_CLASS_
 
 #include "GEMPIC_BSpline.H"
+#include "GEMPIC_DeRhamComplex.H"
 
 namespace Gempic::ParticleMeshCoupling
 {

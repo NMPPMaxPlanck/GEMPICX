@@ -70,7 +70,7 @@ struct BoundaryConditionConfiguration
  * 
  * @details The underlying datastructure which stores degrees of freedom is an amrex::MultiFab.
  *          Therefore, to actually access degrees of freedom, a box needs to be selected with @ref select_box.
- *          Then data stored in the @ref DiscreteField can be accessed using @ref DiscreteField::operator()(int, int, int, int) const
+ *          Then data stored in the @ref DiscreteField can be accessed using @ref DiscreteField::operator()(int, int, int) const
  *          The following example provides an idea how to use @ref DiscreteField.
  *          Note that the developer of an operation on the field is responsible to ensure the availability of required data.
  * 
@@ -97,7 +97,7 @@ public:
         // clang-format off
         /**
          * @brief Assume \f$x_i\f$ is a location on @ref DiscreteGrid::location_1d
-         *        Then a pointwise DoF stored in @ref DiscreteField::operator()(int, int, int, int) const
+         *        Then a pointwise DoF stored in @ref DiscreteField::operator()(int, int, int) const
          *        is given by \f$f(x_i)\f$
          */
         // clang-format on
@@ -106,7 +106,7 @@ public:
         /**
          * @brief Assume \f$x_i\f$ is a location on @ref DiscreteGrid::location_1d
          *        and \f$\Delta x\f$ is the width of a cell given by @ref DiscreteGrid::dx.
-         *        Then a centered integral DoF stored in @ref DiscreteField::operator()(int, int, int, int) const
+         *        Then a centered integral DoF stored in @ref DiscreteField::operator()(int, int, int) const
          *        is given by \f$\int_{x_i-\Delta x/2}^{x_i+\Delta x/2}f(x) \mathrm{d}x\f$
          */
         // clang-format on
@@ -130,14 +130,14 @@ public:
                       Impl::BoundaryConditionConfiguration{});
     //!@endcond
 
-    std::string label() const;
+    inline std::string label () const { return m_data->m_label; }
     //! Discretized domain which maps indexable degrees of freedom to a continuous domain
     AMREX_GPU_HOST_DEVICE
-    DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
+    inline DiscreteGrid const& discrete_grid () const { return m_discreteGrid; }
     //! @cond EXCLUDE_API_DOC
     amrex::MultiFab const& multi_fab() const;
     amrex::MultiFab& multi_fab();
-    amrex::Array4<amrex::Real> const& view () const { return m_view; }
+    inline amrex::Array4<amrex::Real> const& view () const { return m_view; }
     //! @endcond
 
     //! Access indexable degrees of freedom stored in the @ref DiscreteField
@@ -151,7 +151,7 @@ public:
         return static_cast<DOFCategory>(m_data->m_dofCategory[dir]);
     };
     // clang-format off
-    //! Select a box from an amrex::MultiFab to use in the @ref DiscreteField::operator()(int, int, int, int) const
+    //! Select a box from an amrex::MultiFab to use in the @ref DiscreteField::operator()(int, int, int) const
     // clang-format on
     amrex::Box const& select_box(amrex::MFIter const& mfi);
     amrex::Box const& select_box(int index);
@@ -165,7 +165,7 @@ public:
      *
      * The boundary defined as follows:
      * - Patches with neighbouring valid domain are filled using values from the corresponding neighbouring patches.
-     * - Boundaries outside the valid domain are filled according to the configured @ref gempic::BoundaryCondition.
+     * - Boundaries outside the valid domain are filled according to the configured @ref Gempic::Forms::BoundaryCondition.
      *   Depending on the chosen boundary condition, this may also modify degrees of freedom inside the valid domain.
      *
      * @param width The number of ghost-cells of freedom to which the boundary condition should be applied.
@@ -205,7 +205,7 @@ amrex::Box selected_ghost_box(DiscreteField const& df,
  * 
  * @details The underlying datastructure which stores degrees of freedom is an amrex::MultiFab.
  *          Therefore, to actually access degrees of freedoms, a box needs to be selected with @ref select_box.
- *          Then data stored in the @ref DiscreteVectorField can be accessed using @ref DiscreteVectorField::operator()(Direction, int, int, int, int) const
+ *          Then data stored in the @ref DiscreteVectorField can be accessed using @ref DiscreteVectorField::operator()(Direction, int, int, int) const
  *          The following example provides an idea how to use @ref DiscreteVectorField.
  *          Note that the developer of an operation on the vector field is responsible to ensure the availability of required data.
  * 
@@ -267,7 +267,7 @@ public:
     };
 
     // clang-format off
-    //! Select a box for all amrex::MultiFab in all directions to use in the @ref DiscreteVectorField::operator()(Direction, int, int, int, int) const
+    //! Select a box for all amrex::MultiFab in all directions to use in the @ref DiscreteVectorField::operator()(Direction, int, int, int) const
     // clang-format on
     std::array<amrex::Box, 3> const select_box(amrex::MFIter const& mfi);
     std::array<amrex::Box, 3> const select_box(int index);
@@ -281,7 +281,7 @@ public:
      *
      * The boundary defined as follows:
      * - Patches with neighbouring valid domain are filled using values from the corresponding neighbouring patches.
-     * - Boundaries outside the valid domain are filled according to the configured @ref gempic::BoundaryCondition.
+     * - Boundaries outside the valid domain are filled according to the configured @ref Gempic::Forms::BoundaryCondition.
      *   Depending on the chosen boundary condition, this may also modify degrees of freedom inside the valid domain.
      *
      * @param width The number of ghost-cells of freedom to which the boundary condition should be applied.
@@ -334,8 +334,8 @@ concept VectorAnalyticalExpressionSpaceTime =
  *         amrex::Real(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z));
  *         @endcode
  */
-template <ScalarAnalyticalExpressionSpace F>
-void fill (DiscreteField& field, F const& f)
+template <ScalarAnalyticalExpressionSpace SF>
+void fill (DiscreteField& field, SF const& f)
 {
     for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
     {
@@ -355,8 +355,8 @@ void fill (DiscreteField& field, F const& f)
                     });
     }
 }
-template <ScalarAnalyticalExpressionSpaceTime F>
-void fill (DiscreteField& field, F const& f, double time)
+template <ScalarAnalyticalExpressionSpaceTime SF>
+void fill (DiscreteField& field, SF const& f, double time)
 {
     auto timeIndependent = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y,
                                                                   amrex::Real z)) -> amrex::Real
@@ -391,8 +391,8 @@ void fill_zero(DiscreteField&);
  *         @endcode
  */
 // clang-format on
-template <VectorAnalyticalExpressionSpace F>
-void fill (DiscreteVectorField& field, F const& f)
+template <VectorAnalyticalExpressionSpace VF>
+void fill (DiscreteVectorField& field, VF const& f)
 {
     for (Direction dir : {xDir, yDir, zDir})
     {
@@ -402,8 +402,8 @@ void fill (DiscreteVectorField& field, F const& f)
         fill(field[dir], fdir);
     }
 }
-template <VectorAnalyticalExpressionSpaceTime F>
-void fill (DiscreteVectorField& field, F const& f, double time)
+template <VectorAnalyticalExpressionSpaceTime VF>
+void fill (DiscreteVectorField& field, VF const& f, double time)
 {
     auto timeIndependent =
         [=] AMREX_GPU_HOST_DEVICE(
@@ -419,7 +419,7 @@ void fill_zero(DiscreteVectorField&);
 
 /**
  * @brief Provide an interface for functions parsed from the input file to
- *        @ref fill(DiscreteField&, F const&)
+ *        @ref fill(DiscreteField&, SF const&)
  */
 class DiscreteFieldFunctionParser
 {
@@ -430,13 +430,14 @@ public:
     /**
      * @brief Create a function parser to fill a @ref DiscreteField
      *
-     * @param label The identifier of a function in the parameter file parsed through
-     *              `Io::Parameters`
+     * @param label  The identifier of a function in the parameter file parsed through
+     *               `Io::Parameters`
+     * @param params The parameters object with which to read the input file
      */
     DiscreteFieldFunctionParser(std::string const& label, Io::Parameters& params);
     /**
      * @brief Provide an interface for functions parsed from the input file to
-     *        @ref fill(DiscreteField&, F const&)
+     *        @ref fill(DiscreteField&, SF const&)
      */
     AMREX_GPU_HOST_DEVICE
     amrex::Real operator()(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
@@ -453,7 +454,7 @@ private:
 
 /**
  * @brief Provide an interface for functions parsed from the input file to
- *        @ref fill(DiscreteVectorField&, F const&)
+ *        @ref fill(DiscreteVectorField&, VF const&)
  */
 class DiscreteVectorFieldFunctionParser
 {
@@ -464,15 +465,16 @@ public:
     /**
      * @brief Create a function parser to fill a @ref DiscreteVectorField
      *
-     * @param label The identifier of three functions in the parameter file parsed through
-     *              `Io::Parameters` where the position of the string in the array
-     *              corresponds to @ref Direction of the @ref DiscreteVectorField
+     * @param label  The identifier of three functions in the parameter file parsed through
+     *               `Io::Parameters` where the position of the string in the array
+     *               corresponds to @ref Direction of the @ref DiscreteVectorField
+     * @param params The parameters object with which to read the input file
      */
     DiscreteVectorFieldFunctionParser(std::array<std::string, 3> const& label,
                                       Io::Parameters& params);
     /**
      * @brief Provide an interface for functions parsed from the input file to
-     *        @ref fill(DiscreteVectorField&, F const&)
+     *        @ref fill(DiscreteVectorField&, VF const&)
      */
     AMREX_GPU_HOST_DEVICE
     amrex::Real operator()(Direction dir,
@@ -557,13 +559,13 @@ struct DeRhamField
     static_assert(gempic_always_false<space>(), "DeRhamField not implemented for this space");
 };
 
-// One- or Two-form, i.e., space is either edge or face
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-struct DeRhamField<grid, space> : DeRhamFormBase<to_sequence<grid>(), to_form<space>()>
+/// @brief One- or Two-form (vector) field, i.e., space is either edge or face
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+struct DeRhamField<grid, space12> : DeRhamFormBase<to_sequence<grid>(), to_form<space12>()>
 {
     static constexpr Grid s_grid = grid;
-    static constexpr Space s_space = space;
+    static constexpr Space s_space = space12;
     std::array<amrex::Real, 3> m_scaling;
 
     std::shared_ptr<DeRhamComplex> m_deRham;
@@ -583,7 +585,7 @@ struct DeRhamField<grid, space> : DeRhamFormBase<to_sequence<grid>(), to_form<sp
     DeRhamField(
         std::shared_ptr<DeRhamComplex> drc,
         amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs);
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, DeRhamField<grid, space> const& src);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, DeRhamField<grid, space12> const& src);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::MultiFab const& mfIn1,
                 amrex::MultiFab const& mfIn2,
@@ -603,21 +605,21 @@ struct DeRhamField<grid, space> : DeRhamFormBase<to_sequence<grid>(), to_form<sp
     void post_particle_loop_sync();
     void operator*=(amrex::Real dt);
     void operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func);
-    void operator+=(DeRhamField<grid, space>&);
-    void operator-=(DeRhamField<grid, space>&);
-    DeRhamField<grid, space> operator-(DeRhamField<grid, space>&);
+    void operator+=(DeRhamField<grid, space12>&);
+    void operator-=(DeRhamField<grid, space12>&);
+    DeRhamField<grid, space12> operator-(DeRhamField<grid, space12>&);
     void operator+=(amrex::Real c);
     void operator+=(amrex::Vector<amrex::Real> c);
     void operator-=(amrex::Real c);
 };
 
-// Zero- or Three-form, i.e., space is either node or cell
-template <Grid grid, Space space>
-    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-struct DeRhamField<grid, space> : DeRhamFormBase<to_sequence<grid>(), to_form<space>()>
+/// @brief Zero- or Three-form (scalar) field, i.e., space is either node or cell
+template <Grid grid, Space space03>
+    requires(is_zero_or_three_form<space03>()) // Ensures that space03 is a zero- or three-form
+struct DeRhamField<grid, space03> : DeRhamFormBase<to_sequence<grid>(), to_form<space03>()>
 {
     static constexpr Grid s_grid = grid;
-    static constexpr Space s_space = space;
+    static constexpr Space s_space = space03;
     amrex::Real m_scaling;
     int m_hodgeDegree; // if we want it runtime
 
@@ -634,7 +636,7 @@ struct DeRhamField<grid, space> : DeRhamFormBase<to_sequence<grid>(), to_form<sp
                 amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                 amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs);
-    DeRhamField(std::shared_ptr<DeRhamComplex> drc, DeRhamField<grid, space> const& src);
+    DeRhamField(std::shared_ptr<DeRhamComplex> drc, DeRhamField<grid, space03> const& src);
     DeRhamField(std::shared_ptr<DeRhamComplex> drc, amrex::MultiFab const& mfIn);
 
     void fill_boundary();
@@ -651,32 +653,12 @@ struct DeRhamField<grid, space> : DeRhamFormBase<to_sequence<grid>(), to_form<sp
     void post_particle_loop_sync();
     void operator*=(amrex::Real dt);
     void operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func);
-    void operator+=(DeRhamField<grid, space>&);
-    void operator-=(DeRhamField<grid, space>&);
-    DeRhamField<grid, space> operator-(DeRhamField<grid, space>&);
+    void operator+=(DeRhamField<grid, space03>&);
+    void operator-=(DeRhamField<grid, space03>&);
+    DeRhamField<grid, space03> operator-(DeRhamField<grid, space03>&);
     void operator+=(amrex::Real c);
     void operator-=(amrex::Real c);
 };
-
-/**
- * @brief helper, getting the multifab from the field type FT
- * @tparam FT field type
- * @param pf pointer to the field
- * @param dir direction (for vector fields)
- * @return multifab
- */
-template <class FT>
-GEMPIC_FORCE_INLINE static amrex::MultiFab const& multi_fab (FT const* pf, Direction dir)
-{
-    if constexpr (requires(FT const& f, Direction d) { f.multi_fab(d); })
-    {
-        return pf->multi_fab(dir); // vector form (1-/2-form)
-    }
-    else
-    {
-        return pf->multi_fab(); // scalar form (0-/3-form)
-    }
-}
 
 } //namespace Gempic::Forms
 
@@ -1037,17 +1019,17 @@ struct field_to_drc<DeRhamField<g, s>>
 };
 
 // Constructors of DeRhamFields after DeRhamComplex to avoid using a member of an incomplete type
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar) :
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+DeRhamField<grid, space12>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar) :
     DeRhamField{drc, std::array<int, 3>{nVar, nVar, nVar}}
 {
 }
 
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-                                      std::array<int, 3> ncomponents) :
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+DeRhamField<grid, space12>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
+                                        std::array<int, 3> ncomponents) :
     m_deRham{drc}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc)");
@@ -1073,11 +1055,11 @@ DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
 
     auto dxInv = m_deRham->m_geom.InvCellSizeArray();
 
-    if constexpr (space == Space::edge)
+    if constexpr (space12 == Space::edge)
     {
         m_scaling = {GEMPIC_D_PAD_ONE(dxInv[xDir], dxInv[yDir], dxInv[zDir])};
     }
-    else if constexpr (space == Space::face)
+    else if constexpr (space12 == Space::face)
     {
         m_scaling = {GEMPIC_D_MULT(1.0, dxInv[yDir], dxInv[zDir]),
                      GEMPIC_D_MULT(dxInv[xDir], 1.0, dxInv[zDir]),
@@ -1085,9 +1067,10 @@ DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
     }
 }
 
-template <Grid grid, Space space>
-    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar) : m_deRham{drc}
+template <Grid grid, Space space03>
+    requires(is_zero_or_three_form<space03>()) // Ensures that space03 is a zero- or three-form
+DeRhamField<grid, space03>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar) :
+    m_deRham{drc}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc)");
     m_deRham->initialize_field(*this, nVar);
@@ -1104,19 +1087,19 @@ DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nV
 
     auto dxInv = m_deRham->m_geom.InvCellSizeArray();
 
-    if constexpr (space == Space::node) // node field
+    if constexpr (space03 == Space::node) // node field
     {
         m_scaling = 1.0;
     }
-    else if constexpr (space == Space::cell) // cell field
+    else if constexpr (space03 == Space::cell) // cell field
     {
         m_scaling = GEMPIC_D_MULT(dxInv[xDir], dxInv[yDir], dxInv[zDir]);
     }
 }
 
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-DeRhamField<grid, space>::DeRhamField(
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+DeRhamField<grid, space12>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
     amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func) :
     DeRhamField{drc, 1}
@@ -1125,9 +1108,9 @@ DeRhamField<grid, space>::DeRhamField(
     projection(func, 0.0, *this);
 }
 
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-DeRhamField<grid, space>::DeRhamField(
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+DeRhamField<grid, space12>::DeRhamField(
     std::shared_ptr<DeRhamComplex> drc,
     amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
@@ -1136,19 +1119,19 @@ DeRhamField<grid, space>::DeRhamField(
     projection(funcs, 0.0, *this);
 }
 
-template <Grid grid, Space space>
-    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-inline DeRhamField<grid, space>::DeRhamField (std::shared_ptr<DeRhamComplex> drc,
-                                             amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func) :
+template <Grid grid, Space space03>
+    requires(is_zero_or_three_form<space03>()) // Ensures that space03 is a zero- or three-form
+inline DeRhamField<grid, space03>::DeRhamField (std::shared_ptr<DeRhamComplex> drc,
+                                               amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func) :
     DeRhamField{drc, 1}
 {
     BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func)");
     projection(func, 0.0, *this);
 }
 
-template <Grid grid, Space space>
-    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-inline DeRhamField<grid, space>::DeRhamField (
+template <Grid grid, Space space03>
+    requires(is_zero_or_three_form<space03>()) // Ensures that space03 is a zero- or three-form
+inline DeRhamField<grid, space03>::DeRhamField (
     std::shared_ptr<DeRhamComplex> drc,
     amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
@@ -1158,30 +1141,6 @@ inline DeRhamField<grid, space>::DeRhamField (
 }
 
 /// @cond EXCLUDE_API_DOC
-//template <Grid grid, Space space>
-//    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-//DeRhamField<grid, space>::DeRhamField(
-//    std::shared_ptr<DeRhamComplex> drc,
-//    amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func,
-//    std::string const& diagName) :
-//    DeRhamField{drc, diagName, 1}
-//{
-//    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,func,diagName)");
-//    projection(func, 0.0, *this);
-//}
-
-//template <Grid grid, Space space>
-//    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-//DeRhamField<grid, space>::DeRhamField(
-//    std::shared_ptr<DeRhamComplex> drc,
-//    amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs,
-//    std::string const& diagName) :
-//    DeRhamField{drc, diagName, static_cast<int>(funcs.size())}
-//{
-//    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,funcs,diagName)");
-//    projection(funcs, 0.0, *this);
-//}
-
 template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
@@ -1220,29 +1179,6 @@ DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
     m_data[yDir] = amrex::MultiFab(src.multi_fab(yDir), amrex::make_alias, 0, src.get_ncomp(yDir));
     m_data[zDir] = amrex::MultiFab(src.multi_fab(zDir), amrex::make_alias, 0, src.get_ncomp(zDir));
 }
-
-//template <Grid grid, Space space>
-//    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-//inline DeRhamField<grid, space>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
-//                                             amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func,
-//                                             std::string const& diagName) :
-//    DeRhamField{drc, diagName, 1}
-//{
-//    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func,diagName)");
-//    projection(func, 0.0, *this);
-//}
-
-//template <Grid grid, Space space>
-//    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-//inline DeRhamField<grid, space>::DeRhamField(
-//    std::shared_ptr<DeRhamComplex> drc,
-//    amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs,
-//    std::string const& diagName) :
-//    DeRhamField{drc, diagName, static_cast<int>(funcs.size())}
-//{
-//    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,funcs,diagName)");
-//    projection(funcs, 0.0, *this);
-//}
 
 template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
@@ -1673,9 +1609,9 @@ inline DeRhamField<grid, space> DeRhamField<grid, space>::operator-(DeRhamField<
 
 ///@endcond
 
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-DeRhamComplex const& DeRhamField<grid, space>::get_de_rham() const
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+DeRhamComplex const& DeRhamField<grid, space12>::get_de_rham() const
 {
     if (!m_deRham)
     {
@@ -1683,9 +1619,9 @@ DeRhamComplex const& DeRhamField<grid, space>::get_de_rham() const
     }
     return *m_deRham;
 }
-template <Grid grid, Space space>
-    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-DeRhamComplex const& DeRhamField<grid, space>::get_de_rham() const
+template <Grid grid, Space space03>
+    requires(is_zero_or_three_form<space03>()) // Ensures that space03 is a zero- or three-form
+DeRhamComplex const& DeRhamField<grid, space03>::get_de_rham() const
 {
     if (!m_deRham)
     {
@@ -1694,27 +1630,27 @@ DeRhamComplex const& DeRhamField<grid, space>::get_de_rham() const
     return *m_deRham;
 }
 
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-amrex::MultiFab const& DeRhamField<grid, space>::multi_fab(Direction dir) const
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+amrex::MultiFab const& DeRhamField<grid, space12>::multi_fab(Direction dir) const
 {
     return m_data[dir];
 }
-template <Grid grid, Space space>
-    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
-amrex::MultiFab& DeRhamField<grid, space>::multi_fab (Direction dir)
+template <Grid grid, Space space12>
+    requires(is_one_or_two_form<space12>()) // Ensures that space12 is a one- or two-form
+amrex::MultiFab& DeRhamField<grid, space12>::multi_fab (Direction dir)
 {
     return m_data[dir];
 }
-template <Grid grid, Space space>
-    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-amrex::MultiFab const& DeRhamField<grid, space>::multi_fab() const
+template <Grid grid, Space space03>
+    requires(is_zero_or_three_form<space03>()) // Ensures that space03 is a zero- or three-form
+amrex::MultiFab const& DeRhamField<grid, space03>::multi_fab() const
 {
     return m_data;
 }
-template <Grid grid, Space space>
-    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
-amrex::MultiFab& DeRhamField<grid, space>::multi_fab ()
+template <Grid grid, Space space03>
+    requires(is_zero_or_three_form<space03>()) // Ensures that space03 is a zero- or three-form
+amrex::MultiFab& DeRhamField<grid, space03>::multi_fab ()
 {
     return m_data;
 }

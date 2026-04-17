@@ -115,7 +115,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Rea
  * polyIndex-th node of the stencil.
  * @param xk corresponds to the x_0 node of the stencil
  * @param dx
- * @param xi, amrex::Real, the evaluation point
+ * @param xi the evaluation point
  * @return: derivatives of polyIndex-th Lagrange basis functions evaluated at xi
  */
 template <int intDegree>
@@ -219,13 +219,13 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_lagrange_der (int cons
  * x_k]\f$, \f$e_1\f$ to \f$[x_{k+1},  x_{k+2}]\f$, and so forth. The whole grid is assumed to be
  * uniform.
  *
- * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: #dofs of the
- * histopolating basis function)
+ * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: number of dofs
+ * of the histopolating basis function)
  * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$, in
  * {-n,...,0,...,n}
  * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
  * @param dx (uniform) grid size
- * @param y Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
+ * @param xi Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
  *
  * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
  */
@@ -264,13 +264,11 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
  * x_k]\f$, \f$e_1\f$ to \f$[x_{k+1},  x_{k+2}]\f$, and so forth. The whole grid is assumed to be
  * uniform.
  *
- * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: #dofs of the
- * histopolating basis function)
+ * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: number of dofs
+ * of the histopolating basis function)
  * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$, in
  * {-n,...,0,...,n}
- * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
- * @param dx (uniform) grid size
- * @param y Real, point in \f$[x_k, x_{k+1}]\f$, where \f$e_i\f$ is to be evaluated
+ * @param xi Real, point in \f$[0, 1]\f$, where \f$e_i\f$ is to be evaluated
  *
  * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
  */
@@ -309,8 +307,8 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
  * x_k]\f$, \f$e_1\f$ to \f$[x_{k+1},  x_{k+2}]\f$, and so forth. The whole grid is assumed to be
  * uniform.
  *
- * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: #dofs of the
- * histopolating basis function)
+ * @tparam nNodes int, number of nodes used to build the stencil (nCells=nNodes-1: number of dofs
+ * of the histopolating basis function)
  * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$, in
  * {-n,...,0,...,n}
  * @param xk Real, node \f$x_k\f$ which defines the interval of evaluation
@@ -1200,23 +1198,28 @@ void interpolate_field_to_multifab_degree_selector (
     }
 }
 
-template <typename SrcFormType, int testDegInd = 0>
-    requires HasHodgeScheme<field_to_drc_t<SrcFormType>>
-void interpolate_field_to_multifab_degree_selector (
-    amrex::MultiFab& mfDst, SrcFormType const& srcForm, amrex::Real scaling, int dcomp, int dir)
+template <typename SrcTypeWithHodge, int testDegreeIndex = 0>
+    requires HasHodgeScheme<field_to_drc_t<SrcTypeWithHodge>>
+void interpolate_field_to_multifab_degree_selector (amrex::MultiFab& mfDst,
+                                                    SrcTypeWithHodge const& srcForm,
+                                                    amrex::Real scaling,
+                                                    int dcomp,
+                                                    int dir)
 {
     BL_PROFILE("interpolate_field_to_multifab_degree_selector()")
-    constexpr auto validDegreesArray = valid_degrees<field_to_drc_t<SrcFormType>::s_hodgeScheme>();
-    if constexpr (testDegInd < validDegreesArray.size())
+    constexpr auto validDegreesArray =
+        valid_degrees<field_to_drc_t<SrcTypeWithHodge>::s_hodgeScheme>();
+    if constexpr (testDegreeIndex < validDegreesArray.size())
     {
-        if (srcForm.get_hodge_degree() == validDegreesArray[testDegInd])
+        if (srcForm.get_hodge_degree() == validDegreesArray[testDegreeIndex])
         {
-            constexpr int degree = validDegreesArray[testDegInd];
-            interpolate_field_to_multifab<SrcFormType, degree>(mfDst, srcForm, scaling, dcomp, dir);
+            constexpr int degree = validDegreesArray[testDegreeIndex];
+            interpolate_field_to_multifab<SrcTypeWithHodge, degree>(mfDst, srcForm, scaling, dcomp,
+                                                                    dir);
         }
         else
         {
-            interpolate_field_to_multifab_degree_selector<SrcFormType, testDegInd + 1>(
+            interpolate_field_to_multifab_degree_selector<SrcTypeWithHodge, testDegreeIndex + 1>(
                 mfDst, srcForm, scaling, dcomp, dir);
         }
     }

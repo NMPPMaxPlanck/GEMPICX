@@ -73,6 +73,7 @@ amrex::Box selected_ghost_box (DiscreteField const& df,
 }
 }; //namespace Impl
 
+//!@cond EXCLUDE_API_DOC
 DiscreteField::DiscreteField(std::string const& label,
                              Io::Parameters& params,
                              DiscreteGrid const& discreteGrid,
@@ -163,6 +164,7 @@ DiscreteField::DiscreteField(std::shared_ptr<Impl::DiscreteFieldData> const& dat
 
 amrex::MultiFab const& DiscreteField::multi_fab() const { return m_data->m_data; }
 amrex::MultiFab& DiscreteField::multi_fab() { return m_data->m_data; }
+//! @endcond
 
 amrex::Box const& DiscreteField::select_box(amrex::MFIter const& mfi)
 {
@@ -220,6 +222,7 @@ void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM
     }
 }
 
+//! @cond EXCLUDE_API_DOC
 DiscreteVectorField::DiscreteVectorField(
     std::string const& label,
     Io::Parameters& params,
@@ -258,6 +261,7 @@ amrex::MultiFab const& DiscreteVectorField::multi_fab(Direction dir) const
     return m_fields[dir].multi_fab();
 }
 amrex::MultiFab& DiscreteVectorField::multi_fab(Direction dir) { return m_fields[dir].multi_fab(); }
+//! @endcond
 
 std::array<amrex::Box, 3> const DiscreteVectorField::select_box(amrex::MFIter const& mfi)
 {
