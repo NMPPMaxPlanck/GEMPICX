@@ -1,4 +1,6 @@
 if (AMReX_FFT)
-  set(FFTFile GEMPIC_FFT.cpp)
+  set(FFTSource GEMPIC_FFT.cpp)
 endif()
-target_sources(GEMPICX PRIVATE GEMPIC_PoissonSolver.cpp ${FFTFile})
+target_sources(GEMPICX PRIVATE
+               GEMPIC_PoissonSolver.cpp
+               ${FFTSource})

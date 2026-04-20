@@ -174,7 +174,7 @@ namespace Impl
 {
 std::array<amrex::Long, 3> stride (amrex::Array4<amrex::Real> const& view)
 {
-    return std::array<amrex::Long, 3>{1, view.jstride, view.kstride};
+    return std::array<amrex::Long, 3>{1, view.stride.a[0], view.stride.a[1]};
 }
 struct ForwardStencil
 {

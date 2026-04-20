@@ -1,1 +1,2 @@
-target_sources(GEMPICX PRIVATE GEMPIC_SobolSampler.cpp)
+target_sources(GEMPICX PRIVATE
+  GEMPIC_SobolSampler.cpp)

@@ -16,7 +16,7 @@ target_link_libraries(ParametersOutput_test GEMPICX)
 add_test(NAME ParametersOutput_test
   COMMAND ${CMAKE_COMMAND} 
     -DPARAMETERS_OUTPUT_TEST=$<TARGET_FILE:ParametersOutput_test>
-    -DINPUT_FILE=${CMAKE_SOURCE_DIR}/Testing/InputFiles/ParametersOutput_test.input
+    -DINPUT_FILE=${PROJECT_SOURCE_DIR}/Testing/InputFiles/ParametersOutput_test.input
   -P ${CMAKE_CURRENT_SOURCE_DIR}/ParametersOutput_test.cmake
   )
 

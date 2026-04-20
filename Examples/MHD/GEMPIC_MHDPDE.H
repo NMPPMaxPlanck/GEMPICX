@@ -296,13 +296,6 @@ pde_get_eigenvectors<nVarMHD, MhdPdeParameters, MhdPdeTag>(varArray<nVarMHD> con
     amrex::Real cf{std::sqrt(std::abs(0.5 * (ab + std::sqrt(std::abs(ab * ab - 4. * a * bn2)))))};
     amrex::Real cs{std::sqrt(std::abs(0.5 * (ab - std::sqrt(std::abs(ab * ab - 4. * a * bn2)))))};
 
-    // Some auxiliary variables
-    amrex::Real c{std::sqrt(gamma * p / rho)};
-    amrex::Real H{(Q[4] + p) / rho};
-    amrex::Real v2{u * u + v * v + w * w};
-    amrex::Real M{std::sqrt(v2) / c};
-    amrex::Real r2c{rho / 2. / c};
-
     for (int iVar = 0; iVar < nVarMHD; ++iVar)
     {
         for (int jVar = 0; jVar < nVarMHD; ++jVar)
@@ -334,6 +327,13 @@ pde_get_eigenvectors<nVarMHD, MhdPdeParameters, MhdPdeTag>(varArray<nVarMHD> con
     return;
 
     /*
+    // Some auxiliary variables
+    amrex::Real c{std::sqrt(gamma * p / rho)};
+    amrex::Real H{(Q[4] + p) / rho};
+    amrex::Real v2{u * u + v * v + w * w};
+    amrex::Real M{std::sqrt(v2) / c};
+    amrex::Real r2c{rho / 2. / c};
+
     varArray2D<nVarMHD> rm;
     for (int i = 0; i < nVarMHD; ++i)
     {

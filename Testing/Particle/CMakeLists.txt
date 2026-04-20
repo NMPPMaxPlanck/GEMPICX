@@ -10,16 +10,16 @@ target_sources(GtestTests PRIVATE ${TMP_TEST_SOURCES})
 add_executable(
   ParticleAdd_test
   ParticleAdd_test.cpp
-  ${CMAKE_SOURCE_DIR}/Testing/TestUtils/GEMPIC_TestUtils.cpp
+  ${PROJECT_SOURCE_DIR}/Testing/TestUtils/GEMPIC_TestUtils.cpp
   )
 
 if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(ParticleAdd_test)
 endif()
 target_link_libraries(ParticleAdd_test
-                      GEMPICX
+                      GEMPICX::GEMPICX
                       GTest::gtest_main)
-target_include_directories(ParticleAdd_test PUBLIC ${CMAKE_SOURCE_DIR}/Testing)
+target_include_directories(ParticleAdd_test PRIVATE ${PROJECT_SOURCE_DIR}/Testing)
 
 add_test(NAME ParticlePlotFile_test
   COMMAND ${CMAKE_COMMAND}

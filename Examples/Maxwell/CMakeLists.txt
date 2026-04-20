@@ -4,4 +4,4 @@ if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(maxwell) 
 endif()
 
-target_link_libraries(maxwell GEMPICX)
+target_link_libraries(maxwell GEMPICX::GEMPICX)

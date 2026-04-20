@@ -102,9 +102,19 @@
             }
         },
         {
+            "name": "amdclang-compiler",
+            "displayName": "AMD Clang Compiler",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "amdclang++",
+                "CMAKE_C_COMPILER": "amdclang"
+            }
+        },
+        {
             "name": "mpcdf-viper-3D",
             "displayName": "GPU settings for Viper 3D",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits" : [
                 "amd-MI300A-env",
                 "mpi-compiler",
@@ -119,6 +129,7 @@
             "name": "mpcdf-viper-2D",
             "displayName": "GPU settings for Viper 2D",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits" : [
                 "amd-MI300A-env",
                 "mpi-compiler",
@@ -133,9 +144,10 @@
             "name": "mpcdf-viper-1D",
             "displayName": "GPU settings for Viper 1D",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits" : [
                 "amd-MI300A-env",
-                "mpi-compiler",
+                "amdclang-compiler",
                 "gempic-hip-cache-vars"
             ],
             "cacheVariables": {
@@ -147,6 +159,7 @@
             "name": "mpcdf-cloud-cuda",
             "displayName": "GPU settings for MPCDF gitlab cloud CUDA runner",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "nvidia-A100-env",
                 "mpi-compiler",
@@ -165,6 +178,7 @@
             "name": "mpcdf-raven-3D",
             "displayName": "GPU settings for Raven 3D",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "nvidia-A100-env",
                 "mpi-compiler",
@@ -179,6 +193,7 @@
             "name": "mpcdf-raven-2D",
             "displayName": "GPU settings for Raven 2D",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "nvidia-A100-env",
                 "mpi-compiler",
@@ -193,6 +208,7 @@
             "name": "mpcdf-raven-1D",
             "displayName": "GPU settings for Raven 1D",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "nvidia-A100-env",
                 "mpi-compiler",
@@ -207,6 +223,7 @@
             "name": "cpu-debug-3D",
             "displayName": "CPU debug 3D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
@@ -221,6 +238,7 @@
             "name": "cpu-debug-2D",
             "displayName": "CPU debug 2D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
@@ -235,6 +253,7 @@
             "name": "intel-cpu-debug-2D",
             "displayName": "intel-CPU debug 2D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "impi-compiler"
@@ -249,6 +268,7 @@
             "name": "cpu-debug-1D",
             "displayName": "CPU debug 1D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
@@ -263,6 +283,7 @@
             "name": "cpu-release-3D",
             "displayName": "CPU release 3D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
@@ -276,6 +297,7 @@
             "name": "cpu-release-2D",
             "displayName": "CPU release 2D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
@@ -289,6 +311,7 @@
             "name": "cpu-release-1D",
             "displayName": "CPU release 1D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
@@ -302,6 +325,7 @@
             "name": "documentation",
             "displayName": "Build only GEMPIC documentation",
             "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "cacheVariables": {
               "GEMPIC_BUILD_ONLY_DOCUMENTATION": "ON"
             }

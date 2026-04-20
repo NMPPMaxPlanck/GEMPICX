@@ -21,7 +21,7 @@ inline std::string gempicx_git_version ()
 #ifdef GEMPICX_GIT_VERSION
     return GEMPICX_GIT_VERSION;
 #else
-    return "Unknown (repository was not fetched/installed with git?)\n";
+    return "Unknown (repository was not fetched/installed with git?)";
 #endif
 }
 
@@ -30,7 +30,7 @@ inline std::string gempicx_pkg_version ()
 #ifdef GEMPICX_PKG_VERSION
     return GEMPICX_PKG_VERSION;
 #else
-    return "Unknown (repository was not fetched/installed with git?)\n";
+    return "Unknown (repository was not fetched/installed with git?)";
 #endif
 }
 
@@ -39,29 +39,29 @@ inline std::string gempicx_release_number ()
 #ifdef GEMPICX_RELEASE_NUMBER
     return GEMPICX_RELEASE_NUMBER;
 #else
-    return "Unknown (repository was not fetched/installed with git?)\n";
+    return "Unknown (repository was not fetched/installed with git?)";
 #endif
 }
 
 inline std::string gempicx_amrex_version ()
 {
-#ifdef GEMPICX_AMReX_VERSION_FOUND
-    return GEMPICX_AMReX_VERSION_FOUND;
+#ifdef GEMPICX_AMReX_VERSION
+    return GEMPICX_AMReX_VERSION;
 #else
-    return "Unknown (AMReX was not fetched/installed with git?)\n";
+    return "Unknown (AMReX was not fetched/installed with git?)";
 #endif
 }
 
 inline std::string gempicx_hypre_version ()
 {
-#if AMReX_USE_HYPRE
-#ifdef GEMPICX_HYPRE_VERSION_FOUND
-    return GEMPICX_HYPRE_VERSION_FOUND;
+#ifdef AMREX_USE_HYPRE
+#ifdef GEMPICX_HYPRE_VERSION
+    return GEMPICX_HYPRE_VERSION;
 #else
-    return "Unknown (HYPRE was not fetched/installed with git?)\n";
+    return "Unknown (HYPRE was not fetched/installed with git?)";
 #endif
 #else
-    return "Hypre not enabled\n";
+    return "Hypre not enabled";
 #endif
 }
 } //namespace Gempic::Utils

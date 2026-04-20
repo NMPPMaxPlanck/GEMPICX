@@ -107,20 +107,26 @@ build-test_gcc_3D:
   extends:
     - .mpcdf-gcc-env
   script:
-    - configure_build_test cpu-release-3D 
+    - configure_build "--preset cpu-release-3D"
+    - run_ctest
+    - install_test
 
 build-test_gcc_2D:
   extends:
     - .mpcdf-gcc-env
   script:
-    - configure_build_test cpu-release-2D
+    - configure_build "--preset cpu-release-2D"
+    - run_ctest
+    - install_test
   needs: ["build-test_gcc_3D"]
 
 build-test_gcc_1D:
   extends:
     - .mpcdf-gcc-env
   script:
-    - configure_build_test cpu-release-1D
+    - configure_build "--preset cpu-release-1D"
+    - run_ctest
+    - install_test
   needs: ["build-test_gcc_3D"]
 
 .mpcdf-cuda-env:
@@ -146,7 +152,9 @@ build-test_cuda_3D:
     - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
-    - configure_build_test_gpu "mpcdf-cloud-cuda -DAMReX_SPACEDIM=3"
+    - configure_build "--preset mpcdf-cloud-cuda -DAMReX_SPACEDIM=3"
+    - run_ctest 1 # CTest and GoogleTest don't work well with CUDA for multiple processes
+    - install_test_gpu
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gcc_3D"]
 
@@ -155,7 +163,9 @@ build-test_cuda_2D:
     - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
-    - configure_build_test_gpu "mpcdf-cloud-cuda -DAMReX_SPACEDIM=2"
+    - configure_build "--preset mpcdf-cloud-cuda -DAMReX_SPACEDIM=2"
+    - run_ctest 1 # CTest and GoogleTest don't work well with CUDA for multiple processes
+    - install_test_gpu
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_cuda_3D"]
 
@@ -164,7 +174,9 @@ build-test_cuda_1D:
     - .mpcdf-cuda-env
   script:
     - nvidia-cuda-mps-control -d
-    - configure_build_test_gpu "mpcdf-cloud-cuda -DAMReX_SPACEDIM=1"
+    - configure_build "--preset mpcdf-cloud-cuda -DAMReX_SPACEDIM=1"
+    - run_ctest 1 # CTest and GoogleTest don't work well with CUDA for multiple processes
+    - install_test_gpu
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_cuda_2D"]
 
@@ -191,21 +203,38 @@ build-test_clang_cpu_3D:
   extends:
     - .mpcdf-clang-env
   script:
-    - configure_build_test "cpu-debug-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - configure_build "--preset cpu-debug-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - run_ctest
+    - install_test clang++ clang
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_2D:
   extends:
     - .mpcdf-clang-env
   script:
-    - configure_build_test "cpu-debug-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - configure_build "--preset cpu-debug-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - run_ctest
+    - install_test clang++ clang
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_1D:
   extends:
     - .mpcdf-clang-env
   script:
-    - configure_build_test "cpu-debug-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - configure_build "--preset cpu-debug-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - run_ctest
+    - install_test clang++ clang
+  needs: ["build-test_gcc_3D"]
+
+build-test_fetchcontent_clang_cpu_3D:
+  extends:
+    - .mpcdf-clang-env
+  script:
+    - cd Examples/BuildGEMPICXFetched
+    - configure_build "-DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    # Any other tests have been done in other pipelines
+    - run_ctest "" "" "-R GEMPICXFetched_Verify"
+    - cp build.* ../.. # Properly move artifacts
   needs: ["build-test_gcc_3D"]
 
 .warning-check:
@@ -237,7 +266,9 @@ build-test_mac_3D:
   extends:
     - .unit-test-setup
   script:
-    - configure_build_test cpu-release-3D
+    - configure_build "--preset cpu-release-3D"
+    - run_ctest
+    - install_test
   after_script:
     - rm -rf $_JOB_PATH
   tags: [macos]

@@ -1018,8 +1018,8 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                           "Insufficient space in destination multifab");
         amrex::Box const& bxSrc = mfiSrc.tilebox(shiftCellIVect);
 
-        amrex::Array4 dst = mfDst[mfiSrc].array();
-        amrex::Array4 const src = srcForm.multi_fab(dir).const_array(mfiSrc);
+        auto dst{mfDst[mfiSrc].array()};
+        auto const src{srcForm.multi_fab(dir).const_array(mfiSrc)};
 
         // Trying to get the refinement ratio: from mfDst and srcForm
         // Number of cells in each direction
@@ -1087,8 +1087,8 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                           "Insufficient space in destination multifab");
         amrex::Box const& bxSrc = mfiSrc.tilebox(shiftCellIVect);
 
-        amrex::Array4 dst = mfDst[mfiSrc].array();
-        amrex::Array4 const src = srcForm.multi_fab().const_array(mfiSrc);
+        auto dst{mfDst[mfiSrc].array()};
+        auto const src{srcForm.multi_fab().const_array(mfiSrc)};
 
         // Trying to get the refinement ratio: from mfDst and srcForm
         // Number of cells in each direction
@@ -1304,8 +1304,8 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
     for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.tilebox();
-        amrex::Array4 dst = mfDst[mfi].array();
-        amrex::Array4 const src = srcForm.multi_fab()[mfi].array();
+        auto dst{mfDst[mfi].array()};
+        auto const src{srcForm.multi_fab()[mfi].array()};
 
         amrex::IntVect const indexTypeSrc = srcForm.multi_fab().boxArray().ixType().toIntVect();
 
@@ -1345,8 +1345,8 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
     for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.tilebox();
-        amrex::Array4 dst = mfDst[mfi].array();
-        amrex::Array4 const src = srcForm.multi_fab(idir)[mfi].array();
+        auto dst{mfDst[mfi].array()};
+        auto const src{srcForm.multi_fab(idir)[mfi].array()};
 
         amrex::IntVect const indexTypeSrc = srcForm.multi_fab(idir).boxArray().ixType().toIntVect();
 
