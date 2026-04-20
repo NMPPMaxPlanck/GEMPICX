@@ -22,7 +22,7 @@ include(cmake/gempic_FetchContent_Declare.cmake)
 
 if(AMReX_HYPRE)
   gempic_FetchContent_Declare(HYPRE
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/hypre-src
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/third_party/hypre-src
     GIT_REPOSITORY https://github.com/hypre-space/hypre
     GIT_TAG v2.32.0
     SOURCE_SUBDIR src # hypre doesn't follow standard cmake conventions
@@ -30,10 +30,10 @@ if(AMReX_HYPRE)
   )
 endif()
 gempic_FetchContent_Declare(AMReX
-             SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/amrex-src
+             SOURCE_DIR ${PROJECT_SOURCE_DIR}/third_party/amrex-src
              GIT_REPOSITORY https://github.com/AMReX-Codes/amrex.git
-             #GIT_TAG 5686ee3 # AMReX commit Nov 4, 2025
-             GIT_TAG 25.11
+             # AMReX commit Apr, 2026 to fix --prefix option bug
+             GIT_TAG ac6ea0c009071599b873d3b1296b39955d3faa1c
              ALLOW_DIRTY ${USE_DIRTY_AMREX_REPO}
              GIT_PROGRESS ON # AMReX takes long enough that this is nice instead of noise.
              )

@@ -32,4 +32,4 @@ function(add_executable_input_to_tests DIR)
   endforeach()
 endfunction()
 
-add_executable_input_to_tests(${CMAKE_SOURCE_DIR}/Examples)
+add_executable_input_to_tests(${PROJECT_SOURCE_DIR}/Examples)

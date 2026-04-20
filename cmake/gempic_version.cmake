@@ -1,3 +1,6 @@
+# Retrieves GEMPICX version info and sets internal cache variables
+# GEMPICX_GIT_VERSION, GEMPICX_PKG_VERSION, and GEMPICX_RELEASE_NUMBER
+
 include(cmake/gempic_utils.cmake)
 
 # Helper functions
@@ -52,7 +55,7 @@ function(gempic_create_and_link_cmake_constants_file)
   )
 endfunction()
 
-# Retrieves GEMPICX version info and sets internal cache variables
+# Retrieves GEMPICX version info via git and sets internal cache variables
 # GEMPICX_GIT_VERSION, GEMPICX_PKG_VERSION, and GEMPICX_RELEASE_NUMBER
 function(gempic_get_version)
   find_package(Git)
@@ -68,7 +71,7 @@ function(gempic_get_version)
   # <short SHA> is the shortened commit ID
   # -dirty appears if the repository contains uncommitted changes
   if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/.git AND ${GIT_FOUND})
-    execute_process(COMMAND git merge-base --fork-point master
+    execute_process(COMMAND git merge-base HEAD master
                     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     OUTPUT_VARIABLE _master_commit

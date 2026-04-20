@@ -33,11 +33,11 @@ endif()
 option(GEMPIC_USE_LTO "Use Link-Time Optimization. Turning it off reduces compile time, but may reduce performance." OFF)
 option(GEMPIC_BUILD_TESTS "Build the tests. Currently only toggles unit tests." ON)
 option(GEMPIC_BUILD_EXAMPLES "Build the examples. Currently only toggles all or none." ON)
-option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build." OFF)
+option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build" OFF)
 
-option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions when executed on host." OFF)
-option(USE_DIRTY_AMREX_REPO "Allow building from dirty AMReX git repositories." OFF)
-option(GEMPIC_DEBUG_MESSAGES "Turns on GEMPIC-specific debug messages." OFF)
+option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions when executed on host" OFF)
+option(USE_DIRTY_AMREX_REPO "Allow building from dirty AMReX git repositories" OFF)
+option(GEMPIC_DEBUG_MESSAGES "Turns on GEMPIC-specific debug messages" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -54,6 +54,9 @@ if(GEMPIC_USE_HIP)
   # (see https://gitlab.kitware.com/cmake/cmake/-/issues/23210)
   # set(HIP_SEPARABLE_COMPILATION ON)
 endif()
+
+include(cmake/gempic_install.cmake)
+gempic_set_default_install_directories()
 
 include(cmake/gempic_FetchContent_Declare.cmake)
 
@@ -112,20 +115,22 @@ if(GEMPIC_BUILD_TESTS)
   add_subdirectory(Testing)
 endif()
 
+gempic_install_export_targets()
 
 # Preparations necessary for clang-tidy
 include(cmake/clang_tidy.cmake)
 
 # Config summary
-message(STATUS "GEMPIC configuration summary: ")
+message(STATUS "GEMPICX configuration summary: ")
 message(STATUS "   AMReX version            = ${GEMPICX_AMReX_VERSION}")
-message(STATUS "   GEMPIC version           = ${GEMPICX_GIT_VERSION}")
+message(STATUS "   GEMPICX version          = ${GEMPICX_GIT_VERSION}")
 message(STATUS "   Build type               = ${CMAKE_BUILD_TYPE}")
+message(STATUS "   Install directory        = ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
 if(${CMAKE_BUILD_TYPE} MATCHES "Release")
-  message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS_RELEASE}")
+  message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
 elseif(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS_DEBUG}")
+  message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
 endif()
 if(GEMPIC_USE_CUDA)
   message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")

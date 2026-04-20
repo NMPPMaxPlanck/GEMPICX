@@ -46,7 +46,7 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void gempic_assert_array_in_interval (
  * @brief make a directional shift array
  */
 template <Gempic::Forms::OneTwoFormC SrcFormType, Direction dir>
-AMREX_GPU_HOST_DEVICE consteval std::array<int, 3> make_dir_shift ()
+AMREX_GPU_HOST_DEVICE inline constexpr std::array<int, 3> make_dir_shift ()
 {
     if constexpr (SrcFormType::s_space == Gempic::Forms::Space::edge)
     {

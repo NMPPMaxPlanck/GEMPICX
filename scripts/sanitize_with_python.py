@@ -185,15 +185,18 @@ def find_files(globPatterns, folders=['Src', 'Testing', 'Examples'], searchMainD
 
     return filelist 
 
-def fix_folders_syntax(folderNames, forceMove=False):
+def fix_folders_syntax(folderNames, forceMove=False, ignoreFolderNames=["build", "install"]):
     """
     Ensure all subfolders of folderName are CamelCase
     """
     if isinstance(folderNames, str) or isinstance(folderNames, pathlib.Path):
         folderNames = [pathlib.Path(folderNames).resolve()]
+    if isinstance(ignoreFolderNames, str) or isinstance(ignoreFolderNames, pathlib.Path):
+        ignoreFolderNames = [ignoreFolderNames]
 
     for folderName in folderNames:
         for root, dirs, _ in os.walk(folderName):
+            dirs[:] = [d for d in dirs if d not in ignoreFolderNames]
             for dirName in dirs:
                 # Construct CamelCase name
                 newName = convert_to_camel_case(dirName)
@@ -266,6 +269,8 @@ def fix_files_syntax(folders, forceMove=False):
     for folderName in folders:
         folderName = pathlib.Path(folderName).resolve()
         for file in folderName.rglob('*.H'):
+            if file.stem == "GEMPICX": # Special case
+                continue
             if gempicCamelCase.fullmatch(file.stem):
                 if not is_licensed(file):
                     add_license(file)
@@ -293,6 +298,8 @@ def fix_files_syntax(folders, forceMove=False):
         testCase = re.compile('^[A-Z][a-zA-Z0-9]*_test$')
         outdatedTestCase = re.compile(r'^test\w*$')
         for file in folderName.rglob('*.cpp'):
+            if file.stem == "GEMPICX": # Special case
+                continue
             if gempicCamelCase.fullmatch(file.stem):
                 if not is_licensed(file):
                     add_license(file)
@@ -567,12 +574,12 @@ def fix_includes(file):
     """
     Enforces the include style:
     #include "GEMPIC_Library.H"
-    for internal libraries and
+    for internal libraries (including "GEMPICX.H") and
     #include <otherstuff>
     for external libraries
     """
     correct_in_files('(^#include )"([^"]*)"', r'\1<\2>', file)
-    correct_in_files(r'(^#include )<([^>]*GEMPIC_[^>]*\.H)>', r'\1"\2"', file)
+    correct_in_files(r'(^#include )<([^>]*GEMPIC[_X][^>]*\.H)>', r'\1"\2"', file)
 
 def fix_lambda_brackets(file):
     r"""

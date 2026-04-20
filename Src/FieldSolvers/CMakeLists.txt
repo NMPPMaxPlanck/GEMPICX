@@ -1,2 +1,4 @@
 add_subdirectory(Poisson)
-add_subdirectory(Quasineutral)
+if(AMReX_HYPRE)
+  add_subdirectory(Quasineutral)
+endif()

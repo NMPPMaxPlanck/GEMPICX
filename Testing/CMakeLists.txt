@@ -2,15 +2,15 @@ gempic_FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG v1.14.0
-  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/googletest-src
+  SOURCE_DIR ${PROJECT_SOURCE_DIR}/third_party/googletest-src
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable (GtestTests GEMPIC_UnitTests.cpp)
+add_executable(GtestTests GEMPIC_UnitTests.cpp)
 
-target_include_directories(GtestTests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(GtestTests PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 add_subdirectory(FieldSolvers)
 add_subdirectory(Filter)
@@ -49,7 +49,8 @@ endif(GEMPIC_USE_CUDA)
   
 target_link_libraries(
   GtestTests
-  PRIVATE GEMPICX
+  PRIVATE
+  GEMPICX::GEMPICX
   GTest::gtest_main
   GTest::gmock
   )

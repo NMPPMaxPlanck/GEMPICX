@@ -99,8 +99,8 @@ void CustomOperatorOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dc
     for (amrex::MFIter mfi(mfDst, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.tilebox();
-        amrex::Array4 dst = mfDst.array(mfi);
-        amrex::Array4 const src = srcMF->const_array(mfi);
+        auto dst{mfDst.array(mfi)};
+        auto const src{srcMF->const_array(mfi)};
 
         m_f(bx, dst, src, nComps, this->m_dataSrc->scaling(), m_ishift, m_jshift, m_kshift);
     }

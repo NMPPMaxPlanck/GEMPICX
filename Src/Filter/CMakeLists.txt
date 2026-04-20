@@ -1,5 +1,7 @@
 if (AMReX_FFT)
-  set(FFTFile GEMPIC_FFTFilter.cpp)
+  set(FFTSource GEMPIC_FFTFilter.cpp)
 endif()
 
-target_sources(GEMPICX PRIVATE GEMPIC_Filter.cpp ${FFTFile})
+target_sources(GEMPICX PRIVATE
+  GEMPIC_Filter.cpp
+  ${FFTSource})

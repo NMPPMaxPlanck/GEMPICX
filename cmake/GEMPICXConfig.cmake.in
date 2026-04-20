@@ -1,0 +1,98 @@
+# ############################################################################ #
+#
+#  GEMPICX Configuration File
+#  To import into other CMake projects
+#
+# ############################################################################ #
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# This must be the version of CMake used to build the library
+cmake_minimum_required(VERSION @CMAKE_VERSION@)
+
+set(GEMPICX_BUILD_TYPE  @CMAKE_BUILD_TYPE@)
+
+# Versioning
+set(GEMPICX_GIT_VERSION \"@GEMPICX_GIT_VERSION@\")
+set(GEMPICX_PKG_VERSION \"@GEMPICX_PKG_VERSION@\")
+set(GEMPICX_RELEASE_NUMBER @GEMPICX_RELEASE_NUMBER@)
+
+# General options
+set(GEMPICX_MPI_FOUND                 @AMReX_MPI@)
+set(GEMPICX_CUDA_FOUND                @GEMPIC_USE_CUDA@)
+set(GEMPICX_HIP_FOUND                 @GEMPIC_USE_HIP@)
+set(GEMPICX_FFT_FOUND                 @AMReX_FFT@)
+set(GEMPICX_HYPRE_FOUND               @AMReX_HYPRE@)
+
+set(AMReX_SPACEDIM                  @AMReX_SPACEDIM@)
+foreach(D IN LISTS AMReX_SPACEDIM)
+  set(GEMPICX_${D}D_FOUND   ON)
+endforeach()
+
+# Manage all the dependencies!
+if(@AMReX_MPI@)
+  set( _mpi_components C CXX )
+  find_dependency(MPI REQUIRED ${_mpi_components})
+  unset(_mpi_components)
+endif()
+
+if(@GEMPIC_USE_CUDA@)
+  find_dependency(CUDAToolkit REQUIRED)
+endif()
+
+if(@GEMPIC_USE_HIP@)
+  find_dependency(hip REQUIRED)
+  # Link to hiprand -- must include rocrand too
+  find_package(rocrand REQUIRED CONFIG)
+  find_package(rocprim REQUIRED CONFIG)
+  find_package(hiprand REQUIRED CONFIG)
+  if(@AMReX_LINEAR_SOLVERS@)
+    find_package(rocsparse REQUIRED CONFIG)
+  endif()
+  if(@AMReX_FFT@)
+    find_package(rocfft REQUIRED)
+  endif()
+endif()
+
+if(@AMReX_HYPRE@)
+  set(HYPRE_LIBRARIES                 @HYPRE_LIBRARIES@)
+  set(HYPRE_INCLUDE_DIRS              @HYPRE_INCLUDE_DIRS@)
+  set(HYPRE_DIR                       @CMAKE_INSTALL_PREFIX@/@HYPRE_INSTALL_DIR@)
+  if(NOT HYPRE_DIR)
+    set(HYPRE_DIR                       @HYPRE_DIR@)
+  endif()
+  if(NOT HYPRE_LIBRARIES)
+    find_library(HYPRE_LIBRARIES NAME HYPRE PATHS "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@")
+  endif()
+  if(NOT HYPRE_INCLUDE_DIRS)
+    find_path(HYPRE_INCLUDE_DIRS NAME HYPRE.h PATHS "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_INCLUDEDIR@")
+  endif()
+  find_dependency(HYPRE 2.32.0 REQUIRED)
+endif()
+
+set(AMReX_ROOT @AMReX_ROOT@)
+set(AMReX_DIR @AMReX_DIR@)
+if(NOT (AMReX_ROOT OR AMReX_DIR))
+  # We probably built AMReX, and we probably built it here
+  set(AMReX_ROOT @CMAKE_INSTALL_PREFIX@)
+endif()
+find_dependency(AMReX REQUIRED)
+
+# Fiddle with targets
+include("${CMAKE_CURRENT_LIST_DIR}/GEMPICXTargets.cmake")
+
+# CMake targets aliases: last dimension built will be our legacy target
+if(NOT TARGET GEMPICX::GEMPICX)  # protection in case of multiple inclusions
+  list(LENGTH AMReX_SPACEDIM list_len)
+  math(EXPR list_last "${list_len} - 1")
+  list(GET AMReX_SPACEDIM ${list_last} AMReX_SPACEDIM_LAST)
+  add_library(GEMPICX::GEMPICX ALIAS GEMPICX::GEMPICX_${AMReX_SPACEDIM_LAST}D)
+endif()
+
+if(@AMReX_CUDA@)
+  set(AMREX_CUDA_ARCHS @AMREX_CUDA_ARCHS@ CACHE INTERNAL "CUDA archs AMReX is built for")
+  set_target_properties(GEMPICX::GEMPICX PROPERTIES CUDA_ARCHITECTURES ${AMREX_CUDA_ARCHS})
+endif()
+
+check_required_components("@PROJECT_NAME@")

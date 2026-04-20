@@ -31,7 +31,7 @@ string_matches() {
 ################################################################################
 # generic modules
 module load git
-module load cmake/3.30
+module load cmake
 module load ninja
 ################################################################################
 
@@ -62,6 +62,7 @@ elif string_matches ${CLUSTER} "VIPER"; then
         module load impi/2021.15
         module load mkl/2025.1
         module load clang/18
+        module load gcc/15
         export GEMPIC_VIPER_LOADED="true"
     fi
 else

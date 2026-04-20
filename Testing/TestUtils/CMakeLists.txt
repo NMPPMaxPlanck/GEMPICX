@@ -1,3 +1,3 @@
-target_sources(GtestTests PUBLIC
+target_sources(GtestTests PRIVATE
     GEMPIC_TestUtils.cpp
     )
