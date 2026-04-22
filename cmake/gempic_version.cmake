@@ -71,19 +71,21 @@ function(gempic_get_version)
   # <short SHA> is the shortened commit ID
   # -dirty appears if the repository contains uncommitted changes
   if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/.git AND ${GIT_FOUND})
-    execute_process(COMMAND git merge-base HEAD master
+    execute_process(COMMAND git merge-base remotes/origin/master HEAD
                     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     OUTPUT_VARIABLE _master_commit
                     ERROR_QUIET)
-    execute_process(COMMAND git describe ${_master_commit} --always --tags
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-                    OUTPUT_STRIP_TRAILING_WHITESPACE
-                    OUTPUT_VARIABLE _tmp
-                    ERROR_QUIET)
-    # filter invalid descriptions in shallow git clones
-    if(NOT _tmp MATCHES "^v([0-9]+)\\.([0-9]+)(\\.([0-9]+))*(-.*)*$")
-      set(_tmp "")
+    if(_master_commit)
+      execute_process(COMMAND git describe ${_master_commit} --always --tags
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+                      OUTPUT_STRIP_TRAILING_WHITESPACE
+                      OUTPUT_VARIABLE _tmp
+                      ERROR_QUIET)
+      # filter invalid descriptions in shallow git clones
+      if(NOT _tmp MATCHES "^v([0-9]+)\\.([0-9]+)(\\.([0-9]+))*(-.*)*$")
+        set(_tmp "")
+      endif()
     endif()
   endif()
 
@@ -109,6 +111,8 @@ function(gempic_get_version)
       # We're directly on a tag and add '0' as patch version number 
       set(_pkg_version "${_pkg_version}.0")
     endif()
+  else()
+    message(WARNING "Insufficient git repository information available for versioning.")
   endif()
 
   set(GEMPICX_PKG_VERSION "${_pkg_version}" CACHE INTERNAL "" FORCE)
