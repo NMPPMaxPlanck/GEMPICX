@@ -279,7 +279,7 @@ public:
         amrex::Real const dt,
         amrex::Real const gamma) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_rel_u()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_rel_u()");
 
         amrex::Real uX = u[xDir];
         amrex::Real uY = u[yDir];
@@ -338,7 +338,7 @@ public:
         amrex::Real const chargeOverMass,
         amrex::Real const dt) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested_rot()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested_rot()");
 
         amrex::Real uXtemp = vel[xDir];
         amrex::Real uYtemp = vel[yDir];
@@ -580,7 +580,7 @@ public:
         amrex::Real const dt,
         amrex::Real const c) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested_rel()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested_rel()");
 
         amrex::GpuArray<amrex::Real, 3> vel{0., 0., 0.};
         amrex::Real gamma = sqrt(1 + (u[xDir] * u[xDir] + u[yDir] * u[yDir] + u[zDir] * u[zDir]) /
@@ -670,7 +670,7 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested()");
 
 #if AMREX_SPACEDIM == 3
 
