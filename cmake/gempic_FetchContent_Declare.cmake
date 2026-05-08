@@ -116,13 +116,15 @@ endfunction()
 #   NAME:           The name of the library to fetch
 #   SOURCE_DIR:     The location of said library.
 #                   A search is first done to see if the library already exists in this location.
+#   SOURCE_SUBDIR:  The location of the main CMakeLists.txt file of said library, relative to
+#                   SOURCE_DIR. Usually unnecessary, since most projects put it in the main folder.
 #   GIT_REPOSITORY: The git address of the library
 #   GIT_TAG:        The tag or commit ID to get. If given, and a library is already found,
 #                   the downloaded library is checked against the tag/commit ID.
 #   ALLOW_DIRTY:    Downloads the GIT_TAG version if given, but allows the user to modify the repo.
 #   ...             Any other arguments are passed on to FetchContent_Declare unmodified.
 function(gempic_FetchContent_Declare NAME)
-  set(oneValueArgs GIT_REPOSITORY GIT_TAG SOURCE_DIR ALLOW_DIRTY)
+  set(oneValueArgs GIT_REPOSITORY GIT_TAG SOURCE_DIR SOURCE_SUBDIR ALLOW_DIRTY)
   set(multiValueArgs FIND_PACKAGE_ARGS)
   cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -197,6 +199,15 @@ function(gempic_FetchContent_Declare NAME)
       # See https://cmake.org/cmake/help/latest/module/ExternalProject.html#git
       #set(${NAME}_GIT_UPDATE_LINE GIT_REMOTE_UPDATE_STRATEGY CHECKOUT)
     endif()
+    if(DEFINED arg_SOURCE_SUBDIR)
+      # Unfortunately, cmake redefines _SOURCE_DIR to include _SOURCE_SUBDIR, so when reconfiguring
+      # without deleting, we have to omit the latter.
+      file(REAL_PATH ${${NAME}_SOURCE_DIR} REAL_SOURCE_DIR)
+      file(REAL_PATH ${arg_SOURCE_DIR}/${arg_SOURCE_SUBDIR} REAL_SOURCE_SUBDIR)
+      if(NOT ${REAL_SOURCE_DIR} STREQUAL ${REAL_SOURCE_SUBDIR})
+        set(SOURCE_SUBDIR_LINE SOURCE_SUBDIR ${arg_SOURCE_SUBDIR})
+      endif()
+    endif()
 
     FetchContent_Declare(
       ${NAME}
@@ -204,6 +215,7 @@ function(gempic_FetchContent_Declare NAME)
       ${GIT_TAG_LINE}
       ${GIT_UPDATE_LINE}
       SOURCE_DIR ${${NAME}_SOURCE_DIR}
+      ${SOURCE_SUBDIR_LINE}
       ${arg_UNPARSED_ARGUMENTS}  # Give remaining arguments to FetchContent_Declare()
     )
 
