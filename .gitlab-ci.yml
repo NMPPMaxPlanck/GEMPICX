@@ -154,13 +154,13 @@ build-test_gcc_1D:
   before_script:
     - !reference [default,before_script]
     - !reference [.mpcdf-modules,before_script]
+    - module load ninja
     - module load gcc
     - module load openmpi
     - module load cuda
     - module load fftw-mpi
     - module list
     - export NVIDIA_ARCHITECTURE=A100
-    - pip3 install ninja
 
 build-test_cuda_3D:
   extends:
