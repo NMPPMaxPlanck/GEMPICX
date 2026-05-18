@@ -20,6 +20,7 @@ target_link_libraries(ParticleAdd_test
                       GEMPICX::GEMPICX
                       GTest::gtest_main)
 target_include_directories(ParticleAdd_test PRIVATE ${PROJECT_SOURCE_DIR}/Testing)
+gempic_set_compile_options(ParticleAdd_test)
 
 add_test(NAME ParticlePlotFile_test
   COMMAND ${CMAKE_COMMAND}

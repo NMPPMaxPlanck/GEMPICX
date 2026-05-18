@@ -56,12 +56,12 @@ if(GEMPIC_USE_HIP)
 endif()
 
 include(cmake/gempic_install.cmake)
-gempic_set_default_install_directories()
 
 include(cmake/gempic_FetchContent_Declare.cmake)
 
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
+gempic_set_clang_toolchain_flags_on_mpcdf_systems()
 
 include(cmake/gempic_AMReXConfig.cmake)
 
@@ -101,6 +101,7 @@ target_link_libraries(GEMPICX
   # Private primarily so that people could include their own and get info about their repo
   # Info about our repo is already exposed in GEMPICX.H
   PRIVATE cmake_git_version_tracking)
+gempic_set_compile_options(GEMPICX)
 if(GEMPIC_BUILD_DOCUMENTATION)
   add_subdirectory(doc)
 endif()
@@ -127,11 +128,8 @@ message(STATUS "   GEMPICX version          = ${GEMPICX_GIT_VERSION}")
 message(STATUS "   Build type               = ${CMAKE_BUILD_TYPE}")
 message(STATUS "   Install directory        = ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
-if(${CMAKE_BUILD_TYPE} MATCHES "Release")
-  message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
-elseif(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
-endif()
+get_target_property(GEMPICX_FLAGS GEMPICX COMPILE_OPTIONS)
+message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} ${GEMPICX_FLAGS}")
 if(GEMPIC_USE_CUDA)
   message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
   message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
