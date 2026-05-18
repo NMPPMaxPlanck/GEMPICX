@@ -149,3 +149,5 @@ macro(gempic_install_export_targets)
     ${GEMPICX_VERSION_FILE}
     DESTINATION ${GEMPICX_LIBDIR}/cmake/GEMPICX)
 endmacro()
+
+gempic_set_default_install_directories()
