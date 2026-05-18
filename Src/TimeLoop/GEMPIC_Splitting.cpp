@@ -4,8 +4,6 @@
  **************************************************************************************************/
 #include "GEMPIC_Splitting.H"
 
-using namespace Gempic::TimeLoop;
-
 /**
  * @brief solves the ODEs corresponding to H_J part of the Hamiltonian in the cold plasma model.
  *        Rotates and integrates cold current.
@@ -18,9 +16,9 @@ using namespace Gempic::TimeLoop;
  *
  */
 void Gempic::TimeLoop::apply_h_j (
-    DeRhamField<Grid::dual, Space::face>& J,
-    DeRhamField<Grid::dual, Space::face>& D,
-    std::shared_ptr<FDDeRhamComplex> deRham,
+    Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+    Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+    std::shared_ptr<Forms::FDDeRhamComplex> deRham,
     amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> funcBEquilibrium,
     amrex::Real dt)
 {

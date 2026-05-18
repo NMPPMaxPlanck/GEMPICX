@@ -10,15 +10,16 @@
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_Solvers.H"
 #ifdef AMREX_USE_FFT
-#include "GEMPIC_FFT.H"
+#include "GEMPIC_PoissonFFT.H"
 #endif
 #ifdef AMREX_USE_HYPRE
-#include "GEMPIC_Hypre.H"
+#include "GEMPIC_PoissonHypre.H"
 #endif
+
+using namespace Gempic::Forms;
 
 namespace Gempic::FieldSolvers
 {
-
 /// @brief Applies the Poisson equation
 class PoissonApply
 {
@@ -58,119 +59,6 @@ public:
     void operator()(DeRhamField<Grid::dual, Space::cell>& rho,
                     DeRhamField<Grid::primal, Space::node> const& phi);
 };
-
-std::unique_ptr<PoissonSolverMethod> Gempic::FieldSolvers::Impl::make_specific_poisson_solver (
-    std::shared_ptr<DeRhamComplex> deRham,
-    Gempic::ComputationalDomain const& infra,
-    std::string const& solver,
-    amrex::Real const relTol,
-    amrex::Real const absTol,
-    bool const tolerancesGiven)
-{
-    int maxCoarseningLevel = 10;
-    int maxIter = 100;
-    int mgBottomMaxIter = 100;
-    int maxFmgIter = 0;
-    int verbose = Gempic::Utils::Verbosity::level();
-    int bottomVerbose = verbose;
-
-    if (solver == "FFT")
-    {
-        if (tolerancesGiven)
-        {
-            amrex::Warning("Warning: FFT Poisson solver does not use relTol and absTol");
-        }
-#ifdef AMREX_USE_FFT
-        if (infra.geometry().isAllPeriodic())
-        {
-            return std::make_unique<FFTSolver> (
-                FFTSolver(infra, deRham->get_hodge_degree(), HodgeScheme::FDHodge));
-        }
-        else
-        {
-            GEMPIC_ERROR("Non-periodic boundary conditions not compatible with the FFT solver");
-        }
-#else
-        GEMPIC_ERROR("FFT was not compiled with GEMPICX and is thus not available as a solver");
-#endif
-    }
-    else if (solver == "Amrex")
-    {
-        if (infra.geometry().isAllPeriodic())
-        {
-            return std::make_unique<AmrexSolver> (infra, maxCoarseningLevel, maxIter, maxFmgIter,
-                                                 mgBottomMaxIter, relTol, absTol, verbose,
-                                                 bottomVerbose);
-        }
-        else
-        {
-            GEMPIC_ERROR(
-                "Non-periodic boundary conditions not compatible with the AMReX Poisson solver");
-        }
-    }
-    else if (solver == "ConjugateGradient")
-    {
-        using Rhs = DeRhamField<Grid::dual, Space::cell>;
-        using Sol = DeRhamField<Grid::primal, Space::node>;
-        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
-            deRham, PoissonApply{deRham}, // make the operator the poisson operator
-            [amrexSolver = AmrexSolver{infra, maxCoarseningLevel, maxIter, maxFmgIter,
-                                       mgBottomMaxIter, relTol, absTol, verbose, bottomVerbose}] (
-                Sol& z, Rhs& r) mutable
-            {
-                amrexSolver.solve(z, r); // precondition using the amrex solver
-            },
-            [=] (Rhs const& b)
-            {
-                check_charge_neutrality(b, infra); // average b to 0 in the usual way
-            },
-            relTol, absTol, verbose);
-    }
-    else if (solver == "ConjugateGradientInverseHodge")
-    {
-        using Rhs = DeRhamField<Grid::dual, Space::cell>;
-        using Sol = DeRhamField<Grid::primal, Space::node>;
-        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
-            deRham,
-            // make the operator the poisson inverse hodge operator
-            PoissonApplyInverseHodge{deRham, infra}, nullptr,
-            [=] (Rhs const& b)
-            {
-                check_charge_neutrality(b, infra); // average b to 0 in the usual way
-            },
-            relTol, absTol, verbose);
-    }
-    else if (solver == "Hypre")
-    {
-#ifdef AMREX_USE_HYPRE
-        switch (deRham->get_hodge_degree())
-        {
-            case 2:
-                return std::make_unique<HypreLinearSystem<2>>(infra, deRham, relTol, absTol,
-                                                              verbose);
-            case 4:
-                return std::make_unique<HypreLinearSystem<4>>(infra, deRham, relTol, absTol,
-                                                              verbose);
-            case 6:
-                return std::make_unique<HypreLinearSystem<6>>(infra, deRham, relTol, absTol,
-                                                              verbose);
-            default:
-            {
-                GEMPIC_ERROR("Hodge degree " + std::to_string(deRham->get_hodge_degree()) +
-                             " not implemented for Hypre solver");
-            }
-            break;
-        }
-#else
-        GEMPIC_ERROR("Hypre was not compiled with GEMPICX and is thus not available as a solver");
-#endif
-    }
-    else
-    {
-        GEMPIC_ERROR(solver + " not a recognised PoissonSolver");
-    }
-    exit(1); // Calms the compiler even though we don't technically return anything
-}
 
 AmrexSolver::AmrexSolver(ComputationalDomain const& compDom,
                          int maxCoarseningLevel,
@@ -362,4 +250,120 @@ amrex::Real get_and_apply_neutralizing_background (Forms::DeRhamField<Grid::dual
     }
     return rhoBackground;
 }
+
+namespace Impl
+{
+std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver (
+    std::shared_ptr<DeRhamComplex> deRham,
+    ComputationalDomain const& infra,
+    std::string const& solver,
+    amrex::Real const relTol,
+    amrex::Real const absTol,
+    bool const tolerancesGiven)
+{
+    int maxCoarseningLevel = 10;
+    int maxIter = 100;
+    int mgBottomMaxIter = 100;
+    int maxFmgIter = 0;
+    int verbose = Gempic::Utils::Verbosity::level();
+    int bottomVerbose = verbose;
+
+    if (solver == "FFT")
+    {
+        if (tolerancesGiven)
+        {
+            amrex::Warning("Warning: FFT Poisson solver does not use relTol and absTol");
+        }
+#ifdef AMREX_USE_FFT
+        if (infra.geometry().isAllPeriodic())
+        {
+            return std::make_unique<PoissonFFTSolver> (
+                PoissonFFTSolver(infra, deRham->get_hodge_degree(), HodgeScheme::FDHodge));
+        }
+        else
+        {
+            GEMPIC_ERROR("Non-periodic boundary conditions not compatible with the FFT solver");
+        }
+#else
+        GEMPIC_ERROR("FFT was not compiled with GEMPICX and is thus not available as a solver");
+#endif
+    }
+    else if (solver == "Amrex")
+    {
+        if (infra.geometry().isAllPeriodic())
+        {
+            return std::make_unique<AmrexSolver> (infra, maxCoarseningLevel, maxIter, maxFmgIter,
+                                                 mgBottomMaxIter, relTol, absTol, verbose,
+                                                 bottomVerbose);
+        }
+        else
+        {
+            GEMPIC_ERROR(
+                "Non-periodic boundary conditions not compatible with the AMReX Poisson solver");
+        }
+    }
+    else if (solver == "ConjugateGradient")
+    {
+        using Rhs = DeRhamField<Grid::dual, Space::cell>;
+        using Sol = DeRhamField<Grid::primal, Space::node>;
+        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
+            deRham, PoissonApply{deRham}, // make the operator the poisson operator
+            [amrexSolver = AmrexSolver{infra, maxCoarseningLevel, maxIter, maxFmgIter,
+                                       mgBottomMaxIter, relTol, absTol, verbose, bottomVerbose}] (
+                Sol& z, Rhs& r) mutable
+            {
+                amrexSolver.solve(z, r); // precondition using the amrex solver
+            },
+            [=] (Rhs const& b)
+            {
+                check_charge_neutrality(b, infra); // average b to 0 in the usual way
+            },
+            relTol, absTol, verbose);
+    }
+    else if (solver == "ConjugateGradientInverseHodge")
+    {
+        using Rhs = DeRhamField<Grid::dual, Space::cell>;
+        using Sol = DeRhamField<Grid::primal, Space::node>;
+        return make_conjugate_gradient_unique_ptr<Rhs, Sol>(
+            deRham,
+            // make the operator the poisson inverse hodge operator
+            PoissonApplyInverseHodge{deRham, infra}, nullptr,
+            [=] (Rhs const& b)
+            {
+                check_charge_neutrality(b, infra); // average b to 0 in the usual way
+            },
+            relTol, absTol, verbose);
+    }
+    else if (solver == "Hypre")
+    {
+#ifdef AMREX_USE_HYPRE
+        switch (deRham->get_hodge_degree())
+        {
+            case 2:
+                return std::make_unique<PoissonHypreSolver<2>>(infra, deRham, relTol, absTol,
+                                                               verbose);
+            case 4:
+                return std::make_unique<PoissonHypreSolver<4>>(infra, deRham, relTol, absTol,
+                                                               verbose);
+            case 6:
+                return std::make_unique<PoissonHypreSolver<6>>(infra, deRham, relTol, absTol,
+                                                               verbose);
+            default:
+            {
+                GEMPIC_ERROR("Hodge degree " + std::to_string(deRham->get_hodge_degree()) +
+                             " not implemented for Hypre solver");
+            }
+            break;
+        }
+#else
+        GEMPIC_ERROR("Hypre was not compiled with GEMPICX and is thus not available as a solver");
+#endif
+    }
+    else
+    {
+        GEMPIC_ERROR(solver + " not a recognised PoissonSolver");
+    }
+    exit(1); // Calms the compiler even though we don't technically return anything
+}
+} //namespace Impl
 } // namespace Gempic::FieldSolvers

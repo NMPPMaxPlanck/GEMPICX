@@ -14,6 +14,7 @@
 #include <AMReX_Print.H>
 
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Interpolation.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_SplineClass.H"
@@ -1431,6 +1432,33 @@ AMREX_GPU_HOST_DEVICE inline void compute_b (
 }
 
 /**
+ * @brief Normlize magnetic field
+ *
+ * Here nodal splines seem to be used for deposition where integral of cell splines are expected
+ *
+ * @tparam bDim The number of the components of the magnetic field
+ *
+ * @param[out] bValues normalized magnetic field to be computed
+ * @param normB l2 norm of the original magnetic field
+ * @param bfield original magnetic field
+ */
+template <unsigned int bDim>
+AMREX_GPU_HOST_DEVICE inline void compute_b_lagrange (
+    amrex::GpuArray<amrex::Real, bDim>& bValues,
+    amrex::Real& normB,
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> bfield)
+{
+    using namespace Impl; // utility functions for this function
+
+    normB = std::max(sqrt(bfield[0] * bfield[0] + bfield[1] * bfield[1] + bfield[2] * bfield[2]),
+                     1e-15);
+
+    bValues[0] = bfield[0] / normB;
+    bValues[1] = bfield[1] / normB;
+    bValues[2] = bfield[2] / normB;
+}
+
+/**
  * @brief Deposits charge density on cells of dual grid
  *
  * Here nodal splines seem to be used for deposition where integral of cell splines are expected
@@ -2105,9 +2133,8 @@ inline void push_v_using_e (amrex::GpuArray<amrex::Real, vDim>& vel,
     }
 }
 
-template <unsigned int vDim>
-inline void rotate_v_using_b (amrex::GpuArray<amrex::Real, vDim>& vel,
-                              amrex::GpuArray<amrex::Real, vDim> const& bfield,
+inline void rotate_v_using_b (amrex::GpuArray<amrex::Real, 3>& vel,
+                              amrex::GpuArray<amrex::Real, 3> const& bfield,
                               amrex::Real dt,
                               amrex::Real chargeByMass)
 {
@@ -2115,12 +2142,12 @@ inline void rotate_v_using_b (amrex::GpuArray<amrex::Real, vDim>& vel,
                                  bfield[zDir] * bfield[zDir]);
     if (bmag != 0.0)
     {
-        amrex::GpuArray<amrex::Real, vDim> b{bfield[xDir] / bmag, bfield[yDir] / bmag,
-                                             bfield[zDir] / bmag};
+        amrex::GpuArray<amrex::Real, 3> b{bfield[xDir] / bmag, bfield[yDir] / bmag,
+                                          bfield[zDir] / bmag};
         amrex::Real a = chargeByMass * bmag * dt;
-        amrex::Real ca = cos(a);
-        amrex::Real sa = sin(a);
-        amrex::GpuArray<amrex::Real, vDim> vtemp{vel[xDir], vel[yDir], vel[zDir]};
+        amrex::Real ca = std::cos(a);
+        amrex::Real sa = std::sin(a);
+        amrex::GpuArray<amrex::Real, 3> vtemp{vel[xDir], vel[yDir], vel[zDir]};
 
         vel[xDir] =
             (b[xDir] * b[xDir] + (b[yDir] * b[yDir] + b[zDir] * b[zDir]) * ca) * vtemp[xDir] +
@@ -2136,6 +2163,258 @@ inline void rotate_v_using_b (amrex::GpuArray<amrex::Real, vDim>& vel,
             (b[yDir] * sa + b[zDir] * b[xDir] * (1.0 - ca)) * vtemp[xDir] +
             (-b[xDir] * sa + b[zDir] * b[yDir] * (1.0 - ca)) * vtemp[yDir] +
             (b[zDir] * b[zDir] + (b[xDir] * b[xDir] + b[yDir] * b[yDir]) * ca) * vtemp[zDir];
+    }
+}
+
+/**
+ * @brief Deposits charge density using GDEC (alternative implementation)
+ *
+ * This function provides a GDEC based implementation for charge deposition
+ *
+ * @tparam degX GDEC basis degree in x
+ * @tparam degY GDEC basis degree in y
+ * @tparam degZ GDEC basis degree in z
+ * @tparam hodgeDegree hodge degree
+ * @tparam vDim Number of velocity dimensions
+ * @tparam nData Number of particle data components
+ *
+ * @param[out] rho Charge density field to be populated
+ * @param particles Vector of particle species
+ * @param compDom Computational domain
+ * @param doSync Whether to synchronize after deposition
+ */
+template <int hodgeDegree, int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
+void deposit_particle_density_gdec (
+    Gempic::Forms::DeRhamField<Gempic::Forms::Grid::dual, Gempic::Forms::Space::cell>& rho,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    bool doSync = true)
+{
+    BL_PROFILE("deposit_particle_density_gdec()");
+    using PrimalNodeField = Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>;
+    auto dr = compDom.cell_size_array();
+
+    for (auto const& particleSpecies : particles)
+    {
+        amrex::Real charge = particleSpecies->get_charge();
+
+        for (auto& particleGrid : *particleSpecies)
+        {
+            long const np = particleGrid.numParticles();
+            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
+
+            amrex::Array4<amrex::Real> rhoarr = rho.m_data[particleGrid].array();
+
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
+                compDom.geometry().ProbLoArray()};
+
+            // loop over particles: add contribution of particle position to rho
+            amrex::ParallelFor(
+                np,
+                [=] AMREX_GPU_DEVICE(long pp)
+                {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
+                    AMREX_D_EXPR(pos[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                 pos[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                 pos[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+
+                    amrex::Real chargeWeight = charge * ptd.rdata(ii.m_iweight)[pp];
+
+                    int i =
+                        floor((pos[xDir] - plo[xDir]) / dr[xDir]); //gives cell index of particle
+                    int j = floor((pos[yDir] - plo[yDir]) / dr[yDir]);
+                    int k = floor((pos[zDir] - plo[zDir]) / dr[zDir]);
+
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {
+                        AMREX_D_DECL(plo[xDir] + i * dr[xDir], plo[yDir] + j * dr[yDir],
+                                     plo[zDir] + k * dr[zDir])};
+                    //stores the cell lower left corner position
+
+                    GEMPIC_D_EXCL(int b{0};, int c{0};, )
+
+                    GEMPIC_D_LOOP_BEGIN(
+                        for (int a = 1 - hodgeDegree / 2; a < hodgeDegree / 2 + 1; ++a),
+                        for (int b = 1 - hodgeDegree / 2; b < hodgeDegree / 2 + 1; ++b),
+                        for (int c = 1 - hodgeDegree / 2; c < hodgeDegree / 2 + 1; ++c))
+
+                        amrex::HostDevice::Atomic::Add(
+                            &rhoarr(i + a, j + b, k + c),
+                            chargeWeight *
+                                GEMPIC_D_MULT(
+                                    (Gempic::Forms::choose_eval<hodgeDegree, PrimalNodeField>(
+                                        a, rr[xDir], dr[xDir], pos[xDir])),
+                                    (Gempic::Forms::choose_eval<hodgeDegree, PrimalNodeField>(
+                                        b, rr[yDir], dr[yDir], pos[yDir])),
+                                    (Gempic::Forms::choose_eval<hodgeDegree, PrimalNodeField>(
+                                        c, rr[zDir], dr[zDir], pos[zDir]))));
+                        // evaluates polynomials and adds contribution
+                        // to respective cell
+                    GEMPIC_D_LOOP_END
+                });
+        }
+    }
+
+    if (doSync)
+    {
+        rho.post_particle_loop_sync();
+    }
+}
+
+/**
+ * @brief Deposits current density using GDEC (alternative implementation)
+ *
+ * This function provides a GDEC based implementation for current deposition
+ *
+ * @tparam degX GDEC basis degree in x
+ * @tparam degY GDEC basis degree in y
+ * @tparam degZ GDEC basis degree in z
+ * @tparam hodgeDegree hodge degree
+ * @tparam vDim Number of velocity dimensions
+ * @tparam nData Number of particle data components
+ *
+ * @param[out] J current density field to be populated
+ * @param particles Vector of particle species
+ * @param compDom Computational domain
+ * @param dt time step
+ * @param doSync Whether to synchronize after deposition
+ */
+template <int hodgeDegree, int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
+void deposit_particle_current_gdec (
+    Gempic::Forms::DeRhamField<Gempic::Forms::Grid::dual, Gempic::Forms::Space::face>& J,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    amrex::Real dt,
+    bool doSync = true)
+{
+    BL_PROFILE("deposit_particle_current_gdec()");
+    using PrimalEdgeField = Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>;
+    auto dr = compDom.cell_size_array();
+
+    for (auto const& particleSpecies : particles)
+    {
+        amrex::Real charge = particleSpecies->get_charge();
+        amrex::Real chargeOverMass = charge / particleSpecies->get_mass();
+
+        for (auto& particleGrid : *particleSpecies)
+        {
+            long const np = particleGrid.numParticles();
+            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+            auto const ii = particleSpecies->get_data_indices();
+
+            amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
+
+            for (int cc = 0; cc < vDim; cc++)
+            {
+                jA[cc] = (J.m_data[cc])[particleGrid].array();
+            }
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
+
+            // loop over particles: add contribution of old particle position to J
+            amrex::ParallelFor(
+                np,
+                [=] AMREX_GPU_DEVICE(long pp)
+                {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
+                    AMREX_D_EXPR(pos[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                 pos[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                 pos[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+
+                    amrex::GpuArray<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                           ptd.rdata(ii.m_ively)[pp],
+                                                           ptd.rdata(ii.m_ivelz)[pp]};
+
+                    amrex::Real chargeWeight = charge * ptd.rdata(ii.m_iweight)[pp];
+
+                    int i = floor((pos[xDir] - plo[xDir]) / dr[xDir]);
+                    int j = floor((pos[yDir] - plo[yDir]) / dr[yDir]);
+                    int k = floor((pos[zDir] - plo[zDir]) / dr[zDir]);
+
+                    amrex::GpuArray<int, 3> xDirShift = {0, 1, 1};
+                    amrex::GpuArray<int, 3> yDirShift = {1, 0, 1};
+                    amrex::GpuArray<int, 3> zDirShift = {1, 1, 0};
+
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {
+                        AMREX_D_DECL(plo[xDir] + i * dr[xDir], plo[yDir] + j * dr[yDir],
+                                     plo[zDir] + k * dr[zDir])};
+
+                    GEMPIC_D_EXCL(int b{0};, int c{0};, )
+
+                    GEMPIC_D_LOOP_BEGIN(for (int a = 1 - hodgeDegree / 2;
+                                             a < hodgeDegree / 2 + xDirShift[xDir]; ++a),
+                                        for (int b = 1 - hodgeDegree / 2;
+                                             b < hodgeDegree / 2 + xDirShift[yDir]; ++b),
+                                        for (int c = 1 - hodgeDegree / 2;
+                                             c < hodgeDegree / 2 + xDirShift[zDir]; ++c))
+
+                        // J update in predictor step in x
+                        jA[xDir](i + a, j + b, k + c) +=
+                            dt * chargeWeight * vel[xDir] *
+                            GEMPIC_D_MULT(
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::xDir, Direction::xDir>(
+                                    a, rr[xDir], dr[xDir], pos[xDir])),
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::xDir, Direction::yDir>(
+                                    b, rr[yDir], dr[yDir], pos[yDir])),
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::xDir, Direction::zDir>(
+                                    c, rr[zDir], dr[zDir], pos[zDir])));
+                    GEMPIC_D_LOOP_END
+
+                    GEMPIC_D_LOOP_BEGIN(
+                        // J update in predictor step in y
+                        for (int a = 1 - hodgeDegree / 2; a < hodgeDegree / 2 + yDirShift[xDir];
+                             ++a),
+                        for (int b = 1 - hodgeDegree / 2; b < hodgeDegree / 2 + yDirShift[yDir];
+                             ++b),
+                        for (int c = 1 - hodgeDegree / 2; c < hodgeDegree / 2 + yDirShift[zDir];
+                             ++c))
+
+                        jA[yDir](i + a, j + b, k + c) +=
+                            dt * chargeWeight * vel[yDir] *
+                            GEMPIC_D_MULT(
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::yDir, Direction::xDir>(
+                                    a, rr[xDir], dr[xDir], pos[xDir])),
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::yDir, Direction::yDir>(
+                                    b, rr[yDir], dr[yDir], pos[yDir])),
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::yDir, Direction::zDir>(
+                                    c, rr[zDir], dr[zDir], pos[zDir])));
+
+                    GEMPIC_D_LOOP_END
+
+                    GEMPIC_D_LOOP_BEGIN(
+                        // J update in predictor step in z
+                        for (int a = 1 - hodgeDegree / 2; a < hodgeDegree / 2 + zDirShift[xDir];
+                             ++a),
+                        for (int b = 1 - hodgeDegree / 2; b < hodgeDegree / 2 + zDirShift[yDir];
+                             ++b),
+                        for (int c = 1 - hodgeDegree / 2; c < hodgeDegree / 2 + zDirShift[zDir];
+                             ++c))
+
+                        jA[zDir](i + a, j + b, k + c) +=
+                            dt * chargeWeight * vel[zDir] *
+                            GEMPIC_D_MULT(
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::zDir, Direction::xDir>(
+                                    a, rr[xDir], dr[xDir], pos[xDir])),
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::zDir, Direction::yDir>(
+                                    b, rr[yDir], dr[yDir], pos[yDir])),
+                                (Gempic::Forms::choose_eval<hodgeDegree, PrimalEdgeField,
+                                                            Direction::zDir, Direction::zDir>(
+                                    c, rr[zDir], dr[zDir], pos[zDir])));
+                    GEMPIC_D_LOOP_END
+                });
+        }
+    }
+
+    if (doSync)
+    {
+        J.post_particle_loop_sync();
     }
 }
 

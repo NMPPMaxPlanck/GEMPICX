@@ -23,7 +23,7 @@ namespace Gempic::FieldSolvers
  * @param rho The right-hand side vector
  */
 template <int hodgeDegree>
-class HypreLinearSystem : public PoissonSolverMethod
+class PoissonHypreSolver : public PoissonSolverMethod
 {
 private:
     static constexpr int s_maxStencilSize = hodgeDegree * AMREX_SPACEDIM + 1;
@@ -35,11 +35,11 @@ private:
     amrex::Real m_cellVolume;
 
 public:
-    HypreLinearSystem(ComputationalDomain const& compDom,
-                      std::shared_ptr<Gempic::Forms::DeRhamComplex> drc,
-                      amrex::Real relTol = 1.e-10,
-                      amrex::Real absTol = 1.e-12,
-                      int verbose = 0) :
+    PoissonHypreSolver(ComputationalDomain const& compDom,
+                       std::shared_ptr<Gempic::Forms::DeRhamComplex> drc,
+                       amrex::Real relTol = 1.e-10,
+                       amrex::Real absTol = 1.e-12,
+                       int verbose = 0) :
         m_compDom{compDom}, m_relTol{relTol}, m_absTol{absTol}, m_cellVolume{compDom.cell_volume()}
     {
         verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
@@ -171,8 +171,8 @@ public:
      * @param[out] phi The solution vector
      * @param rho The right-hand side vector
      */
-    void solve (DeRhamField<Grid::primal, Space::node>& phi,
-                DeRhamField<Grid::dual, Space::cell> const& rho) override
+    void solve (Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& phi,
+                Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho) override
     {
         check_charge_neutrality(rho, m_compDom);
 

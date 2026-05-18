@@ -27,9 +27,6 @@
 
 namespace Gempic::FieldSolvers
 {
-using namespace Forms;
-using namespace Particle;
-
 enum class RotatePushOrder
 {
     PushvThenRotatev,
@@ -175,7 +172,7 @@ private:
 
 public:
     QuasineutralSolver(ComputationalDomain infr,
-                       std::shared_ptr<DeRhamComplex> drc,
+                       std::shared_ptr<Forms::DeRhamComplex> drc,
                        amrex::Real tol = 1.e-15,
                        int verbose = 0) :
         m_infra{infr}, m_relTol{tol}
@@ -184,16 +181,21 @@ public:
     }
 
     // Generic function to build and solve linear systems with HYPRE
-    template <int maxStencilSize, Grid grid, Space space, typename Tmarker, typename Tfiller>
-    void create_and_use_hypre_solver (DeRhamField<grid, space>& x,
-                                      DeRhamField<oppositeGrid<grid>, oppositeSpace<space>>& rhs,
-                                      Tmarker&& marker,
-                                      Tfiller&& filler)
+    template <int maxStencilSize,
+              Forms::Grid grid,
+              Forms::Space space,
+              typename Tmarker,
+              typename Tfiller>
+    void create_and_use_hypre_solver (
+        Forms::DeRhamField<grid, space>& x,
+        Forms::DeRhamField<Forms::oppositeGrid<grid>, Forms::oppositeSpace<space>>& rhs,
+        Tmarker&& marker,
+        Tfiller&& filler)
     {
         amrex::Vector<amrex::IndexType> idxTypeVector;
         amrex::Vector<amrex::MultiFab*> xPointerVector;
         amrex::Vector<amrex::MultiFab const*> rhsPointerVector;
-        if constexpr (is_one_or_two_form<space>())
+        if constexpr (Forms::is_one_or_two_form<space>())
         {
             idxTypeVector = {x.m_data[xDir].boxArray().ixType(), x.m_data[yDir].boxArray().ixType(),
                              x.m_data[zDir].boxArray().ixType()};
@@ -279,9 +281,10 @@ public:
     }
 
     // Functions relating to the curlcurl matrix begin
-    void solve_curlcurl_plus_field_charge_e (DeRhamField<Grid::dual, Space::face>& b,
-                                             DeRhamField<Grid::primal, Space::edge>& x,
-                                             DeRhamField<Grid::dual, Space::cell> const& rho)
+    void solve_curlcurl_plus_field_charge_e (
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho)
     {
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
@@ -327,8 +330,8 @@ public:
 
         constexpr int maxStencilSize = 6 * AMREX_SPACEDIM - 5;
 
-        create_and_use_hypre_solver<maxStencilSize, Grid::primal, Space::edge>(x, b, marker,
-                                                                               filler);
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
+            x, b, marker, filler);
     }
 
     void filler_curlcurl_matrix (int boxno,
@@ -437,11 +440,12 @@ public:
 
     // Functions relating to the particle charge matrix begin
     void solve_particle_charge_e (
-        DeRhamField<Grid::dual, Space::face>& b,
-        DeRhamField<Grid::primal, Space::edge>& x,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
     {
-        DeRhamField<Grid::dual, Space::face> eCoeffsRho(b.m_deRham, s_nRhoCoeffs);
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
+                                                                             s_nRhoCoeffs);
 
         // Fill up E_coeffs
         for (auto& particleSpecies : particles)
@@ -517,8 +521,8 @@ public:
 
         constexpr int maxStencilSize = *std::max_element(s_nRhoCoeffs.begin(), s_nRhoCoeffs.end());
 
-        create_and_use_hypre_solver<maxStencilSize, Grid::primal, Space::edge>(x, b, marker,
-                                                                               filler);
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
+            x, b, marker, filler);
     }
 
     template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
@@ -558,11 +562,13 @@ public:
                                 for (int kk = 0; kk < nWtsXYZ1f[zDir][ndir]; ++kk))
                 amrex::Real const sCoeff =
                     ((ndir == 0)
-                         ? (spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk))
-                         : ((ndir == 1) ? (spline.template eval_b_spline<Field::DualTwoForm, yDir>(
-                                              ii, jj, kk))
-                                        : (spline.template eval_b_spline<Field::DualTwoForm, zDir>(
-                                              ii, jj, kk))));
+                         ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, xDir>(ii, jj,
+                                                                                           kk))
+                         : ((ndir == 1)
+                                ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, yDir>(
+                                      ii, jj, kk))
+                                : (spline.template eval_b_spline<Forms::Field::DualTwoForm, zDir>(
+                                      ii, jj, kk))));
 
                 // this index is of a primal edge and dual face where deposit is happening
                 amrex::Dim3 edge = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
@@ -627,13 +633,13 @@ public:
 
     // Functions relating to the J cross curl matrix begin
     void solve_jcrosscurl_plus_field_charge_e (
-        DeRhamField<Grid::dual, Space::face>& b,
-        DeRhamField<Grid::primal, Space::edge>& x,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
-        DeRhamField<Grid::dual, Space::cell> const& rho)
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho)
     {
-        DeRhamField<Grid::dual, Space::face> eCoeffsJcrosscurl(b.m_deRham,
-                                                               s_nJcrosscurlCoeffsTotal);
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsJcrosscurl(
+            b.m_deRham, s_nJcrosscurlCoeffsTotal);
 
         // Fill up E_coeffs
         for (auto& particleSpecies : particles)
@@ -731,8 +737,8 @@ public:
         constexpr int maxStencilSize =
             *std::max_element(s_nJcrosscurlCoeffsTotal.begin(), s_nJcrosscurlCoeffsTotal.end());
 
-        create_and_use_hypre_solver<maxStencilSize, Grid::primal, Space::edge>(x, b, marker,
-                                                                               filler);
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
+            x, b, marker, filler);
     }
 
     template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
@@ -778,11 +784,13 @@ public:
                                 for (int kk = 0; kk < nWtsXYZ1f[zDir][ndir]; ++kk))
                 amrex::Real const sCoeff =
                     ((ndir == 0)
-                         ? (spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk))
-                         : ((ndir == 1) ? (spline.template eval_b_spline<Field::DualTwoForm, yDir>(
-                                              ii, jj, kk))
-                                        : (spline.template eval_b_spline<Field::DualTwoForm, zDir>(
-                                              ii, jj, kk))));
+                         ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, xDir>(ii, jj,
+                                                                                           kk))
+                         : ((ndir == 1)
+                                ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, yDir>(
+                                      ii, jj, kk))
+                                : (spline.template eval_b_spline<Forms::Field::DualTwoForm, zDir>(
+                                      ii, jj, kk))));
 
                 // this index is of primal edge and dual face where deposit is happening
                 amrex::Dim3 edge = {GEMPIC_D_PAD(spline.m_firstIndex[xDir] + ii,
@@ -939,12 +947,13 @@ public:
 
     // Functions using combinations of the above matrices begin
     void solve_curlcurl_plus_particle_charge_e (
-        DeRhamField<Grid::dual, Space::face>& b,
-        DeRhamField<Grid::primal, Space::edge>& x,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
     {
         BL_PROFILE("solve_curlcurl_plus_particle_charge_e()");
-        DeRhamField<Grid::dual, Space::face> eCoeffsRho(b.m_deRham, s_nRhoCoeffs);
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
+                                                                             s_nRhoCoeffs);
 
         // Fill up E_coeffs
         for (auto& particleSpecies : particles)
@@ -1037,19 +1046,20 @@ public:
         constexpr int maxStencilSize =
             6 * AMREX_SPACEDIM - 5 + *std::max_element(s_nRhoCoeffs.begin(), s_nRhoCoeffs.end());
 
-        create_and_use_hypre_solver<maxStencilSize, Grid::primal, Space::edge>(x, b, marker,
-                                                                               filler);
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
+            x, b, marker, filler);
     }
 
     void solve_curlcurl_plus_particle_charge_plus_jcrosscurl_e (
-        DeRhamField<Grid::dual, Space::face>& b,
-        DeRhamField<Grid::primal, Space::edge>& x,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real jcrosscurlCoeff)
     {
-        DeRhamField<Grid::dual, Space::face> eCoeffsRho(b.m_deRham, s_nRhoCoeffs);
-        DeRhamField<Grid::dual, Space::face> eCoeffsJcrosscurl(b.m_deRham,
-                                                               s_nJcrosscurlCoeffsTotal);
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
+                                                                             s_nRhoCoeffs);
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsJcrosscurl(
+            b.m_deRham, s_nJcrosscurlCoeffsTotal);
         // Fill up E_coeffs
         for (auto& particleSpecies : particles)
         {
@@ -1151,8 +1161,8 @@ public:
             6 * AMREX_SPACEDIM - 5 + *std::max_element(s_nRhoCoeffs.begin(), s_nRhoCoeffs.end()) +
             *std::max_element(s_nJcrosscurlCoeffsTotal.begin(), s_nJcrosscurlCoeffsTotal.end());
 
-        create_and_use_hypre_solver<maxStencilSize, Grid::primal, Space::edge>(x, b, marker,
-                                                                               filler);
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
+            x, b, marker, filler);
     }
     // Functions using combinations of the above matrices end
 
@@ -1253,8 +1263,9 @@ public:
     // Function for calculating vector potential A ends
 
     // Function for calculating non-periodic phi begins
-    void solve_nonperiodic_poisson_equation (DeRhamField<Grid::dual, Space::cell>& rhs,
-                                             DeRhamField<Grid::primal, Space::node>& x)
+    void solve_nonperiodic_poisson_equation (
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rhs,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& x)
     {
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
@@ -1328,25 +1339,25 @@ public:
 
         constexpr int maxStencilSize = 2 * AMREX_SPACEDIM + 1;
 
-        create_and_use_hypre_solver<maxStencilSize, Grid::primal, Space::node>(x, rhs, marker,
-                                                                               filler);
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::node>(
+            x, rhs, marker, filler);
     }
     // Function for calculating non-periodic phi ends
 
     // Functions for correcting divergence of J begin
     void push_particles_and_correct_div_j (
-        DeRhamField<Grid::dual, Space::face>& J,
-        DeRhamField<Grid::primal, Space::node>& phi,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& phi,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt)
     {
         BL_PROFILE("push_particles_and_correct_div_j()");
-        DeRhamField<Grid::primal, Space::edge> eCorr(phi.m_deRham);
-        DeRhamField<Grid::dual, Space::cell> divJ(phi.m_deRham);
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge> eCorr(phi.m_deRham);
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> divJ(phi.m_deRham);
 
         // Calculate original J and divJ
-        Gempic::ParticleMeshCoupling::deposit_current_density<degx, degy, degz, vdim, ndata>(
-            J, particles, m_infra);
+        Gempic::ParticleMeshCoupling::deposit_current_density<degx, degy, degz>(J, particles,
+                                                                                m_infra);
         div(divJ, J);
 
         // Calculate phi
@@ -1360,12 +1371,13 @@ public:
     }
 
     void solve_particle_div_grad_phi (
-        DeRhamField<Grid::dual, Space::cell>& b,
-        DeRhamField<Grid::primal, Space::node>& x,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& b,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& x,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt)
     {
-        DeRhamField<Grid::dual, Space::cell> phiCoeffsDivGrad(b.m_deRham, s_ndivgradphiCoeffs);
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> phiCoeffsDivGrad(
+            b.m_deRham, s_ndivgradphiCoeffs);
 
         // Fill up phi_coeffs
         for (auto& particleSpecies : particles)
@@ -1431,8 +1443,8 @@ public:
 
         constexpr int maxStencilSize = s_ndivgradphiCoeffs;
 
-        create_and_use_hypre_solver<maxStencilSize, Grid::primal, Space::node>(x, b, marker,
-                                                                               filler);
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::node>(
+            x, b, marker, filler);
 
         if (m_infra.geometry().isAllPeriodic())
         {
@@ -1489,11 +1501,13 @@ public:
 
                 amrex::Real const sCoeff =
                     ((ndir == 0)
-                         ? (spline.template eval_b_spline<Field::DualTwoForm, xDir>(ii, jj, kk))
-                         : ((ndir == 1) ? (spline.template eval_b_spline<Field::DualTwoForm, yDir>(
-                                              ii, jj, kk))
-                                        : (spline.template eval_b_spline<Field::DualTwoForm, zDir>(
-                                              ii, jj, kk))));
+                         ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, xDir>(ii, jj,
+                                                                                           kk))
+                         : ((ndir == 1)
+                                ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, yDir>(
+                                      ii, jj, kk))
+                                : (spline.template eval_b_spline<Forms::Field::DualTwoForm, zDir>(
+                                      ii, jj, kk))));
 
                 // this index is of primal edge and dual face where deposit is happening
                 // this face contributes to the divergences in the two cells sharing it
@@ -1577,9 +1591,9 @@ public:
     }
 
     void update_velocities_using_e_and_calculate_deposit_j (
-        DeRhamField<Grid::dual, Space::face>& J,
-        DeRhamField<Grid::primal, Space::edge>& E,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt)
     {
         for (int comp = 0; comp < vdim; ++comp)
@@ -1624,7 +1638,7 @@ public:
                             positionParticle, plo, m_infra.inv_cell_size_array());
 
                         amrex::GpuArray<amrex::Real, vdim> efield =
-                            spline.template eval_spline_field<Field::PrimalOneForm>(eA);
+                            spline.template eval_spline_field<Forms::Field::PrimalOneForm>(eA);
 
                         Gempic::ParticleMeshCoupling::push_v_using_e<vdim>(vel, efield, dt,
                                                                            chargeByMass);
@@ -1644,13 +1658,13 @@ public:
 
     // Functions for correcting average of J begin
     void push_particles_and_correct_javg (
-        DeRhamField<Grid::dual, Space::face>& J,
-        DeRhamField<Grid::dual, Space::cell>& rho,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
     {
         BL_PROFILE("push_particles_and_correct_javg()");
-        std::vector<DeRhamField<Grid::dual, Space::cell>> rhoVec;
-        std::vector<DeRhamField<Grid::dual, Space::cell>> rhoMassVec;
+        std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoVec;
+        std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoMassVec;
 
         for (int i = 0; i < particles.size(); i++)
         {
@@ -1721,8 +1735,9 @@ public:
         push_back_by_v_avg(vAvg, particles);
     }
 
-    void push_back_by_v_avg (std::vector<amrex::GpuArray<amrex::Real, vdim>> const& vAvg,
-                             std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles)
+    void push_back_by_v_avg (
+        std::vector<amrex::GpuArray<amrex::Real, vdim>> const& vAvg,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
     {
         int index = 0;
         for (auto& particleSpecies : particles)
@@ -1760,9 +1775,9 @@ public:
 
     // Function for updating X using V and V using E,B begin
     void update_particle_positions_and_velocities (
-        DeRhamField<Grid::primal, Space::edge>& E,
-        DeRhamField<Grid::primal, Space::face>& B,
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>>& particles,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt,
         RotatePushOrder order)
     {
@@ -1804,16 +1819,16 @@ public:
                             pos, plo, m_infra.inv_cell_size_array());
 
                         amrex::GpuArray<amrex::Real, vdim> efield =
-                            spline.template eval_spline_field<Field::PrimalOneForm>(eA);
+                            spline.template eval_spline_field<Forms::Field::PrimalOneForm>(eA);
                         amrex::GpuArray<amrex::Real, vdim> bfield =
-                            spline.template eval_spline_field<Field::PrimalTwoForm>(bA);
+                            spline.template eval_spline_field<Forms::Field::PrimalTwoForm>(bA);
 
                         if (order == RotatePushOrder::PushvThenRotatev)
                         {
                             Gempic::ParticleMeshCoupling::push_v_using_e<vdim>(
                                 vel, efield, 0.5 * dt, chargeByMass);
-                            Gempic::ParticleMeshCoupling::rotate_v_using_b<vdim>(
-                                vel, bfield, 0.5 * dt, chargeByMass);
+                            Gempic::ParticleMeshCoupling::rotate_v_using_b(vel, bfield, 0.5 * dt,
+                                                                           chargeByMass);
 
                             Gempic::ParticleMeshCoupling::push_x_using_v<vdim>(pos, vel, dt);
 
@@ -1823,8 +1838,8 @@ public:
                         }
                         else if (order == RotatePushOrder::RotatevThenPushv)
                         {
-                            Gempic::ParticleMeshCoupling::rotate_v_using_b<vdim>(
-                                vel, bfield, 0.5 * dt, chargeByMass);
+                            Gempic::ParticleMeshCoupling::rotate_v_using_b(vel, bfield, 0.5 * dt,
+                                                                           chargeByMass);
                             Gempic::ParticleMeshCoupling::push_v_using_e<vdim>(
                                 vel, efield, 0.5 * dt, chargeByMass);
                         }

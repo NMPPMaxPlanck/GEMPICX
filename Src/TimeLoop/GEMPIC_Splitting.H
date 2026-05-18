@@ -23,6 +23,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Interpolation.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_PoissonSolver.H"
@@ -30,8 +31,6 @@
 
 namespace Gempic::TimeLoop
 {
-using namespace Forms;
-
 /**
  *  Algorithms to solve the ODE systems associated with a splitting of the semi-discrete
  * Vlasov-Maxwell Hamiltonian
@@ -122,10 +121,10 @@ public:
         amrex::Real const chargeOverMass,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_particle()");
+        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::OperatorHamilton::apply_h_e_particle()");
         // evaluate the electric field
         amrex::GpuArray<amrex::Real, vdim> efield =
-            spline.template eval_spline_field<Field::PrimalOneForm>(eA);
+            spline.template eval_spline_field<Forms::Field::PrimalOneForm>(eA);
 
         // push v with the electric field
         for (unsigned int i = 0; i < vdim; i++)
@@ -721,10 +720,10 @@ public:
      * @param dt time step
      *
      */
-    inline void apply_h_b (DeRhamField<Grid::dual, Space::face>& D,
-                           std::shared_ptr<FDDeRhamComplex> deRham,
-                           DeRhamField<Grid::primal, Space::face> const& B,
-                           DeRhamField<Grid::dual, Space::edge>& H,
+    inline void apply_h_b (Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+                           std::shared_ptr<Forms::FDDeRhamComplex> deRham,
+                           Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face> const& B,
+                           Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
                            amrex::Real const dt)
     {
         BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
@@ -744,10 +743,10 @@ public:
      * @param dt time step
      *
      */
-    inline void apply_h_e_field (DeRhamField<Grid::primal, Space::face>& B,
-                                 DeRhamField<Grid::primal, Space::edge>& E,
-                                 std::shared_ptr<FDDeRhamComplex> deRham,
-                                 DeRhamField<Grid::dual, Space::face>& D,
+    inline void apply_h_e_field (Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+                                 Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+                                 std::shared_ptr<Forms::FDDeRhamComplex> deRham,
+                                 Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
                                  amrex::Real const dt)
     {
         BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
@@ -765,9 +764,9 @@ public:
     template <SplittingScheme splittingScheme>
     void apply_h_p (
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim>>>& particles,
-        DeRhamField<Grid::dual, Space::face>& J,
-        DeRhamField<Grid::primal, Space::edge>& E,
-        DeRhamField<Grid::primal, Space::face>& B,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
         ComputationalDomain const& infra,
         amrex::Real const dt,
         amrex::Real const c) const
@@ -863,13 +862,13 @@ class Splitting
 {
 public:
     virtual void time_loop(
-        std::shared_ptr<FDDeRhamComplex> deRham,
-        DeRhamField<Grid::dual, Space::cell>& rho,
-        DeRhamField<Grid::primal, Space::edge>& E,
-        DeRhamField<Grid::primal, Space::face>& B,
-        DeRhamField<Grid::dual, Space::face>& D,
-        DeRhamField<Grid::dual, Space::edge>& H,
-        DeRhamField<Grid::dual, Space::face>& J,
+        std::shared_ptr<Forms::FDDeRhamComplex> deRham,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         ComputationalDomain infra,
         amrex::Real const dt,
         std::vector<std::unique_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
@@ -879,9 +878,9 @@ public:
 };
 
 // Cold plasma step
-void apply_h_j(DeRhamField<Grid::dual, Space::face>& J,
-               DeRhamField<Grid::dual, Space::face>& D,
-               std::shared_ptr<FDDeRhamComplex> deRham,
+void apply_h_j(Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+               Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
+               std::shared_ptr<Forms::FDDeRhamComplex> deRham,
                amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3> funcBEquilibrium,
                amrex::Real dt);
 

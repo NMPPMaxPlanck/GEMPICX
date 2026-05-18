@@ -11,7 +11,7 @@
 
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_GempicNorm.H"
-#include "GEMPIC_Hypre.H"
+#include "GEMPIC_PoissonHypre.H"
 #include "GEMPIC_PoissonSolver.H"
 #include "GEMPIC_SplineClass.H"
 #include "TestUtils/GEMPIC_TestUtils.H"

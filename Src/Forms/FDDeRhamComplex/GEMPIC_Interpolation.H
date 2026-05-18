@@ -558,8 +558,8 @@ AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex, amrex::Rea
  * @tparam srcFormType type of the Form, here constrained to be Zero/Three SpaceGrid-type Form
  * @tparam nNodes order or Lagrange interpolation (only even order implemented)
  * @param funcMF degrees of freedom of the input Form
- * @param r poisition to evaluate the fields
- * @param rr poisition to left grid point
+ * @param r position to evaluate the fields
+ * @param rr position to left grid point
  * @param dr mesh size
  * @param i
  * @param j
@@ -599,7 +599,7 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
  * @tparam srcFormType type of the Form, here constrained to be Zero/Three SpaceGrid-type Form
  * @tparam nNodes order or Lagrange interpolation (only even order implemented)
  * @param funcMF degrees of freedom of the input Form
- * @param r poisition to evaluate the fields on reference stencil [...,0,1,...], [0,1] the central
+ * @param r position to evaluate the fields on reference stencil [...,0,1,...], [0,1] the central
  * cell.
  * @param iIn spatial indices of the reference (primal or dual) cell where we want to evaluate the
  * field.
@@ -1370,6 +1370,263 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
                      src(i, j + jshift, k + kshift, srcComp) + src(i + ishift, j, k, srcComp));
             });
     }
+}
+
+/**
+ * @brief Evaluates a field at a given position using Lagrange interpolation or histopolation.
+ *
+ * This function performs high-order Lagrange interpolation to evaluate a field at an arbitrary
+ * position within the computational domain. It supports both edge and face (1-form/2-form)
+ * discretizations, automatically accounting for staggered grid offsets.
+ *
+ * @tparam degree The polynomial degree of the Lagrange basis functions used for interpolation.
+ * @tparam grid   The grid type (currently unused but reserved for future extensions).
+ * @tparam space  The form space: must be either Forms::Space::face or Forms::Space::edge.
+ *                A compile-time assertion ensures only 1-/2-forms are accepted.
+ *
+ * @param pos     A 3D position (in physical coordinates) where the field is to be evaluated.
+ * @param fArray  An array of three Array4 objects containing the field data for each spatial
+ *                dimension (x, y, z components).
+ * @param dr      The grid spacing (cell size) in each spatial direction [dx, dy, dz].
+ * @param r0      The lower bound of the computational domain (ProbLoArray).
+ *
+ * @return A GpuArray<amrex::Real, 3> containing the interpolated field components [Fx, Fy, Fz]
+ *         at the specified position.
+ *
+ * @note This function is GPU-compatible and uses constant memory for shift arrays based on the
+ *       form space type.
+ * @note Works only for 1-forms and 2-forms.
+ * @note Staggered grid shifts are applied to account for edge-centered
+ *       discretization.
+ */
+template <int degree, Forms::Grid grid, Forms::Space space>
+amrex::GpuArray<amrex::Real, 3> eval_field_lagrange (
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& fArray,
+    amrex::GpuArray<double, AMREX_SPACEDIM> const& dr,
+    amrex::GpuArray<double, AMREX_SPACEDIM> const& r0)
+{
+    static_assert(space == Forms::Space::face || space == Forms::Space::edge,
+                  "Tried to call 1-/2-form "
+                  "eval_form_lagrange with a 0-/3-form.\n\tThe 0-/3-form "
+                  "eval_form_lagrange function doesn't exist.");
+
+    amrex::GpuArray<int, 3> xDirShift = {0, 0, 0};
+    amrex::GpuArray<int, 3> yDirShift = {0, 0, 0};
+    amrex::GpuArray<int, 3> zDirShift = {0, 0, 0};
+
+    if constexpr (space == Forms::Space::edge)
+    {
+        xDirShift = {0, 1, 1};
+        yDirShift = {1, 0, 1};
+        zDirShift = {1, 1, 0};
+    }
+    else // if constexpr (space == Space::face)
+    {
+        xDirShift = {1, 0, 0};
+        yDirShift = {0, 1, 0};
+        zDirShift = {0, 0, 1};
+    }
+
+    int i = floor((pos[xDir] - r0[xDir]) / dr[xDir]);
+    int j = floor((pos[yDir] - r0[yDir]) / dr[yDir]);
+    int k = floor((pos[zDir] - r0[zDir]) / dr[zDir]);
+
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {
+        AMREX_D_DECL(r0[xDir] + i * dr[xDir], r0[yDir] + j * dr[yDir], r0[zDir] + k * dr[zDir])};
+
+    amrex::GpuArray<amrex::Real, 3> fField = {0.0, 0.0, 0.0};
+
+    GEMPIC_D_EXCL(int b{0};, int c{0};, )
+
+    GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + xDirShift[xDir]; ++a),
+                        for (int b = 1 - degree / 2; b < degree / 2 + xDirShift[yDir]; ++b),
+                        for (int c = 1 - degree / 2; c < degree / 2 + xDirShift[zDir]; ++c))
+
+        fField[xDir] +=
+            fArray[xDir](i + a, j + b, k + c) *
+            GEMPIC_D_MULT(
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, xDir, xDir>(
+                    a, rr[xDir], dr[xDir], pos[xDir])),
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, xDir, yDir>(
+                    b, rr[yDir], dr[yDir], pos[yDir])),
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, xDir, zDir>(
+                    c, rr[zDir], dr[zDir], pos[zDir])));
+
+    GEMPIC_D_LOOP_END
+
+    GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + yDirShift[xDir]; ++a),
+                        for (int b = 1 - degree / 2; b < degree / 2 + yDirShift[yDir]; ++b),
+                        for (int c = 1 - degree / 2; c < degree / 2 + yDirShift[zDir]; ++c))
+
+        fField[yDir] +=
+            fArray[yDir](i + a, j + b, k + c) *
+            GEMPIC_D_MULT(
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, yDir, xDir>(
+                    a, rr[xDir], dr[xDir], pos[xDir])),
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, yDir, yDir>(
+                    b, rr[yDir], dr[yDir], pos[yDir])),
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, yDir, zDir>(
+                    c, rr[zDir], dr[zDir], pos[zDir])));
+
+    GEMPIC_D_LOOP_END
+
+    GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + zDirShift[xDir]; ++a),
+                        for (int b = 1 - degree / 2; b < degree / 2 + zDirShift[yDir]; ++b),
+                        for (int c = 1 - degree / 2; c < degree / 2 + zDirShift[zDir]; ++c))
+
+        fField[zDir] +=
+            fArray[zDir](i + a, j + b, k + c) *
+            GEMPIC_D_MULT(
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, zDir, xDir>(
+                    a, rr[xDir], dr[xDir], pos[xDir])),
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, zDir, yDir>(
+                    b, rr[yDir], dr[yDir], pos[yDir])),
+                (Gempic::Forms::choose_eval<degree, Forms::DeRhamField<grid, space>, zDir, zDir>(
+                    c, rr[zDir], dr[zDir], pos[zDir])));
+    GEMPIC_D_LOOP_END
+
+    return fField;
+}
+
+/**
+ * @brief Evaluates a field at a given position using Lagrange interpolation or histopolation
+ * with given non-vanishing basis values
+ *
+ * This function performs high-order Lagrange interpolation to evaluate a field at an arbitrary
+ * position within the computational domain. It supports both edge and face (1-form/2-form)
+ * discretizations, automatically accounting for staggered grid offsets.
+ *
+ * @tparam degree The polynomial degree of the Lagrange basis functions used for interpolation.
+ * @tparam grid   The grid type (currently unused but reserved for future extensions).
+ * @tparam space  The form space: must be either Forms::Space::face or Forms::Space::edge.
+ *                A compile-time assertion ensures only 1-/2-forms are accepted.
+ *
+ * @param pos     A 3D position (in physical coordinates) where the field is to be evaluated.
+ * @param fArray  An array of three Array4 objects containing the field data for each spatial
+ *                dimension (x, y, z components).
+ * @param dr      The grid spacing (cell size) in each spatial direction [dx, dy, dz].
+ * @param r0      The lower bound of the computational domain (ProbLoArray).
+ * @param basisEdgeX The non-vanishing basis values (3D) of the first component of 1 form
+ * @param basisEdgeY The non-vanishing basis values (3D) of the second component of 1 form
+ * @param basisEdgeZ The non-vanishing basis values (3D) of the third component of 1 form
+ * @param basisFaceX The non-vanishing basis values (3D) of the first component of 2 form
+ * @param basisFaceY The non-vanishing basis values (3D) of the second component of 2 form
+ * @param basisFaceZ The non-vanishing basis values (3D) of the third component of 2 form
+ *
+ * @return A GpuArray<amrex::Real, 3> containing the interpolated field components [Fx, Fy, Fz]
+ *         at the specified position.
+ *
+ * @note This function is GPU-compatible and uses constant memory for shift arrays based on the
+ *       form space type.
+ * @note Works only for 1-forms and 2-forms.
+ * @note Staggered grid shifts are applied to account for edge-centered
+ *       discretization.
+ */
+template <int degree, Forms::Grid grid, Forms::Space space>
+amrex::GpuArray<amrex::Real, 3> eval_field_lagrange (
+    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos,
+    amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& fArray,
+    amrex::GpuArray<double, AMREX_SPACEDIM> const& dr,
+    amrex::GpuArray<double, AMREX_SPACEDIM> const& r0,
+    amrex::Array3D<amrex::Real, 0, degree - 2, 0, degree - 1, 0, degree - 1>& basisEdgeX,
+    amrex::Array3D<amrex::Real, 0, degree - 1, 0, degree - 2, 0, degree - 1>& basisEdgeY,
+    amrex::Array3D<amrex::Real, 0, degree - 1, 0, degree - 1, 0, degree - 2>& basisEdgeZ,
+    amrex::Array3D<amrex::Real, 0, degree - 1, 0, degree - 2, 0, degree - 2>& basisFaceX,
+    amrex::Array3D<amrex::Real, 0, degree - 2, 0, degree - 1, 0, degree - 2>& basisFaceY,
+    amrex::Array3D<amrex::Real, 0, degree - 2, 0, degree - 2, 0, degree - 1>& basisFaceZ)
+{
+    static_assert(space == Forms::Space::face || space == Forms::Space::edge,
+                  "Tried to call 1-/2-form "
+                  "eval_form_lagrange with a 0-/3-form.\n\tThe 0-/3-form "
+                  "eval_form_lagrange function doesn't exist.");
+
+    amrex::GpuArray<int, 3> xDirShift = {0, 0, 0};
+    amrex::GpuArray<int, 3> yDirShift = {0, 0, 0};
+    amrex::GpuArray<int, 3> zDirShift = {0, 0, 0};
+
+    amrex::GpuArray<amrex::Real, 3> fField = {0.0, 0.0, 0.0};
+
+    if constexpr (space == Forms::Space::edge)
+    {
+        xDirShift = {0, 1, 1};
+        yDirShift = {1, 0, 1};
+        zDirShift = {1, 1, 0};
+
+        int i = floor((pos[xDir] - r0[xDir]) / dr[xDir]);
+        int j = floor((pos[yDir] - r0[yDir]) / dr[yDir]);
+        int k = floor((pos[zDir] - r0[zDir]) / dr[zDir]);
+
+        GEMPIC_D_EXCL(int b{0};, int c{0};, )
+
+        GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + xDirShift[xDir]; ++a),
+                            for (int b = 1 - degree / 2; b < degree / 2 + xDirShift[yDir]; ++b),
+                            for (int c = 1 - degree / 2; c < degree / 2 + xDirShift[zDir]; ++c))
+
+            fField[xDir] += fArray[xDir](i + a, j + b, k + c) *
+                            basisEdgeX(a - 1 + degree / 2, b - 1 + degree / 2, c - 1 + degree / 2);
+
+        GEMPIC_D_LOOP_END
+
+        GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + yDirShift[xDir]; ++a),
+                            for (int b = 1 - degree / 2; b < degree / 2 + yDirShift[yDir]; ++b),
+                            for (int c = 1 - degree / 2; c < degree / 2 + yDirShift[zDir]; ++c))
+
+            fField[yDir] += fArray[yDir](i + a, j + b, k + c) *
+                            basisEdgeY(a - 1 + degree / 2, b - 1 + degree / 2, c - 1 + degree / 2);
+
+        GEMPIC_D_LOOP_END
+
+        GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + zDirShift[xDir]; ++a),
+                            for (int b = 1 - degree / 2; b < degree / 2 + zDirShift[yDir]; ++b),
+                            for (int c = 1 - degree / 2; c < degree / 2 + zDirShift[zDir]; ++c))
+
+            fField[zDir] += fArray[zDir](i + a, j + b, k + c) *
+                            basisEdgeZ(a - 1 + degree / 2, b - 1 + degree / 2, c - 1 + degree / 2);
+
+        GEMPIC_D_LOOP_END
+    }
+    else // if constexpr (space == Space::face)
+    {
+        xDirShift = {1, 0, 0};
+        yDirShift = {0, 1, 0};
+        zDirShift = {0, 0, 1};
+
+        int i = floor((pos[xDir] - r0[xDir]) / dr[xDir]);
+        int j = floor((pos[yDir] - r0[yDir]) / dr[yDir]);
+        int k = floor((pos[zDir] - r0[zDir]) / dr[zDir]);
+
+        GEMPIC_D_EXCL(int b{0};, int c{0};, )
+
+        GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + xDirShift[xDir]; ++a),
+                            for (int b = 1 - degree / 2; b < degree / 2 + xDirShift[yDir]; ++b),
+                            for (int c = 1 - degree / 2; c < degree / 2 + xDirShift[zDir]; ++c))
+
+            fField[xDir] += fArray[xDir](i + a, j + b, k + c) *
+                            basisFaceX(a - 1 + degree / 2, b - 1 + degree / 2, c - 1 + degree / 2);
+
+        GEMPIC_D_LOOP_END
+
+        GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + yDirShift[xDir]; ++a),
+                            for (int b = 1 - degree / 2; b < degree / 2 + yDirShift[yDir]; ++b),
+                            for (int c = 1 - degree / 2; c < degree / 2 + yDirShift[zDir]; ++c))
+
+            fField[yDir] += fArray[yDir](i + a, j + b, k + c) *
+                            basisFaceY(a - 1 + degree / 2, b - 1 + degree / 2, c - 1 + degree / 2);
+
+        GEMPIC_D_LOOP_END
+
+        GEMPIC_D_LOOP_BEGIN(for (int a = 1 - degree / 2; a < degree / 2 + zDirShift[xDir]; ++a),
+                            for (int b = 1 - degree / 2; b < degree / 2 + zDirShift[yDir]; ++b),
+                            for (int c = 1 - degree / 2; c < degree / 2 + zDirShift[zDir]; ++c))
+
+            fField[zDir] += fArray[zDir](i + a, j + b, k + c) *
+                            basisFaceZ(a - 1 + degree / 2, b - 1 + degree / 2, c - 1 + degree / 2);
+
+        GEMPIC_D_LOOP_END
+    }
+
+    return fField;
 }
 
 } //namespace Gempic::Forms
