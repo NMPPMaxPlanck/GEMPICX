@@ -53,4 +53,4 @@ function(gempic_set_clang_toolchain_flags_on_mpcdf_systems)
   endif()
 endfunction()
 
-gempic_set_default_install_directories()
+gempic_set_clang_toolchain_flags_on_mpcdf_systems()

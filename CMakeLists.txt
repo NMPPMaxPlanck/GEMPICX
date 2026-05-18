@@ -61,7 +61,6 @@ include(cmake/gempic_FetchContent_Declare.cmake)
 
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
-gempic_set_clang_toolchain_flags_on_mpcdf_systems()
 
 include(cmake/gempic_AMReXConfig.cmake)
 
