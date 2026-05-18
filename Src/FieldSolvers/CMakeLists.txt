@@ -1,4 +1,5 @@
 add_subdirectory(Poisson)
 if(AMReX_HYPRE)
   add_subdirectory(Quasineutral)
+  add_subdirectory(VlasovMaxwellSemiImplicit)
 endif()

@@ -1,9 +1,10 @@
 # General setting
-Sim.Type = "HSVlasovMaxwell"
+Sim.Type = "VlasovPoisson"
 
 # Grid parameters
-ComputationalDomain.nCell = 32 4 4
-ComputationalDomain.maxGridSize = 32 4 4
+nGhostExtra = 4
+ComputationalDomain.nCell = 128 128 8
+ComputationalDomain.maxGridSize = 8 8 8
 ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Scaling factors
@@ -12,12 +13,12 @@ sOmega = 1
 
 # Particle parameters
 Particle.speciesNames = electrons
-rhoBackground = 1 # one species
 Particle.electrons.nPartPerCell = 1000 # number of particles per cell
 Particle.electrons.charge = -1.0 # vector (one entry per species)
 Particle.electrons.mass = 1.0 # vector (one entry per species)
-Particle.electrons.density = "1.0 + 0.04 * cos(kvarx * x)"
+Particle.electrons.density = "(1.0 + 0.5 * cos(4 * kvarx * x))"
 Particle.electrons.numGaussians = 1
+rhoBackground = 1
 
 # Gaussian parameters
 Particle.electrons.G0.vMean = 0.0 0.0 0.0
@@ -25,16 +26,19 @@ Particle.electrons.G0.vThermal = 1 1 1
 Particle.electrons.G0.vWeight = 1.0
 
 # wave vector
-k = 0.4 0.4 0.4
+k = 0.1 0.1 0.1
 
 # Simulation parameters
 TimeLoop.nSteps = 500
-TimeLoop.dt = 0.02
+TimeLoop.dt = 0.05
 
 # Filter
 Filter.enable = 1
-Filter.type = Bilinear
-Filter.nPass = 1 1 1
+Filter.type = Fourier
+Filter.nPass = 4 4 1
+Filter.compensate = 1
+Filter.nMin = 0 0 0
+Filter.nMax = 8 8 0
 
 # Function parameters
 Function.Ex = "0.0"
@@ -52,13 +56,12 @@ FullDiagnostics.part.varNames = electrons
 FullDiagnostics.part.saveInterval = 1000
 FullDiagnostics.field.varNames = rho Ex phi
 FullDiagnostics.field.outputProcessor = CellCenter 
-FullDiagnostics.field.saveInterval = 1
+FullDiagnostics.field.saveInterval = 5
 
 # Reduced Diagnostics 
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
-ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
+ReducedDiagnostics.groupNames = ParticleData FieldEnergy GaussError
 ReducedDiagnostics.saveInterval = 1 # saveInterva
-ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
-ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+ReducedDiagnostics.FieldEnergy.types = ElecFieldEnergy MagFieldEnergy
 ReducedDiagnostics.GaussError.types = GaussError
-ReducedDiagnostics.Part.types = Particle
+ReducedDiagnostics.ParticleData.types = Particle ParticleVariance

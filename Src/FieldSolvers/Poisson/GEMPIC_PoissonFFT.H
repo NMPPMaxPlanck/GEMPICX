@@ -35,7 +35,7 @@ namespace Gempic::FieldSolvers
  * @param rho The right-hand side vector
  *
  */
-class FFTSolver : public PoissonSolverMethod
+class PoissonFFTSolver : public PoissonSolverMethod
 {
 private:
     std::unique_ptr<amrex::FFT::R2C<amrex::Real>> m_r2c;
@@ -52,11 +52,11 @@ private:
     amrex::Real* m_eigenvalues0z;
 
 public:
-    FFTSolver(ComputationalDomain const& compDom,
-              int const hodgeDegree,
-              Forms::HodgeScheme hodgeScheme = Forms::HodgeScheme::FDHodge);
+    PoissonFFTSolver(ComputationalDomain const& compDom,
+                     int const hodgeDegree,
+                     Forms::HodgeScheme hodgeScheme = Forms::HodgeScheme::FDHodge);
 
-    void solve(Forms::DeRhamField<Grid::primal, Space::node>& phi,
-               Forms::DeRhamField<Grid::dual, Space::cell> const& rho) override;
+    void solve(Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& phi,
+               Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho) override;
 };
 } //namespace Gempic::FieldSolvers

@@ -21,17 +21,16 @@
 
 namespace Gempic::FieldSolvers
 {
-using namespace Forms;
-
 // Strategy pattern
 using PoissonSolverMethod =
-    SolverMethod<DeRhamField<Grid::dual, Space::cell>, DeRhamField<Grid::primal, Space::node>>;
+    SolverMethod<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>,
+                 Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>>;
 
 namespace Impl
 {
 /// @brief The function used to select a specific poisson solver method
 std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver(
-    std::shared_ptr<DeRhamComplex> deRham,
+    std::shared_ptr<Forms::DeRhamComplex> deRham,
     ComputationalDomain const& infra,
     std::string const& solver,
     amrex::Real const relTol = 1e-10,
@@ -46,7 +45,7 @@ std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver(
  * @param infra
  */
 inline std::unique_ptr<PoissonSolverMethod> make_poisson_solver (
-    std::shared_ptr<DeRhamComplex> deRham, Gempic::ComputationalDomain const& infra)
+    std::shared_ptr<Forms::DeRhamComplex> deRham, ComputationalDomain const& infra)
 {
     Gempic::Io::Parameters params("PoissonSolver", "function make_poisson_solver");
     // Solver defaults:
@@ -101,18 +100,21 @@ public:
                 int verbose = 0,
                 int bottomVerbose = 0);
 
-    void solve(DeRhamField<Grid::primal, Space::node>& phi,
-               DeRhamField<Grid::dual, Space::cell> const& rho) override;
+    void solve(Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& phi,
+               Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho) override;
 };
 
-void check_charge_neutrality(DeRhamField<Grid::dual, Space::cell> const& rho,
+void check_charge_neutrality(Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho,
                              ComputationalDomain const& compDom);
-amrex::Real compute_rho_integral(Forms::DeRhamField<Grid::dual, Space::cell> const& rho);
-amrex::Real compute_rho_average(Forms::DeRhamField<Grid::dual, Space::cell> const& rho);
-amrex::Real get_and_apply_neutralizing_background(Forms::DeRhamField<Grid::dual, Space::cell>& rho,
-                                                  ComputationalDomain const& infra,
-                                                  Io::Parameters& params,
-                                                  bool neutralizeTwice = true);
+amrex::Real compute_rho_integral(
+    Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho);
+amrex::Real compute_rho_average(
+    Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho);
+amrex::Real get_and_apply_neutralizing_background(
+    Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
+    ComputationalDomain const& infra,
+    Io::Parameters& params,
+    bool neutralizeTwice = true);
 
 } // namespace Gempic::FieldSolvers
 #endif

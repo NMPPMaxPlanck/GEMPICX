@@ -5,7 +5,11 @@
 #ifndef GEMPIC_MATRIXOPERATIONS_H_
 #define GEMPIC_MATRIXOPERATIONS_H_
 
+#include <cmath>
 #include <math.h>
+#include <type_traits>
+
+#include <AMReX_GpuComplex.H>
 
 namespace Gempic
 {
@@ -102,6 +106,59 @@ std::vector<std::vector<T>> matsum (std::vector<std::vector<T>> const& aMatrix,
         }
     }
     return result;
+}
+
+/**
+ * Compute the determinant of a 3x3 matrix
+ *
+ * \param a11,a12,a13,a21,a22,a23,a31,a32,a33 Matrix elements in row-major order
+ * \return Determinant of the 3x3 matrix
+ */
+template <typename T>
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE T
+det3 (T a11, T a12, T a13, T a21, T a22, T a23, T a31, T a32, T a33)
+{
+    return a11 * (a22 * a33 - a23 * a32) - a12 * (a21 * a33 - a23 * a31) +
+           a13 * (a21 * a32 - a22 * a31);
+}
+
+/**
+ * Solve 3x3 linear system Ax = b using Cramer's rule
+ *
+ * \param a11,a12,a13,a21,a22,a23,a31,a32,a33 Matrix elements in row-major order
+ * \param b1,b2,b3 Right-hand side vector elements
+ * \return Solution vector [x, y, z]
+ */
+template <typename T>
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::GpuArray<T, 3> sol3x3 (
+    T a11, T a12, T a13, T a21, T a22, T a23, T a31, T a32, T a33, T b1, T b2, T b3)
+{
+    amrex::GpuArray<T, 3> vec;
+    T D = det3(a11, a12, a13, a21, a22, a23, a31, a32, a33);
+
+    if (D.real() == 0 && D.imag() == 0)
+    {
+        vec[0] = T(0.0, 0.0);
+        vec[1] = T(0.0, 0.0);
+        vec[2] = T(0.0, 0.0);
+        return vec;
+    }
+
+    // find Dx, Dy, Dz
+    T Dx = det3(b1, a12, a13, b2, a22, a23, b3, a32, a33);
+    T Dy = det3(a11, b1, a13, a21, b2, a23, a31, b3, a33);
+    T Dz = det3(a11, a12, b1, a21, a22, b2, a31, a32, b3);
+
+    // solution vector
+    T x = Dx / D;
+    T y = Dy / D;
+    T z = Dz / D;
+
+    vec[0] = x;
+    vec[1] = y;
+    vec[2] = z;
+
+    return vec;
 }
 
 } //namespace Gempic

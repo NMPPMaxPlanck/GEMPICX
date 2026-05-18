@@ -1,5 +1,5 @@
 if (AMReX_FFT)
-  set(FFTSource GEMPIC_FFT.cpp)
+  set(FFTSource GEMPIC_PoissonFFT.cpp)
 endif()
 target_sources(GEMPICX PRIVATE
                GEMPIC_PoissonSolver.cpp

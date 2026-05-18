@@ -220,7 +220,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
         ParticleMeshCoupling::accumulate_j<zDir>(spline, chargeWeight,
                                                  m_infra.geometry().CellSizeArray(), jA);
 
-        // setup is in a way, that the first spline is in the "firstSpline" region
+        // setup in such a way that the first spline is in the "firstSpline" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
             zDir, Gempic::ParticleMeshCoupling::Impl::PrimitiveDifferenceRegion::firstSpline>(0);
         primDiffRef = primitiveDifference;

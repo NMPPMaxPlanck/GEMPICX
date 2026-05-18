@@ -1,9 +1,9 @@
 # General setting
-Sim.Type = "HSVlasovMaxwell"
+simName = "Weibel"
 
 # Grid parameters
-ComputationalDomain.nCell = 32 4 4
-ComputationalDomain.maxGridSize = 32 4 4
+ComputationalDomain.nCell = 32 8 8
+ComputationalDomain.maxGridSize = 8 8 4
 ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Scaling factors
@@ -16,25 +16,22 @@ rhoBackground = 1 # one species
 Particle.electrons.nPartPerCell = 1000 # number of particles per cell
 Particle.electrons.charge = -1.0 # vector (one entry per species)
 Particle.electrons.mass = 1.0 # vector (one entry per species)
-Particle.electrons.density = "1.0 + 0.04 * cos(kvarx * x)"
+Particle.electrons.density = "1.0"
 Particle.electrons.numGaussians = 1
+Particle.sampler = Sobol
+# GPU settings
 
 # Gaussian parameters
 Particle.electrons.G0.vMean = 0.0 0.0 0.0
-Particle.electrons.G0.vThermal = 1 1 1
+Particle.electrons.G0.vThermal = 0.01414213562 sqrt(12)*0.02/sqrt(2) sqrt(12)*0.02/sqrt(2)
 Particle.electrons.G0.vWeight = 1.0
 
 # wave vector
-k = 0.4 0.4 0.4
+k = 1.25 2*pi 2*pi #1.25 1.25 
 
 # Simulation parameters
-TimeLoop.nSteps = 500
-TimeLoop.dt = 0.02
-
-# Filter
-Filter.enable = 1
-Filter.type = Bilinear
-Filter.nPass = 1 1 1
+TimeLoop.nSteps = 8000
+TimeLoop.dt = 0.05
 
 # Function parameters
 Function.Ex = "0.0"
@@ -42,7 +39,8 @@ Function.Ey = "0.0"
 Function.Ez = "0.0"
 Function.Bx = "0.0"
 Function.By = "0.0"
-Function.Bz = "0.0"
+Function.Bz = "1e-4 * cos(kvarx * x)"
+Function.phi = "0.0" #"4 * 0.5 * cos(0.5 * x)"
 
 # Diagnostics
 #Full Diagnostics 
@@ -50,15 +48,16 @@ FullDiagnostics.enable = 1 # 1 for true, 0 for false
 FullDiagnostics.groupNames = part field 
 FullDiagnostics.part.varNames = electrons
 FullDiagnostics.part.saveInterval = 1000
-FullDiagnostics.field.varNames = rho Ex phi
+FullDiagnostics.field.varNames = rho phi Ex Ey Bz
 FullDiagnostics.field.outputProcessor = CellCenter 
 FullDiagnostics.field.saveInterval = 1
 
 # Reduced Diagnostics 
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
 ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
-ReducedDiagnostics.saveInterval = 1 # saveInterva
+ReducedDiagnostics.saveInterval = 1 # saveInterval
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
 ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
 ReducedDiagnostics.GaussError.types = GaussError
 ReducedDiagnostics.Part.types = Particle
+
