@@ -9,6 +9,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(GtestTests GEMPIC_UnitTests.cpp)
+gempic_set_compile_options(GtestTests)
 
 target_include_directories(GtestTests PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
@@ -44,7 +45,7 @@ if(GEMPIC_USE_CUDA)
   setup_target_for_cuda_compilation(GtestTests)
   # Too many amrex::ParserExecutor's inside ParallelFor loops. Only a problem because we gather all
   # tests in one executable.
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --ptxas-options=--disable-optimizer-constants" )
+  target_compile_options(GtestTests PRIVATE --ptxas-options=--disable-optimizer-constants)
 endif(GEMPIC_USE_CUDA)
   
 target_link_libraries(

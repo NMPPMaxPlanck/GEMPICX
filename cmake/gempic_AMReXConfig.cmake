@@ -20,6 +20,13 @@ endmacro()
 
 include(cmake/gempic_FetchContent_Declare.cmake)
 
+# This doesn't do anything but avoid an AMReX warning -- CMAKE_CUDA_HOST_COMPILER must be specified as a -D option on the first invocation of cmake as it is used during the compiler detection process.
+if (CMAKE_CUDA_HOST_COMPILER)
+  if ("${CMAKE_CXX_COMPILER}" MATCHES "${CMAKE_CUDA_HOST_COMPILER}")
+    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
+  endif()
+endif()
+
 if(AMReX_HYPRE)
   gempic_FetchContent_Declare(HYPRE
     SOURCE_DIR ${PROJECT_SOURCE_DIR}/third_party/hypre-src
