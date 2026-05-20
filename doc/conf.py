@@ -108,6 +108,8 @@ cpp_index_common_prefix = [
     'Gempic::',
 ]
 
+# explicitly use mathjax3 because newer sphinx versions default to 4, which crashes the browser
+mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
 # equations numbering
 mathjax3_config = {
    'TeX': { 
