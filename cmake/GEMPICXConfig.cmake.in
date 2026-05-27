@@ -78,6 +78,7 @@ if(NOT (AMReX_ROOT OR AMReX_DIR))
   set(AMReX_ROOT @CMAKE_INSTALL_PREFIX@)
 endif()
 find_dependency(AMReX REQUIRED)
+find_dependency(HDF5 REQUIRED)
 
 # Fiddle with targets
 include("${CMAKE_CURRENT_LIST_DIR}/GEMPICXTargets.cmake")

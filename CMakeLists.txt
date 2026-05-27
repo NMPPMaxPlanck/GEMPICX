@@ -62,6 +62,8 @@ include(cmake/gempic_FetchContent_Declare.cmake)
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
 
+find_package(HDF5 REQUIRED COMPONENTS C)
+
 include(cmake/gempic_AMReXConfig.cmake)
 
 add_library(GEMPICX STATIC)
@@ -99,7 +101,9 @@ target_link_libraries(GEMPICX
   PUBLIC AMReX::amrex_${AMReX_SPACEDIM}d AMReX::Flags_CXX
   # Private primarily so that people could include their own and get info about their repo
   # Info about our repo is already exposed in GEMPICX.H
-  PRIVATE cmake_git_version_tracking)
+  PRIVATE
+    cmake_git_version_tracking
+    hdf5::hdf5)
 gempic_set_compile_options(GEMPICX)
 if(GEMPIC_BUILD_DOCUMENTATION)
   add_subdirectory(doc)

@@ -54,6 +54,7 @@ target_link_libraries(
   GEMPICX::GEMPICX
   GTest::gtest_main
   GTest::gmock
+  hdf5::hdf5
   )
 
 gtest_discover_tests(

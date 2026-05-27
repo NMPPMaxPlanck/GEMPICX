@@ -6,6 +6,7 @@
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_HDF5Interface.H"
 #include "GEMPIC_Parameters.H"
 
 namespace Gempic
@@ -18,8 +19,8 @@ DiscreteGrid::DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
                            std::array<bool, AMREX_SPACEDIM> periodicity) :
     m_domainLo{domainLo},
     m_domainHi{domainHi},
-    m_nCells{nCells},
     m_idxPosition{idxPosition},
+    m_nCells{nCells},
     m_periodicity{periodicity}
 {
     for (int dir{0}; dir < AMREX_SPACEDIM; dir++)
@@ -38,8 +39,7 @@ DiscreteGrid::DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
                 m_offset[dir] = 0.0;
                 break;
             }
-        }
-        m_dx[dir] = this->length(static_cast<Direction>(dir)) / nCells[dir];
+        };
     }
 }
 
@@ -106,11 +106,102 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
 }
 //! @endcond
 
+void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandle const& group)
+{
+    H5GroupHandle gridGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::Create};
+
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        H5GroupHandle axis{gridGroup.h5id(), direction_to_string(static_cast<Direction>(dir)),
+                           Gempic::H5GroupHandle::Mode::Create};
+        H5DataspaceHandle space{H5DataspaceHandle::Scalar{}};
+
+        H5AttributeHandle minAttribute{axis.h5id(), "minBound", H5AttributeHandle::Mode::Create,
+                                       H5T_NATIVE_DOUBLE, space.h5id()};
+        double min{static_cast<double>(grid.min(dir))};
+        H5Awrite(minAttribute.h5id(), H5T_NATIVE_DOUBLE, &min);
+
+        H5AttributeHandle maxAttribute{axis.h5id(), "maxBound", H5AttributeHandle::Mode::Create,
+                                       H5T_NATIVE_DOUBLE, space.h5id()};
+        double max{static_cast<double>(grid.max(dir))};
+        H5Awrite(maxAttribute.h5id(), H5T_NATIVE_DOUBLE, &max);
+
+        H5AttributeHandle positionAttribute{
+            axis.h5id(), "position", H5AttributeHandle::Mode::Create, H5T_NATIVE_INT, space.h5id()};
+        int position{static_cast<int>(grid.position(dir))};
+        H5Awrite(positionAttribute.h5id(), H5T_NATIVE_INT, &position);
+
+        H5AttributeHandle cellsAttribute{axis.h5id(), "nCells", H5AttributeHandle::Mode::Create,
+                                         H5T_NATIVE_UINT64, space.h5id()};
+        size_t cells{static_cast<size_t>(grid.m_nCells[dir])};
+        H5Awrite(cellsAttribute.h5id(), H5T_NATIVE_UINT64, &cells);
+
+        H5AttributeHandle periodicityAttribute{axis.h5id(), "periodicity",
+                                               H5AttributeHandle::Mode::Create, H5T_NATIVE_HBOOL,
+                                               space.h5id()};
+        bool periodicity{static_cast<bool>(grid.is_periodic(dir))};
+        H5Awrite(periodicityAttribute.h5id(), H5T_NATIVE_HBOOL, &periodicity);
+    }
+};
+
+void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle const& group)
+{
+    H5GroupHandle gridGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::Create};
+    std::array<amrex::Real, AMREX_SPACEDIM> domainLo;
+    std::array<amrex::Real, AMREX_SPACEDIM> domainHi;
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position;
+    std::array<int, AMREX_SPACEDIM> nCells;
+    std::array<bool, AMREX_SPACEDIM> periodicity;
+
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        H5GroupHandle axis{gridGroup.h5id(), direction_to_string(static_cast<Direction>(dir)),
+                           Gempic::H5GroupHandle::Mode::ReadWrite};
+        H5DataspaceHandle space{H5DataspaceHandle::Scalar{}};
+
+        H5AttributeHandle minAttribute{axis.h5id(), "minBound",
+                                       Gempic::H5AttributeHandle::Mode::ReadWrite,
+                                       H5T_NATIVE_DOUBLE, space.h5id()};
+        double min{};
+        H5Aread(minAttribute.h5id(), H5T_NATIVE_DOUBLE, &min);
+        domainLo[dir] = min;
+
+        H5AttributeHandle maxAttribute{axis.h5id(), "maxBound",
+                                       Gempic::H5AttributeHandle::Mode::ReadWrite,
+                                       H5T_NATIVE_DOUBLE, space.h5id()};
+        double max{};
+        H5Aread(maxAttribute.h5id(), H5T_NATIVE_DOUBLE, &max);
+        domainHi[dir] = max;
+
+        H5AttributeHandle positionAttribute{axis.h5id(), "position",
+                                            Gempic::H5AttributeHandle::Mode::ReadWrite,
+                                            H5T_NATIVE_INT, space.h5id()};
+        int pos{};
+        H5Aread(positionAttribute.h5id(), H5T_NATIVE_INT, &pos);
+        position[dir] = static_cast<DiscreteGrid::Position>(pos);
+
+        H5AttributeHandle cellsAttribute{axis.h5id(), "nCells",
+                                         Gempic::H5AttributeHandle::Mode::ReadWrite,
+                                         H5T_NATIVE_UINT64, space.h5id()};
+        size_t cells{};
+        H5Aread(cellsAttribute.h5id(), H5T_NATIVE_UINT64, &cells);
+        nCells[dir] = cells;
+
+        H5AttributeHandle periodicityAttribute{axis.h5id(), "periodicity",
+                                               Gempic::H5AttributeHandle::Mode::ReadWrite,
+                                               H5T_NATIVE_HBOOL, space.h5id()};
+        bool per{};
+        H5Aread(periodicityAttribute.h5id(), H5T_NATIVE_HBOOL, &per);
+        periodicity[dir] = per;
+    }
+
+    grid = DiscreteGrid{domainLo, domainHi, nCells, position, periodicity};
+};
+
 DiscreteGrid convert_dof_position (
     DiscreteGrid const& grid, std::array<DiscreteGrid::Position, AMREX_SPACEDIM> const& position)
 {
-    return DiscreteGrid{grid.m_domainLo, grid.m_domainHi, grid.m_nCells, position,
-                        grid.m_periodicity};
+    return DiscreteGrid{grid.min(), grid.max(), grid.m_nCells, position, grid.is_periodic()};
 }
 DiscreteGrid dof_on_node (DiscreteGrid const& grid)
 {

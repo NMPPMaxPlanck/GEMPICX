@@ -6,6 +6,7 @@
 #define GEMPIC_CONFIG_H_
 #include <math.h>
 #include <numbers>
+#include <string>
 #include <variant>
 
 #ifndef M_PI /// M_PI is gnu, so we need to define it elsewhere
@@ -249,6 +250,8 @@ enum Direction : unsigned int
     zDir = 2,
     noDir
 };
+
+std::string direction_to_string(Direction);
 
 // deRham enum
 enum class Sequence

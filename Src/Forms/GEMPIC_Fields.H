@@ -33,6 +33,7 @@
 #include "GEMPIC_DeRhamComplex.H"
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_Parameters.H"
+#include "GEMPIC_TimeStepper.H"
 
 namespace Gempic
 {
@@ -46,7 +47,7 @@ struct DiscreteFieldData
     amrex::MultiFab m_data;
     DiscreteGrid m_discreteGrid;
     std::array<int, AMREX_SPACEDIM> m_dofCategory{};
-    std::array<int, AMREX_SPACEDIM> m_haloWidth{AMREX_D_DECL(0, 0, 0)};
+    std::array<int, AMREX_SPACEDIM> m_ghostWidth{AMREX_D_DECL(0, 0, 0)};
     amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> m_boundaryCondition;
 };
 // Boundary conditions are currently only implemented for number of components nComp==1
@@ -150,6 +151,15 @@ public:
     {
         return static_cast<DOFCategory>(m_data->m_dofCategory[dir]);
     };
+    std::array<DOFCategory, AMREX_SPACEDIM> const dof_category () const
+    {
+        std::array<DOFCategory, AMREX_SPACEDIM> dofCategory{};
+        for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+        {
+            dofCategory[dir] = static_cast<DOFCategory>(dof_category(dir));
+        }
+        return dofCategory;
+    };
     // clang-format off
     //! Select a box from an amrex::MultiFab to use in the @ref DiscreteField::operator()(int, int, int) const
     // clang-format on
@@ -157,6 +167,14 @@ public:
     amrex::Box const& select_box(int index);
     //! Currently selected box of the amrex::MultiFab.
     amrex::Box const& selected_box() const;
+    // clang-format off
+    /**
+     * @brief Retrieve the ghost width (number of ghost cells) in each direction.
+     *
+     * @return An array containing the ghost width in x, y, z directions.
+     */
+    // clang-format on
+    std::array<int, AMREX_SPACEDIM> ghost_width() const;
     // clang-format off
     /**
      * @brief Apply boundary conditions to the @p width ghost cells on all patches of the domain covered by the @ref DiscreteField.
@@ -183,6 +201,10 @@ private:
     amrex::Array4<amrex::Real> m_view;
     int m_selectedBoxIdx;
 };
+
+class H5FileHandle;
+void serialize(DiscreteField&, H5FileHandle const&, DiscreteTime const&);
+void deserialize(DiscreteField&, H5FileHandle const&, DiscreteTime const&);
 
 namespace Impl
 {

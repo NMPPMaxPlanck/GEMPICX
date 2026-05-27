@@ -15,6 +15,7 @@ load_viper_gpu () {
     module load rocm/7.0
     module load amd-llvm/7.1
     module load openmpi/5.0 openmpi_gpu/5.0
+    module load hdf5-mpi
     module load mkl/2025.2
     module load gcc/15
     export GEMPIC_VIPER_LOADED="true"
@@ -39,6 +40,7 @@ if string_matches ${CLUSTER} "RAVEN"; then
     module load gcc/15
     module load cuda/13.0
     module load openmpi/5.0 openmpi_gpu/5.0
+    module load hdf5-mpi
     module load mkl/2024.0
     module load clang/18
 elif string_matches ${CLUSTER} "VIPER"; then

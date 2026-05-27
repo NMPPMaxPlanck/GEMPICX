@@ -8,6 +8,13 @@ function(gempic_set_compile_options TARGET)
   endif()
   if(BUILD_TYPE MATCHES "debug")
     target_compile_options(${TARGET} PRIVATE -Wall -Wextra)
+    if(HDF5_VERSION MATCHES "1.14.1")
+      # The following warning is removed to silence https://gitlab.mpcdf.mpg.de/gempic/gempic/-/jobs/4856938
+      # The warning is triggered by the macro -D_FORTIFY_SOURCE=2 which propagates 
+      # into GEMPICX through the HDF5 dependency specifically for the module hdf5-mpi/1.14.1.
+      # For the latest HDF5 version this did not seem to be an issue.
+      target_compile_options(${TARGET} PRIVATE "-Wno-#warnings")
+    endif()
   endif()
   if(AMReX_SPACEDIM EQUAL 1)
     target_compile_options(${TARGET} PRIVATE -Wno-braced-scalar-init)
