@@ -17,10 +17,11 @@
 namespace Gempic
 {
 
+class H5GroupHandle;
 // clang-format off
 /**
  * @class DiscreteGrid
- * @brief Represents a tensor grid axis for equidistant finite difference grids
+ * @brief Represents a tensor grid for equidistant finite differences
  *
  * @details A single axis manages data for a 1-D finite difference grid.
  *          The axis is defined by its length, the minimum value, the number of cells (degrees of freedom) and the type of the axis.
@@ -102,7 +103,7 @@ public:
     //! Length of the domain
     AMREX_GPU_HOST_DEVICE
     amrex::Real length (Direction dir) const { return max(dir) - min(dir); }
-    std::array<amrex::Real, AMREX_SPACEDIM> length ()
+    std::array<amrex::Real, AMREX_SPACEDIM> length () const
     {
         std::array<amrex::Real, AMREX_SPACEDIM> l{};
         for (size_t i = 0; i < l.size(); i++)
@@ -113,8 +114,16 @@ public:
     }
     //! Width of a single cell
     AMREX_GPU_HOST_DEVICE
-    amrex::Real dx (Direction dir) const { return m_dx[dir]; }
-    std::array<amrex::Real, AMREX_SPACEDIM> dx () const { return m_dx; }
+    amrex::Real dx (Direction dir) const { return length(dir) / m_nCells[dir]; }
+    std::array<amrex::Real, AMREX_SPACEDIM> dx () const
+    {
+        std::array<amrex::Real, AMREX_SPACEDIM> dx{};
+        for (size_t i = 0; i < dx.size(); i++)
+        {
+            dx[i] = length(static_cast<Direction>(i));
+        }
+        return dx;
+    }
     //! Position of the degrees of freedom within a cell
     AMREX_GPU_HOST_DEVICE
     DiscreteGrid::Position position (Direction dir) const { return m_idxPosition[dir]; }
@@ -126,21 +135,27 @@ public:
     AMREX_GPU_HOST_DEVICE
     bool is_periodic (Direction dir) const { return m_periodicity[dir]; }
     std::array<bool, AMREX_SPACEDIM> is_periodic () const { return m_periodicity; }
+
     bool operator==(DiscreteGrid const&) const = default;
 
     friend DiscreteGrid convert_dof_position(
         DiscreteGrid const&, std::array<DiscreteGrid::Position, AMREX_SPACEDIM> const&);
+    friend void serialize(std::string const& label,
+                          DiscreteGrid const& grid,
+                          H5GroupHandle const& group);
 
 private:
     std::array<amrex::Real, AMREX_SPACEDIM> m_domainLo{};
     std::array<amrex::Real, AMREX_SPACEDIM> m_domainHi{};
-    std::array<int, AMREX_SPACEDIM> m_nCells{};
-    std::array<amrex::Real, AMREX_SPACEDIM> m_dx{};
     std::array<DiscreteGrid::Position, AMREX_SPACEDIM> m_idxPosition{};
     std::array<amrex::Real, AMREX_SPACEDIM> m_offset{};
     std::array<int, AMREX_SPACEDIM> m_degreesOfFreedom{};
+    std::array<int, AMREX_SPACEDIM> m_nCells{};
     std::array<bool, AMREX_SPACEDIM> m_periodicity{};
 };
+
+void deserialize(std::string const& label, DiscreteGrid& grid, H5GroupHandle const& group);
+
 DiscreteGrid dof_on_node(DiscreteGrid const& grid);
 DiscreteGrid dof_on_cell_center(DiscreteGrid const& grid);
 std::array<DiscreteGrid, 3> dof_on_edge(DiscreteGrid const& grid);

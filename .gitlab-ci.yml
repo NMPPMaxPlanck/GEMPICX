@@ -116,6 +116,7 @@ workflow:
     - module load gcc
     - module load openmpi
     - module load fftw-mpi
+    - module load hdf5-mpi
     - module list
 
 build-test_gcc_3D:
@@ -159,6 +160,7 @@ build-test_gcc_1D:
     - module load openmpi
     - module load cuda
     - module load fftw-mpi
+    - module load hdf5-mpi
     - module list
     - export NVIDIA_ARCHITECTURE=A100
 
@@ -209,6 +211,7 @@ build-test_cuda_1D:
     - module load openmpi
     - module load clang
     - module load fftw-mpi
+    - module load hdf5-mpi
     - module list
   artifacts:
     paths:
@@ -304,7 +307,7 @@ style-test_cpu_3D:
     - !reference [default,before_script]
     - start_details environment "Setup environment"
     - apt update
-    - apt install -y git cmake clang-18 libopenmpi-dev libfftw3-dev clang-tidy-18 clang-format-18 python3
+    - apt install -y git cmake clang-18 libopenmpi-dev libhdf5-openmpi-dev libfftw3-dev clang-tidy-18 clang-format-18 python3
     - end_details environment
   script:
     - start_details configure "CMake Configure Step"

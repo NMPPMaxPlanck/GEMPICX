@@ -88,6 +88,7 @@ int HarmonicSeries::initialize ()
     // read simname parameters
 
     // configure TimeStepper object with parameters provided
+    this->set_timestep(0.01);
     this->set_iterations_to_do(100);
     this->set_checkpoints_to_keep(3);
     this->set_output_interval(20);
@@ -123,7 +124,7 @@ int HarmonicSeries::step ()
     // apply physics equation, updating all data structures according to the appropriate numerical
     // method. for this example, we simply use the "exact solution" instead of an approximate
     // integration scheme.
-    m_sum.set(m_sum.value() + 1. / (1 + this->iteration()));
+    m_sum.set(m_sum.value() + 1. / (1 + this->discrete_time().current_step()));
 
     // test whether stopping mechanism works
     if (m_sum.value() > 20)

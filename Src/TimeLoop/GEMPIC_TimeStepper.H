@@ -5,11 +5,71 @@
 #ifndef TIME_STEPPER_H_
 #define TIME_STEPPER_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <string>
 
+#include <AMReX_REAL.H>
+
 #include "GEMPIC_PlaceholderIO.H"
+
+namespace Gempic
+{
+// clang-format off
+/**
+ * @class DiscreteTime
+ * @brief Representation of the temporal state of a simulation that advances
+ *        in equidistant steps of size \f$\Delta t\f$.
+ *
+ * @details The time state is described by \f$ t \in [t_0,T]\f$ and \f$ t = n \Delta t\f$
+ *          where
+ *          - \f$t\f$ is given by @ref DiscreteTime::t.
+ *          - \f$n\f$ is given by @ref DiscreteTime::current_step.
+ *          - \f$\Delta t\f$ is given by @ref DiscreteTime::dt.
+ *          - \f$t_0\f$ is given by @ref DiscreteTime::initial.
+ *          - \f$T\f$ is given by @ref DiscreteTime::final.
+ */
+// clang-format on
+class DiscreteTime
+{
+public:
+    //!@cond EXCLUDE_API_DOC
+    DiscreteTime(amrex::Real dt, size_t finalStep, size_t initialStep = 0);
+    //!@endcond
+    //! Final time
+    amrex::Real final() const;
+    //! Initial time
+    amrex::Real initial() const;
+    //! Step width
+    amrex::Real const& dt() const;
+    //! Current time
+    amrex::Real t() const;
+    //! Index identifier of the current step
+    size_t const& current_step() const;
+    //! Index identifier of the initial state
+    size_t const& initial_step() const;
+    //! Index identifier of the final state
+    size_t const& final_step() const;
+
+    //! Returns true if @ref DiscreteTime::current_step \$f\leq\f$ @ref DiscreteTime::final_step
+    bool continue_simulation() const;
+    //! Advance the current step by one (\f$n \leftarrow n + 1\f$)
+    void step();
+
+    bool operator==(DiscreteTime const&) const = default;
+
+private:
+    amrex::Real m_dt;
+    size_t m_initialStep;
+    size_t m_currentStep;
+    size_t m_finalStep;
+};
+
+class H5GroupHandle;
+void serialize(std::string const& label, DiscreteTime const&, H5GroupHandle const&);
+void deserialize(std::string const& label, DiscreteTime&, H5GroupHandle const&);
+} // namespace Gempic
 
 /** Basic "iterate solver" functionality.
  *
@@ -34,9 +94,7 @@ class TimeStepperBase
 {
 protected:
     std::string const m_simulationName;
-    int64_t m_iteration;
-    int64_t m_iter0;
-    int64_t m_iter1;
+    Gempic::DiscreteTime m_time;
     int64_t m_checkpointsToKeep;
     int64_t m_outputInterval;
     int64_t m_diagnosticsInterval;
@@ -48,13 +106,19 @@ protected:
 public:
     TimeStepperBase(std::string const simulationName);
 
-    int64_t iteration () const { return m_iteration; }
+    Gempic::DiscreteTime const& discrete_time () const { return m_time; };
+
     std::string simulation_name () const { return m_simulationName; }
+
+    void set_timestep (amrex::Real const dt)
+    {
+        m_time = Gempic::DiscreteTime{dt, m_time.current_step(), m_time.current_step()};
+    }
 
     void set_iterations_to_do (int64_t const nIterToDo)
     {
-        m_iter0 = m_iteration;
-        m_iter1 = m_iteration + nIterToDo;
+        m_time = Gempic::DiscreteTime{m_time.dt(), m_time.current_step() + nIterToDo,
+                                      m_time.current_step()};
     }
 
     void set_checkpoints_to_keep (int64_t const nCPToKeep) { m_checkpointsToKeep = nCPToKeep; }
@@ -153,6 +217,7 @@ public:
     bool check_stop_request() const;
     void create_stop_request() const;
 };
+
 } //namespace Gempic
 
 #endif // TIME_STEPPER_H_

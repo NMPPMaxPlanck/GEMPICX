@@ -2,6 +2,7 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <filesystem>
 #include <vector>
 
 #include <gmock/gmock.h>
@@ -10,7 +11,10 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_HDF5Interface.H"
 #include "GEMPIC_Parameters.H"
+#include "GEMPIC_Sampler.H"
+#include "GEMPIC_TimeStepper.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
 namespace
@@ -327,6 +331,41 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
     g.multi_fab(Direction::zDir).setVal(3.0);
     discrete_vector_field_example_kernel(f, g);
     EXPECT_EQ(f.multi_fab().norm0(), 0);
+}
+
+TEST_F(DiscreteFieldsTest, DiscreteScalarFieldSerializeDeserializeUnity)
+{
+    Gempic::Io::Parameters parameters;
+    DiscreteField df{
+        "df", parameters,
+        DiscreteGrid{parameters,
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
+    df.apply_boundary_conditions({AMREX_D_DECL(1, 2, 3)});
+    DiscreteField ref{
+        "df", parameters,
+        DiscreteGrid{parameters,
+                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}},
+        Impl::scalar_field_dof_category()};
+    df.apply_boundary_conditions({AMREX_D_DECL(2, 3, 4)});
+    fill_scalar_field_with_sin(df);
+    fill_zero(ref);
+    EXPECT_GT(l_inf_error(df, ref), 0.9);
+
+    {
+        H5FileHandle io{"readWriteUnityScalarField", H5FileHandle::Mode::CreateExclusive};
+        DiscreteTime simTime{0.1, 3, 0};
+        while (simTime.continue_simulation())
+        {
+            serialize(df, io, simTime);
+            simTime.step();
+        }
+    }
+    H5FileHandle io{"readWriteUnityScalarField", H5FileHandle::Mode::ReadOnly};
+    DiscreteTime simTimeRef{0.1, 3, 0};
+    deserialize(ref, io, simTimeRef);
+    EXPECT_EQ(l_inf_error(df, ref), 0.0);
+    EXPECT_TRUE(std::filesystem::remove("readWriteUnityScalarField" + H5FileHandle::s_extension));
 }
 
 void fill_reference_scalar_field (DiscreteField& sf, double t)

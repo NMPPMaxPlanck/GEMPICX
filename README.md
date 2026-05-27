@@ -33,6 +33,7 @@ in Garching, Germany.
 # Building and Installing GEMPICX
 ### Requirements
 - [AMReX](https://github.com/AMReX-Codes/amrex)
+- [HDF5](https://github.com/HDFGroup/hdf5)
 - [CMake](https://cmake.org/cmake/help/latest/index.html)
 - Documentation:
   - [Doxygen](https://doxygen.org)

@@ -9,6 +9,7 @@ list(APPEND GEMPICX_HEADER_DIRECTORIES
      "Src/Forms"
      "Src/Forms/FDDeRhamComplex"
      "Src/HyperbolicSolvers"
+     "Src/Io"
      "Src/Io/Diagnostics"
      "Src/Io/Diagnostics/FullDiagnostics"
      "Src/Io/Diagnostics/FullDiagnostics/DiagnosticOutputProcessors"
@@ -25,8 +26,10 @@ list(TRANSFORM GEMPICX_HEADER_DIRECTORIES PREPEND "${PROJECT_SOURCE_DIR}/")
 target_include_directories(GEMPICX PUBLIC
                            ${GEMPICX_HEADER_DIRECTORIES})
 
-target_sources(GEMPICX PRIVATE
-               GEMPIC_ComputationalDomain.cpp)
+target_sources(GEMPICX 
+                PRIVATE
+                  GEMPIC_Config.cpp
+                  GEMPIC_ComputationalDomain.cpp)
 
 add_subdirectory(FieldSolvers)
 add_subdirectory(Filter)
