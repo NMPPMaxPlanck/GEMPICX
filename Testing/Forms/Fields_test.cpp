@@ -333,6 +333,7 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
     EXPECT_EQ(f.multi_fab().norm0(), 0);
 }
 
+#if GEMPIC_USE_HDF5
 TEST_F(DiscreteFieldsTest, DiscreteScalarFieldSerializeDeserializeUnity)
 {
     Gempic::Io::Parameters parameters;
@@ -367,6 +368,7 @@ TEST_F(DiscreteFieldsTest, DiscreteScalarFieldSerializeDeserializeUnity)
     EXPECT_EQ(l_inf_error(df, ref), 0.0);
     EXPECT_TRUE(std::filesystem::remove("readWriteUnityScalarField" + H5FileHandle::s_extension));
 }
+#endif
 
 void fill_reference_scalar_field (DiscreteField& sf, double t)
 {

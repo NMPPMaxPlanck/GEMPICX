@@ -62,7 +62,7 @@ include(cmake/gempic_FetchContent_Declare.cmake)
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
 
-find_package(HDF5 REQUIRED COMPONENTS C)
+find_package(HDF5 COMPONENTS C)
 
 include(cmake/gempic_AMReXConfig.cmake)
 
@@ -79,6 +79,9 @@ if(GEMPIC_PROFILE_KERNELS)
 endif()
 if(GEMPIC_DEBUG_MESSAGES)
   target_compile_definitions(GEMPICX PRIVATE GEMPIC_DEBUG_MESSAGES)
+endif()
+if(HDF5_FOUND)
+  target_compile_definitions(GEMPICX PUBLIC GEMPIC_USE_HDF5=1)
 endif()
 
 # Add subfolder with source files of the library
@@ -102,8 +105,10 @@ target_link_libraries(GEMPICX
   # Private primarily so that people could include their own and get info about their repo
   # Info about our repo is already exposed in GEMPICX.H
   PRIVATE
-    cmake_git_version_tracking
-    hdf5::hdf5)
+    cmake_git_version_tracking)
+if(HDF5_FOUND)
+  target_link_libraries(GEMPICX PRIVATE hdf5::hdf5)
+endif()
 gempic_set_compile_options(GEMPICX)
 if(GEMPIC_BUILD_DOCUMENTATION)
   add_subdirectory(doc)
@@ -133,6 +138,11 @@ message(STATUS "   Install directory        = ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
 get_target_property(GEMPICX_FLAGS GEMPICX COMPILE_OPTIONS)
 message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} ${GEMPICX_FLAGS}")
+if(HDF5_FOUND)
+  message(STATUS "   HDF5 support             = ON")
+else()
+  message(STATUS "   HDF5 support             = OFF")
+endif()
 if(GEMPIC_USE_CUDA)
   message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
   message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")

@@ -108,6 +108,7 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
 
 void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandle const& group)
 {
+#if GEMPIC_USE_HDF5
     H5GroupHandle gridGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::Create};
 
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
@@ -142,10 +143,18 @@ void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandl
         bool periodicity{static_cast<bool>(grid.is_periodic(dir))};
         H5Awrite(periodicityAttribute.h5id(), H5T_NATIVE_HBOOL, &periodicity);
     }
+#else
+    // Remove unused warnings by casting datatype
+    UNUSED(label);
+    UNUSED(time);
+    UNUSED(group);
+    throw_hdf5_unavailable();
+#endif
 };
 
 void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle const& group)
 {
+#if GEMPIC_USE_HDF5
     H5GroupHandle gridGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::Create};
     std::array<amrex::Real, AMREX_SPACEDIM> domainLo;
     std::array<amrex::Real, AMREX_SPACEDIM> domainHi;
@@ -196,6 +205,13 @@ void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle co
     }
 
     grid = DiscreteGrid{domainLo, domainHi, nCells, position, periodicity};
+#else
+    // Remove unused warnings by casting datatype
+    UNUSED(label);
+    UNUSED(time);
+    UNUSED(group);
+    throw_hdf5_unavailable();
+#endif
 };
 
 DiscreteGrid convert_dof_position (

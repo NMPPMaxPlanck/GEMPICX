@@ -33,6 +33,7 @@ void DiscreteTime::step() { m_currentStep++; };
 
 void serialize (std::string const& label, DiscreteTime const& time, H5GroupHandle const& group)
 {
+#if GEMPIC_USE_HDF5
     H5GroupHandle timeGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::CreateExclusive};
 
     // 2) All attributes are scalar → reuse a single scalar dataspace
@@ -55,10 +56,18 @@ void serialize (std::string const& label, DiscreteTime const& time, H5GroupHandl
                               scalarSpace.h5id()};
     auto N = static_cast<size_t>(time.final_step());
     check_hdf5(H5Awrite(finAttr.h5id(), H5T_NATIVE_UINT64, &N));
+#else
+    // Remove unused warnings by casting datatype
+    UNUSED(label);
+    UNUSED(time);
+    UNUSED(group);
+    throw_hdf5_unavailable();
+#endif
 }
 
 void deserialize (std::string const& label, DiscreteTime& time, H5GroupHandle const& group)
 {
+#if GEMPIC_USE_HDF5
     H5GroupHandle timeGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::ReadWrite};
     H5DataspaceHandle scalarSpace{H5DataspaceHandle::Scalar{}};
 
@@ -80,6 +89,13 @@ void deserialize (std::string const& label, DiscreteTime& time, H5GroupHandle co
     check_hdf5(H5Aread(finAttr.h5id(), H5T_NATIVE_UINT64, &N));
 
     time = DiscreteTime{dt, N, n};
+#else
+    // Remove unused warnings by casting datatype
+    UNUSED(label);
+    UNUSED(time);
+    UNUSED(group);
+    throw_hdf5_unavailable();
+#endif
 };
 
 } // namespace Gempic

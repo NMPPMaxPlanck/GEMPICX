@@ -301,6 +301,7 @@ void DiscreteVectorField::apply_boundary_conditions (std::array<size_t, AMREX_SP
 
 void serialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
 {
+#if GEMPIC_USE_HDF5
     H5GroupHandle fieldGroup{io.h5id(), f.label(), H5GroupHandle::Mode::Create};
 
     H5GroupHandle scalarGroup{fieldGroup.h5id(), "SCALAR", H5GroupHandle::Mode::Create};
@@ -368,10 +369,18 @@ void serialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
         check_hdf5(H5Pclose(parallelProperty));
         check_hdf5(H5Sclose(subspaceFile));
     }
+#else
+    // Remove unused warnings by casting datatype
+    UNUSED(f);
+    UNUSED(io);
+    UNUSED(t);
+    throw_hdf5_unavailable();
+#endif
 };
 
 void deserialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
 {
+#if GEMPIC_USE_HDF5
     H5GroupHandle fieldGroup{io.h5id(), f.label(), H5GroupHandle::Mode::ReadWrite};
 
     H5GroupHandle scalarGroup{fieldGroup.h5id(), "SCALAR", H5GroupHandle::Mode::ReadWrite};
@@ -445,6 +454,13 @@ void deserialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& 
         check_hdf5(H5Pclose(parallelProperty));
         check_hdf5(H5Sclose(subspaceFile));
     }
+#else
+    // Remove unused warnings by casting datatype
+    UNUSED(f);
+    UNUSED(io);
+    UNUSED(t);
+    throw_hdf5_unavailable();
+#endif
 };
 
 void fill_zero (DiscreteField& field)

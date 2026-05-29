@@ -54,8 +54,10 @@ target_link_libraries(
   GEMPICX::GEMPICX
   GTest::gtest_main
   GTest::gmock
-  hdf5::hdf5
   )
+if(HDF5_FOUND)
+  target_link_libraries(GtestTests PRIVATE hdf5::hdf5)
+endif()
 
 gtest_discover_tests(
   GtestTests

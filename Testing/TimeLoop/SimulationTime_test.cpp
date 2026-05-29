@@ -24,6 +24,7 @@ TEST(SimulationTimeTest, MemberProperties)
     };
 }
 
+#if GEMPIC_USE_HDF5
 TEST(SimulationTimeTest, SerializeDeserializeUnity)
 {
     double const dt = 0.1;
@@ -51,3 +52,4 @@ TEST(SimulationTimeTest, SerializeDeserializeUnity)
     EXPECT_EQ(original, restored);
     EXPECT_TRUE(std::filesystem::remove(filename + H5FileHandle::s_extension));
 }
+#endif
