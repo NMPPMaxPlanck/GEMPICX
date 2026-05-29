@@ -18,5 +18,8 @@ target_link_libraries(GEMPICX_TIMESTEPPER
                       PUBLIC
                       AMReX::amrex_${AMReX_SPACEDIM}d AMReX::Flags_CXX
                       PRIVATE
-                      GEMPICX::GEMPICX hdf5::hdf5)
+                      GEMPICX::GEMPICX)
+if(HDF5_FOUND)
+  target_link_libraries(GEMPICX_TIMESTEPPER PRIVATE hdf5::hdf5)
+endif()
 target_link_libraries(GEMPICX INTERFACE GEMPICX_TIMESTEPPER)

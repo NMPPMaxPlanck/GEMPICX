@@ -6,6 +6,7 @@
 #define COMPUTATIONAL_DOMAIN_H_
 
 #include <array>
+#include <string>
 
 #include <AMReX_Box.H>
 #include <AMReX_Geometry.H>
