@@ -2,7 +2,7 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
-/**
+/*
  * This file is part of the BSL6D project
  * https://gitlab.mpcdf.mpg.de/bsl6d/bsl6d/
  *
@@ -21,7 +21,6 @@
  * IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
 #if GEMPIC_USE_HDF5
 #include <algorithm>
 #include <iostream>
