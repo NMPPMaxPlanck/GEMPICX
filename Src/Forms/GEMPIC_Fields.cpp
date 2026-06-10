@@ -320,7 +320,7 @@ void serialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
                                 H5T_NATIVE_DOUBLE, H5DataspaceHandle{grid}.h5id()};
     H5AttributeHandle dofCategory{fileDataset.h5id(), "dofCategory",
                                   H5AttributeHandle::Mode::Create, H5T_NATIVE_INT,
-                                  H5DataspaceHandle{std::vector<size_t>{AMREX_SPACEDIM}}.h5id()};
+                                  H5DataspaceHandle{std::vector<hsize_t>{AMREX_SPACEDIM}}.h5id()};
     std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM> dofCategoryValue = f.dof_category();
     std::reverse(dofCategoryValue.begin(), dofCategoryValue.end());
     H5Awrite(dofCategory.h5id(), H5T_NATIVE_INT, &dofCategoryValue);
@@ -400,7 +400,7 @@ void deserialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& 
                                 Impl::h5_type(amrex::Real{}), H5DataspaceHandle{grid}.h5id()};
     H5AttributeHandle dofCategory{fileDataset.h5id(), "dofCategory",
                                   H5AttributeHandle::Mode::Create, H5T_NATIVE_INT,
-                                  H5DataspaceHandle{std::vector<size_t>{AMREX_SPACEDIM}}.h5id()};
+                                  H5DataspaceHandle{std::vector<hsize_t>{AMREX_SPACEDIM}}.h5id()};
     std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM> dofCategoryValue;
     H5Aread(dofCategory.h5id(), H5T_NATIVE_INT, &dofCategoryValue);
     if (dofCategoryValue != f.dof_category())
