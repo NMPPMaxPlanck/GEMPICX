@@ -2,7 +2,7 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
-/**
+/*
  * This file is part of the BSL6D project
  * https://gitlab.mpcdf.mpg.de/bsl6d/bsl6d/
  *
