@@ -299,25 +299,133 @@ void DiscreteVectorField::apply_boundary_conditions (std::array<size_t, AMREX_SP
     }
 };
 
-void serialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
+namespace Impl
 {
-#if GEMPIC_USE_HDF5
-    H5GroupHandle fieldGroup{io.h5id(), f.label(), H5GroupHandle::Mode::Create};
 
-    H5GroupHandle scalarGroup{fieldGroup.h5id(), "SCALAR", H5GroupHandle::Mode::Create};
-    auto grid = f.discrete_grid();
-    if (not H5GroupHandle::exists(scalarGroup.h5id(), "grid"))
+struct H5Subspaces
+{
+    H5DataspaceHandle m_memory;
+    H5DataspaceHandle m_file;
+};
+
+H5Subspaces create_subspaces (DiscreteField const& f, H5DatasetHandle const& dataset)
+{
+    amrex::Box const box{f.selected_box()};
+
+    std::vector<hsize_t> count{};
+    std::vector<hsize_t> boxSize{};
+    for (auto axis : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        serialize("grid", grid, scalarGroup);
+        if (axis < AMREX_SPACEDIM)
+        {
+            if (axis == Direction::xDir) boxSize.push_back(static_cast<hsize_t>(length(box).x));
+            if (axis == Direction::yDir) boxSize.push_back(static_cast<hsize_t>(length(box).y));
+            if (axis == Direction::zDir) boxSize.push_back(static_cast<hsize_t>(length(box).z));
+        }
+        else
+        {
+            boxSize.push_back(1);
+        }
+    }
+    for (auto axis : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        if (axis < AMREX_SPACEDIM)
+        {
+            if (axis == Direction::xDir)
+            {
+                count.push_back(boxSize[Direction::xDir] -
+                                static_cast<hsize_t>(2 * f.ghost_width()[Direction::xDir]));
+            }
+            if (axis == Direction::yDir)
+            {
+                count.push_back(boxSize[Direction::yDir] -
+                                static_cast<hsize_t>(2 * f.ghost_width()[Direction::yDir]));
+            }
+            if (axis == Direction::zDir)
+            {
+                count.push_back(boxSize[Direction::zDir] -
+                                static_cast<hsize_t>(2 * f.ghost_width()[Direction::zDir]));
+            }
+        }
+        else
+        {
+            count.push_back(1);
+        }
+    }
+    std::reverse(count.begin(), count.end());
+    std::array<hsize_t, 3> const block{1, 1, 1};
+    std::array<hsize_t, 3> const stride{1, 1, 1};
+    std::array<hsize_t, 3> offset{0, 0, 0};
+
+    std::reverse(boxSize.begin(), boxSize.end());
+    H5DataspaceHandle memoryDataspace{boxSize};
+    offset = std::array<hsize_t, 3>{
+        GEMPIC_D_PAD(static_cast<hsize_t>(f.ghost_width()[Direction::xDir]),
+                     static_cast<hsize_t>(f.ghost_width()[Direction::yDir]),
+                     static_cast<hsize_t>(f.ghost_width()[Direction::zDir]))};
+    std::reverse(offset.begin(), offset.end());
+    check_hdf5(H5Sselect_hyperslab(memoryDataspace.h5id(), H5S_SELECT_SET, offset.data(),
+                                   stride.data(), count.data(), block.data()));
+
+    offset = std::array<hsize_t, 3>{GEMPIC_D_PAD(
+        static_cast<hsize_t>(box.smallEnd(Direction::xDir) + f.ghost_width()[Direction::xDir]),
+        static_cast<hsize_t>(box.smallEnd(Direction::yDir) + f.ghost_width()[Direction::yDir]),
+        static_cast<hsize_t>(box.smallEnd(Direction::zDir) + f.ghost_width()[Direction::zDir]))};
+    std::reverse(offset.begin(), offset.end());
+    H5DataspaceHandle fileSubspace{check_hdf5(H5Dget_space(dataset.h5id()))};
+    check_hdf5(H5Sselect_hyperslab(fileSubspace.h5id(), H5S_SELECT_SET, offset.data(),
+                                   stride.data(), count.data(), block.data()));
+
+    return H5Subspaces{std::move(memoryDataspace), std::move(fileSubspace)};
+}
+
+void write_field_data (DiscreteField& f, H5DatasetHandle const& dataset)
+{
+    for (amrex::MFIter mfi{f.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        f.select_box(mfi);
+        H5Subspaces hs = create_subspaces(f, dataset);
+
+        hid_t parallelProperty = check_hdf5(H5Pcreate(H5P_DATASET_XFER));
+        check_hdf5(H5Pset_dxpl_mpio(parallelProperty, H5FD_MPIO_COLLECTIVE));
+
+        check_hdf5(H5Dwrite(dataset.h5id(), Impl::h5_type(amrex::Real{}), hs.m_memory.h5id(),
+                            hs.m_file.h5id(), H5P_DEFAULT, f.view().dataPtr()));
+        check_hdf5(H5Pclose(parallelProperty));
+    }
+}
+
+void read_field_data (DiscreteField& f, H5DatasetHandle const& dataset)
+{
+    for (amrex::MFIter mfi{f.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        f.select_box(mfi);
+        H5Subspaces hs = create_subspaces(f, dataset);
+
+        hid_t parallelProperty = check_hdf5(H5Pcreate(H5P_DATASET_XFER));
+        check_hdf5(H5Pset_dxpl_mpio(parallelProperty, H5FD_MPIO_COLLECTIVE));
+
+        check_hdf5(H5Dread(dataset.h5id(), Impl::h5_type(amrex::Real{}), hs.m_memory.h5id(),
+                           hs.m_file.h5id(), H5P_DEFAULT, f.view().dataPtr()));
+        check_hdf5(H5Pclose(parallelProperty));
+    }
+}
+
+void serialize_into (DiscreteField& f, H5GroupHandle const& fieldGroup, DiscreteTime const& t)
+{
+    auto grid = f.discrete_grid();
+    if (not H5GroupHandle::exists(fieldGroup.h5id(), "grid"))
+    {
+        serialize("grid", grid, fieldGroup);
     }
 
-    H5GroupHandle timeSeries{scalarGroup.h5id(), "TIMESERIES", H5GroupHandle::Mode::Create};
+    H5GroupHandle timeSeries{fieldGroup.h5id(), "TIMESERIES", H5GroupHandle::Mode::Create};
     H5GroupHandle timeGroup{timeSeries.h5id(), std::to_string(t.current_step()),
                             H5GroupHandle::Mode::CreateExclusive};
     serialize("simulationTime", t, timeGroup);
 
     H5DatasetHandle fileDataset{timeGroup.h5id(), "data", H5DatasetHandle::Mode::CreateExclusive,
-                                H5T_NATIVE_DOUBLE, H5DataspaceHandle{grid}.h5id()};
+                                Impl::h5_type(amrex::Real{}), H5DataspaceHandle{grid}.h5id()};
     H5AttributeHandle dofCategory{fileDataset.h5id(), "dofCategory",
                                   H5AttributeHandle::Mode::Create, H5T_NATIVE_INT,
                                   H5DataspaceHandle{std::vector<hsize_t>{AMREX_SPACEDIM}}.h5id()};
@@ -325,74 +433,20 @@ void serialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
     std::reverse(dofCategoryValue.begin(), dofCategoryValue.end());
     H5Awrite(dofCategory.h5id(), H5T_NATIVE_INT, &dofCategoryValue);
 
-    for (amrex::MFIter mfi{f.multi_fab()}; mfi.isValid(); ++mfi)
-    {
-        f.select_box(mfi);
-        amrex::Box box{mfi.validbox()};
-        std::array<hsize_t, 3> offset{
-            GEMPIC_D_PAD(static_cast<hsize_t>(box.smallEnd(Direction::xDir)),
-                         static_cast<hsize_t>(box.smallEnd(Direction::yDir)),
-                         static_cast<hsize_t>(box.smallEnd(Direction::zDir)))};
-        std::reverse(offset.begin(), offset.end());
-        std::array<hsize_t, 3> count{GEMPIC_D_PAD_ONE(static_cast<hsize_t>(length(box).x),
-                                                      static_cast<hsize_t>(length(box).y),
-                                                      static_cast<hsize_t>(length(box).z))};
-        std::reverse(count.begin(), count.end());
-        std::array<hsize_t, 3> block{1, 1, 1};
-        std::array<hsize_t, 3> stride{1, 1, 1};
-        hid_t subspaceFile = check_hdf5(H5Dget_space(fileDataset.h5id()));
-        check_hdf5(H5Sselect_hyperslab(subspaceFile, H5S_SELECT_SET, offset.data(), stride.data(),
-                                       count.data(), block.data()));
+    write_field_data(f, fileDataset);
+}
 
-        std::vector<hsize_t> boxSize{
-            GEMPIC_D_PAD_ONE(static_cast<hsize_t>(f.selected_box().length(Direction::xDir)),
-                             static_cast<hsize_t>(f.selected_box().length(Direction::yDir)),
-                             static_cast<hsize_t>(f.selected_box().length(Direction::zDir)))};
-        std::reverse(boxSize.begin(), boxSize.end());
-        H5DataspaceHandle memoryDataspace{boxSize};
-        offset = std::array<hsize_t, 3>{
-            GEMPIC_D_PAD(static_cast<hsize_t>(f.ghost_width()[Direction::xDir]),
-                         static_cast<hsize_t>(f.ghost_width()[Direction::yDir]),
-                         static_cast<hsize_t>(f.ghost_width()[Direction::zDir]))};
-        std::reverse(offset.begin(), offset.end());
-        check_hdf5(H5Sselect_hyperslab(memoryDataspace.h5id(), H5S_SELECT_SET, offset.data(),
-                                       stride.data(), count.data(), block.data()));
-        // clang-format off
-    // Suggestion from
-    // https://github.com/HDFGroup/hdf5/blob/develop/HDF5Examples/C/H5PAR/ph5_hyperslab_by_row.c#L117
-        // clang-format on
-        hid_t parallelProperty = check_hdf5(H5Pcreate(H5P_DATASET_XFER));
-        check_hdf5(H5Pset_dxpl_mpio(parallelProperty, H5FD_MPIO_COLLECTIVE));
-
-        check_hdf5(H5Dwrite(fileDataset.h5id(), H5T_NATIVE_DOUBLE, memoryDataspace.h5id(),
-                            subspaceFile, H5P_DEFAULT, f.view().dataPtr()));
-        check_hdf5(H5Pclose(parallelProperty));
-        check_hdf5(H5Sclose(subspaceFile));
-    }
-#else
-    // Remove unused warnings by casting datatype
-    UNUSED(f);
-    UNUSED(io);
-    UNUSED(t);
-    throw_hdf5_unavailable();
-#endif
-};
-
-void deserialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
+void deserialize_from (DiscreteField& f, H5GroupHandle const& fieldGroup, DiscreteTime const& t)
 {
-#if GEMPIC_USE_HDF5
-    H5GroupHandle fieldGroup{io.h5id(), f.label(), H5GroupHandle::Mode::ReadWrite};
-
-    H5GroupHandle scalarGroup{fieldGroup.h5id(), "SCALAR", H5GroupHandle::Mode::ReadWrite};
     auto grid = f.discrete_grid();
     DiscreteGrid storedGrid{};
-    deserialize("grid", storedGrid, scalarGroup);
+    deserialize("grid", storedGrid, fieldGroup);
     if (storedGrid != grid)
     {
         throw std::runtime_error("H5ReadError: Grid in file does not match grid of discrete field");
     }
 
-    H5GroupHandle timeSeries{scalarGroup.h5id(), "TIMESERIES", H5GroupHandle::Mode::ReadWrite};
+    H5GroupHandle timeSeries{fieldGroup.h5id(), "TIMESERIES", H5GroupHandle::Mode::ReadWrite};
     H5GroupHandle timeGroup{timeSeries.h5id(), std::to_string(t.current_step()),
                             H5GroupHandle::Mode::ReadWrite};
 
@@ -409,59 +463,73 @@ void deserialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& 
             "H5ReadError: DOF category in file does not match DOF category of discrete field");
     }
 
-    for (amrex::MFIter mfi{f.multi_fab()}; mfi.isValid(); ++mfi)
-    {
-        f.select_box(mfi);
-        amrex::Box box{mfi.validbox()};
-        std::array<hsize_t, 3> offset{
-            GEMPIC_D_PAD(static_cast<hsize_t>(box.smallEnd(Direction::xDir)),
-                         static_cast<hsize_t>(box.smallEnd(Direction::yDir)),
-                         static_cast<hsize_t>(box.smallEnd(Direction::zDir)))};
-        std::reverse(offset.begin(), offset.end());
-        std::array<hsize_t, 3> count{GEMPIC_D_PAD_ONE(static_cast<hsize_t>(length(box).x),
-                                                      static_cast<hsize_t>(length(box).y),
-                                                      static_cast<hsize_t>(length(box).z))};
-        std::reverse(count.begin(), count.end());
-        std::array<hsize_t, 3> block{1, 1, 1};
-        std::array<hsize_t, 3> stride{1, 1, 1};
-        hid_t subspaceFile = check_hdf5(H5Dget_space(fileDataset.h5id()));
-        check_hdf5(H5Sselect_hyperslab(subspaceFile, H5S_SELECT_SET, offset.data(), stride.data(),
-                                       count.data(), block.data()));
+    read_field_data(f, fileDataset);
+}
+} //namespace Impl
 
-        std::vector<hsize_t> boxSize{
-            GEMPIC_D_PAD_ONE(static_cast<hsize_t>(f.selected_box().length(Direction::xDir)),
-                             static_cast<hsize_t>(f.selected_box().length(Direction::yDir)),
-                             static_cast<hsize_t>(f.selected_box().length(Direction::zDir)))};
-        std::reverse(boxSize.begin(), boxSize.end());
-        H5DataspaceHandle memoryDataspace{boxSize};
-        offset = std::array<hsize_t, 3>{
-            GEMPIC_D_PAD(static_cast<hsize_t>(f.ghost_width()[Direction::xDir]),
-                         static_cast<hsize_t>(f.ghost_width()[Direction::yDir]),
-                         static_cast<hsize_t>(f.ghost_width()[Direction::zDir]))};
-        std::reverse(offset.begin(), offset.end());
-        check_hdf5(H5Sselect_hyperslab(memoryDataspace.h5id(), H5S_SELECT_SET, offset.data(),
-                                       stride.data(), count.data(), block.data()));
-
-        // clang-format off
-    // Suggestion from
-    // https://github.com/HDFGroup/hdf5/blob/develop/HDF5Examples/C/H5PAR/ph5_hyperslab_by_row.c#L117
-        // clang-format on
-        hid_t parallelProperty = check_hdf5(H5Pcreate(H5P_DATASET_XFER));
-        check_hdf5(H5Pset_dxpl_mpio(parallelProperty, H5FD_MPIO_COLLECTIVE));
-
-        check_hdf5(H5Dread(fileDataset.h5id(), Impl::h5_type(amrex::Real{}), memoryDataspace.h5id(),
-                           subspaceFile, H5P_DEFAULT, f.view().dataPtr()));
-        check_hdf5(H5Pclose(parallelProperty));
-        check_hdf5(H5Sclose(subspaceFile));
-    }
+void serialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
+{
+#ifdef GEMPIC_USE_HDF5
+    H5GroupHandle fieldGroup{io.h5id(), f.label(), H5GroupHandle::Mode::Create};
+    H5GroupHandle scalarGroup{fieldGroup.h5id(), "SCALAR", H5GroupHandle::Mode::Create};
+    Impl::serialize_into(f, scalarGroup, t);
 #else
-    // Remove unused warnings by casting datatype
     UNUSED(f);
     UNUSED(io);
     UNUSED(t);
     throw_hdf5_unavailable();
 #endif
-};
+}
+
+void deserialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
+{
+#ifdef GEMPIC_USE_HDF5
+    H5GroupHandle fieldGroup{io.h5id(), f.label(), H5GroupHandle::Mode::ReadWrite};
+    H5GroupHandle scalarGroup{fieldGroup.h5id(), "SCALAR", H5GroupHandle::Mode::ReadWrite};
+    Impl::deserialize_from(f, scalarGroup, t);
+#else
+    UNUSED(f);
+    UNUSED(io);
+    UNUSED(t);
+    throw_hdf5_unavailable();
+#endif
+}
+
+void serialize (DiscreteVectorField& f, H5FileHandle const& io, DiscreteTime const& t)
+{
+#ifdef GEMPIC_USE_HDF5
+    H5GroupHandle fieldGroup{io.h5id(), f.label(), H5GroupHandle::Mode::Create};
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        H5GroupHandle componentGroup{fieldGroup.h5id(), direction_to_string(dir),
+                                     H5GroupHandle::Mode::Create};
+        Impl::serialize_into(f[dir], componentGroup, t);
+    }
+#else
+    UNUSED(f);
+    UNUSED(io);
+    UNUSED(t);
+    throw_hdf5_unavailable();
+#endif
+}
+
+void deserialize (DiscreteVectorField& vf, H5FileHandle const& io, DiscreteTime const& t)
+{
+#ifdef GEMPIC_USE_HDF5
+    H5GroupHandle fieldGroup{io.h5id(), vf.label(), H5GroupHandle::Mode::ReadWrite};
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        H5GroupHandle componentGroup{fieldGroup.h5id(), direction_to_string(dir),
+                                     H5GroupHandle::Mode::ReadWrite};
+        Impl::deserialize_from(vf[dir], componentGroup, t);
+    }
+#else
+    UNUSED(f);
+    UNUSED(io);
+    UNUSED(t);
+    throw_hdf5_unavailable();
+#endif
+}
 
 void fill_zero (DiscreteField& field)
 {

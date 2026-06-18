@@ -124,6 +124,7 @@ public:
     H5DataspaceHandle(Scalar);
     H5DataspaceHandle(std::vector<hsize_t> const& dims);
     H5DataspaceHandle(DiscreteGrid const& grid);
+    H5DataspaceHandle(hid_t const&& dataspace);
     ~H5DataspaceHandle();
 
     H5DataspaceHandle(H5DataspaceHandle const&) = delete;
