@@ -658,6 +658,8 @@ def main():
                         help='Folders to sanitize, (re)creating the folder list (default: %(default)s)')
     parser.add_argument('-add-folders', '--add-folders', nargs='+', action='extend', dest='folders',metavar='FOLDER',
                         help='Add folders to sanitize, extending the list of folders')
+    parser.add_argument('-format', '-format-only', '--formatOnly', action='store_true',
+                        help='Run only clang-format, not clang-tidy')
     args = parser.parse_args()
 
     initDir = pathlib.Path.cwd().resolve()
@@ -665,13 +667,15 @@ def main():
         os.chdir('..')
     originalNames, changedFiles = exclude_subproject_clang_tools('third_party')
     try:
-        # In case you didn't care about case before, you do now.
-        subprocess.run('git config --local core.ignorecase false', shell=True)
+        if not args.formatOnly:
+            # In case you didn't care about case before, you do now.
+            subprocess.run('git config --local core.ignorecase false', shell=True)
 
-        fix_folders_syntax(args.folders, args.forceMove)
-        fix_files_syntax(args.folders, args.forceMove)
+            fix_folders_syntax(args.folders, args.forceMove)
+            fix_files_syntax(args.folders, args.forceMove)
 
-        gempic_run_clang_tidy(args.folders)
+            gempic_run_clang_tidy(args.folders)
+            
         gempic_run_clang_format(args.folders)
     except KeyboardInterrupt:
         print(" -- Script interrupted. Cleaning up ... ", end='')
