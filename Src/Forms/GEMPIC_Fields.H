@@ -38,6 +38,8 @@
 namespace Gempic
 {
 
+class H5FileHandle;
+
 namespace Impl
 {
 
@@ -202,7 +204,6 @@ private:
     int m_selectedBoxIdx;
 };
 
-class H5FileHandle;
 void serialize(DiscreteField&, H5FileHandle const&, DiscreteTime const&);
 void deserialize(DiscreteField&, H5FileHandle const&, DiscreteTime const&);
 
@@ -317,6 +318,9 @@ private:
     std::shared_ptr<std::string> m_label{};
     std::array<DiscreteField, 3> m_fields;
 };
+
+void serialize(DiscreteVectorField&, H5FileHandle const&, DiscreteTime const&);
+void deserialize(DiscreteVectorField&, H5FileHandle const&, DiscreteTime const&);
 
 template <typename F>
 concept ScalarAnalyticalExpressionSpace =

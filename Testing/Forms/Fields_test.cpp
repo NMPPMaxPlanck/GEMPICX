@@ -337,17 +337,13 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
 TEST_F(DiscreteFieldsTest, DiscreteScalarFieldSerializeDeserializeUnity)
 {
     Gempic::Io::Parameters parameters;
-    DiscreteField df{
-        "df", parameters,
-        DiscreteGrid{parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}},
-        Impl::scalar_field_dof_category()};
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}};
+    DiscreteField df{"df", parameters, DiscreteGrid{parameters, position},
+                     Impl::scalar_field_dof_category()};
     df.apply_boundary_conditions({AMREX_D_DECL(1, 2, 3)});
-    DiscreteField ref{
-        "df", parameters,
-        DiscreteGrid{parameters,
-                     {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}},
-        Impl::scalar_field_dof_category()};
+    DiscreteField ref{"df", parameters, DiscreteGrid{parameters, position},
+                      Impl::scalar_field_dof_category()};
     df.apply_boundary_conditions({AMREX_D_DECL(2, 3, 4)});
     fill_scalar_field_with_sin(df);
     fill_zero(ref);
@@ -367,6 +363,48 @@ TEST_F(DiscreteFieldsTest, DiscreteScalarFieldSerializeDeserializeUnity)
     deserialize(ref, io, simTimeRef);
     EXPECT_EQ(l_inf_error(df, ref), 0.0);
     EXPECT_TRUE(std::filesystem::remove("readWriteUnityScalarField" + H5FileHandle::s_extension));
+}
+
+TEST_F(DiscreteFieldsTest, DiscreteVectorFieldSerializeDeserializeUnity)
+{
+    Gempic::Io::Parameters parameters;
+    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)}};
+    std::array<DiscreteGrid, 3> grids{};
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        grids[dir] = DiscreteGrid{parameters, position};
+    }
+    DiscreteVectorField vf{"vf", parameters, grids, Impl::vector_field_dof_category()};
+    DiscreteVectorField ref{"vf", parameters, grids, Impl::vector_field_dof_category()};
+    vf.apply_boundary_conditions({AMREX_D_DECL(1, 2, 3)});
+    ref.apply_boundary_conditions({AMREX_D_DECL(2, 3, 4)});
+
+    fill_vector_field_with_sin(vf);
+    fill_zero(ref);
+
+    std::array<amrex::Real, 3> initialError{l_inf_error(vf, ref)};
+    EXPECT_GT(initialError[Direction::xDir], 0.9);
+    EXPECT_GT(initialError[Direction::yDir], 0.9);
+    EXPECT_GT(initialError[Direction::zDir], 0.9);
+
+    {
+        H5FileHandle io{"readWriteUnityVectorField", H5FileHandle::Mode::CreateExclusive};
+        DiscreteTime simTime{0.1, 3, 0};
+        while (simTime.continue_simulation())
+        {
+            serialize(vf, io, simTime);
+            simTime.step();
+        }
+    }
+    H5FileHandle io{"readWriteUnityVectorField", H5FileHandle::Mode::ReadOnly};
+    DiscreteTime simTimeRef{0.1, 3, 0};
+    deserialize(ref, io, simTimeRef);
+    std::array<amrex::Real, 3> finalError{l_inf_error(vf, ref)};
+    EXPECT_EQ(finalError[Direction::xDir], 0.0);
+    EXPECT_EQ(finalError[Direction::yDir], 0.0);
+    EXPECT_EQ(finalError[Direction::zDir], 0.0);
+    EXPECT_TRUE(std::filesystem::remove("readWriteUnityVectorField" + H5FileHandle::s_extension));
 }
 #endif
 

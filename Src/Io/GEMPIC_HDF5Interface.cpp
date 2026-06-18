@@ -170,6 +170,8 @@ void H5GroupHandle::close () noexcept
     }
 }
 
+H5DataspaceHandle::H5DataspaceHandle(hid_t const&& dataspace) { m_dataspace = dataspace; }
+
 H5DataspaceHandle::H5DataspaceHandle(H5DataspaceHandle::Scalar)
 {
     open(H5DataspaceHandle::Scalar{});
