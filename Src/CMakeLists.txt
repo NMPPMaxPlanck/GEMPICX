@@ -1,6 +1,7 @@
 # Header files (all directories. Add here if you create a new one)
 list(APPEND GEMPICX_HEADER_DIRECTORIES
      "Src"
+     "Src/AMR"
      "Src/FieldSolvers"
      "Src/FieldSolvers/Poisson"
      "Src/FieldSolvers/Quasineutral"
@@ -31,6 +32,7 @@ target_sources(GEMPICX
                   GEMPIC_Config.cpp
                   GEMPIC_ComputationalDomain.cpp)
 
+add_subdirectory(AMR)
 add_subdirectory(FieldSolvers)
 add_subdirectory(Filter)
 add_subdirectory(Forms)
