@@ -13,6 +13,7 @@ gempic_set_compile_options(GtestTests)
 
 target_include_directories(GtestTests PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
+add_subdirectory(AMR)
 add_subdirectory(FieldSolvers)
 add_subdirectory(Filter)
 add_subdirectory(Forms)
