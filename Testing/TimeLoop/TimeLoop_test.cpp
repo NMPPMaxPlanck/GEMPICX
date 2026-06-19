@@ -126,8 +126,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
                                                 m_infra.geometry().InvCellSize(xDir));
-        ParticleMeshCoupling::accumulate_j<xDir>(spline, chargeWeight,
-                                                 m_infra.geometry().CellSizeArray(), jA);
+        ParticleMeshCoupling::accumulate_j<xDir>(spline, chargeWeight, jA);
 
         // setup is in a way, that the first spline is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
@@ -173,8 +172,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         spline.template update_1d_splines<yDir>(position[yDir], m_infra.geometry().ProbLo(yDir),
                                                 m_infra.geometry().InvCellSize(yDir));
-        ParticleMeshCoupling::accumulate_j<yDir>(spline, chargeWeight,
-                                                 m_infra.geometry().CellSizeArray(), jA);
+        ParticleMeshCoupling::accumulate_j<yDir>(spline, chargeWeight, jA);
 
         // setup is in a way, that the second index is in the "bothSplines" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
@@ -217,8 +215,7 @@ TEST_F(HamiltonianSplittingTest, AccumulateJTest)
 
         spline.template update_1d_splines<zDir>(position[zDir], m_infra.geometry().ProbLo(zDir),
                                                 m_infra.geometry().InvCellSize(zDir));
-        ParticleMeshCoupling::accumulate_j<zDir>(spline, chargeWeight,
-                                                 m_infra.geometry().CellSizeArray(), jA);
+        ParticleMeshCoupling::accumulate_j<zDir>(spline, chargeWeight, jA);
 
         // setup in such a way that the first spline is in the "firstSpline" region
         amrex::Real primitiveDifference = spline.template compute_primitive_difference<
@@ -417,8 +414,7 @@ TEST_F(HamiltonianSplittingTest, GaussTest)
 
         spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
                                                 m_infra.geometry().InvCellSize(xDir));
-        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
-            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
+        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(bfields, spline, chargeWeight, bA, jA);
 
         // compute: rho^n+1
         ParticleMeshCoupling::SplineBase<s_degX, s_degY, s_degZ> splineRho(
@@ -513,8 +509,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         // update the splines in x direction
         spline.template update_1d_splines<xDir>(position[xDir], m_infra.geometry().ProbLo(xDir),
                                                 dxi[xDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(
-            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
+        ParticleMeshCoupling::accumulate_j_integrate_b<xDir>(bfields, spline, chargeWeight, bA, jA);
         // For a constant B, primitive difference is B * (position - positionOld)
         EXPECT_NEAR(Bz * (position[xDir] - positionOld[xDir]), bfields[0], 1e-12);
         EXPECT_NEAR(By * (position[xDir] - positionOld[xDir]), bfields[1], 1e-12);
@@ -523,8 +518,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         // update the splines in y direction
         spline.template update_1d_splines<yDir>(position[yDir], m_infra.geometry().ProbLo(yDir),
                                                 dxi[yDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(
-            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
+        ParticleMeshCoupling::accumulate_j_integrate_b<yDir>(bfields, spline, chargeWeight, bA, jA);
         EXPECT_NEAR(Bx * (position[yDir] - positionOld[yDir]), bfields[0], 1e-12);
         EXPECT_NEAR(Bz * (position[yDir] - positionOld[yDir]), bfields[1], 1e-12);
 
@@ -533,8 +527,7 @@ TEST_F(HamiltonianSplittingTest, IntegrateBTest)
         // update the splines in z direction
         spline.template update_1d_splines<zDir>(position[zDir], m_infra.geometry().ProbLo(zDir),
                                                 dxi[zDir]);
-        ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(
-            bfields, spline, chargeWeight, m_infra.geometry().CellSizeArray(), bA, jA);
+        ParticleMeshCoupling::accumulate_j_integrate_b<zDir>(bfields, spline, chargeWeight, bA, jA);
         EXPECT_NEAR(By * (position[zDir] - positionOld[zDir]), bfields[0], 1e-12);
         EXPECT_NEAR(Bx * (position[zDir] - positionOld[zDir]), bfields[1], 1e-12);
 
@@ -749,8 +742,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
             position, m_infra.geometry().ProbLoArray(), m_infra.geometry().InvCellSizeArray());
 
         // apply h_p_i in x direction
-        operatorHamilton.template apply_h_p_i<xDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+        operatorHamilton.template apply_h_p_i<xDir>(position, vel, m_infra, spline, bfields, jA, bA,
                                                     chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(xPosOld + dt * vel[xDir], position[0], 1e-12);
@@ -767,8 +759,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[yDir] = vy;
         vel[zDir] = vz;
 
-        operatorHamilton.template apply_h_p_i<yDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+        operatorHamilton.template apply_h_p_i<yDir>(position, vel, m_infra, spline, bfields, jA, bA,
                                                     chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(yPosOld + dt * vel[yDir], position[yDir], 1e-12);
@@ -782,8 +773,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[yDir] = vy;
         vel[zDir] = vz;
 
-        operatorHamilton.template apply_h_p_i<zDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+        operatorHamilton.template apply_h_p_i<zDir>(position, vel, m_infra, spline, bfields, jA, bA,
                                                     chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(zPosOld + dt * vel[zDir], position[zDir], 1e-12);
@@ -806,8 +796,7 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[yDir] = vy;
         vel[zDir] = vz;
 
-        operatorHamilton.template apply_h_p_i<yDir>(position, vel, m_infra, spline, bfields,
-                                                    m_infra.geometry().CellSizeArray(), jA, bA,
+        operatorHamilton.template apply_h_p_i<yDir>(position, vel, m_infra, spline, bfields, jA, bA,
                                                     chargeOverMass, chargeWeight, dt);
         // Compare to the exact solution for constant magnetic field
         EXPECT_NEAR(yPosOld + dt * vel[yDir], position[yDir], 1e-12);
@@ -840,9 +829,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
             }
         }
 
-        operatorHamilton.template apply_h_p_i_euler<zDir>(vel, m_infra, spline, bfields,
-                                                          m_infra.geometry().CellSizeArray(), jA,
-                                                          bA, chargeOverMass, chargeWeight, dt);
+        operatorHamilton.template apply_h_p_i_euler<zDir>(vel, m_infra, spline, bfields, jA, bA,
+                                                          chargeOverMass, chargeWeight, dt);
         EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By * dxdy[1] * cellSumXhalf * nodeSumY,
                     vel[xDir], 1e-12);
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx * dxdy[0] * nodeSumX * cellSumYhalf,
@@ -868,9 +856,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
             }
         }
 
-        operatorHamilton.template apply_h_p_i_euler<yDir>(vel, m_infra, spline, bfields,
-                                                          m_infra.geometry().CellSizeArray(), jA,
-                                                          bA, chargeOverMass, chargeWeight, dt);
+        operatorHamilton.template apply_h_p_i_euler<yDir>(vel, m_infra, spline, bfields, jA, bA,
+                                                          chargeOverMass, chargeWeight, dt);
         EXPECT_NEAR(vx + dt * chargeOverMass * vel[yDir] * Bz * dxdy[2] * cellSumX, vel[xDir],
                     1e-12);
         EXPECT_NEAR(vz - dt * chargeOverMass * vel[yDir] * Bx * nodeSumX, vel[zDir], 1e-12);
@@ -881,9 +868,8 @@ TEST_F(HamiltonianSplittingTest, ApplyHpiTest)
         vel[yDir] = vy;
         vel[zDir] = vz;
 
-        operatorHamilton.template apply_h_p_i_euler<zDir>(vel, m_infra, spline, bfields,
-                                                          m_infra.geometry().CellSizeArray(), jA,
-                                                          bA, chargeOverMass, chargeWeight, dt);
+        operatorHamilton.template apply_h_p_i_euler<zDir>(vel, m_infra, spline, bfields, jA, bA,
+                                                          chargeOverMass, chargeWeight, dt);
         EXPECT_NEAR(vx - dt * chargeOverMass * vel[zDir] * By * dxdy[1] * cellSumXhalf, vel[xDir],
                     1e-12);
         EXPECT_NEAR(vy + dt * chargeOverMass * vel[zDir] * Bx * nodeSumX, vel[yDir], 1e-12);

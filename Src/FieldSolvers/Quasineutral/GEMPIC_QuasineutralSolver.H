@@ -171,10 +171,7 @@ private:
         GEMPIC_D_MULT(s_divgradphiBw[xDir], s_divgradphiBw[yDir], s_divgradphiBw[zDir]);
 
 public:
-    QuasineutralSolver(ComputationalDomain infr,
-                       std::shared_ptr<Forms::DeRhamComplex> drc,
-                       amrex::Real tol = 1.e-15,
-                       int verbose = 0) :
+    QuasineutralSolver(ComputationalDomain infr, amrex::Real tol = 1.e-15, int verbose = 0) :
         m_infra{infr}, m_relTol{tol}
     {
         m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
@@ -334,7 +331,7 @@ public:
             x, b, marker, filler);
     }
 
-    void filler_curlcurl_matrix (int boxno,
+    void filler_curlcurl_matrix (int /*boxno*/,
                                  int i,
                                  int j,
                                  int k,
@@ -1195,7 +1192,7 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+        auto filler = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int ndir,
                                            amrex::Array4<HYPRE_Int const> const* gid,
                                            HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {
@@ -1291,7 +1288,7 @@ public:
         // [out] ncols: # of columns in this row.
         // [out] cols: column indices in this row.
         // [out] mat : matrix elements in this row.
-        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int n,
+        auto filler = [=, this] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int n,
                                                  amrex::Array4<HYPRE_Int const> const* gid,
                                                  HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
         {

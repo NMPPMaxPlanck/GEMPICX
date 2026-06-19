@@ -195,7 +195,7 @@ public:
         DeRhamField<Grid::dual, Space::face> rhoEAn(deRham, m_funcRhoE);
 
         QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ> hypreParticleRho(
-            infra, deRham);
+            infra);
 
         hypreParticleRho.solve_particle_charge_e(rhoEAn, E, ions);
 

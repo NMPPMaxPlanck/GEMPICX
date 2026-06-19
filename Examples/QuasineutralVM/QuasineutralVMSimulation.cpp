@@ -115,8 +115,7 @@ int main (int argc, char* argv[])
         // Initializing filter
         std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
 
-        QuasineutralSolver<hodgeDegree, vdim, ndata, degx, degy, degz> hypreQNLinearSystem(infra,
-                                                                                           deRham);
+        QuasineutralSolver<hodgeDegree, vdim, ndata, degx, degy, degz> hypreQNLinearSystem(infra);
 
         { //"Time Loop" scope
             Io::Parameters params("TimeLoop");
@@ -156,9 +155,8 @@ int main (int argc, char* argv[])
                 hodge(H, B, deRham->scaling_bto_h());
 
                 // B-related error checks
-                check_b_related_norms(J, divJ, A, divA, B, divB, H, curlH, jMinusCurlH, deRham,
-                                      infra);
-                check_energies(B, H, particles, deRham, infra);
+                check_b_related_norms(J, divJ, A, divA, B, divB, H, curlH, jMinusCurlH, infra);
+                check_energies(B, H, particles, infra);
 
                 // Deposit JxB, Del.S using X, V
                 amrex::Print() << "Deposit JxB,Del.S(" << tStep << ") -> ";
@@ -174,8 +172,8 @@ int main (int argc, char* argv[])
                 hodge(D, E, deRham->scaling_eto_d());
 
                 // E-related error checks
-                check_e_related_norms<vdim, ndata, degx, degy, degz>(E, B, H, J, rho, rhoIdeal,
-                                                                     deRham, rhs, particles, infra);
+                check_e_related_norms<vdim, ndata, degx, degy, degz>(E, rho, rhoIdeal, deRham, rhs,
+                                                                     particles, infra);
 
                 amrex::Print() << "Obtain V(" << tStep << " + 1/2) and X(" << tStep + 1 << ") -> ";
                 // Update V using E and B and X using V

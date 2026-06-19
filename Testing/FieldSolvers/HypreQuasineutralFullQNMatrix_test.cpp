@@ -170,7 +170,7 @@ public:
         DeRhamField<Grid::primal, Space::edge> eAn(deRham, m_funcE);
 
         QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
-            hypreCurlcurlPlusFieldRho(infra, deRham);
+            hypreCurlcurlPlusFieldRho(infra);
 
         amrex::Real jcrosscurlCoeff = -0.75;
 

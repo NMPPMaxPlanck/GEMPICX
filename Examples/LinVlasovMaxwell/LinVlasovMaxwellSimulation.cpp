@@ -280,8 +280,7 @@ int main (int argc, char* argv[])
 
                                 // Push particle and integrate current
                                 operatorHamilton.apply_h_p_exact(
-                                    pos, vel, infra, spline, infra.cell_size_array(), jA, bA,
-                                    chargeMass,
+                                    pos, vel, infra, spline, jA, bA, chargeMass,
                                     ptd.rdata(ii.m_isqrtf0)[pp] * charge *
                                         ptd.rdata(ii.m_iweight)[pp],
                                     dt);

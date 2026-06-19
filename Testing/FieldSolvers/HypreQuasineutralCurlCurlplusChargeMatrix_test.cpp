@@ -168,7 +168,7 @@ public:
         DeRhamField<Grid::primal, Space::edge> eAn(deRham, m_funcE);
 
         QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
-            hypreCurlcurlPlusFieldRho(infra, deRham);
+            hypreCurlcurlPlusFieldRho(infra);
 
         hypreCurlcurlPlusFieldRho.solve_curlcurl_plus_particle_charge_e(rhs, E, ions);
 
