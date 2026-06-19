@@ -28,7 +28,6 @@ void accumulate_j_update_v_c2_parallel_for (
     DeRhamField<Grid::dual, Space::face>& J,
     ComputationalDomain& infra,
     amrex::Real weight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
     amrex::GpuArray<amrex::Real, 2>& bfields)
 {
     long const np{particleGrid.numParticles()};
@@ -67,7 +66,7 @@ void accumulate_j_update_v_c2_parallel_for (
                                1.0 / infra.geometry_data().CellSize(xDir));
 
                            ParticleMeshCoupling::accumulate_j_integrate_b<pDir>(*bfieldsGPU, spline,
-                                                                                weight, dx, bA, jA);
+                                                                                weight, bA, jA);
                        });
 
     aaBfields.copyToHost(&bfields, 1);
@@ -192,7 +191,7 @@ TEST_F(AccumulateJUpdateVC2Test, NullTest)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            particleGrid, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
+            particleGrid, B, J, m_infra, m_weight, bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);
@@ -257,7 +256,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleMiddle)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            particleGrid, B, J, m_infra, m_weight, m_infra.cell_size_array(), bfields);
+            particleGrid, B, J, m_infra, m_weight, bfields);
 
         EXPECT_NEAR(bfields[0], -4.5, 1e-15);
         EXPECT_NEAR(bfields[1], -4.5, 1e-15);
@@ -333,7 +332,7 @@ TEST_F(AccumulateJUpdateVC2Test, SingleParticleUnevenNodeSplit)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            particleGrid, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
+            particleGrid, B, J, m_infra, m_weight, bfields);
 
         EXPECT_NEAR(bfields[0], -4.75, 1e-15);
         EXPECT_NEAR(bfields[1], -4.75, 1e-15);
@@ -421,7 +420,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleSeparate)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            particleGrid, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
+            particleGrid, B, J, m_infra, m_weight, bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);
@@ -489,7 +488,7 @@ TEST_F(AccumulateJUpdateVC2Test, DoubleParticleOverlap)
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         accumulate_j_update_v_c2_parallel_for<s_pDim, s_degX, s_degY, s_degZ, s_vDim>(
-            particleGrid, B, J, m_infra, m_weight, m_infra.geometry().CellSizeArray(), bfields);
+            particleGrid, B, J, m_infra, m_weight, bfields);
 
         EXPECT_EQ(bfields[0], 0);
         EXPECT_EQ(bfields[1], 0);

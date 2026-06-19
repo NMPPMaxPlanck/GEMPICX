@@ -480,7 +480,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b_euler_z (
  * direction)
  * @param spline Object containing spline values and the particle trajectory
  * @param chargeWeight Particle weight * charge
- * @param dx Spatial grid size
  * @param bArray Degrees of freedom of B as primal 2-form
  * @param jArray Degrees of freedom of J as dual 2-form
  */
@@ -490,7 +489,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2>& fields,
     SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
@@ -559,8 +557,7 @@ template <Direction pDir, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE void time_integrated_j (
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray,
     SplineType& spline,
-    amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx)
+    amrex::Real const chargeWeight)
 {
     BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::time_integrated_j()");
     using namespace Impl; // utility functions for this function
@@ -672,7 +669,6 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
  * direction)
  * @param spline Object containing spline values and the particle trajectory
  * @param chargeWeight Particle weight * charge
- * @param dx Spatial grid size
  * @param bArray Degrees of freedom of B as primal 2-form
  * @param jArray Degrees of freedom of J as dual 2-form
  */
@@ -681,7 +677,6 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2>& fields,
     SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
@@ -846,7 +841,6 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
  * direction)
  * @param spline Object containing spline values and the particle trajectory
  * @param chargeWeight Particle weight * charge
- * @param dx Spatial grid size
  * @param bArray Degrees of freedom of B as primal 2-form
  * @param jArray Degrees of freedom of J as dual 2-form
  */
@@ -856,7 +850,6 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Real, 2>& fields,
     SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
@@ -934,7 +927,6 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
 
  * @param spline Object containing spline values and the particle trajectory
  * @param chargeWeight Particle weight * charge
- * @param dx Spatial grid size
  * @param jArray Degrees of freedom of J as dual 2-form
  */
 
@@ -942,7 +934,6 @@ template <Direction pDir, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
@@ -1056,7 +1047,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
 
  * @param spline Object containing spline values and the particle trajectory
  * @param chargeWeight Particle weight * charge
- * @param dx Spatial grid size
  * @param jArray Degrees of freedom of J as dual 2-form
  */
 
@@ -1064,7 +1054,6 @@ template <Direction pDir, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
@@ -1236,7 +1225,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
 
  * @param spline Object containing spline values and the particle trajectory
  * @param chargeWeight Particle weight * charge
- * @param dx Spatial grid size
  * @param jArray Degrees of freedom of J as dual 2-form
  */
 
@@ -1244,7 +1232,6 @@ template <Direction pDir, typename SplineType, unsigned int vDim>
 AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     SplineType& spline,
     amrex::Real const chargeWeight,
-    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const& dx,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
     BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
@@ -2294,7 +2281,6 @@ void deposit_particle_current_gdec (
     for (auto const& particleSpecies : particles)
     {
         amrex::Real charge = particleSpecies->get_charge();
-        amrex::Real chargeOverMass = charge / particleSpecies->get_mass();
 
         for (auto& particleGrid : *particleSpecies)
         {

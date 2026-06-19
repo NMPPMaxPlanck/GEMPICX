@@ -49,7 +49,6 @@ void check_b_related_norms (DeRhamField<Grid::dual, Space::face>& J,
                             DeRhamField<Grid::dual, Space::edge>& H,
                             DeRhamField<Grid::dual, Space::face>& curlH,
                             DeRhamField<Grid::dual, Space::face>& jMinusCurlH,
-                            std::shared_ptr<FDDeRhamComplex> drc,
                             ComputationalDomain& mInfra)
 {
     amrex::Print() << "\nError checks for B-related computations:";

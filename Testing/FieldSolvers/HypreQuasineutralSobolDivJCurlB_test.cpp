@@ -211,7 +211,7 @@ public:
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
 
         QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
-            hypreParticleDivJCurlB(infra, deRham);
+            hypreParticleDivJCurlB(infra);
 
         // Correction of divJ
         hypreParticleDivJCurlB.push_particles_and_correct_div_j(J, phiCorr, ions, dt);

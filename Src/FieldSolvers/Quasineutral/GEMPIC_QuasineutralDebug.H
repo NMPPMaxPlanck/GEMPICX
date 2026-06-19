@@ -27,7 +27,6 @@ void check_energies (
     Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
     std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>>& particles,
-    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
     ComputationalDomain& mInfra)
 {
     amrex::Real me{0.0};
@@ -52,8 +51,6 @@ void check_energies (
             auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
             auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
             auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
-
-            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{mInfra.geometry().ProbLoArray()};
 
             amrex::ParallelFor(
                 np,
@@ -80,9 +77,6 @@ void check_energies (
 template <unsigned int vdim, unsigned int ndata, int degx, int degy, int degz>
 void check_e_related_norms (
     Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
-    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
-    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
-    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rhoIdeal,
     std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
@@ -153,7 +147,6 @@ void check_b_related_norms(
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& curlH,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jMinusCurlH,
-    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
     ComputationalDomain& mInfra);
 
 void check_j_change_norms(Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jOld,

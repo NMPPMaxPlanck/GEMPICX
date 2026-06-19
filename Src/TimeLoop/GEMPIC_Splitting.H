@@ -158,7 +158,6 @@ public:
      * @param spline object containing the values of non-zero grid splines at the particle
      * position
      * @param bfields temporary array to store the values of the integrated B field
-     * @param dx cell size in every direction
      * @param jA array of J density coefficients (dual face dofs)
      * @param bA array of B field coefficients (primal face dofs)
      * @param chargeOverMass (q/m)_p ratio
@@ -173,7 +172,6 @@ public:
         ComputationalDomain const& infra,
         SplineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -185,8 +183,7 @@ public:
         amrex::Real posNew = pos[dir] + dt * vel[dir];
         spline.template update_1d_splines<dir>(posNew, infra.geometry_data().ProbLo(dir),
                                                1.0 / infra.geometry_data().CellSize(dir));
-        ParticleMeshCoupling::accumulate_j_integrate_b<dir>(bfields, spline, chargeWeight, dx, bA,
-                                                            jA);
+        ParticleMeshCoupling::accumulate_j_integrate_b<dir>(bfields, spline, chargeWeight, bA, jA);
         pos[dir] = posNew;
 
         // we assume vdim = 3
@@ -216,7 +213,6 @@ public:
      * @param infra computational domain
      * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param dx cell size in every direction
      * @param jA array of J density coefficients (dual face dofs)
      * @param chargeWeight weight * charge of the given particle
      * @param dt time step
@@ -229,7 +225,6 @@ public:
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
         SplineType& spline,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
@@ -240,7 +235,7 @@ public:
 
         spline.template update_1d_splines<dir>(posNew, infra.geometry_data().ProbLo(dir),
                                                1.0 / infra.geometry_data().CellSize(dir));
-        ParticleMeshCoupling::accumulate_j<dir>(spline, chargeWeight, dx, jA);
+        ParticleMeshCoupling::accumulate_j<dir>(spline, chargeWeight, jA);
 
         pos[dir] = posNew;
     }
@@ -393,7 +388,6 @@ public:
      * @param spline object containing the values of non-zero grid splines at the particle
      * position
      * @param bfields temporary array to store the values of the integrated B field
-     * @p dx cell size in every direction. Unused in this function.
      * @param jA array of J density coefficients (dual face dofs)
      * @param bA array of B field coefficients (primal face dofs)
      * @param chargeOverMass (q/m)_p ratio
@@ -407,7 +401,6 @@ public:
         ComputationalDomain const& /*compDom*/,
         SplineType& spline,
         amrex::GpuArray<amrex::Real, 2>& bfields,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const /*dx*/,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -492,7 +485,6 @@ public:
      * @param infra computational domain
      * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param dx cell size in every direction
      * @param jA array of J density coefficients (dual face dofs)
      * @param bA array of B field coefficients (primal face dofs)
      * @param chargeOverMass (q/m)_p ratio
@@ -506,7 +498,6 @@ public:
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
         SplineType& spline,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -517,34 +508,34 @@ public:
 
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
-        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                          chargeWeight, 0.5 * dt);
+        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                          0.5 * dt);
 #if AMREX_SPACEDIM == 3
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                          chargeWeight, 0.5 * dt);
-        apply_h_p_i<zDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                          chargeWeight, dt);
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                          chargeWeight, 0.5 * dt);
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                          0.5 * dt);
+        apply_h_p_i<zDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                          dt);
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                          0.5 * dt);
 
 #elif AMREX_SPACEDIM == 2
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                          chargeWeight, 0.5 * dt);
-        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                                chargeWeight, dt);
-        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                          chargeWeight, 0.5 * dt);
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                          0.5 * dt);
+        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                                dt);
+        apply_h_p_i<yDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                          0.5 * dt);
 
 #elif AMREX_SPACEDIM == 1
-        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                                chargeWeight, 0.5 * dt);
-        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                                chargeWeight, dt);
-        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                                chargeWeight, 0.5 * dt);
+        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                                0.5 * dt);
+        apply_h_p_i_euler<zDir>(vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                                dt);
+        apply_h_p_i_euler<yDir>(vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                                0.5 * dt);
 #endif
-        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, dx, jA, bA, chargeOverMass,
-                          chargeWeight, 0.5 * dt);
+        apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
+                          0.5 * dt);
     }
 
     /**
@@ -556,7 +547,6 @@ public:
      * @param infra computational domain
      * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param dx cell size in every direction
      * @param jA array of J density coefficients (dual face dofs)
      * @param bA array of B field coefficients (primal face dofs)
      * @param chargeOverMass (q/m)_p ratio
@@ -571,7 +561,6 @@ public:
         amrex::GpuArray<amrex::Real, vdim>& u,
         ComputationalDomain const& infra,
         SplineType& spline,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -591,9 +580,9 @@ public:
 
 #if AMREX_SPACEDIM == 3
 
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 
         apply_h_p_rel_u(u, spline, bA, chargeOverMass, dt, gamma);
 
@@ -601,14 +590,14 @@ public:
         vel[yDir] = u[yDir] / gamma;
         vel[zDir] = u[zDir] / gamma;
 
-        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 
 #elif AMREX_SPACEDIM == 2
 
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
 
         apply_h_p_rel_u(u, spline, bA, chargeOverMass, dt, gamma);
@@ -618,12 +607,12 @@ public:
         vel[zDir] = u[zDir] / gamma;
 
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 
 #elif AMREX_SPACEDIM == 1
 
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<yDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
 
@@ -635,7 +624,7 @@ public:
 
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<yDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 #endif
     }
 
@@ -648,7 +637,6 @@ public:
      * @param infra computational domain
      * @param spline object containing the values of non-zero grid splines at the particle
      * position
-     * @param dx cell size in every direction
      * @param jA array of J density coefficients (dual face dofs)
      * @param bA array of B field coefficients (primal face dofs)
      * @param chargeOverMass (q/m)_p ratio
@@ -662,7 +650,6 @@ public:
         amrex::GpuArray<amrex::Real, vdim>& vel,
         ComputationalDomain const& infra,
         SplineType& spline,
-        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& jA,
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& bA,
         amrex::Real const chargeOverMass,
@@ -673,31 +660,31 @@ public:
 
 #if AMREX_SPACEDIM == 3
 
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 
         apply_h_p_nested_rot(vel, spline, bA, chargeOverMass, dt);
 
-        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<zDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 
 #elif AMREX_SPACEDIM == 2
 
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
 
         apply_h_p_nested_rot(vel, spline, bA, chargeOverMass, dt);
 
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<yDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 
 #elif AMREX_SPACEDIM == 1
 
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<yDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
 
@@ -705,7 +692,7 @@ public:
 
         apply_h_p_i_nested_d_euler<zDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
         apply_h_p_i_nested_d_euler<yDir>(vel, spline, jA, chargeWeight, 0.5 * dt);
-        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, dx, jA, chargeWeight, 0.5 * dt);
+        apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
 #endif
     }
 
@@ -821,20 +808,20 @@ public:
 
                         if constexpr (splittingScheme == SplittingScheme::HamiltonianSplittingExact)
                         {
-                            apply_h_p_exact(pos, vel, infra, spline, infra.cell_size_array(), jA,
-                                            bA, chargeOverMass, chargeWeight, dt);
+                            apply_h_p_exact(pos, vel, infra, spline, jA, bA, chargeOverMass,
+                                            chargeWeight, dt);
                         }
                         else if constexpr (splittingScheme ==
                                            SplittingScheme::HamiltonianSplittingNestedRelativistic)
                         {
-                            apply_h_p_nested_rel(pos, vel, infra, spline, infra.cell_size_array(),
-                                                 jA, bA, chargeOverMass, chargeWeight, dt, c);
+                            apply_h_p_nested_rel(pos, vel, infra, spline, jA, bA, chargeOverMass,
+                                                 chargeWeight, dt, c);
                         }
                         else if constexpr (splittingScheme ==
                                            SplittingScheme::HamiltonianSplittingNested)
                         {
-                            apply_h_p_nested(pos, vel, infra, spline, infra.cell_size_array(), jA,
-                                             bA, chargeOverMass, chargeWeight, dt);
+                            apply_h_p_nested(pos, vel, infra, spline, jA, bA, chargeOverMass,
+                                             chargeWeight, dt);
                         }
                         AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = pos[0],
                                      ptd.rdata(ii.m_iposy)[pp] = pos[1],

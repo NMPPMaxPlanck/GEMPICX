@@ -202,7 +202,7 @@ public:
         // Adding AMREX_SPACEDIM individual particles ends here
 
         QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
-            hypreParticleDivGradV(infra, deRham);
+            hypreParticleDivGradV(infra);
 
         hypreParticleDivGradV.push_particles_and_correct_div_j(J, phiCorr, ions, dt);
 

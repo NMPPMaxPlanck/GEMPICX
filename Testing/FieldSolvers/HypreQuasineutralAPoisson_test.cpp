@@ -90,7 +90,7 @@ public:
                                                         HodgeScheme::FDHodge);
 
         QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ> hyprePoissonA(
-            infra, deRham);
+            infra);
 
         DeRhamField<Grid::dual, Space::face> J(deRham, m_funcJ);
         DeRhamField<Grid::dual, Space::face> A(deRham);
