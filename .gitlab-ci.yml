@@ -367,7 +367,7 @@ pages:
         compare_to: $CI_COMMIT_BEFORE_SHA
   script:
     - configure_build "--preset documentation" 1
-    - mv build/documentation/sphinx/ public/
+    - mv build/sphinx/ public/
   needs: []
   artifacts:
     paths:
