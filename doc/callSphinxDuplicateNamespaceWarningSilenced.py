@@ -23,7 +23,7 @@ def removeDuplicateNamespaceWarnings(err: str) -> tuple[str, int]:
   # ... and their corresponding regex OR pattern
   nsRegex = '('+'|'.join(namespaces)+')'
   
-  duplicateIDPattern = re.compile(rf'\n?[^\n]*CRITICAL: Duplicate ID: "namespace[^"]*{nsRegex}"\.[^\n]*')
+  duplicateIDPattern = re.compile(rf'\n?[^\n]*(CRITICAL|ERROR): Duplicate ID: "namespace[^"]*{nsRegex}"\.?[^\n]*')
   duplicateTargetNamePattern = re.compile(rf'\n?[^\n]*WARNING: Duplicate explicit target name: "namespace[^"]*?{nsRegex}"\.[^\n]*')
   duplicateCPPTypePattern = re.compile(rf"\n?[^\n]*WARNING: Duplicate C\+\+ declaration[^\n]*\nDeclaration is '\.\. cpp:type:: {nsRegex}'\.[^\n]*")
 
