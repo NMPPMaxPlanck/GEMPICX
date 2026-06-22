@@ -301,6 +301,9 @@ build-test_mac_3D:
 # Test that merge requests are "clean", i.e. with the proper style
 style-test_cpu_3D:
   image: debian:stable-slim
+  tags:
+    - cpu
+  stage: test
   rules:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
   before_script:
@@ -322,10 +325,34 @@ style-test_cpu_3D:
     - git diff --exit-code
   # needs: ["build-test_clang_cpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 
-pages:
+.documentation:
   image: ubuntu
   tags:
     - cpu
+  before_script:
+    - !reference [default,before_script]
+    - apt-get update
+    - apt-get install -y python3 python3-venv git cmake
+    - apt-get install -y doxygen
+    - apt-get install -y wget curl
+    - wget https://github.com/jgm/pandoc/releases/download/3.5/pandoc-3.5-1-amd64.deb
+    - dpkg -i pandoc-3.5-1-amd64.deb
+    - python3 -m venv ./venv
+    - source ./venv/bin/activate
+    - pip3 install sphinx breathe sphinx_rtd_theme
+
+warning-check_documentation:
+  extends: .documentation
+  stage: test
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^master$/
+  allow_failure: true
+  script:
+    - configure_build "--preset documentation" 1
+    - '! grep -E "warning:" build.err'
+
+pages:
+  extends: .documentation
   stage: deploy
   rules:
     - if: $BUILD_DOCUMENTATION == "true"
@@ -338,24 +365,8 @@ pages:
           - doc/**/*
           - Src/**/*
         compare_to: $CI_COMMIT_BEFORE_SHA
-  before_script:
-    - !reference [default,before_script]
-    - apt-get update
-    - apt-get install -y python3 python3-venv git cmake
-    - apt-get install -y doxygen
-    - apt-get install -y wget curl
-    - wget https://github.com/jgm/pandoc/releases/download/3.5/pandoc-3.5-1-amd64.deb
-    - dpkg -i pandoc-3.5-1-amd64.deb
-    - python3 -m venv ./venv
-    - source ./venv/bin/activate
-    - pip3 install sphinx breathe sphinx_rtd_theme
   script:
-    - start_details configure "CMake Configure Step"
-    - cmake --preset documentation
-    - end_details configure
-    - start_details build "CMake Build Step"
-    - cmake --build ./build/documentation
-    - end_details build
+    - configure_build "--preset documentation" 1
     - mv build/documentation/sphinx/ public/
   needs: []
   artifacts:

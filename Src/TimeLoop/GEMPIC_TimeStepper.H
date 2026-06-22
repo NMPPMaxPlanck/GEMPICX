@@ -34,9 +34,7 @@ namespace Gempic
 class DiscreteTime
 {
 public:
-    //!@cond EXCLUDE_API_DOC
     DiscreteTime(amrex::Real dt, size_t finalStep, size_t initialStep = 0);
-    //!@endcond
     //! Final time
     amrex::Real final() const;
     //! Initial time
@@ -52,7 +50,7 @@ public:
     //! Index identifier of the final state
     size_t const& final_step() const;
 
-    //! Returns true if @ref DiscreteTime::current_step \$f\leq\f$ @ref DiscreteTime::final_step
+    //! Returns true if @ref DiscreteTime::current_step <= @ref DiscreteTime::final_step
     bool continue_simulation() const;
     //! Advance the current step by one (\f$n \leftarrow n + 1\f$)
     void step();
