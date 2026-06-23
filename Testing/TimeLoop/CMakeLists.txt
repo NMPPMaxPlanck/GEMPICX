@@ -8,13 +8,29 @@ target_sources(GtestTests PRIVATE
     )
 
 add_executable(
+  TimeStepperBase_test
+  TimeStepperBase_test.cpp)
+
+target_link_libraries(
+  TimeStepperBase_test
+  GEMPICX)
+
+add_executable(
   TimeStepper_test
   TimeStepper_test.cpp)
 
 target_link_libraries(
   TimeStepper_test
-  GEMPICX_TIMESTEPPER)
+  GEMPICX)
+
+if(GEMPIC_USE_CUDA)
+  setup_target_for_cuda_compilation(TimeStepper_test)
+endif()
 
 add_test(
-  NAME TS_test
-  COMMAND TimeStepper_test TSTest00)
+  NAME TimeStepperBase_test
+  COMMAND TimeStepperBase_test TSBTest00)
+
+add_test(
+  NAME TimeStepper_test
+  COMMAND TimeStepper_test)

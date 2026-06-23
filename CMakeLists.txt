@@ -62,6 +62,7 @@ include(cmake/gempic_FetchContent_Declare.cmake)
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
 
+set(HDF5_PREFER_PARALLEL TRUE)
 find_package(HDF5 COMPONENTS C)
 
 include(cmake/gempic_AMReXConfig.cmake)

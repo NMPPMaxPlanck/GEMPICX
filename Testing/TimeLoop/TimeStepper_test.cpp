@@ -6,56 +6,11 @@
 #include <fstream>
 #include <iostream>
 
+#include <AMReX.H>
+#include <AMReX_ParallelDescriptor.H>
+
+#include "GEMPIC_TestRealValue.H"
 #include "GEMPIC_TimeStepper.H"
-
-/** Example of a "physical object" class
- *
- * In general holds some physically meaningful data structure, along with IO functionality.
- * For this simple example, a single real number
- */
-
-class RealValue
-{
-private:
-    double m_value;
-
-public:
-    void set (double const newValue) { m_value = newValue; }
-    double value () const { return m_value; }
-
-    int read(std::filesystem::path const fname);
-    int write(std::filesystem::path const fname) const;
-    int write_diagnostics(std::filesystem::path const fname) const;
-    std::string extension () const { return std::string("txt"); }
-};
-
-int RealValue::read (std::filesystem::path const fname)
-{
-    std::ifstream iFile;
-    iFile.open(fname, std::ios::in);
-    iFile >> m_value;
-    iFile.close();
-    return EXIT_SUCCESS;
-}
-
-int RealValue::write (std::filesystem::path const fname) const
-{
-    std::ofstream oFile;
-    oFile.open(fname, std::ios::out);
-    oFile << m_value;
-    oFile.close();
-    return EXIT_SUCCESS;
-}
-
-int RealValue::write_diagnostics (std::filesystem::path const fname) const
-{
-    std::cout << "current sum is " << m_value << std::endl;
-    std::ofstream oFile;
-    oFile.open(fname, std::ios::out);
-    oFile << m_value;
-    oFile.close();
-    return EXIT_SUCCESS;
-}
 
 /** Example "dynamical system" object
  *
@@ -64,7 +19,7 @@ int RealValue::write_diagnostics (std::filesystem::path const fname) const
  * The purpose is to have a very basic example based on `TimeStepper` functionality.
  */
 
-class HarmonicSeries : public TimeStepperBase
+class HarmonicSeries : public Gempic::TimeStepper
 {
 private:
     // The dynamical system will be described by a collection of different meaningful data
@@ -72,10 +27,7 @@ private:
     RealValue m_sum;
 
 public:
-    HarmonicSeries(std::string const simulationName) : TimeStepperBase(simulationName)
-    {
-        m_sum.set(0);
-    }
+    HarmonicSeries() : Gempic::TimeStepper() { m_sum.set(0); }
     int initialize() override;
     int generate_initial_condition() override;
     int step() override;
@@ -96,7 +48,8 @@ int HarmonicSeries::initialize ()
 
     // model dependent
     // register model data for IO
-    auto registryAddResult = this->get_registry().add_data_structure(&m_sum, "sum");
+    auto registryAddResult = this->get_registry().add_data_structure(
+        &m_sum, std::string("sum") + std::to_string(amrex::ParallelDescriptor::MyProc()));
 
     // model independent
     // call generic initialization
@@ -143,24 +96,14 @@ int HarmonicSeries::finalize ()
 
 int main (int argc, char* argv[]) // generic
 {
-    /*****/
-    /// read simulation name
-    if (argc != 2)
+    amrex::Initialize(argc, argv);
     {
-        std::cout << "Usage: " << argv[0] << " <simulation_name>" << std::endl;
-        return EXIT_FAILURE;
+        /// create appropriate TimeStepper
+        HarmonicSeries cc;
+
+        /// execute TimeStepper
+        cc.run();
     }
-    std::string const simulationName(argv[1]);
-    /*****/
-
-    // FIXME: misc initialization (MPI, AMReX, etc)
-
-    /// create appropriate TimeStepper object with provided simname
-    HarmonicSeries cc(simulationName);
-
-    /// execute TimeStepper
-    cc.run();
-
-    // FIXME: clean up (MPI, AMReX, etc)
+    amrex::Finalize();
     return EXIT_SUCCESS;
 }
