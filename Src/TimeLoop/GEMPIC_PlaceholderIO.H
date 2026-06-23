@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstdint>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -31,70 +32,95 @@ inline int handle_io_call (int const callResult, std::string const message)
     return callResult;
 }
 
-class RegistryElement
+class RegistryElementBase
 {
 public:
     virtual int read(std::filesystem::path const) = 0;
     virtual int write(std::filesystem::path const) = 0;
     virtual int write_diagnostics(std::filesystem::path const) = 0;
-    virtual ~RegistryElement() {}
+    virtual ~RegistryElementBase() {}
 };
 
 template <typename T>
-concept fitsRegistryElement = requires(T t, std::filesystem::path const fname) {
+concept RegistryElement = requires(T t, std::filesystem::path const fname) {
     { t.read(fname) } -> std::same_as<int>;
     { t.write(fname) } -> std::same_as<int>;
     { t.write_diagnostics(fname) } -> std::same_as<int>;
-    { t.extension() } -> std::same_as<std::string>;
 };
 
-template <fitsRegistryElement T>
-class RegistryElementImpl : public RegistryElement
+template <typename T>
+concept FreeFormIOCapable = requires(T t, std::filesystem::path const fname) {
+    { free_form_read(t, fname) } -> std::same_as<int>;
+    { free_form_write(t, fname) } -> std::same_as<int>;
+    { free_form_write_diagnostics(t, fname) } -> std::same_as<int>;
+};
+
+template <RegistryElement T>
+class RegistryElementImpl : public RegistryElementBase
 {
 private:
     T* const m_dataStructure;
 
 public:
     RegistryElementImpl(T* const inDs) : m_dataStructure(inDs) {}
+    int read (std::filesystem::path const fname) final { return m_dataStructure->read(fname); }
+    int write (std::filesystem::path const fname) final { return m_dataStructure->write(fname); }
+    int write_diagnostics (std::filesystem::path const fname) final
+    {
+        return m_dataStructure->write_diagnostics(fname);
+    }
+};
+
+template <FreeFormIOCapable T>
+class RegistryElementFreeFormImpl : public RegistryElementBase
+{
+private:
+    T* m_dataStructure;
+
+public:
+    RegistryElementFreeFormImpl(T* inDs) : m_dataStructure(inDs) {}
     int read (std::filesystem::path const fname) final
     {
-        std::filesystem::path tempPath(fname);
-        tempPath += "." + m_dataStructure->extension();
-        return m_dataStructure->read(tempPath);
+        return free_form_read(*m_dataStructure, fname);
     }
     int write (std::filesystem::path const fname) final
     {
-        std::filesystem::path tempPath(fname);
-        tempPath += "." + m_dataStructure->extension();
-        return m_dataStructure->write(tempPath);
+        return free_form_write(*m_dataStructure, fname);
     }
     int write_diagnostics (std::filesystem::path const fname) final
     {
-        std::filesystem::path tempPath(fname);
-        tempPath += "." + m_dataStructure->extension();
-        return m_dataStructure->write_diagnostics(tempPath);
+        return free_form_write_diagnostics(*m_dataStructure, fname);
     }
 };
 
 class Registry
 {
 private:
-    std::vector<RegistryElement*> m_ds;
+    std::vector<std::unique_ptr<RegistryElementBase>> m_ds;
     std::vector<std::string> m_name;
 
 public:
     Registry() {}
     ~Registry()
     {
-        for (auto* ds : m_ds) delete ds;
         m_ds.clear();
         m_name.clear();
     }
-    template <fitsRegistryElement T>
+
+    template <RegistryElement T>
     int add_data_structure (T* const inDs, std::string const name)
     {
-        RegistryElement* obj = new RegistryElementImpl<T>(inDs);
-        m_ds.push_back(obj);
+        std::unique_ptr<RegistryElementBase> obj(new RegistryElementImpl<T>(inDs));
+        m_ds.push_back(std::move(obj));
+        m_name.push_back(name);
+        return EXIT_SUCCESS;
+    }
+
+    template <FreeFormIOCapable T>
+    int add_data_structure (T* inDs, std::string const name)
+    {
+        std::unique_ptr<RegistryElementBase> obj(new RegistryElementFreeFormImpl<T>(inDs));
+        m_ds.push_back(std::move(obj));
         m_name.push_back(name);
         return EXIT_SUCCESS;
     }

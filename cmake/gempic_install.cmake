@@ -125,7 +125,7 @@ macro(gempic_install_export_targets)
     set(HYPRE_INSTALL_DIR ${GEMPICX_LIBDIR}/cmake/HYPRE
         CACHE PATH "Set by GEMPICX install" FORCE)
   endif()
-  
+
   install(
     EXPORT GEMPICXTargets
     NAMESPACE GEMPICX::
