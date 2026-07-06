@@ -458,7 +458,7 @@ public:
                 auto const ii = particleSpecies->get_data_indices();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsARho;
-                for (int cc = 0; cc < vdim; cc++)
+                for (int cc = 0; cc < static_cast<int>(vdim); cc++)
                 {
                     eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[particleGrid].array();
                 }
@@ -481,13 +481,13 @@ public:
             }
         }
 
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             eCoeffsRho.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
         }
 
         std::array<decltype(eCoeffsRho.m_data[0].arrays()), vdim> eCoeffsArrsRho;
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             eCoeffsArrsRho[ndir] = (eCoeffsRho.m_data[ndir]).arrays();
         }
@@ -552,7 +552,7 @@ public:
         int AMREX_D_DECL(iiTemp, jjTemp, kkTemp);
         int component;
 
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ1f[xDir][ndir]; ++ii),
                                 for (int jj = 0; jj < nWtsXYZ1f[yDir][ndir]; ++jj),
@@ -654,7 +654,7 @@ public:
                 //amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsAJcrosscurl;
 
-                for (int cc = 0; cc < vdim; cc++)
+                for (int cc = 0; cc < static_cast<int>(vdim); cc++)
                 {
                     eCoeffsAJcrosscurl[cc] = (eCoeffsJcrosscurl.m_data[cc])[particleGrid].array();
                 }
@@ -683,13 +683,13 @@ public:
             }
         }
 
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             eCoeffsJcrosscurl.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
         }
 
         std::array<decltype(eCoeffsJcrosscurl.m_data[0].arrays()), vdim> eCoeffsArrsJcrosscurl;
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             eCoeffsArrsJcrosscurl[ndir] = (eCoeffsJcrosscurl.m_data[ndir]).arrays();
         }
@@ -774,7 +774,7 @@ public:
         int AMREX_D_DECL(iiTemp, jjTemp, kkTemp);
         int component;
 
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ1f[xDir][ndir]; ++ii),
                                 for (int jj = 0; jj < nWtsXYZ1f[yDir][ndir]; ++jj),
@@ -966,7 +966,7 @@ public:
                 auto const ii = particleSpecies->get_data_indices();
 
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsARho;
-                for (int cc = 0; cc < vdim; cc++)
+                for (int cc = 0; cc < static_cast<int>(vdim); cc++)
                 {
                     eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[particleGrid].array();
                 }
@@ -989,7 +989,7 @@ public:
             }
         }
 
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             eCoeffsRho.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
         }
@@ -1070,10 +1070,9 @@ public:
                 auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
                 auto const ii = particleSpecies->get_data_indices();
 
-                amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsARho;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsAJcrosscurl;
-                for (int cc = 0; cc < vdim; cc++)
+                for (int cc = 0; cc < static_cast<int>(vdim); cc++)
                 {
                     eCoeffsARho[cc] = (eCoeffsRho.m_data[cc])[particleGrid].array();
                     eCoeffsAJcrosscurl[cc] = (eCoeffsJcrosscurl.m_data[cc])[particleGrid].array();
@@ -1100,7 +1099,7 @@ public:
                     });
             }
         }
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             eCoeffsRho.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
             eCoeffsJcrosscurl.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
@@ -1108,7 +1107,7 @@ public:
         }
         std::array<decltype(eCoeffsRho.m_data[0].arrays()), vdim> eCoeffsArrsRho;
         std::array<decltype(eCoeffsJcrosscurl.m_data[0].arrays()), vdim> eCoeffsArrsJcrosscurl;
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             eCoeffsArrsRho[ndir] = (eCoeffsRho.m_data[ndir]).arrays();
             eCoeffsArrsJcrosscurl[ndir] = (eCoeffsJcrosscurl.m_data[ndir]).arrays();
@@ -1484,7 +1483,7 @@ public:
         int AMREX_D_DECL(iiTemp, jjTemp, kkTemp);
         int component;
 
-        for (int ndir = 0; ndir < vdim; ++ndir)
+        for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
             int in = (ndir == xDir);
             int jn = (ndir == yDir);
@@ -1593,7 +1592,7 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt)
     {
-        for (int comp = 0; comp < vdim; ++comp)
+        for (int comp = 0; comp < static_cast<int>(vdim); ++comp)
         {
             J.m_data[comp].setVal(0.0);
         }
@@ -1612,7 +1611,7 @@ public:
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
 
-                for (int cc = 0; cc < vdim; cc++)
+                for (int cc = 0; cc < static_cast<int>(vdim); cc++)
                 {
                     jA[cc] = (J.m_data[cc])[pti].array();
                     eA[cc] = (E.m_data[cc])[pti].array();
@@ -1663,7 +1662,7 @@ public:
         std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoVec;
         std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoMassVec;
 
-        for (int i = 0; i < particles.size(); i++)
+        for (int i = 0; i < static_cast<int>(particles.size()); i++)
         {
             rhoVec.emplace_back(rho.m_deRham);
             rhoMassVec.emplace_back(rho.m_deRham);
@@ -1689,7 +1688,7 @@ public:
             amrex::Real ninv = 1.0 / GEMPIC_D_MULT(m_infra.m_nCell[xDir], m_infra.m_nCell[yDir],
                                                    m_infra.m_nCell[zDir]);
 
-            for (int i = 0; i < particles.size(); i++)
+            for (int i = 0; i < static_cast<int>(particles.size()); i++)
             {
                 rhoSum[i] = rhoVec[i].m_data.sum_unique(0, false, m_infra.geometry().periodicity());
                 rhoMassSum[i] =
@@ -1745,8 +1744,6 @@ public:
                 auto const ptd = pti.GetParticleTile().getParticleTileData();
                 auto const ii = particleSpecies->get_data_indices();
 
-                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
-
                 amrex::ParallelFor(np,
                                    [=] AMREX_GPU_DEVICE(long pp)
                                    {
@@ -1754,7 +1751,7 @@ public:
                                            ptd.rdata(ii.m_ivelx)[pp], ptd.rdata(ii.m_ively)[pp],
                                            ptd.rdata(ii.m_ivelz)[pp]};
 
-                                       for (int i = 0; i < vdim; i++)
+                                       for (int i = 0; i < static_cast<int>(vdim); i++)
                                        {
                                            vel[i] -= vAvg[index][i];
                                        }
@@ -1793,7 +1790,7 @@ public:
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> bA;
 
-                for (int cc = 0; cc < vdim; cc++)
+                for (int cc = 0; cc < static_cast<int>(vdim); cc++)
                 {
                     eA[cc] = (E.m_data[cc])[pti].array();
                     bA[cc] = (B.m_data[cc])[pti].array();

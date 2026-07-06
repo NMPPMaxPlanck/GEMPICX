@@ -1895,7 +1895,7 @@ void deposit_current_density (
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
-    for (int comp = 0; comp < vDim; ++comp)
+    for (int comp = 0; comp < static_cast<int>(vDim); ++comp)
     {
         J.m_data[comp].setVal(0.0);
     }
@@ -1911,7 +1911,7 @@ void deposit_current_density (
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
 
-            for (int cc = 0; cc < vDim; cc++)
+            for (int cc = 0; cc < static_cast<int>(vDim); cc++)
             {
                 jA[cc] = (J.m_data[cc])[pti].array();
             }
@@ -2018,7 +2018,7 @@ void deposit_rho_j_jcrossb_deldots (
 {
     BL_PROFILE("deposit_rho_j_jcrossb_deldots()");
     rho.m_data.setVal(0.0);
-    for (int comp = 0; comp < vDim; ++comp)
+    for (int comp = 0; comp < static_cast<int>(vDim); ++comp)
     {
         J.m_data[comp].setVal(0.0);
         jcrossB.m_data[comp].setVal(0.0);
@@ -2043,7 +2043,7 @@ void deposit_rho_j_jcrossb_deldots (
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> deldotsA;
 
             rhoA = rho.m_data[pti].array();
-            for (int cc = 0; cc < vDim; cc++)
+            for (int cc = 0; cc < static_cast<int>(vDim); cc++)
             {
                 jA[cc] = (J.m_data[cc])[pti].array();
                 bA[cc] = (B.m_data[cc])[pti].array();
@@ -2114,7 +2114,7 @@ inline void push_v_using_e (amrex::GpuArray<amrex::Real, vDim>& vel,
                             amrex::Real dt,
                             amrex::Real chargeByMass)
 {
-    for (int i = 0; i < vDim; i++)
+    for (int i = 0; i < static_cast<int>(vDim); i++)
     {
         vel[i] += chargeByMass * efield[i] * dt;
     }
@@ -2290,7 +2290,7 @@ void deposit_particle_current_gdec (
 
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
 
-            for (int cc = 0; cc < vDim; cc++)
+            for (int cc = 0; cc < static_cast<int>(vDim); cc++)
             {
                 jA[cc] = (J.m_data[cc])[particleGrid].array();
             }

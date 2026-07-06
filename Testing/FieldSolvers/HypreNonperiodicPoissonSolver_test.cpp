@@ -88,7 +88,6 @@ public:
 
         if (infra.geometry().isAllPeriodic())
         {
-            auto nGhost = phi.m_deRham->get_n_ghost();
             amrex::Real phiSum = phi.m_data.sum_unique(0, false, infra.geometry().periodicity());
             amrex::Real ninv =
                 1.0 / GEMPIC_D_MULT(infra.m_nCell[xDir], infra.m_nCell[yDir], infra.m_nCell[zDir]);
