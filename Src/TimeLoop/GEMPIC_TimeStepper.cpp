@@ -89,7 +89,7 @@ void Gempic::TimeStepper::write_current_iteration () const
     }
     amrex::ParallelDescriptor::Bcast(&ioProcessorIteration, 1,
                                      amrex::ParallelDescriptor::IOProcessorNumber());
-    assert(m_time.current_step() == ioProcessorIteration);
+    assert(static_cast<int64_t>(m_time.current_step()) == ioProcessorIteration);
     if (amrex::ParallelDescriptor::IOProcessor())
     {
         TimeStepperBase::write_current_iteration();

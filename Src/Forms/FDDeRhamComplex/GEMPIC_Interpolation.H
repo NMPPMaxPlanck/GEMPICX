@@ -760,7 +760,7 @@ void eval_form_component (
             bx, nComp,
             [=] AMREX_GPU_DEVICE(int i, int j, int k, int n)
             {
-                for (unsigned int evalInd{0}; evalInd < nEvals; ++evalInd)
+                for (int evalInd{0}; evalInd < nEvals; ++evalInd)
                 {
                     // evalshift is always given with respect to primal grid
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> rr = {

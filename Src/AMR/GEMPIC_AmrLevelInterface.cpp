@@ -30,9 +30,9 @@ void remove_duplicates (amrex::BoxList& bl)
     // O(N²) implementation; only use on small BoxLists from single box surfaces
     auto& boxes = bl.data(); // reference to underlying vector
 
-    for (size_t i = 0; i < boxes.size(); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(boxes.size()); ++i)
     {
-        for (size_t j = i + 1; j < boxes.size();)
+        for (size_t j = i + 1; j < static_cast<size_t>(boxes.size());)
         {
             if (boxes[i] == boxes[j])
             {
@@ -51,9 +51,9 @@ void remove_overlaps (amrex::BoxList& bl)
     // O(N²) implementation; only use on small BoxLists from single box surfaces
     auto& boxes = bl.data(); // reference to underlying vector
 
-    for (size_t i = 0; i < boxes.size(); ++i)
+    for (size_t i = 0; i < static_cast<size_t>(boxes.size()); ++i)
     {
-        for (size_t j = 0; j < boxes.size(); ++j)
+        for (size_t j = 0; j < static_cast<size_t>(boxes.size()); ++j)
         {
             if (j != i and boxes[i].contains(boxes[j]))
             {
