@@ -19,6 +19,82 @@ namespace Gempic
 {
 
 class H5GroupHandle;
+class DiscreteAxis
+{
+public:
+    enum IndexPosition
+    {
+        Cell,
+        Node
+    };
+
+    DiscreteAxis() = default;
+    AMREX_GPU_HOST_DEVICE
+    DiscreteAxis(amrex::Real domainLo,
+                 amrex::Real domainHi,
+                 int nCells,
+                 IndexPosition idxPosition,
+                 bool periodic = true);
+
+    AMREX_GPU_HOST_DEVICE amrex::Real min () const { return m_domainLo; }
+    AMREX_GPU_HOST_DEVICE amrex::Real max () const { return m_domainHi; }
+    AMREX_GPU_HOST_DEVICE amrex::Real length () const { return m_domainHi - m_domainLo; }
+    AMREX_GPU_HOST_DEVICE amrex::Real dx () const { return length() / n_cells(); }
+    AMREX_GPU_HOST_DEVICE int size () const { return m_degreesOfFreedom; }
+    AMREX_GPU_HOST_DEVICE int n_cells () const
+    {
+        return position() == IndexPosition::Cell ? size() : size() - 1;
+    }
+    AMREX_GPU_HOST_DEVICE bool is_periodic () const { return m_periodicity; }
+    AMREX_GPU_HOST_DEVICE IndexPosition position () const { return m_idxPosition; }
+    AMREX_GPU_HOST_DEVICE amrex::Real location (int idx) const
+    {
+        return m_domainLo + (m_offset + static_cast<amrex::Real>(idx)) * dx();
+    }
+
+    // clang-format off
+    /**
+     * @brief Describe a location on the axis with an index and the offset between the location and the index
+     */
+    // clang-format on
+    class Location
+    {
+    public:
+        AMREX_GPU_HOST_DEVICE int index () { return m_index; }
+        AMREX_GPU_HOST_DEVICE amrex::Real offset () { return m_offset; }
+
+    private:
+        friend class DiscreteAxis;
+        Location(int index, amrex::Real offset) : m_index{index}, m_offset{offset} {};
+        int m_index{};
+        amrex::Real m_offset{};
+    };
+    // clang-format off
+    /**
+     * @brief Calculate the nearest index to the right of @param x
+     *
+     * @return @ref IndexLocation Return the nearest index to the right of @param x.
+     */
+    // clang-format on
+    AMREX_GPU_HOST_DEVICE Location index (amrex::Real const& x) const
+    {
+        amrex::Real const normalizedPos = (x - location(0)) / dx();
+        int const index = std::ceil(normalizedPos);
+        amrex::Real const offset = location(index) - x;
+        return Location{index, offset};
+    };
+
+    bool operator==(DiscreteAxis const&) const = default;
+
+private:
+    amrex::Real m_domainLo{};
+    amrex::Real m_domainHi{};
+    int m_degreesOfFreedom{};
+    amrex::Real m_offset{};
+    IndexPosition m_idxPosition{};
+    bool m_periodicity{true};
+};
+
 // clang-format off
 /**
  * @class DiscreteGrid
@@ -31,13 +107,13 @@ class H5GroupHandle;
  *
  * Two independent definitions for axes are available depending on where in the cell a degree of freedom is positioned.
  *
- * @ref DiscreteGrid::Position Cell:
+ * @ref DiscreteAxis::IndexPosition Cell:
  * The degree of freedom is located in the center of a cell.
  * The interval of the cell is a closed interval at the lower boundary and an open interval on the upper boundary.
  *
  * @image html GEMPIC_DiscreteGridAxisCell.png
  *
- * @ref DiscreteGrid::Position Node:
+ * @ref DiscreteAxis::IndexPosition Node:
  * The degree of freedom is located on the cell nodes or on the boundaries of the cell.
  * Therefore size-2 cells in an axis have size-1 degrees of freedom.
  *
@@ -48,20 +124,15 @@ class H5GroupHandle;
 class DiscreteGrid
 {
 public:
-    enum Position //! Defines the location of the degree of freedom within a cell
-    {
-        Cell,
-        Node
-    };
     //!@cond EXCLUDE_API_DOC
     DiscreteGrid() = default;
     DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
                  std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
                  std::array<int, AMREX_SPACEDIM> nCells,
-                 std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
+                 std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition,
                  std::array<bool, AMREX_SPACEDIM> periodic = {AMREX_D_DECL(true, true, true)});
     DiscreteGrid(Io::Parameters& params,
-                 std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition);
+                 std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition);
     //!@endcond
     /**
      * @brief Calculate the location of the given index in the interval
@@ -71,22 +142,13 @@ public:
      * @param idx idx\f$\in[0,\f$ @ref DiscreteGrid::size - 1\f$]\f$
      */
     AMREX_GPU_HOST_DEVICE
-    amrex::Real location_1d (Direction dir, int idx) const
-    {
-        return min(dir) + (m_offset[dir] + static_cast<amrex::Real>(idx)) * dx(dir);
-    }
+    amrex::Real location_1d (Direction dir, int idx) const { return m_axes[dir].location(idx); }
     AMREX_GPU_HOST_DEVICE
     std::array<amrex::Real, AMREX_SPACEDIM> location (AMREX_D_DECL(int ix, int iy, int iz))
     {
-        std::array<amrex::Real, AMREX_SPACEDIM> loc{};
-        loc[0] = location_1d(Direction::xDir, ix);
-#if (AMREX_SPACEDIM > 1)
-        loc[1] = location_1d(Direction::yDir, iy);
-#endif
-#if (AMREX_SPACEDIM == 3)
-        loc[2] = location_1d(Direction::zDir, iz);
-#endif
-        return loc;
+        return std::array<amrex::Real, AMREX_SPACEDIM>{
+            AMREX_D_DECL(location_1d(Direction::xDir, ix), location_1d(Direction::yDir, iy),
+                         location_1d(Direction::zDir, iz))};
     }
     AMREX_GPU_HOST_DEVICE
     std::array<amrex::Real, AMREX_SPACEDIM> location (std::array<int, AMREX_SPACEDIM> const& idx)
@@ -95,66 +157,113 @@ public:
     }
     //! Lower domain boundary
     AMREX_GPU_HOST_DEVICE
-    amrex::Real min (Direction dir) const { return m_domainLo[dir]; }
-    std::array<amrex::Real, AMREX_SPACEDIM> min () const { return m_domainLo; }
+    amrex::Real min (Direction dir) const { return m_axes[dir].min(); }
+    std::array<amrex::Real, AMREX_SPACEDIM> min () const
+    {
+        std::array<amrex::Real, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
+        {
+            result[d] = m_axes[d].min();
+        }
+        return result;
+    }
     //! Upper domain boundary
     AMREX_GPU_HOST_DEVICE
-    amrex::Real max (Direction dir) const { return m_domainHi[dir]; }
-    std::array<amrex::Real, AMREX_SPACEDIM> max () const { return m_domainHi; }
+    amrex::Real max (Direction dir) const { return m_axes[dir].max(); }
+    std::array<amrex::Real, AMREX_SPACEDIM> max () const
+    {
+        std::array<amrex::Real, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
+        {
+            result[d] = m_axes[d].max();
+        }
+        return result;
+    }
     //! Length of the domain
     AMREX_GPU_HOST_DEVICE
-    amrex::Real length (Direction dir) const { return max(dir) - min(dir); }
+    amrex::Real length (Direction dir) const { return m_axes[dir].length(); }
     std::array<amrex::Real, AMREX_SPACEDIM> length () const
     {
-        std::array<amrex::Real, AMREX_SPACEDIM> l{};
-        for (size_t i = 0; i < l.size(); i++)
+        std::array<amrex::Real, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
         {
-            l[i] = length(static_cast<Direction>(i));
+            result[d] = m_axes[d].length();
         }
-        return l;
+        return result;
     }
     //! Width of a single cell
     AMREX_GPU_HOST_DEVICE
-    amrex::Real dx (Direction dir) const { return length(dir) / m_nCells[dir]; }
+    amrex::Real dx (Direction dir) const { return m_axes[dir].dx(); }
     std::array<amrex::Real, AMREX_SPACEDIM> dx () const
     {
-        std::array<amrex::Real, AMREX_SPACEDIM> dx{};
-        for (size_t i = 0; i < dx.size(); i++)
+        std::array<amrex::Real, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
         {
-            dx[i] = length(static_cast<Direction>(i));
+            result[d] = m_axes[d].dx();
         }
-        return dx;
+        return result;
     }
     //! Position of the degrees of freedom within a cell
     AMREX_GPU_HOST_DEVICE
-    DiscreteGrid::Position position (Direction dir) const { return m_idxPosition[dir]; }
-    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position () const { return m_idxPosition; }
+    DiscreteAxis::IndexPosition position (Direction dir) const { return m_axes[dir].position(); }
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> position () const
+    {
+        std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
+        {
+            result[d] = m_axes[d].position();
+        }
+        return result;
+    }
     //! Number of degrees of freedom in the domain
     AMREX_GPU_HOST_DEVICE
-    int size (Direction dir) const { return m_degreesOfFreedom[dir]; }
-    std::array<int, AMREX_SPACEDIM> size () const { return m_degreesOfFreedom; }
+    int size (Direction dir) const { return m_axes[dir].size(); }
+    std::array<int, AMREX_SPACEDIM> size () const
+    {
+        std::array<int, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
+        {
+            result[d] = m_axes[d].size();
+        }
+        return result;
+    }
+    //! Number of cells the domain is divided into
     AMREX_GPU_HOST_DEVICE
-    bool is_periodic (Direction dir) const { return m_periodicity[dir]; }
-    std::array<bool, AMREX_SPACEDIM> is_periodic () const { return m_periodicity; }
+    int n_cells (Direction dir) const { return m_axes[dir].n_cells(); }
+    std::array<int, AMREX_SPACEDIM> n_cells () const
+    {
+        std::array<int, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
+        {
+            result[d] = m_axes[d].n_cells();
+        }
+        return result;
+    }
+    //! Periodicity of the domain
+    AMREX_GPU_HOST_DEVICE
+    bool is_periodic (Direction dir) const { return m_axes[dir].is_periodic(); }
+    std::array<bool, AMREX_SPACEDIM> is_periodic () const
+    {
+        std::array<bool, AMREX_SPACEDIM> result{};
+        for (std::size_t d = 0; d < AMREX_SPACEDIM; ++d)
+        {
+            result[d] = m_axes[d].is_periodic();
+        }
+        return result;
+    }
+
+    AMREX_GPU_HOST_DEVICE DiscreteAxis const& axis (Direction dir) const { return m_axes[dir]; }
 
     bool operator==(DiscreteGrid const&) const = default;
 
     friend DiscreteGrid convert_dof_position(
-        DiscreteGrid const&, std::array<DiscreteGrid::Position, AMREX_SPACEDIM> const&);
-    friend void serialize(std::string const& label,
-                          DiscreteGrid const& grid,
-                          H5GroupHandle const& group);
+        DiscreteGrid const&, std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> const&);
 
 private:
-    std::array<amrex::Real, AMREX_SPACEDIM> m_domainLo{};
-    std::array<amrex::Real, AMREX_SPACEDIM> m_domainHi{};
-    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> m_idxPosition{};
-    std::array<amrex::Real, AMREX_SPACEDIM> m_offset{};
-    std::array<int, AMREX_SPACEDIM> m_degreesOfFreedom{};
-    std::array<int, AMREX_SPACEDIM> m_nCells{};
-    std::array<bool, AMREX_SPACEDIM> m_periodicity{};
+    std::array<DiscreteAxis, AMREX_SPACEDIM> m_axes{};
 };
 
+void serialize(std::string const& label, DiscreteGrid const& grid, H5GroupHandle const& group);
 void deserialize(std::string const& label, DiscreteGrid& grid, H5GroupHandle const& group);
 
 DiscreteGrid dof_on_node(DiscreteGrid const& grid);

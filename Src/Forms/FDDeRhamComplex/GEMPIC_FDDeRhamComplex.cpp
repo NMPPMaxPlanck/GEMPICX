@@ -19,9 +19,8 @@ FiniteDifferenceDeRhamSpaces::FiniteDifferenceDeRhamSpaces(
     m_integrator{integrator}
 {
     Io::Parameters params{};
-    m_grid = DiscreteGrid{params,
-                          {AMREX_D_DECL(DiscreteGrid::Position::Cell, DiscreteGrid::Position::Cell,
-                                        DiscreteGrid::Position::Cell)}};
+    m_grid = DiscreteGrid{
+        params, {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell, DiscreteAxis::Cell)}};
     amrex::IntVect maxGridSize;
     params.get("ComputationalDomain.maxGridSize", maxGridSize);
 

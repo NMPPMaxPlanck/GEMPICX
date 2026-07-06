@@ -11,40 +11,42 @@
 
 namespace Gempic
 {
+DiscreteAxis::DiscreteAxis(amrex::Real domainLo,
+                           amrex::Real domainHi,
+                           int nCells,
+                           IndexPosition idxPosition,
+                           bool periodic) :
+    m_domainLo{domainLo}, m_domainHi{domainHi}, m_idxPosition{idxPosition}, m_periodicity{periodic}
+{
+    switch (m_idxPosition)
+    {
+        case IndexPosition::Cell:
+            m_degreesOfFreedom = nCells;
+            m_offset = 0.5;
+            break;
+        case IndexPosition::Node:
+            m_degreesOfFreedom = nCells + 1;
+            m_offset = 0.0;
+            break;
+    }
+}
+
 //! @cond EXCLUDE_API_DOC
 DiscreteGrid::DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
                            std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
                            std::array<int, AMREX_SPACEDIM> nCells,
-                           std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition,
-                           std::array<bool, AMREX_SPACEDIM> periodicity) :
-    m_domainLo{domainLo},
-    m_domainHi{domainHi},
-    m_idxPosition{idxPosition},
-    m_nCells{nCells},
-    m_periodicity{periodicity}
+                           std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition,
+                           std::array<bool, AMREX_SPACEDIM> periodicity)
 {
-    for (int dir{0}; dir < AMREX_SPACEDIM; dir++)
+    for (int dir = 0; dir < AMREX_SPACEDIM; ++dir)
     {
-        switch (m_idxPosition[dir])
-        {
-            case Position::Cell:
-            {
-                m_degreesOfFreedom[dir] = nCells[dir];
-                m_offset[dir] = 0.5;
-                break;
-            }
-            case Position::Node:
-            {
-                m_degreesOfFreedom[dir] = nCells[dir] + 1;
-                m_offset[dir] = 0.0;
-                break;
-            }
-        };
+        m_axes[dir] = DiscreteAxis{domainLo[dir], domainHi[dir], nCells[dir], idxPosition[dir],
+                                   periodicity[dir]};
     }
 }
 
 DiscreteGrid::DiscreteGrid(Io::Parameters& params,
-                           std::array<DiscreteGrid::Position, AMREX_SPACEDIM> idxPosition)
+                           std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition)
 {
     // Initialize infrastructure:
     std::array<int, AMREX_SPACEDIM> nCells{};
@@ -134,7 +136,7 @@ void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandl
 
         H5AttributeHandle cellsAttribute{axis.h5id(), "nCells", H5AttributeHandle::Mode::Create,
                                          H5T_NATIVE_UINT64, space.h5id()};
-        size_t cells{static_cast<size_t>(grid.m_nCells[dir])};
+        size_t cells{static_cast<size_t>(grid.n_cells(dir))};
         H5Awrite(cellsAttribute.h5id(), H5T_NATIVE_UINT64, &cells);
 
         H5AttributeHandle periodicityAttribute{axis.h5id(), "periodicity",
@@ -158,7 +160,7 @@ void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle co
     H5GroupHandle gridGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::Create};
     std::array<amrex::Real, AMREX_SPACEDIM> domainLo;
     std::array<amrex::Real, AMREX_SPACEDIM> domainHi;
-    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position;
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> position;
     std::array<int, AMREX_SPACEDIM> nCells;
     std::array<bool, AMREX_SPACEDIM> periodicity;
 
@@ -187,7 +189,7 @@ void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle co
                                             H5T_NATIVE_INT, space.h5id()};
         int pos{};
         H5Aread(positionAttribute.h5id(), H5T_NATIVE_INT, &pos);
-        position[dir] = static_cast<DiscreteGrid::Position>(pos);
+        position[dir] = static_cast<DiscreteAxis::IndexPosition>(pos);
 
         H5AttributeHandle cellsAttribute{axis.h5id(), "nCells",
                                          Gempic::H5AttributeHandle::Mode::ReadWrite,
@@ -215,47 +217,53 @@ void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle co
 };
 
 DiscreteGrid convert_dof_position (
-    DiscreteGrid const& grid, std::array<DiscreteGrid::Position, AMREX_SPACEDIM> const& position)
+    DiscreteGrid const& grid,
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> const& position)
 {
-    return DiscreteGrid{grid.min(), grid.max(), grid.m_nCells, position, grid.is_periodic()};
+    std::array<int, AMREX_SPACEDIM> nCells{};
+    for (int d = 0; d < AMREX_SPACEDIM; ++d)
+    {
+        nCells[d] = grid.m_axes[d].n_cells();
+    }
+    return DiscreteGrid{grid.min(), grid.max(), nCells, position, grid.is_periodic()};
 }
 DiscreteGrid dof_on_node (DiscreteGrid const& grid)
 {
-    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> positions{AMREX_D_DECL(
-        DiscreteGrid::Position::Node, DiscreteGrid::Position::Node, DiscreteGrid::Position::Node)};
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> positions{
+        AMREX_D_DECL(DiscreteAxis::Node, DiscreteAxis::Node, DiscreteAxis::Node)};
     return convert_dof_position(grid, positions);
 }
 DiscreteGrid dof_on_cell_center (DiscreteGrid const& grid)
 {
-    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> positions{AMREX_D_DECL(
-        DiscreteGrid::Position::Cell, DiscreteGrid::Position::Cell, DiscreteGrid::Position::Cell)};
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> positions{
+        AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell, DiscreteAxis::Cell)};
     return convert_dof_position(grid, positions);
 }
 std::array<DiscreteGrid, 3> dof_on_edge (DiscreteGrid const& grid)
 {
-    std::array<std::array<DiscreteGrid::Position, AMREX_SPACEDIM>, 3> positions{};
+    std::array<std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM>, 3> positions{};
     for (int fieldDir = 0; fieldDir < 3; fieldDir++)
     {
         for (int gridDir = 0; gridDir < AMREX_SPACEDIM; gridDir++)
         {
-            positions[fieldDir][gridDir] = DiscreteGrid::Position::Node;
+            positions[fieldDir][gridDir] = DiscreteAxis::Node;
         }
     }
-    for (int i = 0; i < AMREX_SPACEDIM; i++) positions[i][i] = DiscreteGrid::Position::Cell;
+    for (int i = 0; i < AMREX_SPACEDIM; i++) positions[i][i] = DiscreteAxis::Cell;
     return {convert_dof_position(grid, positions[0]), convert_dof_position(grid, positions[1]),
             convert_dof_position(grid, positions[2])};
 };
 std::array<DiscreteGrid, 3> dof_on_face (DiscreteGrid const& grid)
 {
-    std::array<std::array<DiscreteGrid::Position, AMREX_SPACEDIM>, 3> positions{};
+    std::array<std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM>, 3> positions{};
     for (int fieldDir = 0; fieldDir < 3; fieldDir++)
     {
         for (int gridDir = 0; gridDir < AMREX_SPACEDIM; gridDir++)
         {
-            positions[fieldDir][gridDir] = DiscreteGrid::Position::Cell;
+            positions[fieldDir][gridDir] = DiscreteAxis::Cell;
         }
     }
-    for (int i = 0; i < AMREX_SPACEDIM; i++) positions[i][i] = DiscreteGrid::Position::Node;
+    for (int i = 0; i < AMREX_SPACEDIM; i++) positions[i][i] = DiscreteAxis::Node;
     return {convert_dof_position(grid, positions[0]), convert_dof_position(grid, positions[1]),
             convert_dof_position(grid, positions[2])};
 };
@@ -269,10 +277,10 @@ amrex::IndexType to_amrex_idx_type (DiscreteGrid const& discreteGrid)
     {
         switch (discreteGrid.position(static_cast<Direction>(i)))
         {
-            case DiscreteGrid::Position::Cell:
+            case DiscreteAxis::Cell:
                 idx.setType(i, amrex::CellIndexEnum::CELL);
                 break;
-            case DiscreteGrid::Position::Node:
+            case DiscreteAxis::Node:
                 idx.setType(i, amrex::CellIndexEnum::NODE);
                 break;
         }
