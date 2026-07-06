@@ -16,7 +16,7 @@ namespace Gempic
  */
 inline void overwrite_amrex_parser_defaults ()
 {
-    BL_PROFILE("Gempic::overwrite_amrex_parser_defaults()");
+    // reminder: this code block cannot be profiled because it is invoked during initialization
     amrex::ParmParse ppAmrex("amrex");
 
     // Abort the simulation when we run out of GPU memory

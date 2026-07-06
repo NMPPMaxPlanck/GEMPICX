@@ -223,7 +223,7 @@ build-test_clang_cpu_3D:
   script:
     - configure_build "--preset cpu-debug-3D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
     - run_ctest
-    - install_test clang++ clang
+    - install_test clang++ clang build install "-DCMAKE_CXX_FLAGS=-g -D_GLIBCXX_DEBUG"
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_2D:
@@ -232,7 +232,7 @@ build-test_clang_cpu_2D:
   script:
     - configure_build "--preset cpu-debug-2D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
     - run_ctest
-    - install_test clang++ clang
+    - install_test clang++ clang build install "-DCMAKE_CXX_FLAGS=-g -D_GLIBCXX_DEBUG"
   needs: ["build-test_gcc_3D"]
 
 build-test_clang_cpu_1D:
@@ -241,7 +241,7 @@ build-test_clang_cpu_1D:
   script:
     - configure_build "--preset cpu-debug-1D -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
     - run_ctest
-    - install_test clang++ clang
+    - install_test clang++ clang build install "-DCMAKE_CXX_FLAGS=-g -D_GLIBCXX_DEBUG"
   needs: ["build-test_gcc_3D"]
 
 build-test_fetchcontent_clang_cpu_3D:

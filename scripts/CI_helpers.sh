@@ -40,7 +40,7 @@ install_test () {
   c_compiler="${2:-mpicc}"
   build_dir="${3:-build}"
   relative_install_dir="${4:-install}"
-  test_flags="${5}"
+  test_flags=("${@:5}")  # capture all remaining args as array elements
 
   install_test_dir=Examples/BuildGEMPICXInstalled
   install_test_build_dir=$install_test_dir/$build_dir
@@ -50,7 +50,7 @@ install_test () {
   cmake --install $build_dir --prefix=$relative_install_dir
   end_details install
   start_details configure_build_install_test
-  cmake -S$install_test_dir -B$install_test_build_dir -DGEMPICX_ROOT=$(pwd)/$relative_install_dir -DCMAKE_CXX_COMPILER=$cxx_compiler -DCMAKE_C_COMPILER=$c_compiler $test_flags
+  cmake -S$install_test_dir -B$install_test_build_dir -DGEMPICX_ROOT=$(pwd)/$relative_install_dir -DCMAKE_CXX_COMPILER=$cxx_compiler -DCMAKE_C_COMPILER=$c_compiler "${test_flags[@]}"
   cmake --build $install_test_build_dir
   end_details configure_build_install_test
   ctest --output-on-failure --no-tests=error --test-dir $install_test_build_dir
@@ -63,7 +63,7 @@ install_test_gpu () {
   c_compiler="$2"
   build_dir="$3"
   install_dir="$4"
-  test_flags="$5 -DUSE_CUDA=ON"
+  test_flags=("${@:5}" "-DUSE_CUDA=ON")
 
-  install_test "$cxx_compiler" "$c_compiler" "$build_dir" "$install_dir" "$test_flags"
+  install_test "$cxx_compiler" "$c_compiler" "$build_dir" "$install_dir" "${test_flags[@]}"
 }
