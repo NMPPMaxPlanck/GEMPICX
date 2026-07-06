@@ -23,7 +23,7 @@ TEST(BSplineExample, CardinalBSpline)
 }
 
 template <size_t nIntervals>
-void check_continuity (std::function<amrex::GpuArray<amrex::Real, nIntervals>(amrex::Real)> bSpline,
+void check_continuity (std::function<std::array<amrex::Real, nIntervals>(amrex::Real)> bSpline,
                        std::pair<amrex::Real, amrex::Real> boundaryValues = {0.0, 0.0},
                        amrex::Real tolerance = 1e-15)
 {
@@ -70,7 +70,7 @@ TEST(BSpline, Continuity)
 }
 
 template <size_t nIntervals>
-double integrate (std::function<amrex::GpuArray<double, nIntervals>(double)> bSpline)
+double integrate (std::function<std::array<double, nIntervals>(double)> bSpline)
 {
     double x{};
     size_t N{1000};
@@ -78,7 +78,7 @@ double integrate (std::function<amrex::GpuArray<double, nIntervals>(double)> bSp
     double res{};
 
     // Sxi[i] is S^d(x+i) as declared in the documentation
-    amrex::GpuArray<double, nIntervals> sxi{};
+    std::array<double, nIntervals> sxi{};
     while (x < 1.0)
     {
         sxi = bSpline(x + dx);

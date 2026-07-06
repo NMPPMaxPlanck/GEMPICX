@@ -2,8 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
-#ifndef SPLINE_CLASS_
-#define SPLINE_CLASS_
+#ifndef GEMPIC_SPLINE_CLASS_
+#define GEMPIC_SPLINE_CLASS_
 
 #include "GEMPIC_BSpline.H"
 #include "GEMPIC_DeRhamComplex.H"
@@ -549,7 +549,7 @@ public:
     AMREX_GPU_HOST_DEVICE constexpr void spline_eval (amrex::Real const xRef,
                                                       amrex::GpuArray<amrex::Real, length>& s) const
     {
-        s = cardinal_b_splines<degree, length>(xRef);
+        s = cardinal_b_splines<degree, length, amrex::GpuArray<amrex::Real, length>>(xRef);
     }
 };
 
@@ -846,7 +846,8 @@ public:
     AMREX_GPU_HOST_DEVICE inline constexpr void primitive_eval (
         amrex::Real const xRef, amrex::GpuArray<amrex::Real, length>& s) const
     {
-        s = cardinal_b_splines_primitive<degree, length>(xRef);
+        s = cardinal_b_splines_primitive<degree, length, amrex::GpuArray<amrex::Real, length>>(
+            xRef);
     }
 };
 
@@ -957,7 +958,7 @@ public:
     AMREX_GPU_HOST_DEVICE inline constexpr void first_derivative_eval (
         amrex::Real const xRef, amrex::GpuArray<amrex::Real, length>& s) const
     {
-        s = cardinal_b_splines_first_derivative<degree>(xRef);
+        s = cardinal_b_splines_first_derivative<degree, amrex::GpuArray<amrex::Real, length>>(xRef);
     }
 
     /**

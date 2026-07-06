@@ -26,16 +26,20 @@ TEST(DiscreteGridTest, Node)
     parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
 
     DiscreteGrid discreteGrid{
-        parameters, {AMREX_D_DECL(DiscreteGrid::Node, DiscreteGrid::Node, DiscreteGrid::Node)}};
+        parameters, {AMREX_D_DECL(DiscreteAxis::Node, DiscreteAxis::Node, DiscreteAxis::Node)}};
     for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
-        EXPECT_EQ(discreteGrid.position(dir), DiscreteGrid::Node);
+        EXPECT_EQ(discreteGrid.position(dir), DiscreteAxis::Node);
         EXPECT_DOUBLE_EQ(discreteGrid.location_1d(dir, 0), discreteGrid.min(dir));
         EXPECT_DOUBLE_EQ(discreteGrid.location_1d(dir, discreteGrid.size(dir) - 1),
                          discreteGrid.max(dir));
         EXPECT_DOUBLE_EQ(discreteGrid.max(dir) - discreteGrid.min(dir), discreteGrid.length(dir));
         EXPECT_DOUBLE_EQ(discreteGrid.location_1d(dir, 2) - discreteGrid.location_1d(dir, 1),
                          discreteGrid.dx(dir));
+        amrex::Real x{1.1};
+        DiscreteAxis const& axis{discreteGrid.axis(dir)};
+        DiscreteAxis::Location mapping{axis.index(x)};
+        EXPECT_DOUBLE_EQ(x, axis.location(mapping.index()) - mapping.offset());
     }
 }
 
@@ -52,10 +56,10 @@ TEST(DiscreteGridTest, Cell)
     parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
 
     DiscreteGrid discreteGrid{
-        parameters, {AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Cell, DiscreteGrid::Cell)}};
+        parameters, {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell, DiscreteAxis::Cell)}};
     for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
     {
-        EXPECT_EQ(discreteGrid.position(dir), DiscreteGrid::Cell);
+        EXPECT_EQ(discreteGrid.position(dir), DiscreteAxis::Cell);
         EXPECT_DOUBLE_EQ(discreteGrid.location_1d(dir, 0),
                          discreteGrid.min(dir) + discreteGrid.dx(dir) / 2.0);
         EXPECT_DOUBLE_EQ(discreteGrid.location_1d(dir, discreteGrid.size(dir) - 1),
@@ -63,6 +67,11 @@ TEST(DiscreteGridTest, Cell)
         EXPECT_DOUBLE_EQ(discreteGrid.max(dir) - discreteGrid.min(dir), discreteGrid.length(dir));
         EXPECT_DOUBLE_EQ(discreteGrid.location_1d(dir, 2) - discreteGrid.location_1d(dir, 1),
                          discreteGrid.dx(dir));
+        EXPECT_EQ(discreteGrid.n_cells(dir), discreteGrid.size(dir));
+        amrex::Real x{1.1};
+        DiscreteAxis const& axis{discreteGrid.axis(dir)};
+        DiscreteAxis::Location mapping{axis.index(x)};
+        EXPECT_DOUBLE_EQ(x, axis.location(mapping.index()) - mapping.offset());
     }
 }
 
@@ -72,8 +81,8 @@ TEST(DiscreteGridTest, SerializeDeserializeUnity)
     std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(-1.5, -1.0, -0.5)};
     std::array<amrex::Real, AMREX_SPACEDIM> domainHi{AMREX_D_DECL(2.0, 2.5, 4.0)};
     std::array<int, AMREX_SPACEDIM> nCells{AMREX_D_DECL(5, 6, 7)};
-    std::array<DiscreteGrid::Position, AMREX_SPACEDIM> position{
-        AMREX_D_DECL(DiscreteGrid::Cell, DiscreteGrid::Node, DiscreteGrid::Cell)};
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> position{
+        AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Node, DiscreteAxis::Cell)};
     std::array<bool, AMREX_SPACEDIM> isPeriodic{AMREX_D_DECL(1, 1, 0)};
 
     DiscreteGrid discreteGrid{domainLo, domainHi, nCells, position, isPeriodic};

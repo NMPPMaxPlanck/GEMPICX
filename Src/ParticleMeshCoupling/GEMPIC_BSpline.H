@@ -8,6 +8,9 @@
 
 #include <AMReX_Array.H>
 
+#include "GEMPIC_ComputationalDomain.H"
+#include "GEMPIC_OffsetArray.H"
+
 namespace Gempic::ParticleMeshCoupling
 {
 // NOLINTBEGIN(readability-magic-numbers)
@@ -26,17 +29,20 @@ namespace Gempic::ParticleMeshCoupling
  * 
  * @param x \f$x\in[0,1]\f$
  * @tparam degree \f$degree\in\{0,1,2,3,4,5\}\f$
- * @tparam length For compatibility with @ref SplineBase. 
+ * @tparam length For compatibility with @ref SplineBase.
+ *                  Will be deprecated as soon as possible.
+ *                  Every user thinking about using this, DO NOT!
+ * @tparam T      For compatibility with @ref SplineBase.
  *                  Will be deprecated as soon as possible.
  *                  Every user thinking about using this, DO NOT!
  *
  * @return res \f$res[i] = S^{degree}(x+i-(degree+1)/2)\f$
  */
 // clang-format on
-template <size_t degree, size_t length = degree + 1>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines (amrex::Real x)
+template <size_t degree, size_t length = degree + 1, typename T = std::array<amrex::Real, length>>
+AMREX_GPU_HOST_DEVICE T cardinal_b_splines (amrex::Real x)
 {
-    amrex::GpuArray<amrex::Real, length> res{};
+    T res{};
     static_assert(degree < 6, "Only B Splines of degree 0 to 5 have been implemented!");
     switch (degree)
     {
@@ -110,15 +116,17 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines (a
  * @tparam length For compatibility with @ref SplineBase.
  *                  Will be deprecated as soon as possible.
  *                  Every user thinking about using this, DO NOT!
+ * @tparam T      For compatibility with @ref SplineBase.
+ *                  Will be deprecated as soon as possible.
+ *                  Every user thinking about using this, DO NOT!
  *
  * @return res \f$res[i] = \int_{(degree+1)/2}^{x+i-(degree+1)/2} S^{degree}(y) \mathrm{d}y\f$
  */
 // clang-format on
-template <size_t degree, size_t length = degree + 1>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines_primitive (
-    amrex::Real x)
+template <size_t degree, size_t length = degree + 1, typename T = std::array<amrex::Real, length>>
+AMREX_GPU_HOST_DEVICE T cardinal_b_splines_primitive (amrex::Real x)
 {
-    amrex::GpuArray<amrex::Real, length> res{};
+    T res{};
     static_assert(degree < 6,
                   "Only the primitives for Bsplines of degree 0 to 5 have been implemented.");
     switch (degree)
@@ -200,11 +208,10 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, length> cardinal_b_splines_pr
  * 
  */
 // clang-format on
-template <size_t degree>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> cardinal_b_splines_first_derivative (
-    amrex::Real x)
+template <size_t degree, typename T = std::array<amrex::Real, degree + 1>>
+AMREX_GPU_HOST_DEVICE T cardinal_b_splines_first_derivative (amrex::Real x)
 {
-    amrex::GpuArray<amrex::Real, degree + 1> res{};
+    T res{};
     static_assert(0 < degree and degree < 6,
                   "Only first derivatives B Splines of degree 1 to 5 have been implemented!");
     switch (degree)
@@ -272,16 +279,19 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1> cardinal_b_spline
  * 
  * @param x \f$x\in[0,1]\f$
  * @tparam degree \f$degree\in\{0,1,2,3,4,5\}\f$
+ * @tparam T      For compatibility with @ref SplineBase.
+ *                  Will be deprecated as soon as possible.
+ *                  Every user thinking about using this, DO NOT!
  *
  * @return res \f$res[i] = \partial_x^2 S^{degree}(x+i-(degree+1)/2)\f$
  * 
  */
 // clang-format on
 template <size_t degree>
-AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, degree + 1>
-cardinal_b_splines_second_derivative (amrex::Real x)
+AMREX_GPU_HOST_DEVICE std::array<amrex::Real, degree + 1> cardinal_b_splines_second_derivative (
+    amrex::Real x)
 {
-    amrex::GpuArray<amrex::Real, degree + 1> res{};
+    std::array<amrex::Real, degree + 1> res{};
     static_assert(1 < degree or degree < 6,
                   "Only second derivatives B Splines of degree 2 to 5 have been implemented!");
     switch (degree)
@@ -330,4 +340,30 @@ cardinal_b_splines_second_derivative (amrex::Real x)
     }
 }
 // NOLINTEND(readability-magic-numbers)
+
+/**
+ * @brief Evaluate the cardinal B-spline of given degree localized on a 1-D grid axis.
+ *
+ * @details Compute B-Spline coefficients and their location on the given axis
+ *
+ * @tparam degree spline degree, in [0, 5]
+ *
+ * @return OffsetArray Spline coefficients located on the axis
+ */
+template <int degree>
+struct LocalizedBSpline
+{
+    AMREX_GPU_HOST_DEVICE
+    Utils::OffsetArray<amrex::Real, degree + 1> operator()(amrex::Real position,
+                                                           DiscreteAxis const& axis)
+    {
+        amrex::Real width{(degree + 1) * axis.dx()};
+        DiscreteAxis::Location idx{axis.index(position - width / 2.0)};
+        std::array<amrex::Real, degree + 1> bsplineValues{
+            cardinal_b_splines<degree, degree + 1, std::array<amrex::Real, degree + 1>>(
+                idx.offset() / axis.dx())};
+        return Utils::OffsetArray<amrex::Real, degree + 1>{idx.index(), bsplineValues};
+    }
+};
+
 } //namespace Gempic::ParticleMeshCoupling
