@@ -220,11 +220,20 @@
             }
         },
         {
+            "name": "glibcxx-debug-env",
+            "displayName": "libstdc++ debug mode",
+            "hidden": true,
+            "environment": {
+                "CXXFLAGS": "$penv{CXXFLAGS} -fno-omit-frame-pointer -D_GLIBCXX_DEBUG"
+            }
+        },
+        {
             "name": "cpu-debug-3D",
             "displayName": "CPU debug 3D settings",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
+                "glibcxx-debug-env",
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
             ],
@@ -240,6 +249,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
+                "glibcxx-debug-env",
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
             ],
@@ -270,6 +280,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
+                "glibcxx-debug-env",
                 "gempic-cpu-cache-vars",
                 "mpi-compiler"
             ],

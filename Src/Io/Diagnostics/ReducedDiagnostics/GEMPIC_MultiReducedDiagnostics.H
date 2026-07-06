@@ -241,8 +241,11 @@ private:
                 otherParams.get("Particle.speciesNames", speciesNames);
                 std::transform(speciesNames.begin(), speciesNames.end(), speciesNames.begin(),
                                [] (std::string& s) { return s + "Variance"; });
+                // save position before erase (to avoid undefined behavior of an invalidated
+                // iterator)
+                auto const pos = std::distance(rdTypes.begin(), ind);
                 rdTypes.erase(ind);
-                rdTypes.insert(ind, speciesNames.begin(), speciesNames.end());
+                rdTypes.insert(rdTypes.begin() + pos, speciesNames.begin(), speciesNames.end());
             }
 
             size_t const numTypes{rdTypes.size()};
