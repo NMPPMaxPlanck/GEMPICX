@@ -340,6 +340,42 @@
             "cacheVariables": {
               "GEMPIC_BUILD_ONLY_DOCUMENTATION": "ON"
             }
+        },
+        {
+            "name": "vs-intelOneAPI-release",
+            "displayName": "VS2022 + Intel oneAPI Release",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "toolset": "Intel C++ Compiler 2025,fortran=ifx",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_Fortran_FLAGS": "/MP",
+                "CMAKE_EXE_LINKER_FLAGS": "/Qopenmp",
+                "GEMPIC_USE_HDF5": false
+             },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "vs-intelOneAPI-debug",
+            "displayName": "VS2022 + Intel oneAPI Debug",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "toolset": "Intel C++ Compiler 2025,fortran=ifx",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_Fortran_FLAGS": "/MP",
+                "CMAKE_EXE_LINKER_FLAGS": "/Qopenmp",
+                "GEMPIC_USE_HDF5": false
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
         }
     ]
 }

@@ -119,7 +119,10 @@ void fill_with_integrated_cells (DiscreteField& field,
     auto f = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         auto f3D = [&] (amrex::Real x, amrex::Real y, amrex::Real z)
-        { return funcs(AMREX_D_DECL(x, y, z)); };
+        {
+            GEMPIC_D_EXCL(UNUSED(y);, UNUSED(z);, )
+            return funcs(AMREX_D_DECL(x, y, z));
+        };
         return integrate.volume({GEMPIC_D_PAD(x, y, z)}, dx, f3D);
     };
     fill(field, f);

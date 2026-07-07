@@ -44,3 +44,38 @@ function(gempic_check_required_variables)
     endif()
   endforeach()
 endfunction()
+
+function(gempic_suppress_third_party_warnings)
+  set(mandatoryArgs TARGET)
+  set(oneValueArgs ${mandatoryArgs})
+  cmake_parse_arguments("arg" "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  gempic_check_required_variables(CHECK_VARIABLES ${mandatoryArgs} PREFIX arg)
+
+  # Don't attempt to modify installed targets
+  if(${arg_TARGET}_FOUND)
+    return()
+  endif()
+
+  # Suppress upstream warnings
+  get_target_property(${arg_TARGET}_HEADER_DIRS ${arg_TARGET} INTERFACE_INCLUDE_DIRECTORIES)
+  
+  # Suppress warnings about source-prefixed include paths
+  get_target_property(${arg_TARGET}_ISID ${arg_TARGET} INTERFACE_SYSTEM_INCLUDE_DIRECTORIES)
+  if(${arg_TARGET}_ISID MATCHES "BUILD_INTERFACE")
+    set(_${arg_TARGET}_ISID "$<BUILD_INTERFACE:${${arg_TARGET}_HEADER_DIRS}>" "${${arg_TARGET}_ISID}")
+  elseif(${arg_TARGET}_ISID)
+    set(_${arg_TARGET}_ISID "$<BUILD_INTERFACE:${${arg_TARGET}_HEADER_DIRS}" "${${arg_TARGET}_ISID}>")
+  else()
+    set(_${arg_TARGET}_ISID "$<BUILD_INTERFACE:${${arg_TARGET}_HEADER_DIRS}>")
+  endif()
+
+  set_target_properties(${arg_TARGET} PROPERTIES
+      INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+      "${_${arg_TARGET}_ISID}")
+  # Using the big guns
+  if(MSVC)
+    target_compile_options(${arg_TARGET} PRIVATE /W0)
+  else()
+    target_compile_options(${arg_TARGET} PRIVATE -w)
+  endif()
+endfunction()

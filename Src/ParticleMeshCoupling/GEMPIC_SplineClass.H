@@ -235,6 +235,7 @@ public:
     {
         static_assert(form == Forms::Field::DualOneForm || form == Forms::Field::DualTwoForm,
                       "Function called with primal form, or superfluous direction supplied.");
+        GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
         if constexpr (form == Forms::Field::DualTwoForm)
         {
             if constexpr (dir == Direction::xDir)
@@ -284,6 +285,7 @@ public:
     {
         static_assert(form == Forms::Field::DualZeroForm || form == Forms::Field::DualThreeForm,
                       "Function called with primal form, or no direction supplied.");
+        GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
         if constexpr (form == Forms::Field::DualThreeForm)
         {
             return GEMPIC_D_MULT(m_nodeSplineVals[Direction::xDir][i],
@@ -997,6 +999,7 @@ public:
     {
         static_assert(form == Forms::Field::DualOneForm || form == Forms::Field::DualTwoForm,
                       "Function called with primal form, or superfluous direction supplied.");
+        GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
         if constexpr (form == Forms::Field::DualTwoForm)
         {
             if constexpr (dir == Direction::xDir)

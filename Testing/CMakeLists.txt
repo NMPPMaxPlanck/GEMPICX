@@ -1,12 +1,4 @@
-gempic_FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.14.0
-  SOURCE_DIR ${PROJECT_SOURCE_DIR}/third_party/googletest-src
-)
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+include(${PROJECT_SOURCE_DIR}/cmake/gempic_GoogleTestConfig.cmake)
 
 add_executable(GtestTests GEMPIC_UnitTests.cpp)
 gempic_set_compile_options(GtestTests)
@@ -47,8 +39,8 @@ if(GEMPIC_USE_CUDA)
   # Too many amrex::ParserExecutor's inside ParallelFor loops. Only a problem because we gather all
   # tests in one executable.
   target_compile_options(GtestTests PRIVATE --ptxas-options=--disable-optimizer-constants)
-endif(GEMPIC_USE_CUDA)
-  
+endif()
+
 target_link_libraries(
   GtestTests
   PRIVATE
@@ -56,8 +48,8 @@ target_link_libraries(
   GTest::gtest_main
   GTest::gmock
   )
-if(HDF5_FOUND)
-  target_link_libraries(GtestTests PRIVATE hdf5::hdf5)
+if(GEMPIC_USE_HDF5)
+  target_link_libraries(GtestTests PRIVATE GEMPICX::HDF5)
 endif()
 
 gtest_discover_tests(

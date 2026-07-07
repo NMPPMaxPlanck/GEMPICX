@@ -31,6 +31,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#else
+using hsize_t = std::size_t;
 #endif
 
 namespace Gempic
@@ -213,10 +215,16 @@ hid_t h5_type(double);
 #else
 
 [[noreturn]] void throw_hdf5_unavailable();
-struct H5FileHandle
+class H5FileHandle
 {
 };
-struct H5GroupHandle
+class H5GroupHandle
+{
+};
+class H5DataspaceHandle
+{
+};
+class H5DatasetHandle
 {
 };
 

@@ -11,6 +11,7 @@
 #include <AMReX_ParallelDescriptor.H>
 #include <AMReX_REAL.H>
 
+#include "GEMPIC_Config.H"
 #include "GEMPIC_DiscreteTime.H"
 #include "GEMPIC_HDF5Interface.H"
 

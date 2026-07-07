@@ -50,6 +50,7 @@ AMREX_GPU_HOST_DEVICE inline void update_j_component (
     double const chargeWeight,
     double const primitiveDifference)
 {
+    GEMPIC_D_EXCL(UNUSED(spline); UNUSED(j);, UNUSED(k);, )
     double sCoeff =
         chargeWeight * GEMPIC_D_MULT(primitiveDifference, spline.m_nodeSplineVals[pDir1][j],
                                      spline.m_nodeSplineVals[pDir2][k]);

@@ -182,6 +182,7 @@ struct BoundaryCondition
                                                      int const j,
                                                      int const k) const
     {
+        GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
         amrex::Real val = 0.0;
         for (int shift = 0; shift <= m_extrapDegree; shift++)
         {

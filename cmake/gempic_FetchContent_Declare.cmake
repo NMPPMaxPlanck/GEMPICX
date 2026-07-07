@@ -1,5 +1,5 @@
 include(FetchContent)
-include(cmake/gempic_utils.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/gempic_utils.cmake)
 
 function(gempic_confirm_git_tag)# NAME LOCATION (mandatory) #GIT_TAG ALLOW_DIRTY (optional)
   # Checks that a folder at LOCATION
@@ -132,7 +132,11 @@ function(gempic_FetchContent_Declare NAME)
   if(NOT DEFINED ${NAME}_SOURCE_DIR)
     set(${NAME}_SOURCE_DIR ${arg_SOURCE_DIR})
   endif()
-  find_package(${NAME} CONFIG ${arg_FIND_PACKAGE_ARGS})
+  if(arg_FIND_PACKAGE_ARGS)
+    find_package(${NAME} ${arg_FIND_PACKAGE_ARGS})
+  else()
+    find_package(${NAME} CONFIG)
+  endif()
 
   if(${${NAME}_FOUND})
     message(STATUS "Found ${NAME} install: ${${NAME}_DIR}")

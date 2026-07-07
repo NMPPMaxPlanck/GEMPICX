@@ -262,6 +262,7 @@ void PoissonFFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
         m_r2c->forwardThenBackward(m_rhoFft, m_phiFft,
                                    [=] AMREX_GPU_DEVICE(int i, int j, int k, auto& sp)
                                    {
+                                       GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
                                        auto eigenvalueSum{GEMPIC_D_ADD(
                                            eigenvalues0x[i], eigenvalues0y[j], eigenvalues0z[k])};
                                        if (eigenvalueSum == 0)
