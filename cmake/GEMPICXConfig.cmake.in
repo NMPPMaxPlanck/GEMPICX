@@ -78,7 +78,35 @@ if(NOT (AMReX_ROOT OR AMReX_DIR))
   set(AMReX_ROOT @CMAKE_INSTALL_PREFIX@)
 endif()
 find_dependency(AMReX REQUIRED)
-find_dependency(HDF5 REQUIRED)
+
+
+if(@GEMPIC_USE_HDF5@)
+  if(@GEMPICX_HDF5_WAS_SYSTEM@)
+    # System HDF5: find_dependency recreates HDF5::HDF5
+    find_dependency(HDF5 REQUIRED COMPONENTS C)
+    if(NOT TARGET GEMPICX::HDF5)
+      add_library(GEMPICX::HDF5 INTERFACE IMPORTED)
+      if(TARGET HDF5::HDF5)
+        target_link_libraries(GEMPICX::HDF5 INTERFACE HDF5::HDF5)
+      else()
+        target_link_libraries(GEMPICX::HDF5 INTERFACE ${HDF5_LIBRARIES})
+        target_include_directories(GEMPICX::HDF5 INTERFACE ${HDF5_INCLUDE_DIRS})
+      endif()
+    endif()
+  else()
+    # FetchContent HDF5: was built and installed alongside GEMPICX
+    if(NOT TARGET GEMPICX::HDF5)
+      find_library(_gempic_hdf5_lib
+        NAMES hdf5 hdf5_serial libhdf5
+        PATHS "@CMAKE_INSTALL_PREFIX@/@GEMPICX_HDF5_FETCHED_LIB_DIR@"
+        NO_DEFAULT_PATH REQUIRED)
+      add_library(GEMPICX::HDF5 INTERFACE IMPORTED)
+      target_link_libraries(GEMPICX::HDF5 INTERFACE ${_gempic_hdf5_lib})
+      target_include_directories(GEMPICX::HDF5 INTERFACE "@CMAKE_INSTALL_PREFIX@/@GEMPICX_HDF5_FETCHED_INC_DIR@")
+    endif()
+  endif()
+  # Now targets.cmake will find GEMPICX::HDF5 already defined
+endif()
 
 # Fiddle with targets
 include("${CMAKE_CURRENT_LIST_DIR}/GEMPICXTargets.cmake")

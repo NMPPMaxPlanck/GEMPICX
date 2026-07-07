@@ -67,6 +67,7 @@ void do_filter (amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf, FourierFil
 #endif
                 int nx, int j, int k, auto& sp)
             {
+                GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
                 // do actual filtering
 
                 // in x-Direction only half of the Hermitian matrix is stored

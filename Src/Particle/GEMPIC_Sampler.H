@@ -951,6 +951,7 @@ AMREX_GPU_HOST_DEVICE amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> inline get_ce
 AMREX_GPU_HOST_DEVICE inline int get_cellid (
     int i, int j, int k, amrex::IntVect lo, amrex::IntVect n)
 {
+    GEMPIC_D_EXCL(UNUSED(n); UNUSED(j);, UNUSED(k);, )
     AMREX_D_TERM(int ix = i - lo[xDir];, int iy = j - lo[yDir];, int iz = k - lo[zDir];)
     AMREX_D_PICK(return ix;, return iy * n[xDir] + ix;, return (iz * n[yDir] + iy) * n[xDir] + ix;)
 }

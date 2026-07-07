@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.24.0)
 
+# Enable IDE folder hierarchy
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 include(cmake/gempic_utils.cmake)
 include(cmake/gempic_version.cmake)
 
@@ -39,6 +42,8 @@ option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions wh
 option(USE_DIRTY_AMREX_REPO "Allow building from dirty AMReX git repositories" OFF)
 option(GEMPIC_DEBUG_MESSAGES "Turns on GEMPIC-specific debug messages" OFF)
 
+option(GEMPIC_USE_HDF5 "Enable HDF5 support" ON) 
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable Languages
@@ -62,10 +67,9 @@ include(cmake/gempic_FetchContent_Declare.cmake)
 # Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
 
-set(HDF5_PREFER_PARALLEL TRUE)
-find_package(HDF5 COMPONENTS C)
-
 include(cmake/gempic_AMReXConfig.cmake)
+
+include(cmake/gempic_HDF5Config.cmake)
 
 add_library(GEMPICX STATIC)
 add_library(GEMPICX::GEMPICX ALIAS GEMPICX)
@@ -80,9 +84,6 @@ if(GEMPIC_PROFILE_KERNELS)
 endif()
 if(GEMPIC_DEBUG_MESSAGES)
   target_compile_definitions(GEMPICX PRIVATE GEMPIC_DEBUG_MESSAGES)
-endif()
-if(HDF5_FOUND)
-  target_compile_definitions(GEMPICX PUBLIC GEMPIC_USE_HDF5=1)
 endif()
 
 # Add subfolder with source files of the library
@@ -100,6 +101,14 @@ gempic_FetchContent_Declare(
   )
 set(GIT_WORKING_DIR ${PROJECT_SOURCE_DIR} CACHE STRING "Internal cmake_git_version_tracking option set within GEMPIC")
 FetchContent_MakeAvailable(cmake_git_version_tracking)
+gempic_suppress_third_party_warnings(TARGET cmake_git_version_tracking)
+
+if(TARGET GEMPICX::HDF5)
+  message(STATUS "HDF5 is available as GEMPICX::HDF5")
+  target_compile_definitions(GEMPICX PUBLIC GEMPIC_USE_HDF5=1)
+else()
+  message(STATUS "HDF5 target missing at GEMPICX level")
+endif()
 
 target_link_libraries(GEMPICX
   PUBLIC AMReX::amrex_${AMReX_SPACEDIM}d AMReX::Flags_CXX
@@ -107,8 +116,8 @@ target_link_libraries(GEMPICX
   # Info about our repo is already exposed in GEMPICX.H
   PRIVATE
     cmake_git_version_tracking)
-if(HDF5_FOUND)
-  target_link_libraries(GEMPICX PRIVATE hdf5::hdf5)
+if(TARGET GEMPICX::HDF5)
+  target_link_libraries(GEMPICX PRIVATE ${GEMPIC_HDF5_LINK_TARGET})
 endif()
 gempic_set_compile_options(GEMPICX)
 if(GEMPIC_BUILD_DOCUMENTATION)
@@ -139,7 +148,7 @@ message(STATUS "   Install directory        = ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
 get_target_property(GEMPICX_FLAGS GEMPICX COMPILE_OPTIONS)
 message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} ${GEMPICX_FLAGS}")
-if(HDF5_FOUND)
+if(TARGET GEMPICX::HDF5)
   message(STATUS "   HDF5 support             = ON")
 else()
   message(STATUS "   HDF5 support             = OFF")
@@ -154,4 +163,9 @@ if(GEMPIC_USE_HIP)
 endif()
 
 gempic_create_and_link_cmake_constants_file()
+
+# Assign all third-party targets to folder
+include(cmake/gempic_TargetFolder.cmake)
+assign_folders_by_origin()
+
 endif() #CMAKE_BUILD_ONLY_DOCUMENTATION OFF

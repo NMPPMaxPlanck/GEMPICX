@@ -1,3 +1,9 @@
+# Enable by default multi-processor compilation on MSVC
+if(MSVC)
+    message(STATUS "Enabling MSVC multi-processor compilation (/MP)")
+    add_compile_options(/MP)
+endif()
+
 function(gempic_set_compile_options TARGET)
   message(STATUS "GEMPIC-CompilerID: ${CMAKE_CXX_COMPILER_ID}")
   string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
@@ -16,7 +22,7 @@ function(gempic_set_compile_options TARGET)
       target_compile_options(${TARGET} PRIVATE "-Wno-#warnings")
     endif()
   endif()
-  if(AMReX_SPACEDIM EQUAL 1)
+  if(AMReX_SPACEDIM EQUAL 1 AND NOT (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU.*"))
     target_compile_options(${TARGET} PRIVATE -Wno-braced-scalar-init)
   endif()
 

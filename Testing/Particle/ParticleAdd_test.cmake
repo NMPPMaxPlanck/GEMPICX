@@ -1,4 +1,4 @@
-cmake_policy(SET CMP0074 NEW)
+cmake_policy(SET CMP0094 NEW)
 find_package(Python3)
 
 execute_process(COMMAND mpirun -np 1 ${TEST_EXECUTABLE}

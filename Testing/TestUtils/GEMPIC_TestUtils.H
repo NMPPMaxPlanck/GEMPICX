@@ -18,6 +18,7 @@ namespace Gempic::Test::Utils
 // Nghost helper function
 inline int init_n_ghost (int degX, int degY, int degZ)
 {
+    GEMPIC_D_EXCL(UNUSED(degY);, UNUSED(degZ);, )
     amrex::Array<int, AMREX_SPACEDIM> degs = {AMREX_D_DECL(degX, degY, degZ)};
     int const maxDeg{*(std::max_element(degs.begin(), degs.end()))};
     return maxDeg;

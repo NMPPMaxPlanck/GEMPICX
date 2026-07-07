@@ -299,6 +299,8 @@ void DiscreteVectorField::apply_boundary_conditions (std::array<size_t, AMREX_SP
     }
 };
 
+#if GEMPIC_USE_HDF5
+
 namespace Impl
 {
 
@@ -366,7 +368,6 @@ H5Subspaces create_subspaces (DiscreteField const& f, H5DatasetHandle const& dat
     std::reverse(offset.begin(), offset.end());
     check_hdf5(H5Sselect_hyperslab(memoryDataspace.h5id(), H5S_SELECT_SET, offset.data(),
                                    stride.data(), count.data(), block.data()));
-
     offset = std::array<hsize_t, 3>{GEMPIC_D_PAD(
         static_cast<hsize_t>(box.smallEnd(Direction::xDir) + f.ghost_width()[Direction::xDir]),
         static_cast<hsize_t>(box.smallEnd(Direction::yDir) + f.ghost_width()[Direction::yDir]),
@@ -467,6 +468,8 @@ void deserialize_from (DiscreteField& f, H5GroupHandle const& fieldGroup, Discre
 }
 } //namespace Impl
 
+#endif
+
 void serialize (DiscreteField& f, H5FileHandle const& io, DiscreteTime const& t)
 {
 #ifdef GEMPIC_USE_HDF5
@@ -524,7 +527,6 @@ void deserialize (DiscreteVectorField& vf, H5FileHandle const& io, DiscreteTime 
         Impl::deserialize_from(vf[dir], componentGroup, t);
     }
 #else
-    UNUSED(f);
     UNUSED(io);
     UNUSED(t);
     throw_hdf5_unavailable();

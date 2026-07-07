@@ -118,7 +118,7 @@ workflow:
     - module load fftw-mpi
     - module load hdf5-mpi
     - module list
-
+ 
 build-test_gcc_3D:
   extends:
     - .mpcdf-gcc-env
@@ -126,6 +126,13 @@ build-test_gcc_3D:
     - configure_build "--preset cpu-release-3D"
     - run_ctest
     - install_test
+
+clean-build-only-test_clang_cpu_3D:
+  extends:
+    - .mpcdf-clang-env
+  script:
+    - configure_build "--preset cpu-debug-3D -DGEMPIC_USE_HDF5=OFF -DAMReX_HYPRE=OFF -DAMReX_FFT=OFF -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang"
+    - install_test clang++ clang build install "-DCMAKE_CXX_FLAGS=-g -D_GLIBCXX_DEBUG"
 
 build-test_gcc_2D:
   extends:
@@ -314,7 +321,9 @@ style-test_cpu_3D:
     - end_details environment
   script:
     - start_details configure "CMake Configure Step"
-    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_C_COMPILER=clang-18 -B ./build
+    # HDF5 Compiler specification necessary only for finding the libraries
+    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_C_COMPILER=clang-18 
+                     -DHDF5_C_COMPILER_EXECUTABLE=h5pcc -B ./build
     - end_details configure
     - start_details sanitize
     - python3 scripts/sanitize_with_python.py

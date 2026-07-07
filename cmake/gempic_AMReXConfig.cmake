@@ -47,6 +47,9 @@ gempic_FetchContent_Declare(AMReX
 if(NOT ${AMReX_FOUND}) # AMReX_FOUND is only true if the package was installed
   set_amrex_options_from_gempic() # and only if not do the settings matter.
   FetchContent_MakeAvailable(AMReX)
+  if(AMReX_HYPRE)
+    gempic_suppress_third_party_warnings(TARGET HYPRE)
+  endif()
 endif()
 
 if(GEMPIC_USE_CUDA)

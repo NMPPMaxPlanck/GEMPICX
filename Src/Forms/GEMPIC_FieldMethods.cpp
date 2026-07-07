@@ -95,7 +95,10 @@ void projection (amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const&
                     r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir], r[zDir] + drHalf[zDir])};
 
                 auto f = [&] (amrex::Real x, amrex::Real y, amrex::Real z)
-                { return funcsGpuPtr[n](AMREX_D_DECL(x, y, z), t); };
+                {
+                    GEMPIC_D_EXCL(UNUSED(y);, UNUSED(z);, )
+                    return funcsGpuPtr[n](AMREX_D_DECL(x, y, z), t);
+                };
 
                 // Rescale the integral and assign it to degrees of freedom
                 threeForm(i, j, k, n) = integrate.volume(midpoint, drHalf, f);
@@ -193,7 +196,10 @@ void projection (amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const&
                     r[xDir] - drHalf[xDir], r[yDir] - drHalf[yDir], r[zDir] - drHalf[zDir])};
 
                 auto f = [&] (amrex::Real x, amrex::Real y, amrex::Real z)
-                { return funcsGpuPtr[n](AMREX_D_DECL(x, y, z), t); };
+                {
+                    GEMPIC_D_EXCL(UNUSED(y);, UNUSED(z);, )
+                    return funcsGpuPtr[n](AMREX_D_DECL(x, y, z), t);
+                };
 
                 // Rescale the integral and assign it to degrees of freedom
                 threeForm(i, j, k, n) = integrate.volume(midpoint, drHalf, f);
@@ -337,7 +343,10 @@ void projection (
                 std::array<amrex::Real, 2> drHalfTmp{drHalf[yDir], drHalf[zDir]};
 
                 auto f = [&] (amrex::Real y, amrex::Real z)
-                { return funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], y, z), t); };
+                {
+                    GEMPIC_D_EXCL(UNUSED(y);, UNUSED(z);, )
+                    return funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], y, z), t);
+                };
 
                 twoForm(i, j, k, n) = integrate.surface(midpoint, drHalfTmp, f);
             });
@@ -364,7 +373,10 @@ void projection (
                 std::array<amrex::Real, 2> drHalfTmp{drHalf[xDir], drHalf[zDir]};
 
                 auto f = [&] (amrex::Real x, amrex::Real z)
-                { return funcsGpuPtr[n][yDir](AMREX_D_DECL(x, r[yDir], z), t); };
+                {
+                    GEMPIC_D_EXCL(, UNUSED(z);, )
+                    return funcsGpuPtr[n][yDir](AMREX_D_DECL(x, r[yDir], z), t);
+                };
 
                 twoForm(i, j, k, n) = integrate.surface(midpoint, drHalfTmp, f);
             });
@@ -388,7 +400,10 @@ void projection (
                 std::array<amrex::Real, 2> midpoint{r[xDir] + drHalf[xDir], r[yDir] + drHalf[yDir]};
                 std::array<amrex::Real, 2> drHalfTmp{drHalf[xDir], drHalf[yDir]};
                 auto f = [&] (amrex::Real x, amrex::Real y)
-                { return funcsGpuPtr[n][zDir](AMREX_D_DECL(x, y, r[zDir]), t); };
+                {
+                    AMREX_1D_ONLY(UNUSED(y));
+                    return funcsGpuPtr[n][zDir](AMREX_D_DECL(x, y, r[zDir]), t);
+                };
 
                 // Rescale the integral and assign it to array of degrees of freedom
                 twoForm(i, j, k, n) = integrate.surface(midpoint, drHalfTmp, f);
@@ -530,7 +545,10 @@ void projection (
                 std::array<amrex::Real, 2> drHalfTmp{drHalf[yDir], drHalf[zDir]};
 
                 auto f = [&] (amrex::Real y, amrex::Real z)
-                { return funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], y, z), t); };
+                {
+                    GEMPIC_D_EXCL(UNUSED(y);, UNUSED(z);, )
+                    return funcsGpuPtr[n][xDir](AMREX_D_DECL(r[xDir], y, z), t);
+                };
 
                 twoForm(i, j, k, n) = integrate.surface(midpoint, drHalfTmp, f);
             });
@@ -556,7 +574,10 @@ void projection (
                 std::array<amrex::Real, 2> drHalfTmp{drHalf[xDir], drHalf[zDir]};
 
                 auto f = [&] (amrex::Real x, amrex::Real z)
-                { return funcsGpuPtr[n][yDir](AMREX_D_DECL(x, r[yDir], z), t); };
+                {
+                    GEMPIC_D_EXCL(, UNUSED(z);, )
+                    return funcsGpuPtr[n][yDir](AMREX_D_DECL(x, r[yDir], z), t);
+                };
 
                 twoForm(i, j, k, n) = integrate.surface(midpoint, drHalfTmp, f);
             });
@@ -582,7 +603,10 @@ void projection (
                 std::array<amrex::Real, 2> drHalfTmp{drHalf[xDir], drHalf[yDir]};
 
                 auto f = [&] (amrex::Real x, amrex::Real y)
-                { return funcsGpuPtr[n][zDir](AMREX_D_DECL(x, y, r[zDir]), t); };
+                {
+                    AMREX_1D_ONLY(UNUSED(y));
+                    return funcsGpuPtr[n][zDir](AMREX_D_DECL(x, y, r[zDir]), t);
+                };
 
                 // Rescale the integral and assign it to array of degrees of freedom
                 twoForm(i, j, k, n) = integrate.surface(midpoint, drHalfTmp, f);
