@@ -749,59 +749,71 @@ public:
     amrex::Vector<int> const m_isPeriodic{AMREX_D_DECL(1, 1, 1)};
 };
 
-TEST_F(LinearAlgebraTest, AddAssignDiscreteVectorFieldVectorField)
+TEST_F(LinearAlgebraTest, AddSubtractAssignFieldToField)
 {
     std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> position{
         {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Node, DiscreteAxis::Cell)}};
-    std::array<DiscreteGrid, 3> grids{};
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        grids[dir] = DiscreteGrid{m_parameters, position};
-    }
-    DiscreteVectorField df{"df", m_parameters, grids, Impl::vector_field_dof_category()};
-    DiscreteVectorField res{"df", m_parameters, grids, Impl::vector_field_dof_category()};
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        df.multi_fab(dir).setVal(1);
-        res.multi_fab(dir).setVal(0);
-    }
-    res += df;
+    DiscreteGrid grid{m_parameters, position};
+    DiscreteField f{"f", m_parameters, grid, Impl::scalar_field_dof_category()};
+    DiscreteField g{"g", m_parameters, grid, Impl::scalar_field_dof_category()};
 
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        EXPECT_EQ(res.multi_fab(dir).norm0(), 1);
-        EXPECT_EQ(res.multi_fab(dir).norm1(),
-                  GEMPIC_D_MULT(res.discrete_grid(dir).size(Direction::xDir),
-                                res.discrete_grid(dir).size(Direction::yDir),
-                                res.discrete_grid(dir).size(Direction::zDir)));
-    }
+    f.multi_fab().setVal(1);
+    g.multi_fab().setVal(0);
+
+    g += f;
+    g -= f;
+
+    EXPECT_EQ(g.multi_fab().norm0(), 0);
 }
 
-TEST_F(LinearAlgebraTest, MultiplyAssignScalarVectorField)
+TEST_F(LinearAlgebraTest, MultiplyAssignScalarToField)
 {
     std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> position{
         {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Node, DiscreteAxis::Cell)}};
-    std::array<DiscreteGrid, 3> grids{};
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        grids[dir] = DiscreteGrid{m_parameters, position};
-    }
-    DiscreteVectorField df{"df", m_parameters, grids, Impl::vector_field_dof_category()};
-    DiscreteVectorField res{"df", m_parameters, grids, Impl::vector_field_dof_category()};
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        res.multi_fab(dir).setVal(1);
-    }
-    res *= 2.0;
+    DiscreteGrid grid{m_parameters, position};
+    DiscreteField f{"f", m_parameters, grid, Impl::scalar_field_dof_category()};
 
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-    {
-        EXPECT_EQ(res.multi_fab(dir).norm0(), 2);
-        EXPECT_EQ(res.multi_fab(dir).norm1(),
-                  2 * GEMPIC_D_MULT(res.discrete_grid(dir).size(Direction::xDir),
-                                    res.discrete_grid(dir).size(Direction::yDir),
-                                    res.discrete_grid(dir).size(Direction::zDir)));
-    }
+    f.multi_fab().setVal(1);
+    f *= 2.0;
+
+    EXPECT_EQ(f.multi_fab().norm0(), 2);
+    EXPECT_EQ(f.multi_fab().norm1(), 2 * GEMPIC_D_MULT(f.discrete_grid().size(Direction::xDir),
+                                                       f.discrete_grid().size(Direction::yDir),
+                                                       f.discrete_grid().size(Direction::zDir)));
+}
+
+TEST_F(LinearAlgebraTest, DivideAssignScalarToField)
+{
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Node, DiscreteAxis::Cell)}};
+    DiscreteGrid grid{m_parameters, position};
+    DiscreteField f{"f", m_parameters, grid, Impl::scalar_field_dof_category()};
+
+    f.multi_fab().setVal(1);
+    f /= 2.0;
+
+    EXPECT_EQ(f.multi_fab().norm0(), 0.5);
+    EXPECT_EQ(f.multi_fab().norm1(), 0.5 * GEMPIC_D_MULT(f.discrete_grid().size(Direction::xDir),
+                                                         f.discrete_grid().size(Direction::yDir),
+                                                         f.discrete_grid().size(Direction::zDir)));
+}
+
+TEST_F(LinearAlgebraTest, LinearCombination)
+{
+    std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> position{
+        {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Node, DiscreteAxis::Cell)}};
+    DiscreteGrid grid{m_parameters, position};
+    DiscreteField f{"f", m_parameters, grid, Impl::scalar_field_dof_category()};
+    DiscreteField g{"g", m_parameters, grid, Impl::scalar_field_dof_category()};
+
+    f.multi_fab().setVal(1);
+    g.multi_fab().setVal(2);
+    linear_combination(f, 2.0, f, 3.0, g);
+
+    EXPECT_EQ(f.multi_fab().norm0(), 8);
+    EXPECT_EQ(f.multi_fab().norm1(), 8 * GEMPIC_D_MULT(f.discrete_grid().size(Direction::xDir),
+                                                       f.discrete_grid().size(Direction::yDir),
+                                                       f.discrete_grid().size(Direction::zDir)));
 }
 
 TEST_F(LinearAlgebraTest, DotProductScalarField)
@@ -812,7 +824,7 @@ TEST_F(LinearAlgebraTest, DotProductScalarField)
     DiscreteField a{"df", m_parameters, grid, Impl::scalar_field_dof_category()};
 
     a.multi_fab().setVal(1);
-    amrex::Real dotProduct = Gempic::Impl::dot(a, a);
+    amrex::Real dotProduct = dot_product(a, a);
 
     // result in periodic domain should be the number of cells independent of index type
     EXPECT_EQ(dotProduct, Gempic::Impl::to_amrex_geometry(grid).Domain().numPts());
@@ -832,7 +844,7 @@ TEST_F(LinearAlgebraTest, DotProductVectorField)
     {
         a.multi_fab(dir).setVal(1);
     }
-    amrex::Real dotProduct = Gempic::Impl::dot(a, a);
+    amrex::Real dotProduct = dot_product(a, a);
 
     // result in periodic domain should be 3 times (3 field directions) the number of cells
     // independent of index type

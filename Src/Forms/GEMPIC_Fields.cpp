@@ -531,23 +531,6 @@ void deserialize (DiscreteVectorField& vf, H5FileHandle const& io, DiscreteTime 
 #endif
 }
 
-void fill_zero (DiscreteField& field)
-{
-    auto zero = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
-                                                      amrex::Real /*z*/)) -> amrex::Real
-    { return 0.0; };
-    Gempic::fill(field, zero);
-}
-
-void fill_zero (DiscreteVectorField& field)
-{
-    auto zero = [] AMREX_GPU_HOST_DEVICE(Direction /*dir*/,
-                                         AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
-                                                      amrex::Real /*z*/)) -> amrex::Real
-    { return 0.0; };
-    Gempic::fill(field, zero);
-}
-
 DiscreteFieldFunctionParser::DiscreteFieldFunctionParser(std::string const& label,
                                                          Io::Parameters& params)
 {
@@ -593,31 +576,156 @@ bool is_nan (DiscreteField& a)
 /**
  * Utility functions for DiscreteField and DiscreteVectorField
  */
+
+void fill_zero (DiscreteField& field)
+{
+    auto zero = [] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                      amrex::Real /*z*/)) -> amrex::Real
+    { return 0.0; };
+    Gempic::fill(field, zero);
+}
+void fill_zero (DiscreteVectorField& field)
+{
+    auto zero = [] AMREX_GPU_HOST_DEVICE(Direction /*dir*/,
+                                         AMREX_D_DECL(amrex::Real /*x*/, amrex::Real /*y*/,
+                                                      amrex::Real /*z*/)) -> amrex::Real
+    { return 0.0; };
+    Gempic::fill(field, zero);
+}
+void fill_random (DiscreteField& field)
+{
+    for (amrex::MFIter mfi(field.multi_fab()); mfi.isValid(); ++mfi)
+    {
+        field.select_box(mfi);
+        ParallelForRNG(mfi.validbox(), [=] AMREX_GPU_DEVICE(int i, int j, int k,
+                                                            amrex::RandomEngine const& gen) noexcept
+                       { field(i, j, k) = amrex::Random(gen); });
+    }
+    Impl::override_sync(field); // ensure consistency of overlapping dof
+}
+void fill_random (DiscreteVectorField& field)
+{
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        fill_random(field[dir]);
+    }
+}
+
+void copy (DiscreteField& a, DiscreteField const& b)
+{
+    amrex::LocalCopy(a.multi_fab(), b.multi_fab(), 0, 0, 1, amrex::IntVect{0});
+}
+void copy (DiscreteVectorField& a, DiscreteVectorField const& b)
+{
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        copy(a[dir], b[dir]);
+    }
+}
+
+void operator*=(DiscreteField& field, amrex::Real const& scalar)
+{
+    for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        field.select_box(mfi);
+        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                           { field(ix, iy, iz) *= scalar; });
+    }
+}
 void operator*=(DiscreteVectorField& field, amrex::Real const& scalar)
 {
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        for (amrex::MFIter mfi{field.multi_fab(dir)}; mfi.isValid(); ++mfi)
-        {
-            field.select_box(mfi);
-            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                               { field(dir, ix, iy, iz) *= scalar; });
-        }
+        field[dir] *= scalar;
+    }
+}
+void operator/=(DiscreteField& field, amrex::Real const& scalar)
+{
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        std::abs(scalar) > std::numeric_limits<amrex::Real>::epsilon(),
+        "Scalar value is too close to zero. Division by zero.");
+    field *= 1.0 / scalar;
+}
+void operator/=(DiscreteVectorField& field, amrex::Real const& scalar)
+{
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
+        std::abs(scalar) > std::numeric_limits<amrex::Real>::epsilon(),
+        "Scalar value is too close to zero. Division by zero.");
+    field *= 1.0 / scalar;
+}
+void operator+=(DiscreteField& a, DiscreteField const& b)
+{
+    for (amrex::MFIter mfi{a.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        a.select_box(mfi);
+        auto const& otherView{b.multi_fab().array(mfi)};
+        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                           { a(ix, iy, iz) += otherView(ix, iy, iz); });
     }
 }
 void operator+=(DiscreteVectorField& a, DiscreteVectorField const& b)
 {
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        for (amrex::MFIter mfi{a.multi_fab(dir)}; mfi.isValid(); ++mfi)
-        {
-            a.select_box(mfi);
-            auto const& otherView{b.multi_fab(dir).array(mfi)};
-            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                               { a(dir, ix, iy, iz) += otherView(ix, iy, iz); });
-        }
+        a[dir] += b[dir];
     }
 }
+void operator-=(DiscreteField& a, DiscreteField const& b)
+{
+    for (amrex::MFIter mfi{a.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        a.select_box(mfi);
+        auto const& otherView{b.multi_fab().array(mfi)};
+        amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
+                           { a(ix, iy, iz) -= otherView(ix, iy, iz); });
+    }
+}
+void operator-=(DiscreteVectorField& a, DiscreteVectorField const& b)
+{
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        a[dir] -= b[dir];
+    }
+}
+void linear_combination (DiscreteField& result,
+                         amrex::Real a,
+                         DiscreteField const& field1,
+                         amrex::Real b,
+                         DiscreteField const& field2)
+{
+    amrex::LinComb(result.multi_fab(), a, field1.multi_fab(), 0, b, field2.multi_fab(), 0, 0, 1,
+                   amrex::IntVect{AMREX_D_DECL(0, 0, 0)});
+}
+
+void linear_combination (DiscreteVectorField& result,
+                         amrex::Real a,
+                         DiscreteVectorField const& field1,
+                         amrex::Real b,
+                         DiscreteVectorField const& field2)
+{
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        linear_combination(result[dir], a, field1[dir], b, field2[dir]);
+    }
+}
+
+amrex::Real dot_product (DiscreteField& a, DiscreteField& b)
+{
+    auto mask =
+        amrex::OwnerMask(a.multi_fab(), Gempic::Impl::to_amrex_periodicty(a.discrete_grid()));
+    return amrex::MultiFab::Dot(*mask, a.multi_fab(), 0, b.multi_fab(), 0, 1, 0);
+}
+
+amrex::Real dot_product (DiscreteVectorField& a, DiscreteVectorField& b)
+{
+    amrex::Real result = 0;
+    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        result += dot_product(a[dir], b[dir]);
+    }
+    return result;
+}
+
 amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
 {
     auto ma = a.multi_fab().const_arrays();
@@ -663,24 +771,16 @@ std::array<amrex::Real, 3> l_inf_error (DiscreteVectorField& a, DiscreteVectorFi
 
 namespace Impl
 {
-amrex::Real dot (DiscreteField& a, DiscreteField& b)
+void override_sync (DiscreteField& a)
 {
-    AMREX_ALWAYS_ASSERT(a.discrete_grid() == b.discrete_grid());
-    AMREX_ALWAYS_ASSERT(a.multi_fab().nComp() == b.multi_fab().nComp());
-    auto mask =
-        amrex::OwnerMask(a.multi_fab(), Gempic::Impl::to_amrex_periodicty(a.discrete_grid()));
-    return amrex::MultiFab::Dot (*mask, a.multi_fab(), 0, b.multi_fab(), 0, a.multi_fab().nComp(),
-                                0);
+    a.multi_fab().OverrideSync(Gempic::Impl::to_amrex_periodicty(a.discrete_grid()));
 }
-
-amrex::Real dot (DiscreteVectorField& a, DiscreteVectorField& b)
+void override_sync (DiscreteVectorField& a)
 {
-    amrex::Real result = 0;
-    for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    for (Direction dir : {xDir, yDir, zDir})
     {
-        result += dot(a[dir], b[dir]);
+        override_sync(a[dir]);
     }
-    return result;
 }
 } //namespace Impl
 
