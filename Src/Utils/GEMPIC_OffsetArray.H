@@ -54,6 +54,67 @@ public:
 
     bool operator==(OffsetArray const&) const = default;
 
+    struct Entry
+    {
+        int m_index;
+        T& m_value;
+    };
+
+    struct ConstEntry
+    {
+        int m_index;
+        T const& m_value;
+    };
+
+    struct Iterator
+    {
+        T* m_ptr;
+        int m_index;
+
+        AMREX_GPU_HOST_DEVICE Entry operator*() { return {m_index, *m_ptr}; }
+        AMREX_GPU_HOST_DEVICE Iterator& operator++()
+        {
+            ++m_ptr;
+            ++m_index;
+            return *this;
+        }
+        AMREX_GPU_HOST_DEVICE bool operator==(Iterator const& o) const { return m_ptr == o.m_ptr; }
+        AMREX_GPU_HOST_DEVICE bool operator!=(Iterator const& o) const { return m_ptr != o.m_ptr; }
+    };
+
+    struct ConstIterator
+    {
+        T const* m_ptr;
+        int m_index;
+
+        AMREX_GPU_HOST_DEVICE ConstEntry operator*() const { return {m_index, *m_ptr}; }
+        AMREX_GPU_HOST_DEVICE ConstIterator& operator++()
+        {
+            ++m_ptr;
+            ++m_index;
+            return *this;
+        }
+        AMREX_GPU_HOST_DEVICE bool operator==(ConstIterator const& o) const
+        {
+            return m_ptr == o.m_ptr;
+        }
+        AMREX_GPU_HOST_DEVICE bool operator!=(ConstIterator const& o) const
+        {
+            return m_ptr != o.m_ptr;
+        }
+    };
+
+    AMREX_GPU_HOST_DEVICE Iterator begin () { return {m_values.data(), m_firstIndex}; }
+    AMREX_GPU_HOST_DEVICE Iterator end ()
+    {
+        return {m_values.data() + n, m_firstIndex + static_cast<int>(n)};
+    }
+    AMREX_GPU_HOST_DEVICE ConstIterator begin () const { return {m_values.data(), m_firstIndex}; }
+    AMREX_GPU_HOST_DEVICE ConstIterator end () const
+    {
+        return {m_values.data() + n, m_firstIndex + static_cast<int>(n)};
+    }
+
 private:
     int m_firstIndex{0};
     std::array<T, n> m_values{};
