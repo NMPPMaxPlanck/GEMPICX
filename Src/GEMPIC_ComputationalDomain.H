@@ -71,9 +71,9 @@ public:
     };
     // clang-format off
     /**
-     * @brief Calculate the nearest index to the right of @param x
+     * @brief Calculate the nearest index to the right of @p x
      *
-     * @return @ref IndexLocation Return the nearest index to the right of @param x.
+     * @return @ref Location Return the nearest index to the right of @p x
      */
     // clang-format on
     AMREX_GPU_HOST_DEVICE Location index (amrex::Real const& x) const
@@ -132,6 +132,8 @@ public:
                  std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition,
                  std::array<bool, AMREX_SPACEDIM> periodic = {AMREX_D_DECL(true, true, true)});
     DiscreteGrid(Io::Parameters& params,
+                 std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition);
+    DiscreteGrid(amrex::Geometry const& geom,
                  std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition);
     //!@endcond
     /**

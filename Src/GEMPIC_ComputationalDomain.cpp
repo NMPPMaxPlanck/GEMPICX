@@ -106,6 +106,22 @@ DiscreteGrid::DiscreteGrid(Io::Parameters& params,
     }
     *this = DiscreteGrid{domainLo, domainHi, nCells, idxPosition, periodicity};
 }
+
+DiscreteGrid::DiscreteGrid(amrex::Geometry const& geom,
+                           std::array<DiscreteAxis::IndexPosition, AMREX_SPACEDIM> idxPosition)
+{
+    std::array<amrex::Real, AMREX_SPACEDIM> domainLo, domainHi;
+    std::array<int, AMREX_SPACEDIM> nCells;
+    std::array<bool, AMREX_SPACEDIM> periodicity;
+    for (Direction dir : {AMREX_D_DECL(xDir, yDir, zDir)})
+    {
+        domainLo[dir] = geom.ProbLo(dir);
+        domainHi[dir] = geom.ProbHi(dir);
+        nCells[dir] = geom.Domain().length(dir);
+        periodicity[dir] = geom.isPeriodic(dir);
+    }
+    *this = DiscreteGrid{domainLo, domainHi, nCells, idxPosition, periodicity};
+}
 //! @endcond
 
 void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandle const& group)

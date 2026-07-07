@@ -278,6 +278,7 @@ public:
     amrex::Array4<amrex::Real> const& view (Direction dir) const { return m_fields[dir].view(); }
     //! @endcond
     DiscreteField& operator[](Direction dir) { return m_fields[dir]; };
+    DiscreteField const& operator[](Direction dir) const { return m_fields[dir]; };
 
     //! Access indexable degrees of freedom stored in the @ref DiscreteVectorField
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(Direction dir, int ix1, int ix2, int ix3) const
@@ -389,7 +390,6 @@ void fill (DiscreteField& field, SF const& f, double time)
     { return f(AMREX_D_DECL(x, y, z), time); };
     fill(field, timeIndependent);
 }
-void fill_zero(DiscreteField&);
 
 // clang-format off
 /**
@@ -437,11 +437,6 @@ void fill (DiscreteVectorField& field, VF const& f, double time)
     { return f(dir, AMREX_D_DECL(x, y, z), time); };
     fill(field, timeIndependent);
 }
-
-/**
- * Start utility functions for DiscreteFields
- */
-void fill_zero(DiscreteVectorField&);
 
 /**
  * @brief Provide an interface for functions parsed from the input file to
@@ -515,20 +510,51 @@ private:
     std::array<amrex::Parser, 3> m_parser{};
 };
 
+/**
+ * Start utility functions for DiscreteField and DiscreteVectorField
+ */
+void fill_zero(DiscreteField&);
+void fill_zero(DiscreteVectorField&);
+void fill_random(DiscreteField&);
+void fill_random(DiscreteVectorField&);
+
+void copy(DiscreteField& a, DiscreteField const& b);
+void copy(DiscreteVectorField& a, DiscreteVectorField const& b);
+
+void operator*=(DiscreteField&, amrex::Real const&);
 void operator*=(DiscreteVectorField&, amrex::Real const&);
+void operator/=(DiscreteField&, amrex::Real const&);
+void operator/=(DiscreteVectorField&, amrex::Real const&);
+void operator+=(DiscreteField&, DiscreteField const&);
 void operator+=(DiscreteVectorField&, DiscreteVectorField const&);
+void operator-=(DiscreteField&, DiscreteField const&);
+void operator-=(DiscreteVectorField&, DiscreteVectorField const&);
+void linear_combination(DiscreteField& result,
+                        amrex::Real a,
+                        DiscreteField const& field1,
+                        amrex::Real b,
+                        DiscreteField const& field2);
+void linear_combination(DiscreteVectorField& result,
+                        amrex::Real a,
+                        DiscreteVectorField const& field1,
+                        amrex::Real b,
+                        DiscreteVectorField const& field2);
+
+amrex::Real dot_product(DiscreteField& a, DiscreteField& b);
+amrex::Real dot_product(DiscreteVectorField& a, DiscreteVectorField& b);
+
 bool is_nan(DiscreteField&);
-amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
 std::array<bool, 3> is_nan(DiscreteVectorField&);
+amrex::Real l_inf_error(DiscreteField& a, DiscreteField& b);
 std::array<amrex::Real, 3> l_inf_error(DiscreteVectorField&, DiscreteVectorField&);
 /**
- * Finish utility functions for DiscreteFields
+ * Finish utility functions for DiscreteField and DiscreteVectorField
  */
 
 namespace Impl
 {
-amrex::Real dot(DiscreteField& a, DiscreteField& b);
-amrex::Real dot(DiscreteVectorField& a, DiscreteVectorField& b);
+void override_sync(DiscreteField& a);
+void override_sync(DiscreteVectorField& a);
 } // namespace Impl
 } //namespace Gempic
 
