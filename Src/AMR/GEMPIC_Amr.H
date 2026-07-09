@@ -540,10 +540,8 @@ template <MLScalarFormC T>
 void serialize (T& form, DiscreteTime const& time, std::filesystem::path folderName = "Checkpoints")
 {
     amrex::Vector<int> levelStep(form.m_amr->finestLevel() + 1, time.current_step());
-    std::string filename = amrex::Concatenate(
-        (folderName / form.m_label).string() + std::filesystem::path::preferred_separator,
-        time.current_step());
-
+    std::string filename =
+        (folderName / form.m_label / std::to_string(time.current_step())).string();
     amrex::Vector<amrex::MultiFab const*> tmp;
     for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
     {
@@ -564,9 +562,8 @@ void serialize (T& form, DiscreteTime const& time, std::filesystem::path folderN
     for (auto dir : {xDir, yDir, zDir})
     {
         std::string filename =
-            amrex::Concatenate((folderName / (form.m_label + dirNames[dir])).string() +
-                                   std::filesystem::path::preferred_separator,
-                               time.current_step());
+            (folderName / (form.m_label + dirNames[dir]) / std::to_string(time.current_step()))
+                .string();
         amrex::Vector<amrex::MultiFab const*> tmp;
         for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
         {
@@ -585,9 +582,8 @@ void deserialize (T& form,
                   DiscreteTime const& time,
                   std::filesystem::path folderName = "Checkpoints")
 {
-    std::string filename = amrex::Concatenate(
-        (folderName / form.m_label).string() + std::filesystem::path::preferred_separator,
-        time.current_step());
+    std::string filename =
+        (folderName / form.m_label / std::to_string(time.current_step())).string();
 
     for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
     {
@@ -606,9 +602,8 @@ void deserialize (T& form,
     for (auto dir : {xDir, yDir, zDir})
     {
         std::string filename =
-            amrex::Concatenate((folderName / (form.m_label + dirNames[dir])).string() +
-                                   std::filesystem::path::preferred_separator,
-                               time.current_step());
+            (folderName / (form.m_label + dirNames[dir]) / std::to_string(time.current_step()))
+                .string();
         for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
         {
             amrex::VisMF::Read(form[lev].multi_fab(dir),
