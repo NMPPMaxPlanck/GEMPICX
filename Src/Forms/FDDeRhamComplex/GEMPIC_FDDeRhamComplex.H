@@ -187,8 +187,10 @@ using DualThreeForm = Impl::DeRhamScalarField<Sequence::dual, Form::three>;
 class FiniteDifferenceDeRhamSpaces
 {
 public:
-    FiniteDifferenceDeRhamSpaces(GaussLegendreQuadrature const& integrator);
-    FiniteDifferenceDeRhamSpaces(GaussLegendreQuadrature const integrator,
+    FiniteDifferenceDeRhamSpaces() = default;
+    FiniteDifferenceDeRhamSpaces(Io::Parameters& params, GaussLegendreQuadrature const& integrator);
+    FiniteDifferenceDeRhamSpaces(Io::Parameters& params,
+                                 GaussLegendreQuadrature const integrator,
                                  DiscreteGrid grid,
                                  amrex::BoxArray ba,
                                  amrex::DistributionMapping dm);
@@ -210,6 +212,8 @@ public:
                                          Impl::BoundaryConditionConfiguration bcConf) const;
     using DOFCategories = std::array<DiscreteField::DOFCategory, AMREX_SPACEDIM>;
 
+    static int hodge_degree();
+
 private:
     // These need to be equivalent for all operations done with the DeRhamComplex.
     // Therefore, it should not be necessary to pass them around in operations.
@@ -222,6 +226,8 @@ private:
     std::array<DOFCategories, 3> const edge_centered_integral() const;
     std::array<DOFCategories, 3> const face_centered_integral() const;
     DOFCategories const cell_centered_integral() const;
+
+    static int s_hodgeDegree;
 };
 
 template <typename FDZeroForm, ScalarAnalyticalExpressionSpace SF>
@@ -278,17 +284,6 @@ void div(PrimalThreeForm& threeform, PrimalTwoForm& twoform);
 void grad(DualOneForm& of, DualZeroForm& zf);
 void curl(DualTwoForm& tf, DualOneForm& of);
 void div(DualThreeForm& threeform, DualTwoForm& twoform);
-namespace Impl
-{
-void finite_difference_hodge(PrimalZeroForm& p, DualThreeForm& d, size_t degree);
-void finite_difference_hodge(PrimalOneForm& p, DualTwoForm& d, size_t degree);
-void finite_difference_hodge(PrimalTwoForm& p, DualOneForm& d, size_t degree);
-void finite_difference_hodge(PrimalThreeForm& p, DualZeroForm& d, size_t degree);
-void finite_difference_hodge(DualZeroForm& d, PrimalThreeForm& p, size_t degree);
-void finite_difference_hodge(DualOneForm& d, PrimalTwoForm& p, size_t degree);
-void finite_difference_hodge(DualTwoForm& d, PrimalOneForm& p, size_t degree);
-void finite_difference_hodge(DualThreeForm& d, PrimalZeroForm& p, size_t degree);
-} //namespace Impl
 void hodge(PrimalZeroForm& p, DualThreeForm& d);
 void hodge(PrimalOneForm& p, DualTwoForm& d);
 void hodge(PrimalTwoForm& p, DualOneForm& d);

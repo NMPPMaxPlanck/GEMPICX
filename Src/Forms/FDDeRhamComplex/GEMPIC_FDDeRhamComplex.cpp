@@ -13,16 +13,15 @@
 
 namespace Gempic
 {
-
 FiniteDifferenceDeRhamSpaces::FiniteDifferenceDeRhamSpaces(
-    GaussLegendreQuadrature const& integrator) :
+    Io::Parameters& params, GaussLegendreQuadrature const& integrator) :
     m_integrator{integrator}
 {
-    Io::Parameters params{};
+    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", s_hodgeDegree);
     m_grid = DiscreteGrid{
         params, {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell, DiscreteAxis::Cell)}};
     amrex::IntVect maxGridSize;
-    params.get("ComputationalDomain.maxGridSize", maxGridSize);
+    params.get_or_set("ComputationalDomain.maxGridSize", maxGridSize);
 
     m_boxArray = amrex::BoxArray{Impl::to_amrex_box(m_grid)};
     m_boxArray.maxSize(maxGridSize);
@@ -30,6 +29,7 @@ FiniteDifferenceDeRhamSpaces::FiniteDifferenceDeRhamSpaces(
 };
 
 FiniteDifferenceDeRhamSpaces::FiniteDifferenceDeRhamSpaces(
+    Io::Parameters& params,
     GaussLegendreQuadrature const integrator,
     DiscreteGrid grid,
     amrex::BoxArray boxArray,
@@ -39,6 +39,7 @@ FiniteDifferenceDeRhamSpaces::FiniteDifferenceDeRhamSpaces(
     m_boxArray{boxArray},
     m_distributionMapping{distributionMapping}
 {
+    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", s_hodgeDegree);
 }
 
 FiniteDifferenceDeRhamSpaces::DOFCategories const FiniteDifferenceDeRhamSpaces::point_value() const
@@ -168,6 +169,9 @@ DualThreeForm FiniteDifferenceDeRhamSpaces::create_dual_three_form (
                      m_boxArray, m_distributionMapping, bcConf};
     return DualThreeForm{std::move(df), m_integrator};
 };
+
+int FiniteDifferenceDeRhamSpaces::s_hodgeDegree{2};
+int FiniteDifferenceDeRhamSpaces::hodge_degree() { return s_hodgeDegree; };
 
 namespace Impl
 {
@@ -514,152 +518,101 @@ void div (DualThreeForm& threeF, DualTwoForm& twoF)
     Impl::div(threeF, twoF, Impl::BackwardStencil{});
 }
 
-namespace Impl
-{
-void finite_difference_hodge (PrimalZeroForm& p, DualThreeForm& d, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit([&] (auto const& chosenStencil)
-               { Impl::hodge(p, d, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
-               cellToNode);
-};
-void finite_difference_hodge (PrimalOneForm& p, DualTwoForm& d, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit(
-        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
-        {
-            Impl::hodge(p[Direction::xDir], d[Direction::xDir],
-                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode));
-            Impl::hodge(p[Direction::yDir], d[Direction::yDir],
-                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode));
-            Impl::hodge(p[Direction::zDir], d[Direction::zDir],
-                        AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell));
-        },
-        cellToNode, nodeToCell);
-};
-void finite_difference_hodge (PrimalTwoForm& p, DualOneForm& d, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit(
-        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
-        {
-            Impl::hodge(p[Direction::xDir], d[Direction::xDir],
-                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell));
-            Impl::hodge(p[Direction::yDir], d[Direction::yDir],
-                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell));
-            Impl::hodge(p[Direction::zDir], d[Direction::zDir],
-                        AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode));
-        },
-        cellToNode, nodeToCell);
-};
-void finite_difference_hodge (PrimalThreeForm& p, DualZeroForm& d, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit([&] (auto const& chosenStencil)
-               { Impl::hodge(p, d, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
-               nodeToCell);
-};
-void finite_difference_hodge (DualZeroForm& d, PrimalThreeForm& p, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit([&] (auto const& chosenStencil)
-               { Impl::hodge(d, p, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
-               cellToNode);
-};
-void finite_difference_hodge (DualOneForm& d, PrimalTwoForm& p, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit(
-        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
-        {
-            Impl::hodge(d[Direction::xDir], p[Direction::xDir],
-                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode));
-            Impl::hodge(d[Direction::yDir], p[Direction::yDir],
-                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode));
-            Impl::hodge(d[Direction::zDir], p[Direction::zDir],
-                        AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell));
-        },
-        cellToNode, nodeToCell);
-};
-void finite_difference_hodge (DualTwoForm& d, PrimalOneForm& p, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit(
-        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
-        {
-            Impl::hodge(d[Direction::xDir], p[Direction::xDir],
-                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell));
-            Impl::hodge(d[Direction::yDir], p[Direction::yDir],
-                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell));
-            Impl::hodge(d[Direction::zDir], p[Direction::zDir],
-                        AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode));
-        },
-        cellToNode, nodeToCell);
-};
-void finite_difference_hodge (DualThreeForm& d, PrimalZeroForm& p, size_t degree)
-{
-    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
-    std::visit([&] (auto const& chosenStencil)
-               { Impl::hodge(d, p, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
-               nodeToCell);
-};
-} // namespace Impl
 void hodge (PrimalZeroForm& p, DualThreeForm& d)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(p, d, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(p, d, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
+               cellToNode);
 };
 void hodge (PrimalOneForm& p, DualTwoForm& d)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(p, d, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit(
+        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
+        {
+            Impl::hodge(p[Direction::xDir], d[Direction::xDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode));
+            Impl::hodge(p[Direction::yDir], d[Direction::yDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode));
+            Impl::hodge(p[Direction::zDir], d[Direction::zDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell));
+        },
+        cellToNode, nodeToCell);
 };
 void hodge (PrimalTwoForm& p, DualOneForm& d)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(p, d, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit(
+        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
+        {
+            Impl::hodge(p[Direction::xDir], d[Direction::xDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell));
+            Impl::hodge(p[Direction::yDir], d[Direction::yDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell));
+            Impl::hodge(p[Direction::zDir], d[Direction::zDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode));
+        },
+        cellToNode, nodeToCell);
 };
 void hodge (PrimalThreeForm& p, DualZeroForm& d)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(p, d, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(p, d, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
+               nodeToCell);
 };
 void hodge (DualZeroForm& d, PrimalThreeForm& p)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(d, p, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(d, p, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
+               cellToNode);
 };
 void hodge (DualOneForm& d, PrimalTwoForm& p)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(d, p, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit(
+        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
+        {
+            Impl::hodge(d[Direction::xDir], p[Direction::xDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenCellToNode));
+            Impl::hodge(d[Direction::yDir], p[Direction::yDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenCellToNode));
+            Impl::hodge(d[Direction::zDir], p[Direction::zDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenCellToNode, chosenNodeToCell));
+        },
+        cellToNode, nodeToCell);
 };
 void hodge (DualTwoForm& d, PrimalOneForm& p)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(d, p, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit(
+        [&] (auto const& chosenCellToNode, auto const& chosenNodeToCell)
+        {
+            Impl::hodge(d[Direction::xDir], p[Direction::xDir],
+                        AMREX_D_DECL(chosenCellToNode, chosenNodeToCell, chosenNodeToCell));
+            Impl::hodge(d[Direction::yDir], p[Direction::yDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenCellToNode, chosenNodeToCell));
+            Impl::hodge(d[Direction::zDir], p[Direction::zDir],
+                        AMREX_D_DECL(chosenNodeToCell, chosenNodeToCell, chosenCellToNode));
+        },
+        cellToNode, nodeToCell);
 };
 void hodge (DualThreeForm& d, PrimalZeroForm& p)
 {
-    Io::Parameters params{};
-    int degree{2};
-    params.get_or_set("FiniteDifferenceDeRhamComplex.hodgeDegree", degree);
-    Impl::finite_difference_hodge(d, p, degree);
+    int degree{FiniteDifferenceDeRhamSpaces::hodge_degree()};
+    auto [nodeToCell, cellToNode] = Impl::select_hodge_stencil_finite_difference(degree);
+    std::visit([&] (auto const& chosenStencil)
+               { Impl::hodge(d, p, AMREX_D_DECL(chosenStencil, chosenStencil, chosenStencil)); },
+               nodeToCell);
 };
 
 } // namespace Gempic

@@ -29,6 +29,7 @@ namespace Gempic
 class GaussLegendreQuadrature
 {
 public:
+    GaussLegendreQuadrature() = default;
     GaussLegendreQuadrature(int points);
     // clang-format off
     /**
