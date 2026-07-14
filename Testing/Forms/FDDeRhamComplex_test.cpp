@@ -23,9 +23,7 @@ using namespace Forms;
 class FiniteDifferenceExternalDerivativesTest : public testing::Test
 {
 public:
-    FiniteDifferenceExternalDerivativesTest() :
-        m_fdDeRhamComplex{GaussLegendreQuadrature{6}, DiscreteGrid{}, amrex::BoxArray{},
-                          amrex::DistributionMapping{}}
+    FiniteDifferenceExternalDerivativesTest()
     {
         amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
         amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.1, 1.2, 1.3)};
@@ -40,7 +38,7 @@ public:
         m_params.set("ComputationalDomain.maxGridSize", maxGridSize);
         m_params.set("ComputationalDomain.isPeriodic", isPeriodic);
 
-        m_fdDeRhamComplex = FiniteDifferenceDeRhamSpaces{m_gaussPoints};
+        m_fdDeRhamComplex = FiniteDifferenceDeRhamSpaces{m_params, m_gaussPoints};
     }
     Io::Parameters m_params{};
     int m_gaussPoints{10};
@@ -348,12 +346,10 @@ TEST_F(FiniteDifferenceExternalDerivativesTest, DualDiv)
 }
 
 // ToDo: If possible remove dependency of test on parameter file
-class FiniteDifferenceHodgeTest : public testing::TestWithParam<size_t>
+class FiniteDifferenceHodgeTest : public testing::TestWithParam<int>
 {
 public:
-    FiniteDifferenceHodgeTest() :
-        m_fdDeRhamComplex{GaussLegendreQuadrature{5}, DiscreteGrid{}, amrex::BoxArray{},
-                          amrex::DistributionMapping{}}
+    FiniteDifferenceHodgeTest()
     {
         amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
         amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.1, 1.2, 1.3)};
@@ -362,16 +358,17 @@ public:
         amrex::Vector<int> const maxGridSize{AMREX_D_DECL(10, 11, 12)};
         amrex::Vector<int> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
 
+        m_params.set("FiniteDifferenceDeRhamComplex.hodgeDegree", m_hodgeDegree);
         m_params.set("ComputationalDomain.domainLo", domainLo);
         m_params.set("ComputationalDomain.domainHi", domainHi);
         m_params.set("ComputationalDomain.nCell", nCell);
         m_params.set("ComputationalDomain.maxGridSize", maxGridSize);
         m_params.set("ComputationalDomain.isPeriodic", isPeriodic);
-        m_fdDeRhamComplex = FiniteDifferenceDeRhamSpaces{m_gaussPoints};
+        m_fdDeRhamComplex = FiniteDifferenceDeRhamSpaces{m_params, m_gaussPoints};
     }
     Io::Parameters m_params{};
     int m_gaussPoints{10};
-    size_t m_hodgeDegree{GetParam()};
+    int m_hodgeDegree{GetParam()};
     FiniteDifferenceDeRhamSpaces m_fdDeRhamComplex;
 };
 INSTANTIATE_TEST_SUITE_P(
@@ -401,7 +398,7 @@ void finite_difference_de_rham_complex_hodge_primal_to_dual_scalar (
     DualThreeForm hpzf{fdDeRhamComplex.create_dual_three_form("", bcConfig)};
     DualThreeForm dtf{fdDeRhamComplex.create_dual_three_form("", bcConfig)};
     project(pzf, polynom);
-    Gempic::Impl::finite_difference_hodge(hpzf, pzf, hodgeDegree);
+    hodge(hpzf, pzf);
     project(dtf, polynom);
     EXPECT_LE(l_inf_error(hpzf, dtf), 1.0e-10);
 
@@ -409,7 +406,7 @@ void finite_difference_de_rham_complex_hodge_primal_to_dual_scalar (
     DualZeroForm hptf{fdDeRhamComplex.create_dual_zero_form("", bcConfig)};
     DualZeroForm dzf{fdDeRhamComplex.create_dual_zero_form("", bcConfig)};
     project(ptf, polynom);
-    Gempic::Impl::finite_difference_hodge(hptf, ptf, hodgeDegree);
+    hodge(hptf, ptf);
     project(dzf, polynom);
     EXPECT_LE(l_inf_error(hptf, dzf), 1.0e-10);
 }
@@ -439,7 +436,7 @@ void finite_difference_de_rham_complex_hodge_primal_to_dual_vector (
     DualTwoForm hpzf{fdDeRhamComplex.create_dual_two_form("", {bcConfig, bcConfig, bcConfig})};
     DualTwoForm dtf{fdDeRhamComplex.create_dual_two_form("", {bcConfig, bcConfig, bcConfig})};
     project(pzf, polynom);
-    Gempic::Impl::finite_difference_hodge(hpzf, pzf, hodgeDegree);
+    hodge(hpzf, pzf);
     project(dtf, polynom);
     EXPECT_LE(l_inf_error(hpzf, dtf)[Direction::xDir], 1.0e-10);
     EXPECT_LE(l_inf_error(hpzf, dtf)[Direction::yDir], 1.0e-10);
@@ -449,7 +446,7 @@ void finite_difference_de_rham_complex_hodge_primal_to_dual_vector (
     DualOneForm hptf{fdDeRhamComplex.create_dual_one_form("", {bcConfig, bcConfig, bcConfig})};
     DualOneForm dzf{fdDeRhamComplex.create_dual_one_form("", {bcConfig, bcConfig, bcConfig})};
     project(ptf, polynom);
-    Gempic::Impl::finite_difference_hodge(hptf, ptf, hodgeDegree);
+    hodge(hptf, ptf);
     project(dzf, polynom);
     EXPECT_LE(l_inf_error(hptf, dzf)[Direction::xDir], 1.0e-10);
     EXPECT_LE(l_inf_error(hptf, dzf)[Direction::yDir], 1.0e-10);
@@ -481,7 +478,7 @@ void finite_difference_de_rham_complex_hodge_dual_to_primal_scalar (
     PrimalZeroForm hdtf{fdDeRhamComplex.create_primal_zero_form("", bcConfig)};
     PrimalZeroForm pzf{fdDeRhamComplex.create_primal_zero_form("", bcConfig)};
     project(dtf, polynom);
-    Gempic::Impl::finite_difference_hodge(hdtf, dtf, hodgeDegree);
+    hodge(hdtf, dtf);
     project(pzf, polynom);
     EXPECT_LE(l_inf_error(hdtf, pzf), 1.0e-10);
 
@@ -489,7 +486,7 @@ void finite_difference_de_rham_complex_hodge_dual_to_primal_scalar (
     PrimalThreeForm hdzf{fdDeRhamComplex.create_primal_three_form("", bcConfig)};
     PrimalThreeForm ptf{fdDeRhamComplex.create_primal_three_form("", bcConfig)};
     project(dzf, polynom);
-    Gempic::Impl::finite_difference_hodge(hdzf, dzf, hodgeDegree);
+    hodge(hdzf, dzf);
     project(ptf, polynom);
     EXPECT_LE(l_inf_error(hdzf, ptf), 1.0e-10);
 }
@@ -519,7 +516,7 @@ void finite_difference_de_rham_complex_hodge_dual_to_primal_vector (
     PrimalTwoForm hdof{fdDeRhamComplex.create_primal_two_form("", {bcConfig, bcConfig, bcConfig})};
     PrimalTwoForm ptf{fdDeRhamComplex.create_primal_two_form("", {bcConfig, bcConfig, bcConfig})};
     project(dof, polynom);
-    Gempic::Impl::finite_difference_hodge(hdof, dof, hodgeDegree);
+    hodge(hdof, dof);
     project(ptf, polynom);
     EXPECT_LE(l_inf_error(hdof, ptf)[Direction::xDir], 1.0e-10);
     EXPECT_LE(l_inf_error(hdof, ptf)[Direction::yDir], 1.0e-10);
@@ -529,7 +526,7 @@ void finite_difference_de_rham_complex_hodge_dual_to_primal_vector (
     PrimalOneForm hdtf{fdDeRhamComplex.create_primal_one_form("", {bcConfig, bcConfig, bcConfig})};
     PrimalOneForm pof{fdDeRhamComplex.create_primal_one_form("", {bcConfig, bcConfig, bcConfig})};
     project(dtf, polynom);
-    Gempic::Impl::finite_difference_hodge(hdtf, dtf, hodgeDegree);
+    hodge(hdtf, dtf);
     project(pof, polynom);
     EXPECT_LE(l_inf_error(hdtf, pof)[Direction::xDir], 1.0e-10);
     EXPECT_LE(l_inf_error(hdtf, pof)[Direction::yDir], 1.0e-10);
