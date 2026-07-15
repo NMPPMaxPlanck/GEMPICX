@@ -77,7 +77,9 @@ void GempicAmrCore::ErrorEst (int lev, amrex::TagBoxArray& tags, amrex::Real /*t
 }
 
 MLFiniteDifferenceDeRhamSpaces::MLFiniteDifferenceDeRhamSpaces(
-    std::shared_ptr<GempicAmrCore> amr, GaussLegendreQuadrature const& integrator) :
+    Io::Parameters& params,
+    std::shared_ptr<GempicAmrCore> amr,
+    GaussLegendreQuadrature const& integrator) :
     m_amr{amr}
 {
     for (int lev = 0; lev <= m_amr->finestLevel(); lev++)
@@ -86,8 +88,8 @@ MLFiniteDifferenceDeRhamSpaces::MLFiniteDifferenceDeRhamSpaces(
             m_amr->Geom(lev),
             {AMREX_D_DECL(DiscreteAxis::IndexPosition::Cell, DiscreteAxis::IndexPosition::Cell,
                           DiscreteAxis::IndexPosition::Cell)}};
-        m_deRham.push_back(FiniteDifferenceDeRhamSpaces(integrator, grid, amr->boxArray(lev),
-                                                        amr->DistributionMap(lev)));
+        m_deRham.push_back(FiniteDifferenceDeRhamSpaces(
+            params, integrator, grid, amr->boxArray(lev), amr->DistributionMap(lev)));
     }
 }
 
