@@ -73,7 +73,7 @@ protected:
 
 TEST_F(MultiLevelFieldTest, SerializeDeserializeUnity)
 {
-    MLFiniteDifferenceDeRhamSpaces mLdeRham{m_amr};
+    MLFiniteDifferenceDeRhamSpaces mLdeRham{m_parameters, m_amr};
     std::array<Gempic::Impl::BoundaryConditionConfiguration, 3> bcConfig{};
 
     auto field1{
@@ -95,7 +95,7 @@ TEST_F(MultiLevelFieldTest, SerializeDeserializeUnity)
 
 TEST_F(MultiLevelFieldTest, HodgeCorrection)
 {
-    MLFiniteDifferenceDeRhamSpaces mLdeRham{m_amr};
+    MLFiniteDifferenceDeRhamSpaces mLdeRham{m_parameters, m_amr};
     std::array<Gempic::Impl::BoundaryConditionConfiguration, 3> bcConfig{};
 
     auto nodal{
