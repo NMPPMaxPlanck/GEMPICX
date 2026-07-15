@@ -22,7 +22,7 @@ TEST(OffsetArray, ConstructionRoundTrips)
     EXPECT_EQ(arr.values(), values);
 }
 
-TEST(OffsetArray, OperatorBracketUsesGridIndex)
+TEST(OffsetArray, OperatorBracketUsesIndex)
 {
     std::array<double, 4> const values{10.0, 20.0, 30.0, 40.0};
     OffsetArray<double, 4> arr{7, values};
@@ -54,6 +54,68 @@ TEST(OffsetArray, NegativeFirstIndex)
     EXPECT_DOUBLE_EQ(arr[-1], 100.0);
     EXPECT_DOUBLE_EQ(arr[0], 200.0);
     EXPECT_DOUBLE_EQ(arr[1], 300.0);
+}
+
+TEST(OffsetArray, IteratorYieldsCorrectIndexAndValue)
+{
+    std::array<double, 4> const values{10.0, 20.0, 30.0, 40.0};
+    OffsetArray<double, 4> arr{7, values};
+
+    int expectedIndex = 7;
+    double expectedValue = 10.0;
+    for (auto [idx, val] : arr)
+    {
+        EXPECT_EQ(idx, expectedIndex);
+        EXPECT_DOUBLE_EQ(val, expectedValue);
+        ++expectedIndex;
+        expectedValue += 10.0;
+    }
+}
+
+TEST(OffsetArray, IteratorNegativeOffset)
+{
+    std::array<double, 3> const values{100.0, 200.0, 300.0};
+    OffsetArray<double, 3> arr{-1, values};
+
+    std::vector<int> indices;
+    std::vector<double> vals;
+    for (auto [idx, val] : arr)
+    {
+        indices.push_back(idx);
+        vals.push_back(val);
+    }
+
+    EXPECT_EQ(indices, (std::vector<int>{-1, 0, 1}));
+    EXPECT_EQ(vals, (std::vector<double>{100.0, 200.0, 300.0}));
+}
+
+TEST(OffsetArray, IteratorMutatesValues)
+{
+    OffsetArray<double, 3> arr{5, std::array<double, 3>{0.0, 0.0, 0.0}};
+    for (auto [idx, val] : arr)
+    {
+        val = static_cast<double>(idx);
+    }
+
+    EXPECT_DOUBLE_EQ(arr[5], 5.0);
+    EXPECT_DOUBLE_EQ(arr[6], 6.0);
+    EXPECT_DOUBLE_EQ(arr[7], 7.0);
+}
+
+TEST(OffsetArray, ConstIteratorYieldsCorrectIndexAndValue)
+{
+    std::array<double, 4> const values{1.0, 2.0, 3.0, 4.0};
+    OffsetArray<double, 4> const arr{3, values};
+
+    int expectedIndex = 3;
+    double expectedValue = 1.0;
+    for (auto [idx, val] : arr)
+    {
+        EXPECT_EQ(idx, expectedIndex);
+        EXPECT_DOUBLE_EQ(val, expectedValue);
+        ++expectedIndex;
+        ++expectedValue;
+    }
 }
 
 TEST(OffsetArray, IsTriviallyCopyable)
