@@ -260,7 +260,7 @@ void write_plot_file (amrex::Vector<amrex::MultiFab>& diagnostics,
     amrex::Vector<int> levelStep(amr->finestLevel() + 1, time.current_step());
     amrex::Vector<amrex::IntVect> refRatio(amr->finestLevel() + 1,
                                            amrex::IntVect(AMREX_D_DECL(2, 2, 2)));
-    std::string filename = amrex::Concatenate(name, time.current_step());
+    std::string filename = amrex::Concatenate(name, time.current_step(), 6);
 
     amrex::WriteMultiLevelPlotfile(filename, amr->finestLevel() + 1,
                                    amrex::GetVecOfConstPtrs(diagnostics), varNames, amr->Geom(),

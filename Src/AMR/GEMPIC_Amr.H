@@ -541,8 +541,11 @@ template <MLScalarFormC T>
 void serialize (T& form, DiscreteTime const& time, std::filesystem::path folderName = "Checkpoints")
 {
     amrex::Vector<int> levelStep(form.m_amr->finestLevel() + 1, time.current_step());
+    int padLen{6};
     std::string filename =
-        (folderName / form.m_label / std::to_string(time.current_step())).string();
+        // Empty string "" to get appropriate trailing separator
+        amrex::Concatenate((folderName / form.m_label / "").string(), time.current_step(), padLen);
+
     amrex::Vector<amrex::MultiFab const*> tmp;
     for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
     {
@@ -562,9 +565,8 @@ void serialize (T& form, DiscreteTime const& time, std::filesystem::path folderN
 
     for (auto dir : {xDir, yDir, zDir})
     {
-        std::string filename =
-            (folderName / (form.m_label + dirNames[dir]) / std::to_string(time.current_step()))
-                .string();
+        std::string filename = amrex::Concatenate(
+            (folderName / (form.m_label + dirNames[dir]) / "").string(), time.current_step(), 6);
         amrex::Vector<amrex::MultiFab const*> tmp;
         for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
         {
@@ -584,7 +586,7 @@ void deserialize (T& form,
                   std::filesystem::path folderName = "Checkpoints")
 {
     std::string filename =
-        (folderName / form.m_label / std::to_string(time.current_step())).string();
+        amrex::Concatenate((folderName / form.m_label / "").string(), time.current_step(), 6);
 
     for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
     {
@@ -602,9 +604,8 @@ void deserialize (T& form,
 
     for (auto dir : {xDir, yDir, zDir})
     {
-        std::string filename =
-            (folderName / (form.m_label + dirNames[dir]) / std::to_string(time.current_step()))
-                .string();
+        std::string filename = amrex::Concatenate(
+            (folderName / (form.m_label + dirNames[dir]) / "").string(), time.current_step(), 6);
         for (int lev = 0; lev <= form.m_amr->finestLevel(); lev++)
         {
             amrex::VisMF::Read(form[lev].multi_fab(dir),
