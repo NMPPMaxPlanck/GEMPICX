@@ -25,17 +25,6 @@ using namespace FieldSolvers;
 //using ::testing::Exactly;
 //using ::testing::Mock;
 
-ComputationalDomain get_compdom ()
-{
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(-M_PI, -M_PI, -M_PI)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(M_PI, M_PI, M_PI)};
-    amrex::IntVect const nCell{AMREX_D_DECL(16, 16, 16)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(8, 8, 8)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 /**
  * @brief Tests the Poisson solver for an analytical rho of 1.0 + cos(x)
  *
@@ -58,7 +47,7 @@ public:
     amrex::Parser m_parserRho, m_parserPhi;
     amrex::ParserExecutor<s_nVar> m_funcRho, m_funcPhi;
 
-    PoissonSolverTest() : m_infra{get_compdom()}
+    PoissonSolverTest() : m_infra{Gempic::Test::Utils::get_compdom(-M_PI, M_PI, 16, 8, 1)}
     {
         /* Initialize the infrastructure */
         int const nGhostExtra = 0;

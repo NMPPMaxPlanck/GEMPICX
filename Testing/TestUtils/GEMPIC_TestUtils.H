@@ -154,6 +154,15 @@ double l_inf_error(amrex::Array4<amrex::Real const> const& a,
 ComputationalDomain get_default_compdom();
 ComputationalDomain get_compdom(int gSize);
 ComputationalDomain get_compdom(amrex::IntVect const& nCell);
+
+ComputationalDomain get_compdom(amrex::Real const domainLoIn,
+                                amrex::Real const domainHiIn,
+                                int const nCellIn,
+                                int const maxGridSizeIn,
+                                int const isPeriodicIn,
+                                int nCellZIn = 0,
+                                int maxGridSizeZIn = 0);
+
 void init_multilevel_domain(amrex::Vector<amrex::Geometry>& geom,
                             amrex::Vector<amrex::BoxArray>& ba,
                             amrex::Vector<amrex::DistributionMapping>& dm);

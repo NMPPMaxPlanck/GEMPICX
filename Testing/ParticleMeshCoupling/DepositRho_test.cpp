@@ -61,17 +61,6 @@ void update_rho_parallel_for (amrex::ParIterSoA<AMREX_SPACEDIM + vDim + 1, 0>& p
     amrex::Gpu::Device::synchronize();
 }
 
-ComputationalDomain get_compdom ()
-{
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(10, 10, 10)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 // Test fixture. Sets up clean environment before each test.
 class DepositRhoTest : public testing::Test
 {
@@ -102,7 +91,7 @@ protected:
     std::shared_ptr<FDDeRhamComplex> m_deRham;
     std::unique_ptr<DeRhamField<Grid::dual, Space::cell>> m_rhoPtr;
 
-    DepositRhoTest() : m_infra{get_compdom()}
+    DepositRhoTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 10.0, 10, 10, 1)}
     {
         // particle settings
         m_params.set("Particle.species0.charge", m_charge[0]);

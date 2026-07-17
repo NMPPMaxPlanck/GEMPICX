@@ -25,17 +25,6 @@ using namespace Particle;
 using namespace TimeLoop;
 constexpr int hodgeDegree = 2;
 
-ComputationalDomain get_compdom ()
-{
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10, 10, 10)};
-    amrex::IntVect const nCell{AMREX_D_DECL(4, 4, 24)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(4, 4, 12)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 class RungeKuttaTest : public testing::Test
 {
 protected:
@@ -64,7 +53,7 @@ protected:
     Gempic::Io::FieldRegistry m_fieldRegistry;
     amrex::Geometry const m_geom = m_infra.m_geom;
 
-    RungeKuttaTest() : m_infra{get_compdom()}
+    RungeKuttaTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 10.0, 4, 4, 1, 24, 12)}
     {
         // particle settings
         double charge{-1};

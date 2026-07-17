@@ -72,17 +72,6 @@ void accumulate_j_update_v_c2_parallel_for (
     aaBfields.copyToHost(&bfields, 1);
 }
 
-ComputationalDomain get_compdom ()
-{
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(10, 10, 10)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 class AccumulateJUpdateVC2Test : public testing::Test
 {
 protected:
@@ -111,7 +100,7 @@ protected:
     amrex::GpuArray<amrex::Real, 2> m_bfields{0., 0.};
     amrex::GpuArray<amrex::Real, std::max(s_degX, std::max(s_degY, s_degZ)) + 4> m_primitive;
 
-    AccumulateJUpdateVC2Test() : m_infra(get_compdom())
+    AccumulateJUpdateVC2Test() : m_infra(Gempic::Test::Utils::get_compdom(0.0, 10.0, 10, 10, 1))
     {
         // particle settings
         double charge{1};

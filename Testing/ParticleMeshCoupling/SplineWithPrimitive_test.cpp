@@ -38,17 +38,6 @@ public:
                 ((amrex::Real position), (amrex::Real plo), (amrex::Real dxInverse)));
 };
 
-ComputationalDomain get_compdom ()
-{
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(10.0, 10.0, 10.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(20, 20, 20)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(20, 20, 20)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 /**
  * @brief Test fixture. Sets up clean environment before each test of the SplineWithPrimitive class
  */
@@ -67,7 +56,7 @@ protected:
     ComputationalDomain m_infra;
     std::vector<std::unique_ptr<ParticleSpecies<s_vDim>>> m_particles;
 
-    SplineWithPrimitiveTest() : m_infra{get_compdom()}
+    SplineWithPrimitiveTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 10.0, 20, 20, 1)}
     {
         // Parameters initialized here so that different tests can have different parameters
         Io::Parameters parameters{};

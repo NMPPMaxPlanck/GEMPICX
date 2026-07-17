@@ -170,4 +170,33 @@ void init_multilevel_domain (amrex::Vector<amrex::Geometry>& geom,
     dm.push_back(amrex::DistributionMapping(ba[0]));
     dm.push_back(amrex::DistributionMapping(ba[1]));
 }
+
+ComputationalDomain get_compdom (amrex::Real const domainLoIn,
+                                 amrex::Real const domainHiIn,
+                                 int const nCellIn,
+                                 int const maxGridSizeIn,
+                                 int const isPeriodicIn,
+                                 int nCellZIn,
+                                 int maxGridSizeZIn)
+{
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{
+        AMREX_D_DECL(domainLoIn, domainLoIn, domainLoIn)};
+    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{
+        AMREX_D_DECL(domainHiIn, domainHiIn, domainHiIn)};
+    if (nCellZIn == 0)
+    {
+        nCellZIn = nCellIn;
+    }
+    amrex::IntVect const nCell{AMREX_D_DECL(nCellIn, nCellIn, nCellZIn)};
+    if (maxGridSizeZIn == 0)
+    {
+        maxGridSizeZIn = maxGridSizeIn;
+    }
+    amrex::IntVect const maxGridSize{AMREX_D_DECL(maxGridSizeIn, maxGridSizeIn, maxGridSizeIn)};
+    std::array<int, AMREX_SPACEDIM> const isPeriodic{
+        AMREX_D_DECL(isPeriodicIn, isPeriodicIn, isPeriodicIn)};
+
+    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
+}
+
 } // namespace Gempic::Test::Utils
