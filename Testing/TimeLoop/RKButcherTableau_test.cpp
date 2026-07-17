@@ -99,17 +99,6 @@ private:
     static constexpr int s_nFields{nVar};
 };
 
-ComputationalDomain get_compdom ()
-{
-    // Cells of size 1x1x1
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(3.0, 3.0, 3.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(3, 3, 3)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
 /**
  * Numerical Scheme Class.
  *  - fields: in and out state.
@@ -318,7 +307,7 @@ public:
     }
 
     TestNumericalScheme() :
-        m_compDom{get_compdom()},
+        m_compDom{Gempic::Test::Utils::get_compdom(0.0, 3.0, 3, 10, 0)},
         m_drc{
             std::make_shared<FDDeRhamComplex>(m_compDom,
                                               s_hodgeDegree,

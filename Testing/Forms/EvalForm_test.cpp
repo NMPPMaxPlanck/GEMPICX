@@ -137,18 +137,6 @@ void compute_analytical_vector_function_parallel_for (
         });
 }
 
-//@todo: These tests should work with the default ComputationDomain, but don't. Why?
-ComputationalDomain get_compdom ()
-{
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(10, 10, 10)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 template <typename FormType>
 class FDDeRhamComplexEvalFormTest : public testing::Test
 {
@@ -169,7 +157,8 @@ protected:
     int m_gaussNodes = 6;
     amrex::Real const m_tol = 1e-13;
 
-    FDDeRhamComplexEvalFormTest() : m_infra{get_compdom()}
+    //@todo: These tests should work with the default ComputationDomain, but don't. Why?
+    FDDeRhamComplexEvalFormTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 1.0, 10, 10, 0)}
     {
         // Not checking particles
         int const nGhostExtra{1}; //{-s_maxSplineDegree};

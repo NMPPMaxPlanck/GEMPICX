@@ -41,18 +41,6 @@ condLambda condX = func_cond_x;
 condLambda condY = func_cond_y;
 condLambda condZ = func_cond_z;
 
-ComputationalDomain get_compdom ()
-{
-    // Cells of size 1x1x1
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(3.0, 3.0, 3.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(3, 3, 3)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(10, 10, 10)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(0, 0, 0)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 class BoundaryConditionTest : public testing::Test
 {
 protected:
@@ -66,7 +54,8 @@ protected:
     Io::Parameters m_parameters{};
     ComputationalDomain m_infra;
 
-    BoundaryConditionTest() : m_infra{get_compdom()}
+    // Cells of size 1x1x1
+    BoundaryConditionTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 3.0, 3, 10, 0)}
     {
         amrex::Vector<std::string> const bcVec(6, "PerfectlyConducting");
         // Not checking particles

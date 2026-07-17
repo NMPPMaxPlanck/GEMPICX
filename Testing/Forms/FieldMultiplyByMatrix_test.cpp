@@ -34,17 +34,6 @@ void initialize_tensor (amrex::MFIter& mfi,
                 });
 }
 
-ComputationalDomain get_compdom ()
-{
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(2, 2, 2)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(2, 2, 2)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 class FieldMultiplyByMatrixTest : public testing::Test
 {
 protected:
@@ -59,7 +48,7 @@ protected:
     ComputationalDomain m_infra;
     amrex::Real m_tol{1e-11};
 
-    FieldMultiplyByMatrixTest() : m_infra{get_compdom()}
+    FieldMultiplyByMatrixTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 1.0, 2, 2, 1)}
     {
         // Not checking particles
         int const nGhostExtra{1};

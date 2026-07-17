@@ -84,18 +84,6 @@ void reduced_diagnostics_setup (Io::Parameters& parameters, ComputationalDomain 
     parameters.set("Function.Ez", Ez);
 }
 
-ComputationalDomain get_compdom ()
-{
-    // 2pi(domainHi - domainLo) = k
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    std::array<amrex::Real, AMREX_SPACEDIM> const domainHi{AMREX_D_DECL(1.0, 1.0, 1.0)};
-    amrex::IntVect const nCell{AMREX_D_DECL(8, 8, 8)};
-    amrex::IntVect const maxGridSize{AMREX_D_DECL(4, 4, 4)};
-    std::array<int, AMREX_SPACEDIM> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
-
-    return ComputationalDomain(domainLo, domainHi, nCell, maxGridSize, isPeriodic);
-}
-
 class ReducedDiagnosticsTest : public testing::Test
 {
 protected:
@@ -117,7 +105,7 @@ protected:
     amrex::Real const m_backgroundDensity{-1.0}; // so that \int rho dx = 0
 
     // Setup all the tests in the TestSuite
-    ReducedDiagnosticsTest() : m_infra{get_compdom()}
+    ReducedDiagnosticsTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 1.0, 8, 4, 1)}
     {
         reduced_diagnostics_setup(m_parameters, m_infra);
         init_particles(m_particles, m_infra);
@@ -281,7 +269,8 @@ protected:
     Io::Parameters m_parameters{};
     amrex::Real const m_backgroundDensity{-1.0}; // so that \int rho dx = 0
 
-    ReducedDiagnosticsMissingFieldsTest() : m_infra{get_compdom()}
+    ReducedDiagnosticsMissingFieldsTest() :
+        m_infra{Gempic::Test::Utils::get_compdom(0.0, 1.0, 8, 4, 1)}
     {
         reduced_diagnostics_setup(m_parameters, m_infra);
         init_particles(m_particles, m_infra);
