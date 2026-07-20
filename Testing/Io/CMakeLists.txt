@@ -7,10 +7,6 @@ target_sources(GtestTests PRIVATE
 
 add_executable(ParametersOutput_test ParametersOutput_test.cpp)
 
-if(GEMPIC_USE_CUDA) 
-  setup_target_for_cuda_compilation(ParametersOutput_test)
-endif()
-
 target_link_libraries(ParametersOutput_test GEMPICX)
 
 add_test(NAME ParametersOutput_test

@@ -178,7 +178,7 @@ build-test_cuda_3D:
     - nvidia-cuda-mps-control -d
     - configure_build "--preset mpcdf-cloud-cuda -DAMReX_SPACEDIM=3"
     - run_ctest 1 # CTest and GoogleTest don't work well with CUDA for multiple processes
-    - install_test_gpu
+    - install_test_gpu $(pwd)/third_party/kokkos/bin/nvcc_wrapper gcc
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_gcc_3D"]
 
@@ -189,7 +189,7 @@ build-test_cuda_2D:
     - nvidia-cuda-mps-control -d
     - configure_build "--preset mpcdf-cloud-cuda -DAMReX_SPACEDIM=2"
     - run_ctest 1 # CTest and GoogleTest don't work well with CUDA for multiple processes
-    - install_test_gpu
+    - install_test_gpu $(pwd)/third_party/kokkos/bin/nvcc_wrapper gcc
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_cuda_3D"]
 
@@ -200,7 +200,7 @@ build-test_cuda_1D:
     - nvidia-cuda-mps-control -d
     - configure_build "--preset mpcdf-cloud-cuda -DAMReX_SPACEDIM=1"
     - run_ctest 1 # CTest and GoogleTest don't work well with CUDA for multiple processes
-    - install_test_gpu
+    - install_test_gpu $(pwd)/third_party/kokkos/bin/nvcc_wrapper gcc
     - echo quit | nvidia-cuda-mps-control
   needs: ["build-test_cuda_2D"]
 

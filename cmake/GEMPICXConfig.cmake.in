@@ -37,12 +37,20 @@ if(@AMReX_MPI@)
   unset(_mpi_components)
 endif()
 
+find_dependency(Kokkos REQUIRED)
+
 if(@GEMPIC_USE_CUDA@)
-  find_dependency(CUDAToolkit REQUIRED)
+  kokkos_check(DEVICES CUDA RETURN_VALUE IS_CUDA_ENABLED)
+  if(NOT ${IS_CUDA_ENABLED})
+    message(FATAL_ERROR "GEMPIC was build with the CUDA backend but Kokkos was build without CUDA support")
+  endif()
 endif()
 
 if(@GEMPIC_USE_HIP@)
-  find_dependency(hip REQUIRED)
+  kokkos_check(DEVICES HIP RETURN_VALUE IS_HIP_ENABLED)
+  if(NOT ${IS_HIP_ENABLED})
+    message(FATAL_ERROR "GEMPIC was build with the HIP backend but Kokkos was build without HIP support")
+  endif()
   # Link to hiprand -- must include rocrand too
   find_package(rocrand REQUIRED CONFIG)
   find_package(rocprim REQUIRED CONFIG)

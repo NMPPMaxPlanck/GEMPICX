@@ -1,6 +1,8 @@
 #ifndef _GEMPICX_HEADER_
 #define _GEMPICX_HEADER_
 
+#include <Kokkos_Core.hpp>
+
 #include <AMReX.H>
 
 #include "GEMPIC_AmrexInit.H"

@@ -32,14 +32,11 @@ add_custom_command(
 )
 
 include(GoogleTest)
-# Setup target to be compiled with CUDA and be linked against CUDA-enabled AMReX
-# MUST be done AFTER all sources have been assigned to target
 if(GEMPIC_USE_CUDA)
-  setup_target_for_cuda_compilation(GtestTests)
   # Too many amrex::ParserExecutor's inside ParallelFor loops. Only a problem because we gather all
   # tests in one executable.
-  target_compile_options(GtestTests PRIVATE --ptxas-options=--disable-optimizer-constants)
-endif()
+  target_compile_options(GtestTests PRIVATE "-Xptxas=--disable-optimizer-constants")
+endif(GEMPIC_USE_CUDA)
 
 target_link_libraries(
   GtestTests

@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Core.hpp>
+
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
@@ -59,6 +61,7 @@ public:
                               // useful for testing
                               pp.add("the_arena_is_managed", 1);
                           });
+        Kokkos::initialize(m_argc, m_argv);
 
         // Save managed memory flag for future use
         {
@@ -82,7 +85,11 @@ public:
         }
     }
 
-    void TearDown () override { amrex::Finalize(); }
+    void TearDown () override
+    {
+        Kokkos::finalize();
+        amrex::Finalize();
+    }
 
     bool has_managed_memory () const { return m_hasManagedMemory; }
 

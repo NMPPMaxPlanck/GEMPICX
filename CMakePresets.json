@@ -31,30 +31,6 @@
             }
         },
         {
-            "name": "nvidia-A100-env",
-            "displayName": "NVIDIA A100 environment settings",
-            "hidden": true,
-            "generator": "Ninja",
-            "cacheVariables": {
-                "CMAKE_CUDA_ARCHITECTURES": "80"
-            },
-            "condition": {
-                "type": "anyOf",
-                "conditions": [
-                    {
-                        "type": "matches",
-                        "string": "$env{HOSTNAME}",
-                        "regex": "^raven[0-9]+$"
-                    },
-                    {
-                        "type": "equals",
-                        "lhs": "$env{NVIDIA_ARCHITECTURE}",
-                        "rhs": "A100"
-                    }
-                ]
-            }
-        },
-        {
             "name": "gempic-cuda-cache-vars",
             "displayName": "GEMPIC Cache Variables for CUDA",
             "hidden": true,
@@ -87,8 +63,7 @@
             "hidden": true,
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "mpicxx",
-                "CMAKE_C_COMPILER": "mpicc",
-                "CMAKE_CUDA_HOST_COMPILER": "mpicxx"
+                "CMAKE_C_COMPILER": "mpicc"
             }
         },
         {
@@ -97,8 +72,7 @@
             "hidden": true,
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "mpiicpx",
-                "CMAKE_C_COMPILER": "mpiicx",
-                "CMAKE_CUDA_HOST_COMPILER": "mpiicpx"
+                "CMAKE_C_COMPILER": "mpiicx"
             }
         },
         {
@@ -108,6 +82,16 @@
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "amdclang++",
                 "CMAKE_C_COMPILER": "amdclang"
+            }
+        },
+        {
+            "name": "kokkos-compiler-wrapper",
+            "displayName": "Wrapper compiler of kokkos for GPUs",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "${sourceDir}/third_party/kokkos/bin/nvcc_wrapper",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CUDA_COMPILER": "nvcc"
             }
         },
         {
@@ -161,8 +145,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
-                "nvidia-A100-env",
-                "mpi-compiler",
+                "kokkos-compiler-wrapper",
                 "gempic-cuda-cache-vars"
             ],
             "condition": {
@@ -180,8 +163,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
-                "nvidia-A100-env",
-                "mpi-compiler",
+                "kokkos-compiler-wrapper",
                 "gempic-cuda-cache-vars"
             ],
             "cacheVariables": {
@@ -195,8 +177,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
-                "nvidia-A100-env",
-                "mpi-compiler",
+                "kokkos-compiler-wrapper",
                 "gempic-cuda-cache-vars"
             ],
             "cacheVariables": {
@@ -210,8 +191,7 @@
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
             "inherits": [
-                "nvidia-A100-env",
-                "mpi-compiler",
+                "kokkos-compiler-wrapper",
                 "gempic-cuda-cache-vars"
             ],
             "cacheVariables": {

@@ -7,6 +7,7 @@ endif()
 function(gempic_set_compile_options TARGET)
   message(STATUS "GEMPIC-CompilerID: ${CMAKE_CXX_COMPILER_ID}")
   string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE)
+  # GEMPICX and AMReX macros which depend on SPACEDIM result int multiple unused parameters
   if(BUILD_TYPE MATCHES "release")
     if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU.*")
       target_compile_options(${TARGET} PRIVATE -funroll-all-loops -march=native)
@@ -21,6 +22,10 @@ function(gempic_set_compile_options TARGET)
       # For the latest HDF5 version this did not seem to be an issue.
       target_compile_options(${TARGET} PRIVATE "-Wno-#warnings")
     endif()
+  endif()
+  # Disabling warnings has to be added after -Wall and -Wextra otherwise the removed warning might be reenabled
+  if(AMReX_SPACEDIM LESS_EQUAL 2)
+    target_compile_options(${TARGET} PRIVATE -Wno-unused-parameter)
   endif()
   if(AMReX_SPACEDIM EQUAL 1 AND NOT (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU.*"))
     target_compile_options(${TARGET} PRIVATE -Wno-braced-scalar-init)
@@ -43,6 +48,8 @@ function(gempic_set_compile_options TARGET)
   if(GEMPIC_USE_CUDA)
     target_compile_definitions(${TARGET} PRIVATE -DGEMPIC_GPU)
     target_compile_options(${TARGET} PRIVATE -lcusparse -lcurand)
+    target_compile_options(${TARGET} PUBLIC --expt-relaxed-constexpr)
+    #target_compile_options(${TARGET} PRIVATE --Werror=cross-execution-space-call,ext-lambda-captures-this)
     # The following flags are not found in the official nvcc documentation.
     # We found the usage here
     # https://stackoverflow.com/questions/14831051/how-to-disable-a-specific-nvcc-compiler-warnings

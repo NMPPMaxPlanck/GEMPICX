@@ -6,8 +6,12 @@
 #define GEMPIC_FIELDS_H_
 
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <variant>
+
+#include <Kokkos_Core.hpp>
+#include <Kokkos_OffsetView.hpp>
 
 #include <AMReX.H>
 #include <AMReX_Box.H>
@@ -63,6 +67,10 @@ struct BoundaryConditionConfiguration
         AMREX_D_DECL(amrex::BCType::int_dir, amrex::BCType::int_dir, amrex::BCType::int_dir),
         AMREX_D_DECL(amrex::BCType::int_dir, amrex::BCType::int_dir, amrex::BCType::int_dir)};
 };
+
+Kokkos::MDRangePolicy<Kokkos::Rank<3>, Kokkos::IndexType<int>> md_range_policy(
+    amrex::Box box, std::optional<std::array<int, 3>> tiling = {});
+
 } //namespace Impl
 
 // clang-format off
@@ -140,14 +148,17 @@ public:
     //! @cond EXCLUDE_API_DOC
     amrex::MultiFab const& multi_fab() const;
     amrex::MultiFab& multi_fab();
-    inline amrex::Array4<amrex::Real> const& view () const { return m_view; }
+    using View = Kokkos::Experimental::OffsetView<amrex::Real***,
+                                                  Kokkos::LayoutLeft,
+                                                  Kokkos::SharedSpace,
+                                                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    KOKKOS_INLINE_FUNCTION
+    View const& view () const { return m_view; }
     //! @endcond
 
     //! Access indexable degrees of freedom stored in the @ref DiscreteField
-    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(int ix1, int ix2, int ix3) const
-    {
-        return m_view(ix1, ix2, ix3);
-    }
+    KOKKOS_INLINE_FUNCTION
+    amrex::Real& operator()(int ix1, int ix2, int ix3) const { return m_view(ix1, ix2, ix3); }
     //! Describes the degree of freedom stored by the @ref DiscreteField
     DOFCategory dof_category (Direction dir) const
     {
@@ -200,7 +211,7 @@ private:
     std::shared_ptr<Impl::DiscreteFieldData> m_data;
     // GPU accessible members
     DiscreteGrid m_discreteGrid;
-    amrex::Array4<amrex::Real> m_view;
+    View m_view{};
     int m_selectedBoxIdx;
 };
 
@@ -275,7 +286,8 @@ public:
     //! @cond EXCLUDE_API_DOC
     amrex::MultiFab const& multi_fab(Direction dir) const;
     amrex::MultiFab& multi_fab(Direction dir);
-    amrex::Array4<amrex::Real> const& view (Direction dir) const { return m_fields[dir].view(); }
+    KOKKOS_INLINE_FUNCTION
+    DiscreteField::View const& view (Direction dir) const { return m_fields[dir].view(); }
     //! @endcond
     DiscreteField& operator[](Direction dir) { return m_fields[dir]; };
     DiscreteField const& operator[](Direction dir) const { return m_fields[dir]; };
@@ -364,22 +376,23 @@ concept VectorAnalyticalExpressionSpaceTime =
 template <ScalarAnalyticalExpressionSpace SF>
 void fill (DiscreteField& field, SF const& f)
 {
+    BL_PROFILE("fill(DiscreteField&)");
     for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
     {
         field.select_box(mfi);
         DiscreteGrid const& dg = field.discrete_grid();
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
-                        amrex::Real x = dg.location_1d(xDir, ix);
+        Kokkos::parallel_for(
+            "Impl::fill(DiscreteField, F)", Impl::md_range_policy(mfi.validbox()),
+            KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                amrex::Real x = dg.location_1d(xDir, ix);
 #if AMREX_SPACEDIM > 1
-                        amrex::Real y = dg.location_1d(yDir, iy);
+                amrex::Real y = dg.location_1d(yDir, iy);
 #endif
 #if AMREX_SPACEDIM == 3
-                        amrex::Real z = dg.location_1d(zDir, iz);
+                amrex::Real z = dg.location_1d(zDir, iz);
 #endif
-                        field(ix, iy, iz) = f(AMREX_D_DECL(x, y, z));
-                    });
+                field(ix, iy, iz) = f(AMREX_D_DECL(x, y, z));
+            });
     }
 }
 template <ScalarAnalyticalExpressionSpaceTime SF>
@@ -460,7 +473,7 @@ public:
      * @brief Provide an interface for functions parsed from the input file to
      *        @ref fill(DiscreteField&, SF const&)
      */
-    AMREX_GPU_HOST_DEVICE
+    KOKKOS_INLINE_FUNCTION
     amrex::Real operator()(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
                            amrex::Real t) const
     {
@@ -497,7 +510,7 @@ public:
      * @brief Provide an interface for functions parsed from the input file to
      *        @ref fill(DiscreteVectorField&, VF const&)
      */
-    AMREX_GPU_HOST_DEVICE
+    KOKKOS_INLINE_FUNCTION
     amrex::Real operator()(Direction dir,
                            AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z),
                            amrex::Real t) const

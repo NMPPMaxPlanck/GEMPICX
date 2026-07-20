@@ -11,6 +11,7 @@ using namespace Gempicx;
 int main (int argc, char* argv[])
 {
     amrex::Initialize(argc, argv, &overwrite_amrex_parser_defaults);
+    Kokkos::initialize(argc, argv);
     {
         Verbosity::set_level(99);
         print_gempicx_version();
@@ -21,8 +22,10 @@ int main (int argc, char* argv[])
                        << "CMake Package version: " << gempicx_pkg_version() << '\n'
                        << "Release number: " << gempicx_release_number() << '\n'
                        << "AMReX version: " << gempicx_amrex_version() << '\n'
+                       << "Kokkos version: " << gempicx_kokkos_version() << '\n'
                        << "HYPRE version: " << gempicx_hypre_version() << '\n';
     }
+    Kokkos::finalize();
     amrex::Finalize();
     return EXIT_SUCCESS;
 }

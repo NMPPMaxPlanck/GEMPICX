@@ -72,7 +72,8 @@ void fill_scalar_field_with_sin (DiscreteField& f)
     {
         k0[dir] = 2 * M_PI / f.discrete_grid().length(dir);
     }
-    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(double x, double y, double z))
+    auto fillFunc =
+        [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         return GEMPIC_D_MULT(std::sin(k0[Direction::xDir] * x), std::sin(k0[Direction::yDir] * y),
                              std::sin(k0[Direction::zDir] * z));
@@ -110,8 +111,8 @@ void fill_vector_field_with_sin (DiscreteVectorField& f)
     {
         k0[gridDir] = 2 * M_PI / f.discrete_grid(Direction::xDir).length(gridDir);
     }
-    auto fillFunc =
-        [=] AMREX_GPU_HOST_DEVICE(Direction dir, AMREX_D_DECL(double x, double y, double z))
+    auto fillFunc = [=] AMREX_GPU_HOST_DEVICE(
+                        Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         switch (dir)
         {
@@ -419,7 +420,7 @@ void fill_reference_scalar_field (DiscreteField& sf, double t)
 }
 void fill_scalar_field_with_parse (DiscreteField& f,
                                    DiscreteFieldFunctionParser const& parser,
-                                   double t)
+                                   amrex::Real t)
 {
     fill(f, parser, t);
 }
@@ -433,7 +434,7 @@ TEST(FunctionParser, fillDiscreteFieldWithParsedFunction)
                       nCell,
                       {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell, DiscreteAxis::Node)}};
     Gempic::Io::Parameters parameters;
-    double t{0.5};
+    amrex::Real t{0.5};
     // AMReX `ParamParse::add()` requires a reference for a string
     // Trying to directly pass the string to `Parameters::set()` on clang converts implicitly and
     // calls ParamParse::add(bool);
@@ -450,7 +451,7 @@ TEST(FunctionParser, fillDiscreteFieldWithParsedFunction)
     EXPECT_LT(l_inf_error(sf, sfRef), 1.0e-14);
 }
 
-void fill_reference_vector_field (DiscreteVectorField& vf, double t)
+void fill_reference_vector_field (DiscreteVectorField& vf, amrex::Real t)
 {
     fill(
         vf,
@@ -474,7 +475,7 @@ void fill_reference_vector_field (DiscreteVectorField& vf, double t)
 }
 void fill_vector_field_with_parse (DiscreteVectorField& f,
                                    DiscreteVectorFieldFunctionParser const& parser,
-                                   double t)
+                                   amrex::Real t)
 {
     fill(f, parser, t);
 }
@@ -488,7 +489,7 @@ TEST(FunctionParser, fillDiscreteVectorFieldWithParsedFunction)
                       nCell,
                       {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell, DiscreteAxis::Node)}};
     Gempic::Io::Parameters parameters;
-    double t{0.5};
+    amrex::Real t{0.5};
     // AMReX `ParamParse::add()` requires a reference for a string
     // Trying to directly pass the string to `Parameters::set()` on clang converts implicitly and
     // calls ParamParse::add(bool);

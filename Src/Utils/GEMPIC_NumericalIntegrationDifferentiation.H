@@ -44,9 +44,9 @@ public:
      */
     // clang-format on
     template <typename Function1D>
-    inline AMREX_GPU_HOST_DEVICE amrex::Real line (amrex::Real const& midpoint,
-                                                   amrex::Real const& halfWidth,
-                                                   Function1D const& f) const
+    KOKKOS_INLINE_FUNCTION amrex::Real line (amrex::Real const& midpoint,
+                                             amrex::Real const& halfWidth,
+                                             Function1D const& f) const
     {
         static_assert(
             std::is_invocable_r_v<amrex::Real, Function1D, amrex::Real>,
@@ -72,9 +72,9 @@ public:
      */
     // clang-format on
     template <typename Function2D>
-    inline AMREX_GPU_HOST_DEVICE amrex::Real surface (std::array<amrex::Real, 2> const& midpoint,
-                                                      std::array<amrex::Real, 2> const& halfWidth,
-                                                      Function2D const& f) const
+    KOKKOS_INLINE_FUNCTION amrex::Real surface (std::array<amrex::Real, 2> const& midpoint,
+                                                std::array<amrex::Real, 2> const& halfWidth,
+                                                Function2D const& f) const
     {
         static_assert(std::is_invocable_r_v<amrex::Real, Function2D, amrex::Real, amrex::Real>,
                       "'Function2D const &f' has no callable interface matching "

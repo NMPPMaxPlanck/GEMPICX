@@ -13,9 +13,6 @@ add_executable(
   ${PROJECT_SOURCE_DIR}/Testing/TestUtils/GEMPIC_TestUtils.cpp
   )
 
-if(GEMPIC_USE_CUDA)
-  setup_target_for_cuda_compilation(ParticleAdd_test)
-endif()
 target_link_libraries(ParticleAdd_test
                       GEMPICX::GEMPICX
                       GTest::gtest_main)

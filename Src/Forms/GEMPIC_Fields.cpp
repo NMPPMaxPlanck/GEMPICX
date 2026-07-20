@@ -72,6 +72,29 @@ amrex::Box selected_ghost_box (DiscreteField const& df,
     // Unreachable
     return amrex::Box{};
 }
+
+Kokkos::MDRangePolicy<Kokkos::Rank<3>, Kokkos::IndexType<int>> md_range_policy (
+    amrex::Box box, std::optional<std::array<int, 3>> tiling)
+{
+    Kokkos::Array<int, 3> begin{0, 0, 0};
+    Kokkos::Array<int, 3> end{1, 1, 1};
+    for (size_t i = 0; i < AMREX_SPACEDIM; i++)
+    {
+        begin[i] = box.smallEnd(i);
+        end[i] = box.bigEnd(i) + 1;
+    }
+    if (tiling)
+    {
+        std::array<int, 3> tileSize{tiling.value()};
+        return Kokkos::MDRangePolicy<Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>{
+            begin, end, Kokkos::Array<int, 3>{tileSize[0], tileSize[1], tileSize[2]}};
+    }
+    else
+    {
+        return Kokkos::MDRangePolicy<Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>{
+            begin, end};
+    }
+};
 }; //namespace Impl
 
 //!@cond EXCLUDE_API_DOC
@@ -118,6 +141,7 @@ DiscreteField::DiscreteField(std::string const& label,
     m_data = std::make_shared<Impl::DiscreteFieldData>(
         label, std::move (data), m_discreteGrid, Impl::convert_to_int(dofCategory),
         std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition);
+    Kokkos::fence();
 }
 
 DiscreteField::DiscreteField(std::string const& label,
@@ -156,6 +180,7 @@ DiscreteField::DiscreteField(std::string const& label,
     m_data = std::make_shared<Impl::DiscreteFieldData>(
         label, std::move (data), m_discreteGrid, Impl::convert_to_int(dofCategory),
         std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition);
+    Kokkos::fence();
 };
 
 DiscreteField::DiscreteField(std::shared_ptr<Impl::DiscreteFieldData> const& data) :
@@ -175,7 +200,10 @@ amrex::Box const& DiscreteField::select_box(amrex::MFIter const& mfi)
 }
 amrex::Box const& DiscreteField::select_box(int index)
 {
-    m_view = this->multi_fab().array(index);
+    amrex::Array4<amrex::Real> view{this->multi_fab().array(index)};
+    amrex::Dim3 min{amrex::lbound(view)};
+    amrex::Dim3 max{amrex::ubound(view)};
+    m_view = View{view.dataPtr(), {min.x, min.y, min.z}, {max.x + 1, max.y + 1, max.z + 1}};
     m_selectedBoxIdx = index;
     return this->multi_fab()[index].box();
 }
@@ -188,6 +216,7 @@ std::array<int, AMREX_SPACEDIM> DiscreteField::ghost_width() const { return m_da
 
 void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM> width)
 {
+    Kokkos::fence();
     bool increaseGhost{false};
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
@@ -209,7 +238,7 @@ void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM
         amrex::MultiFab dataNew{ba, dm, 1, ng};
         dataNew.LocalCopy(this->multi_fab(), 0, 0, 1, amrex::IntVect{0});
         m_data->m_data = std::move(dataNew);
-        m_view = amrex::Array4<amrex::Real>{};
+        m_view = View{};
         m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
     this->multi_fab().FillBoundary(ng, Impl::to_amrex_periodicty(this->discrete_grid()));
@@ -391,7 +420,7 @@ void write_field_data (DiscreteField& f, H5DatasetHandle const& dataset)
         check_hdf5(H5Pset_dxpl_mpio(parallelProperty, H5FD_MPIO_COLLECTIVE));
 
         check_hdf5(H5Dwrite(dataset.h5id(), Impl::h5_type(amrex::Real{}), hs.m_memory.h5id(),
-                            hs.m_file.h5id(), H5P_DEFAULT, f.view().dataPtr()));
+                            hs.m_file.h5id(), H5P_DEFAULT, f.view().data()));
         check_hdf5(H5Pclose(parallelProperty));
     }
 }
@@ -407,7 +436,7 @@ void read_field_data (DiscreteField& f, H5DatasetHandle const& dataset)
         check_hdf5(H5Pset_dxpl_mpio(parallelProperty, H5FD_MPIO_COLLECTIVE));
 
         check_hdf5(H5Dread(dataset.h5id(), Impl::h5_type(amrex::Real{}), hs.m_memory.h5id(),
-                           hs.m_file.h5id(), H5P_DEFAULT, f.view().dataPtr()));
+                           hs.m_file.h5id(), H5P_DEFAULT, f.view().data()));
         check_hdf5(H5Pclose(parallelProperty));
     }
 }
@@ -557,22 +586,28 @@ DiscreteVectorFieldFunctionParser::DiscreteVectorFieldFunctionParser(
 
 bool is_nan (DiscreteField& a)
 {
-    auto ma = a.multi_fab().const_arrays();
-    amrex::GpuTuple<int> isNan{};
-    isNan = amrex::ParReduce(amrex::TypeList<amrex::ReduceOpLogicalOr>{}, amrex::TypeList<int>{},
-                             a.multi_fab(),
-                             [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
-                                                       int iz) noexcept -> amrex::GpuTuple<int>
-                             {
-                                 auto aa = ma[boxNo];
-                                 return {std::isnan(aa(ix, iy, iz))};
-                             });
+    bool isNan{false};
+    for (amrex::MFIter mfi{a.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        a.select_box(mfi);
+        bool tmp{};
+        Kokkos::LOr<bool> reducer{tmp};
+        Kokkos::parallel_reduce(
+            "bool is_nan(DiscreteField)", Impl::md_range_policy(mfi.validbox()),
+            KOKKOS_LAMBDA(int ix, int iy, int iz, bool& lIsNan) {
+                lIsNan = lIsNan || Kokkos::isnan(a(ix, iy, iz));
+            },
+            reducer);
+        isNan = reducer.reference() || isNan;
+    }
     //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
     //It should be noted that the reduction result of ParReduce is local and it is the user's
     //responsibility if MPI communication is needed
-    MPI_Allreduce(MPI_IN_PLACE, &isNan, 1, MPI_INT, MPI_LOR,
+    int isNanMPI{isNan};
+    MPI_Allreduce(MPI_IN_PLACE, &isNanMPI, 1, MPI_INT, MPI_LOR,
                   amrex::ParallelContext::CommunicatorAll());
-    return amrex::get<0>(isNan);
+    isNan = static_cast<bool>(isNanMPI);
+    return isNan;
 }
 
 /**
@@ -730,31 +765,38 @@ amrex::Real dot_product (DiscreteVectorField& a, DiscreteVectorField& b)
 
 amrex::Real l_inf_error (DiscreteField& a, DiscreteField& b)
 {
-    auto ma = a.multi_fab().const_arrays();
-    auto mb = b.multi_fab().const_arrays();
-    amrex::GpuTuple<amrex::Real, int> res{};
-    res = amrex::ParReduce(
-        amrex::TypeList<amrex::ReduceOpMax, amrex::ReduceOpLogicalOr>{},
-        amrex::TypeList<amrex::Real, int>{}, a.multi_fab(),
-        [=] AMREX_GPU_HOST_DEVICE(int boxNo, int ix, int iy,
-                                  int iz) noexcept -> amrex::GpuTuple<amrex::Real, int>
-        {
-            auto aa = ma[boxNo];
-            auto ba = mb[boxNo];
-            amrex::Real ldiff{aa(ix, iy, iz) - ba(ix, iy, iz)};
-            // NaN comparisons always evaluate to false, which is why we check on Nan manually.
-            // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
-            // https://rgambord.github.io/c99-doc/sections/7/12/14/index.html#id2
-            return {std::abs(ldiff), static_cast<int>(std::isnan(ldiff))};
-        });
-    int isNan{amrex::get<1>(res)};
-    amrex::Real norm{amrex::get<0>(res)};
+    bool isNan{false};
+    amrex::Real norm{};
+    for (amrex::MFIter mfi{a.multi_fab()}; mfi.isValid(); ++mfi)
+    {
+        bool tmpNan{};
+        amrex::Real tmpNorm{};
+        Kokkos::LOr<bool> reducerNan{tmpNan};
+        Kokkos::Max<amrex::Real> reducerNorm{tmpNorm};
+        a.select_box(mfi);
+        b.select_box(mfi);
+        Kokkos::parallel_reduce(
+            "amrex::Real l_inf_error(DiscreteField,DiscreteField)",
+            Impl::md_range_policy(mfi.validbox()),
+            KOKKOS_LAMBDA(int ix, int iy, int iz, amrex::Real& lNorm, bool& lIsNan) {
+                amrex::Real diff{std::abs(a(ix, iy, iz) - b(ix, iy, iz))};
+                lNorm = std::max(lNorm, diff);
+                // NaN comparisons always evaluate to false, which is why we check on Nan manually.
+                // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
+                // https://rgambord.github.io/c99-doc/sections/7/12/14/index.html#id2
+                lIsNan = lIsNan || Kokkos::isnan(diff);
+            },
+            reducerNorm, reducerNan);
+        isNan = tmpNan || isNan;
+        norm = std::max(tmpNorm, norm);
+    }
     //https://amrex-codes.github.io/amrex/docs_html/GPU.html#multifab-reductions
     //It should be noted that the reduction result of ParReduce is local and it is the user's
     //responsibility if MPI communication is needed
-    MPI_Allreduce(MPI_IN_PLACE, &isNan, 1, MPI_INT, MPI_LOR,
+    int isNanMPI{isNan};
+    MPI_Allreduce(MPI_IN_PLACE, &isNanMPI, 1, MPI_INT, MPI_LOR,
                   amrex::ParallelContext::CommunicatorAll());
-    if (amrex::get<1>(res)) return std::numeric_limits<amrex::Real>::quiet_NaN();
+    if (isNanMPI) return std::numeric_limits<amrex::Real>::quiet_NaN();
     MPI_Allreduce(MPI_IN_PLACE, &norm, 1, MPI_DOUBLE, MPI_MAX,
                   amrex::ParallelContext::CommunicatorAll());
     return norm;
