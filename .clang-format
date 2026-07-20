@@ -32,6 +32,8 @@ IncludeCategories:
     Priority:       9
   - Regex:          '^<AMReX'
     Priority:       8
+  - Regex:          '^<Kokkos'
+    Priority:       7
   - Regex:          '^((<|")(gtest|gmock)/?)'
     Priority:       3
   - Regex:          '^<[a-z0-9_]*'

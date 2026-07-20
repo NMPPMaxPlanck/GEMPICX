@@ -64,6 +64,15 @@ inline std::string gempicx_hypre_version ()
     return "Hypre not enabled";
 #endif
 }
+
+inline std::string gempicx_kokkos_version ()
+{
+#ifdef GEMPICX_Kokkos_VERSION
+    return GEMPICX_Kokkos_VERSION;
+#else
+    return "Unknown (Kokkos was not fetched/installed with git?)";
+#endif
+}
 } //namespace Gempic::Utils
 
 #endif

@@ -385,8 +385,7 @@ void finite_difference_de_rham_complex_hodge_primal_to_dual_scalar (
     bcConfig.m_extrapolationDegree = hodgeDegree - 1;
     bcConfig.m_bcRec = amrex::BCRec{AMREX_D_DECL(BCType::extrap, BCType::extrap, BCType::extrap),
                                     AMREX_D_DECL(BCType::extrap, BCType::extrap, BCType::extrap)};
-    auto polynom =
-        [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    auto polynom = KOKKOS_LAMBDA(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         size_t degree{hodgeDegree};
         return GEMPIC_D_ADD(std::pow(x, degree - 1), std::pow(y, degree - 1),
@@ -423,8 +422,8 @@ void finite_difference_de_rham_complex_hodge_primal_to_dual_vector (
     bcConfig.m_extrapolationDegree = hodgeDegree - 1;
     bcConfig.m_bcRec = amrex::BCRec{AMREX_D_DECL(BCType::extrap, BCType::extrap, BCType::extrap),
                                     AMREX_D_DECL(BCType::extrap, BCType::extrap, BCType::extrap)};
-    auto polynom = [=] AMREX_GPU_HOST_DEVICE(
-                       Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    auto polynom =
+        KOKKOS_LAMBDA(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         size_t degree{hodgeDegree};
         return GEMPIC_D_ADD(std::pow(x, degree - 1), std::pow(y, degree - 1),

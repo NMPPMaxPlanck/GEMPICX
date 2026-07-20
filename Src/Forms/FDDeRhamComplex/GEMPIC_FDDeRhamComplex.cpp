@@ -175,10 +175,6 @@ int FiniteDifferenceDeRhamSpaces::hodge_degree() { return s_hodgeDegree; };
 
 namespace Impl
 {
-std::array<amrex::Long, 3> stride (amrex::Array4<amrex::Real> const& view)
-{
-    return std::array<amrex::Long, 3>{1, view.stride.a[0], view.stride.a[1]};
-}
 struct ForwardStencil
 {
     AMREX_GPU_HOST_DEVICE amrex::Real operator()(amrex::Real const& f, size_t const& stride) const
@@ -201,21 +197,23 @@ void grad (DiscreteVectorField& of, DiscreteField& zf, Stencil const& stencil)
 {
     for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
     {
-        for (amrex::MFIter mfi{of.multi_fab(dir)}; mfi.isValid(); ++mfi)
+        if (dir < AMREX_SPACEDIM)
         {
-            of.select_box(mfi);
-            zf.select_box(mfi);
-            auto strides = stride(zf.view());
-            if (dir < AMREX_SPACEDIM)
+            for (amrex::MFIter mfi{of.multi_fab(dir)}; mfi.isValid(); ++mfi)
             {
-                ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                            { of(dir, ix, iy, iz) = stencil(zf(ix, iy, iz), strides[dir]); });
+                of.select_box(mfi);
+                zf.select_box(mfi);
+                Kokkos::parallel_for(
+                    "Impl::grad(DiscreteVectorField, DiscreteField)",
+                    Impl::md_range_policy(mfi.validbox()), KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                        of(dir, ix, iy, iz) =
+                            stencil(zf(ix, iy, iz), zf.view().stride(static_cast<size_t>(dir)));
+                    });
             }
-            else
-            {
-                ParallelFor(mfi.validbox(), [=] AMREX_GPU_HOST_DEVICE(int ix, int iy, int iz)
-                            { of(dir, ix, iy, iz) = 0.0; });
-            }
+        }
+        else
+        {
+            fill_zero(of[dir]);
         }
     }
 }
@@ -227,64 +225,50 @@ void curl (DiscreteVectorField& tf, DiscreteVectorField& of, Stencil const& sten
     {
         tf.select_box(mfi);
         of.select_box(mfi);
-        std::array<std::array<amrex::Long, 3>, 3> strides{};
-        for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-        {
-            strides[dir] = Impl::stride(of.view(dir));
-        }
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
-                        tf(Direction::xDir, ix, iy, iz) =
-                            GEMPIC_D_ADD(0.0,
-                                         stencil(of(Direction::zDir, ix, iy, iz),
-                                                 strides[Direction::zDir][Direction::yDir]),
-                                         -stencil(of(Direction::yDir, ix, iy, iz),
-                                                  strides[Direction::yDir][Direction::zDir]));
-                    });
+        Kokkos::parallel_for(
+            "Impl::curl(DiscreteVectorField[Direction::x], DiscreteVectorField)",
+            Impl::md_range_policy(mfi.validbox()), KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                tf(Direction::xDir, ix, iy, iz) = GEMPIC_D_ADD(
+                    0.0,
+                    stencil(of(Direction::zDir, ix, iy, iz),
+                            of.view(Direction::zDir).stride(static_cast<size_t>(Direction::yDir))),
+                    -stencil(
+                        of(Direction::yDir, ix, iy, iz),
+                        of.view(Direction::yDir).stride(static_cast<size_t>(Direction::zDir))));
+            });
     }
 
     for (amrex::MFIter mfi(tf.multi_fab(Direction::yDir)); mfi.isValid(); ++mfi)
     {
         tf.select_box(mfi);
         of.select_box(mfi);
-        std::array<std::array<amrex::Long, 3>, 3> strides{};
-        for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-        {
-            strides[dir] = Impl::stride(of.view(dir));
-        }
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
-                        tf(Direction::yDir, ix, iy, iz) =
-                            GEMPIC_D_ADD(-stencil(of(Direction::zDir, ix, iy, iz),
-                                                  strides[Direction::zDir][Direction::xDir]),
-                                         0.0,
-                                         stencil(of(Direction::xDir, ix, iy, iz),
-                                                 strides[Direction::xDir][Direction::zDir]));
-                    });
+        Kokkos::parallel_for(
+            "Impl::curl(DiscreteVectorField[Direction::y], DiscreteVectorField)",
+            Impl::md_range_policy(mfi.validbox()), KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                tf(Direction::yDir, ix, iy, iz) = GEMPIC_D_ADD(
+                    -stencil(of(Direction::zDir, ix, iy, iz),
+                             of.view(Direction::zDir).stride(static_cast<size_t>(Direction::xDir))),
+                    0.0,
+                    stencil(of(Direction::xDir, ix, iy, iz),
+                            of.view(Direction::xDir).stride(static_cast<size_t>(Direction::zDir))));
+            });
     }
 
     for (amrex::MFIter mfi(tf.multi_fab(Direction::zDir)); mfi.isValid(); ++mfi)
     {
         tf.select_box(mfi);
         of.select_box(mfi);
-        std::array<std::array<amrex::Long, 3>, 3> strides{};
-        for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-        {
-            strides[dir] = Impl::stride(of.view(dir));
-        }
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
-                        tf(Direction::zDir, ix, iy, iz) =
-                            GEMPIC_D_ADD(stencil(of(Direction::yDir, ix, iy, iz),
-                                                 strides[Direction::yDir][Direction::xDir]),
-                                         -stencil(of(Direction::xDir, ix, iy, iz),
-                                                  strides[Direction::xDir][Direction::yDir]),
-                                         0.0);
-                        ;
-                    });
+        Kokkos::parallel_for(
+            "Impl::curl(DiscreteVectorField[Direction::z], DiscreteVectorField)",
+            Impl::md_range_policy(mfi.validbox()), KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                tf(Direction::zDir, ix, iy, iz) = GEMPIC_D_ADD(
+                    stencil(of(Direction::yDir, ix, iy, iz),
+                            of.view(Direction::yDir).stride(static_cast<size_t>(Direction::xDir))),
+                    -stencil(of(Direction::xDir, ix, iy, iz),
+                             of.view(Direction::xDir).stride(static_cast<size_t>(Direction::yDir))),
+                    0.0);
+                ;
+            });
     }
 }
 
@@ -295,22 +279,20 @@ void div (DiscreteField threeF, DiscreteVectorField twoF, Stencil const& stencil
     {
         threeF.select_box(mfi);
         twoF.select_box(mfi);
-        std::array<std::array<amrex::Long, 3>, 3> strides{};
-        for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
-        {
-            strides[dir] = Impl::stride(twoF.view(dir));
-        }
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
-                        threeF(ix, iy, iz) =
-                            GEMPIC_D_ADD(stencil(twoF(Direction::xDir, ix, iy, iz),
-                                                 strides[Direction::xDir][Direction::xDir]),
-                                         stencil(twoF(Direction::yDir, ix, iy, iz),
-                                                 strides[Direction::yDir][Direction::yDir]),
-                                         stencil(twoF(Direction::zDir, ix, iy, iz),
-                                                 strides[Direction::zDir][Direction::zDir]));
-                    });
+        Kokkos::parallel_for(
+            "Impl::div(DiscreteField, DiscreteVectorField)", Impl::md_range_policy(mfi.validbox()),
+            KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                threeF(ix, iy, iz) = GEMPIC_D_ADD(
+                    stencil(
+                        twoF(Direction::xDir, ix, iy, iz),
+                        twoF.view(Direction::xDir).stride(static_cast<size_t>(Direction::xDir))),
+                    stencil(
+                        twoF(Direction::yDir, ix, iy, iz),
+                        twoF.view(Direction::yDir).stride(static_cast<size_t>(Direction::yDir))),
+                    stencil(
+                        twoF(Direction::zDir, ix, iy, iz),
+                        twoF.view(Direction::zDir).stride(static_cast<size_t>(Direction::zDir))));
+            });
     }
 }
 
@@ -318,12 +300,9 @@ template <size_t n>
 struct StridedArrayView
 {
     StridedArrayView() = delete;
-    constexpr StridedArrayView(amrex::Real& f, std::ptrdiff_t const& stride) :
-        m_f{f}, m_stride{stride}
-    {
-    }
+    constexpr StridedArrayView(amrex::Real& f, size_t const& stride) : m_f{f}, m_stride{stride} {}
     amrex::Real& m_f;
-    std::ptrdiff_t const m_stride;
+    size_t const m_stride;
     static constexpr size_t s_size{n};
 };
 
@@ -331,10 +310,12 @@ template <size_t n>
 struct StencilHelper
 {
     template <int i = 0>
-    static constexpr amrex::Real unroll (std::array<amrex::Real, n> coeff, StridedArrayView<n> view)
+    static constexpr amrex::Real unroll (std::array<amrex::Real, n> const& coeff,
+                                         StridedArrayView<n> const& view)
     {
         amrex::Real const* fPtr{&view.m_f};
-        std::ptrdiff_t offset{static_cast<std::ptrdiff_t>(i - (n - 1) / 2) * view.m_stride};
+        std::ptrdiff_t offset{static_cast<std::ptrdiff_t>(i - (n - 1) / 2) *
+                              static_cast<std::ptrdiff_t>(view.m_stride)};
         if constexpr (i < n - 1)
         {
             return coeff[i] * fPtr[offset] + StencilHelper<n>::unroll<i + 1>(coeff, view);
@@ -364,14 +345,14 @@ struct HodgeStencil
     static constexpr size_t s_halfWidth{(s_width - 1) / 2};
     std::array<T, s_width> m_coeff{};
 };
-constexpr HodgeStencil<amrex::Real, 2> hodgeFiniteDifferenceStencilDegree2{{1.0}};
-constexpr HodgeStencil<amrex::Real, 4> hodgeFiniteDifferenceStencilDegree4NodeToCell{
+static constexpr HodgeStencil<amrex::Real, 2> hodgeFiniteDifferenceStencilDegree2{{1.0}};
+static constexpr HodgeStencil<amrex::Real, 4> hodgeFiniteDifferenceStencilDegree4NodeToCell{
     {1.0 / 24.0, 22.0 / 24.0, 1.0 / 24.0}};
-constexpr HodgeStencil<amrex::Real, 4> hodgeFiniteDifferenceStencilDegree4CellToNode{
+static constexpr HodgeStencil<amrex::Real, 4> hodgeFiniteDifferenceStencilDegree4CellToNode{
     {-1.0 / 24.0, 13.0 / 12.0, -1.0 / 24.0}};
-constexpr HodgeStencil<amrex::Real, 6> hodgeFiniteDifferenceStencilDegree6NodeToCell{
+static constexpr HodgeStencil<amrex::Real, 6> hodgeFiniteDifferenceStencilDegree6NodeToCell{
     {-17.0 / 5760.0, 154.0 / 2880.0, 863.0 / 960.0, 154.0 / 2880.0, -17.0 / 5760.0}};
-constexpr HodgeStencil<amrex::Real, 6> hodgeFiniteDifferenceStencilDegree6CellToNode{
+static constexpr HodgeStencil<amrex::Real, 6> hodgeFiniteDifferenceStencilDegree6CellToNode{
     {3.0 / 640.0, -29.0 / 480.0, 1067.0 / 960.0, -29.0 / 480.0, 3.0 / 640.0}};
 using HodgeFiniteDifferenceStencils = std::variant<HodgeStencil<amrex::Real, 2>,
                                                    HodgeStencil<amrex::Real, 4>,
@@ -429,6 +410,7 @@ void hodge (DiscreteField& dst,
             DiscreteField& src,
             AMREX_D_DECL(StencilXdir stencilXdir, StencilYdir stencilYdir, StencilZdir stencilZdir))
 {
+    BL_PROFILE("Impl::hodge(DiscreteField, DiscreteField)");
     amrex::Real scale{hodge_scale(dst, src)};
     std::array<size_t, AMREX_SPACEDIM> ghostWidth{
         AMREX_D_DECL(stencilXdir.s_halfWidth, stencilYdir.s_halfWidth, stencilZdir.s_halfWidth)};
@@ -437,44 +419,54 @@ void hodge (DiscreteField& dst,
     {
         src.select_box(mfi);
         dst.select_box(mfi);
-        auto strides = stride(src.view());
-        ParallelFor(mfi.validbox(),
-                    [=] AMREX_GPU_DEVICE(int ix, int iy, int iz)
-                    {
+        amrex::ParallelFor(
 #if AMREX_SPACEDIM == 1
-                        StridedArrayView<StencilXdir::s_width> tmp{src(ix, iy, iz),
-                                                                   strides[Direction::xDir]};
-                        dst(ix, iy, iz) = scale * (stencilXdir.m_coeff * tmp);
+            mfi.validbox(), KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                StridedArrayView<StencilXdir::s_width> tmp{
+                    src(ix, iy, iz), src.view().stride(static_cast<size_t>(Direction::xDir))};
+                dst(ix, iy, iz) = scale * (stencilXdir.m_coeff * tmp);
 #elif AMREX_SPACEDIM == 2
-                        std::array<amrex::Real, StencilXdir::s_width> tmp1D{};
-                        int const &hw{static_cast<int>(stencilXdir.s_halfWidth)};
-                        for(int sx=-hw;sx<=hw;sx++) {
-                            StridedArrayView<StencilYdir::s_width> const tmp{src(ix + sx,iy,iz), strides[Direction::yDir]};
-                            tmp1D[sx + hw] = stencilYdir.m_coeff*tmp;
-                        };
-                        StridedArrayView<StencilXdir::s_width> const tmp{tmp1D[hw], 1};
-                        dst(ix,iy,iz) = scale * (stencilXdir.m_coeff*tmp);
+            mfi.validbox(),
+            KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                std::array<amrex::Real, StencilXdir::s_width> tmp1D{};
+                constexpr size_t hw{static_cast<int>(StencilXdir::s_halfWidth)};
+                for (int sx = -static_cast<int>(hw); sx <= static_cast<int>(hw); sx++)
+                {
+                    StridedArrayView<StencilYdir::s_width> const tmp{
+                        src(ix + sx, iy, iz),
+                        src.view().stride(static_cast<size_t>(Direction::yDir))};
+                    tmp1D[sx + hw] = stencilYdir.m_coeff * tmp;
+                };
+                StridedArrayView<StencilXdir::s_width> const tmp{tmp1D[hw], 1};
+                dst(ix, iy, iz) = scale * (stencilXdir.m_coeff * tmp);
 #elif AMREX_SPACEDIM == 3
-                        // No 2-D array is available. Is emulated manually using C-layout (LayoutRight).
-                        std::array<amrex::Real, StencilXdir::s_width * StencilYdir::s_width> tmp2D{};
-                        std::array<amrex::Real, StencilXdir::s_width> tmp1D{};
-                        int const &hwx{static_cast<int>(stencilXdir.s_halfWidth)};
-                        int const &hwy{static_cast<int>(stencilYdir.s_halfWidth)};
-                        int const &w{static_cast<int>(stencilXdir.s_width)};
-                        for(int sx=-hwx;sx<=hwx;sx++) {
-                            for(int sy=-hwy;sy<=hwy;sy++) {
-                               StridedArrayView<stencilZdir.s_width> const tmp{src(ix + sx,iy + sy,iz), strides[Direction::zDir]};
-                               tmp2D[(sx + hwx) + (sy + hwy) * w] = stencilZdir.m_coeff * tmp;
-                        }
-                        }
-                        for(int sx=0;sx<w;sx++) {
-                            StridedArrayView<StencilYdir::s_width> const tmp{tmp2D[sx + hwy*w], w};
-                            tmp1D[sx] = stencilYdir.m_coeff * tmp;
-                        };
-                        StridedArrayView<StencilXdir::s_width> const tmp{tmp1D[hwx], 1};
-                        dst(ix,iy,iz) = scale * (stencilXdir.m_coeff * tmp);
+            mfi.validbox(),
+            KOKKOS_LAMBDA(int ix, int iy, int iz) {
+                // No 2-D array is available. Is emulated manually using C-layout (LayoutRight).
+                std::array<amrex::Real, StencilXdir::s_width * StencilYdir::s_width> tmp2D{};
+                std::array<amrex::Real, StencilXdir::s_width> tmp1D{};
+                constexpr size_t hwx{StencilXdir::s_halfWidth};
+                constexpr size_t hwy{StencilYdir::s_halfWidth};
+                constexpr size_t w{StencilXdir::s_width};
+                for (int sx = -static_cast<int>(hwx); sx <= static_cast<int>(hwx); sx++)
+                {
+                    for (int sy = -static_cast<int>(hwy); sy <= static_cast<int>(hwy); sy++)
+                    {
+                        StridedArrayView<StencilZdir::s_width> const tmp{
+                            src(ix + sx, iy + sy, iz),
+                            src.view().stride(static_cast<size_t>(Direction::zDir))};
+                        tmp2D[(sx + hwx) + (sy + hwy) * w] = stencilZdir.m_coeff * tmp;
+                    }
+                }
+                for (size_t sx = 0; sx < w; sx++)
+                {
+                    StridedArrayView<StencilYdir::s_width> const tmp{tmp2D[sx + hwy * w], w};
+                    tmp1D[sx] = stencilYdir.m_coeff * tmp;
+                };
+                StridedArrayView<StencilXdir::s_width> const tmp{tmp1D[hwx], 1};
+                dst(ix, iy, iz) = scale * (stencilXdir.m_coeff * tmp);
 #endif
-                    });
+            });
     }
 }
 

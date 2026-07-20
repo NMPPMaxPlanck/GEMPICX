@@ -46,30 +46,14 @@ option(GEMPIC_USE_HDF5 "Enable HDF5 support" ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# Enable Languages
-enable_language(CXX)
-if(GEMPIC_USE_CUDA)
-  enable_language(CUDA)
-  set(CUDA_SEPARABLE_COMPILATION ON)
-endif()
-if(GEMPIC_USE_HIP)
-  enable_language(HIP)
-  # note. this line here because it is there for CUDA.
-  # Option is irrelevant as of 2025-05-20
-  # (see https://gitlab.kitware.com/cmake/cmake/-/issues/23210)
-  # set(HIP_SEPARABLE_COMPILATION ON)
-endif()
 
 include(cmake/gempic_install.cmake)
-
 include(cmake/gempic_FetchContent_Declare.cmake)
-
-# Set compiler flags
 include(cmake/gempic_CompilerConfig.cmake)
 
-include(cmake/gempic_AMReXConfig.cmake)
-
 include(cmake/gempic_HDF5Config.cmake)
+include(cmake/gempic_KokkosConfig.cmake)
+include(cmake/gempic_AMReXConfig.cmake)
 
 add_library(GEMPICX STATIC)
 add_library(GEMPICX::GEMPICX ALIAS GEMPICX)
@@ -88,10 +72,6 @@ endif()
 
 # Add subfolder with source files of the library
 add_subdirectory(Src)
-if(GEMPIC_USE_CUDA)
-  # function defined in AMReX tools. No equivalent for HIP
-  setup_target_for_cuda_compilation(GEMPICX)
-endif()
 # Add cmake-git-version-tracking
 gempic_FetchContent_Declare(
   cmake_git_version_tracking
@@ -111,7 +91,7 @@ else()
 endif()
 
 target_link_libraries(GEMPICX
-  PUBLIC AMReX::amrex_${AMReX_SPACEDIM}d AMReX::Flags_CXX
+  PUBLIC AMReX::amrex_${AMReX_SPACEDIM}d Kokkos::kokkos
   # Private primarily so that people could include their own and get info about their repo
   # Info about our repo is already exposed in GEMPICX.H
   PRIVATE
@@ -152,10 +132,6 @@ if(TARGET GEMPICX::HDF5)
   message(STATUS "   HDF5 support             = ON")
 else()
   message(STATUS "   HDF5 support             = OFF")
-endif()
-if(GEMPIC_USE_CUDA)
-  message(STATUS "   CUDA compiler            = ${CMAKE_CUDA_COMPILER}")
-  message(STATUS "   CUDA flags               = ${CMAKE_CUDA_FLAGS}")
 endif()
 if(GEMPIC_USE_HIP)
   message(STATUS "   HIP compiler            = ${CMAKE_HIP_COMPILER}")

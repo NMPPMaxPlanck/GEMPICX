@@ -21,14 +21,13 @@ void fill_with_integrated_edges (DiscreteVectorField& field,
                                  F const& funcs,
                                  Integrator const& integrate = GaussLegendreQuadrature{10})
 {
-    auto f = [=] AMREX_GPU_HOST_DEVICE(Direction dir,
-                                       AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    auto f = KOKKOS_LAMBDA(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         std::array<amrex::Real, 3> r{GEMPIC_D_PAD(x, y, z)};
         std::array<amrex::Real, 3> dx{GEMPIC_D_PAD_ONE(field.discrete_grid(xDir).dx(xDir),
                                                        field.discrete_grid(yDir).dx(yDir),
                                                        field.discrete_grid(zDir).dx(zDir))};
-        auto f1D = [&, r] (amrex::Real val)
+        auto f1D = [&, r] (amrex::Real val) -> amrex::Real
         {
             std::array<amrex::Real, 3> tmp{r};
             tmp[dir] = val;
@@ -44,11 +43,10 @@ void fill_with_integrated_faces (DiscreteVectorField& field,
                                  Integrator const& integrate = GaussLegendreQuadrature{10})
 {
     // Direction dir is the direction of the normal vector of the face
-    auto f = [=] AMREX_GPU_HOST_DEVICE(Direction dir,
-                                       AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    auto f = KOKKOS_LAMBDA(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
         std::array<amrex::Real, 3> r{GEMPIC_D_PAD(x, y, z)};
-        auto f2D = [&, r] (amrex::Real val1, amrex::Real val2)
+        auto f2D = [&, r] (amrex::Real val1, amrex::Real val2) -> amrex::Real
         {
             std::array<amrex::Real, 3> tmp{r};
             switch (dir)
@@ -116,9 +114,9 @@ void fill_with_integrated_cells (DiscreteField& field,
                                                    field.discrete_grid().dx(Direction::yDir),
                                                    field.discrete_grid().dx(Direction::zDir))};
     for (int i = 0; i < 3; i++) dx[i] = dx[i] / 2.0;
-    auto f = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    auto f = KOKKOS_LAMBDA(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
     {
-        auto f3D = [&] (amrex::Real x, amrex::Real y, amrex::Real z)
+        auto f3D = [&] (amrex::Real x, amrex::Real y, amrex::Real z) -> amrex::Real
         {
             GEMPIC_D_EXCL(UNUSED(y);, UNUSED(z);, )
             return funcs(AMREX_D_DECL(x, y, z));
@@ -261,9 +259,11 @@ template <typename FDForm, ScalarAnalyticalExpressionSpaceTime SF>
              std::is_same_v<FDForm, DualZeroForm> || std::is_same_v<FDForm, DualThreeForm>
 void project (FDForm& field, SF const& f, amrex::Real const& time)
 {
-    auto timeIndependent = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y,
-                                                                  amrex::Real z)) -> amrex::Real
-    { return f(AMREX_D_DECL(x, y, z), time); };
+    auto timeIndependent =
+        KOKKOS_LAMBDA(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))->amrex::Real
+    {
+        return f(AMREX_D_DECL(x, y, z), time);
+    };
     project(field, timeIndependent);
 }
 template <typename FDForm, VectorAnalyticalExpressionSpaceTime VF>
@@ -272,9 +272,11 @@ template <typename FDForm, VectorAnalyticalExpressionSpaceTime VF>
 void project (FDForm& field, VF const& f, amrex::Real const& time)
 {
     auto timeIndependent =
-        [=] AMREX_GPU_HOST_DEVICE(
-            Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z)) -> amrex::Real
-    { return f(dir, AMREX_D_DECL(x, y, z), time); };
+        KOKKOS_LAMBDA(Direction dir, AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+            ->amrex::Real
+    {
+        return f(dir, AMREX_D_DECL(x, y, z), time);
+    };
     project(field, timeIndependent);
 }
 

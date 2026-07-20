@@ -22,9 +22,6 @@ std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask (amrex::MultiFab& thisMF,
 
     bool runOnGpu = amrex::Gpu::inLaunchRegion();
     amrex::ignore_unused(runOnGpu, tags);
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (!runOnGpu)
-#endif
     {
         std::vector<std::pair<int, amrex::Box>> isects;
 
@@ -125,9 +122,6 @@ void mult_and_add (amrex::Real const dstVal,
     else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
-#endif
         for (amrex::MFIter mfi(dst, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             amrex::Box const& bx = mfi.growntilebox(nghost);
@@ -175,9 +169,6 @@ void mult_and_add (amrex::MultiFab& dst,
     else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (amrex::Gpu::notInLaunchRegion())
-#endif
         for (amrex::MFIter mfi(dst, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
             amrex::Box const& bx = mfi.growntilebox(nghost);
@@ -236,9 +227,6 @@ typename FAB::value_type wgt_dot (amrex::FabArray<FAB> const& wgt,
     else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (!system::regtest_reduction) reduction(+ : sm)
-#endif
         for (amrex::MFIter mfi(x, true); mfi.isValid(); ++mfi)
         {
             amrex::Box const& bx = mfi.tilebox(); //growntilebox(nghost);
@@ -313,9 +301,6 @@ amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
     else
 #endif
     {
-#ifdef AMREX_USE_OMP
-#pragma omp parallel if (!system::regtest_reduction) reduction(+ : sm)
-#endif
         for (amrex::MFIter mfi(x, true); mfi.isValid(); ++mfi)
         {
             amrex::Box const& bx = mfi.tilebox(); //mfi.growntilebox(nghost);

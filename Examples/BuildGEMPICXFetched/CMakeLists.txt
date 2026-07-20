@@ -23,13 +23,6 @@ FetchContent_Declare(GEMPICX
 # Set GEMPICX options here ...
 FetchContent_MakeAvailable(GEMPICX)
 
-if(USE_CUDA)
-  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES ${AMREX_CUDA_ARCHS})
-  endif()
-  enable_language(CUDA)
-endif()
-
 if(   ($ENV{HOSTNAME} MATCHES "raven*")
    OR ($ENV{HOSTNAME} MATCHES "viper*")
    OR (DEFINED ENV{MPCDF_RUNNER}))
@@ -40,13 +33,8 @@ endif()
 
 add_executable(example UseFetchedGEMPICX.cpp)
 
-if(USE_CUDA)
-  # Hard coded because we have 1 project with 1 file. Not necessary at all if we use KOKKOS.
-  set_target_properties(example PROPERTIES CUDA_SEPARABLE_COMPILATION ON) # This adds -dc
-  set_source_files_properties(UseFetchedGEMPICX.cpp PROPERTIES LANGUAGE CUDA)
-  set_target_properties(example PROPERTIES CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES})
-endif()
 target_link_libraries(example GEMPICX::GEMPICX)
 
 enable_testing()
+
 add_test(NAME GEMPICXFetched_Verify COMMAND example)

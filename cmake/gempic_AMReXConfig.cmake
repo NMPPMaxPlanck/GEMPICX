@@ -2,12 +2,14 @@ macro(set_amrex_options_from_gempic)
   include(cmake/check_FFT.cmake)
   set(AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
   if(GEMPIC_USE_CUDA)
-    if(IPO_IS_SUPPORTED)
-      set(AMReX_CUDA_LTO ON CACHE STRING "AMReX Option set within GEMPIC")
-    endif()
+    # AMReX does not recognise the CUDA language set by Kokkos, so we still need to enable it
+    # even if Kokkos handles the performance portability options
+    enable_language(CUDA)
+    set(AMReX_CUDA_LTO ON CACHE STRING "AMReX Option set within GEMPIC")
     set(AMReX_GPU_BACKEND CUDA CACHE STRING "AMReX Option set within GEMPIC")
   endif()
   if(GEMPIC_USE_HIP)
+    enable_language(HIP)
     set(AMReX_GPU_BACKEND HIP CACHE STRING "AMReX Option set within GEMPIC")
     set(AMReX_AMD_ARCH ${CMAKE_HIP_ARCHITECTURES} CACHE STRING "AMReX Option set within GEMPIC")
   endif()
@@ -19,13 +21,6 @@ macro(set_amrex_options_from_gempic)
 endmacro()
 
 include(cmake/gempic_FetchContent_Declare.cmake)
-
-# This doesn't do anything but avoid an AMReX warning -- CMAKE_CUDA_HOST_COMPILER must be specified as a -D option on the first invocation of cmake as it is used during the compiler detection process.
-if (CMAKE_CUDA_HOST_COMPILER)
-  if ("${CMAKE_CXX_COMPILER}" MATCHES "${CMAKE_CUDA_HOST_COMPILER}")
-    set(CMAKE_CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
-  endif()
-endif()
 
 if(AMReX_HYPRE)
   gempic_FetchContent_Declare(HYPRE
@@ -52,29 +47,3 @@ if(NOT ${AMReX_FOUND}) # AMReX_FOUND is only true if the package was installed
   endif()
 endif()
 
-if(GEMPIC_USE_CUDA)
-  # Convert all .cpp sources of _target to CUDA sources
-  # This DOES NOT change the actual extension of the source.
-  # It just change the default language CMake uses to compile
-  # the source
-  #
-  function(set_cpp_sources_to_cuda_language _target)
-    get_target_property(_sources ${_target} SOURCES)
-    list(FILTER _sources INCLUDE REGEX "\\.cpp$")
-    set_source_files_properties(${_sources} PROPERTIES LANGUAGE CUDA)
-  endfunction()
-
-  #
-  # Setup an amrex-dependent target for cuda compilation.
-  # This function ensures that the CUDA compilation of _target
-  # is compatible with amrex CUDA build.
-  #
-  function(Setup_target_for_cuda_compilation _target)
-    set_target_properties(${_target}
-    PROPERTIES
-    CUDA_SEPARABLE_COMPILATION ON      # This adds -dc
-        )
-    set_cpp_sources_to_cuda_language(${_target})
-  endfunction()
-  
-endif(GEMPIC_USE_CUDA)

@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Core.hpp>
+
 #include "GEMPIC_OffsetArray.H"
 
 using Gempic::Utils::OffsetArray;

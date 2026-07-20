@@ -27,7 +27,7 @@ list(TRANSFORM GEMPICX_HEADER_DIRECTORIES PREPEND "${PROJECT_SOURCE_DIR}/")
 target_include_directories(GEMPICX PUBLIC
                            ${GEMPICX_HEADER_DIRECTORIES})
 
-target_sources(GEMPICX 
+target_sources(GEMPICX
                 PRIVATE
                   GEMPIC_Config.cpp
                   GEMPIC_ComputationalDomain.cpp)
