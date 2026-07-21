@@ -270,6 +270,7 @@ inline std::unique_ptr<Filter> make_filter (Gempic::ComputationalDomain const& c
 #ifdef AMREX_USE_FFT
         return std::make_unique<FourierFilter>(compDom);
 #else
+        UNUSED(compDom);
         GEMPIC_ERROR("FFT was not compiled with GEMPICX so the Fourier filter is not available");
 #endif
     }

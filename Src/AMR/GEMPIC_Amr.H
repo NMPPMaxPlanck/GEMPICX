@@ -239,7 +239,7 @@ template <MLFormC T, MLFormC U>
 void grad (T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
-    for (int lev = 0; lev < t.size(); lev++) grad(t[lev], u[lev]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) grad(t[lev], u[lev]);
 }
 
 template <MLFormC T, MLFormC U>
@@ -247,7 +247,7 @@ template <MLFormC T, MLFormC U>
 void curl (T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
-    for (int lev = 0; lev < t.size(); lev++) curl(t[lev], u[lev]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) curl(t[lev], u[lev]);
 }
 
 template <MLFormC T, MLFormC U>
@@ -255,7 +255,7 @@ template <MLFormC T, MLFormC U>
 void div (T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
-    for (int lev = 0; lev < t.size(); lev++) div(t[lev], u[lev]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) div(t[lev], u[lev]);
 }
 
 template <MLFormC T, MLFormC U>
@@ -263,7 +263,7 @@ template <MLFormC T, MLFormC U>
 void operator+=(T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
-    for (int lev = 0; lev < t.size(); lev++) t[lev] += u[lev];
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) t[lev] += u[lev];
 }
 
 template <MLFormC T, MLFormC U>
@@ -271,14 +271,14 @@ template <MLFormC T, MLFormC U>
 void operator-=(T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
-    for (int lev = 0; lev < t.size(); lev++) t[lev] -= u[lev];
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) t[lev] -= u[lev];
 }
 
 template <MLFormC T>
     requires requires(typename T::reference t) { operator*=(t, std::declval<amrex::Real>()); }
 void operator*=(T& t, amrex::Real factor)
 {
-    for (int lev = 0; lev < t.size(); lev++) t[lev] *= factor;
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) t[lev] *= factor;
 }
 
 template <MLFormC T, MLFormC U>
@@ -286,7 +286,7 @@ template <MLFormC T, MLFormC U>
 void copy (T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
-    for (int lev = 0; lev < t.size(); lev++) copy(t[lev], u[lev]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) copy(t[lev], u[lev]);
 }
 
 template <MLFormC T, MLFormC U>
@@ -295,7 +295,7 @@ amrex::Real dot_product (T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
     amrex::Real res = 0;
-    for (int lev = 0; lev < t.size(); lev++) res += dot_product(t[lev], u[lev]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) res += dot_product(t[lev], u[lev]);
     return res;
 }
 
@@ -305,7 +305,10 @@ amrex::Real dot_product (T& t, U& u, Direction dir)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
     amrex::Real res = 0;
-    for (int lev = 0; lev < t.size(); lev++) res += dot_product(t[lev][dir], u[lev][dir]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
+    {
+        res += dot_product(t[lev][dir], u[lev][dir]);
+    }
     return res;
 }
 
@@ -317,7 +320,7 @@ amrex::Real l_inf_error (T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
     amrex::Real res = 0;
-    for (int lev = 0; lev < t.size(); lev++)
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         if constexpr (MLVectorFormC<T>)
         {
@@ -339,7 +342,7 @@ void linear_combination (T& t, amrex::Real a, U& u, amrex::Real b, V& v)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
     CHECK_NUMBER_OF_LEVELS(t, v);
-    for (int lev = 0; lev < t.size(); lev++)
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         linear_combination(t[lev], a, u[lev], b, v[lev]);
     }
@@ -348,7 +351,7 @@ void linear_combination (T& t, amrex::Real a, U& u, amrex::Real b, V& v)
 template <MLScalarFormC T>
 void fill_all (T& t, amrex::Real value)
 {
-    for (int lev = 0; lev < t.size(); lev++)
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         t[lev].multi_fab().setVal(value);
     }
@@ -357,7 +360,7 @@ void fill_all (T& t, amrex::Real value)
 template <MLVectorFormC T>
 void fill_all (T& t, amrex::Real value)
 {
-    for (int lev = 0; lev < t.size(); lev++)
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         for (auto dir : {xDir, yDir, zDir})
         {
@@ -370,13 +373,13 @@ template <MLFormC T>
     requires requires(typename T::reference t) { fill_random(t); }
 void fill_random (T& t)
 {
-    for (int lev = 0; lev < t.size(); lev++) fill_random(t[lev]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) fill_random(t[lev]);
 }
 
 template <MLScalarFormC T>
 void override_sync (T& t)
 {
-    for (int lev = 0; lev < t.size(); lev++)
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         t[lev].multi_fab().OverrideSync();
     }
@@ -385,7 +388,7 @@ void override_sync (T& t)
 template <MLVectorFormC T>
 void override_sync (T& t)
 {
-    for (int lev = 0; lev < t.size(); lev++)
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         for (auto dir : {xDir, yDir, zDir})
         {
@@ -398,7 +401,7 @@ template <MLScalarFormC T>
 amrex::Real sum_unique (T& t)
 {
     amrex::Real sum = 0;
-    for (int lev = 0; lev < t.size(); lev++)
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         sum += t[lev].multi_fab().sum_unique(
             0, false, Gempic::Impl::to_amrex_periodicty(t[lev].discrete_grid()));
@@ -422,7 +425,6 @@ void do_hodge_correction (T& form,
                           amrex::BoxArray const& ba,
                           amrex::DistributionMapping const& dm,
                           amrex::Vector<int> const& boxIdx,
-                          int lev,
                           bool isFine,
                           bool isPrimal)
 {
@@ -458,7 +460,7 @@ void hodge_correction (T& mlform)
 {
     BL_PROFILE("Amr::hodge_correction");
     CHECK_LEVEL_INTERFACES(mlform);
-    for (int lev = 0; lev < mlform.size() - 1; ++lev)
+    for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
     {
         if constexpr (MLVectorFormC<T>)
         {
@@ -466,17 +468,17 @@ void hodge_correction (T& mlform)
             {
                 auto const& li = mlform.m_levelInterfaces.value()[lev][dir];
                 do_hodge_correction(mlform[lev + 1][dir], li, li.m_baFine, li.m_dmFine,
-                                    li.m_fineIdx, lev, true, MLPrimalFormC<T>);
+                                    li.m_fineIdx, true, MLPrimalFormC<T>);
                 do_hodge_correction(mlform[lev][dir], li, li.m_baCoarse, li.m_dmCoarse,
-                                    li.m_coarseIdx, lev, false, MLPrimalFormC<T>);
+                                    li.m_coarseIdx, false, MLPrimalFormC<T>);
             }
         }
         else
         {
             auto const& li = mlform.m_levelInterfaces.value()[lev];
-            do_hodge_correction(mlform[lev + 1], li, li.m_baFine, li.m_dmFine, li.m_fineIdx, lev,
-                                true, MLPrimalFormC<T>);
-            do_hodge_correction(mlform[lev], li, li.m_baCoarse, li.m_dmCoarse, li.m_coarseIdx, lev,
+            do_hodge_correction(mlform[lev + 1], li, li.m_baFine, li.m_dmFine, li.m_fineIdx, true,
+                                MLPrimalFormC<T>);
+            do_hodge_correction(mlform[lev], li, li.m_baCoarse, li.m_dmCoarse, li.m_coarseIdx,
                                 false, MLPrimalFormC<T>);
         }
     }
@@ -502,7 +504,7 @@ template <MLFormC T, MLFormC U>
 void hodge (T& t, U& u)
 {
     CHECK_NUMBER_OF_LEVELS(t, u);
-    for (int lev = 0; lev < t.size(); lev++) hodge(t[lev], u[lev]);
+    for (int lev = 0; lev < static_cast<int>(t.size()); lev++) hodge(t[lev], u[lev]);
     Impl::hodge_correction(t);
 }
 
@@ -511,7 +513,7 @@ void zero_covered_coarse (T& mlform)
 {
     BL_PROFILE("Amr::zero_covered_coarse");
     CHECK_LEVEL_INTERFACES(mlform);
-    for (int lev = 0; lev < mlform.size() - 1; ++lev)
+    for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
     {
         if constexpr (MLVectorFormC<T>)
         {
@@ -675,7 +677,7 @@ void interpolate_cell_center (T& mlfield,
     varNames[startIdx + 2] = mlfield.m_label + "z";
     varNames[startIdx + 3] = mlfield.m_label + "abs";
 
-    for (int level = 0; level < mlfield.size(); level++)
+    for (int level = 0; level < static_cast<int>(mlfield.size()); level++)
     {
         for (auto dir : {xDir, yDir, zDir})
         {
@@ -708,7 +710,7 @@ void interpolate_cell_center (T& mlfield,
     varNames.resize(startIdx + 1);
     varNames[startIdx] = mlfield.m_label;
 
-    for (int level = 0; level < mlfield.size(); level++)
+    for (int level = 0; level < static_cast<int>(mlfield.size()); level++)
     {
         interpolate_cell_center(mlfield[level], diagnostics[level], startIdx);
     }

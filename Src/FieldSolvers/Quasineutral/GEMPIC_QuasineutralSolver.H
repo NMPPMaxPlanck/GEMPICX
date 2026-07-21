@@ -799,20 +799,13 @@ public:
                 int ncDir[4];
                 amrex::Real sign[4];
 
-                int n[3], in[3], jn[3], kn[3];
+                int n[3], AMREX_D_DECL(in[3], jn[3], kn[3]);
                 for (int dir = 0; dir < 3; dir++)
                 {
                     n[dir] = (ndir + dir) % 3;
-                    in[dir] = (n[dir] == 0);
-                    jn[dir] = (n[dir] == 1);
-                    kn[dir] = (n[dir] == 2);
+                    AMREX_D_EXPR(in[dir] = (n[dir] == 0), jn[dir] = (n[dir] == 1),
+                                 kn[dir] = (n[dir] == 2));
                 }
-
-#if AMREX_SPACEDIM == 2
-                kn[0] = 0;
-                kn[1] = 0;
-                kn[2] = 0;
-#endif
 
                 // vcrossb[n[0]] = (v[n[1]] * B[n[2]] - v[n[2]] * B[n[1]])
                 for (int i = 0; i < nWts2f[n[1]]; i++)

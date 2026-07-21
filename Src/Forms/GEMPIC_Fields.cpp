@@ -556,6 +556,7 @@ void deserialize (DiscreteVectorField& vf, H5FileHandle const& io, DiscreteTime 
         Impl::deserialize_from(vf[dir], componentGroup, t);
     }
 #else
+    UNUSED(vf);
     UNUSED(io);
     UNUSED(t);
     throw_hdf5_unavailable();

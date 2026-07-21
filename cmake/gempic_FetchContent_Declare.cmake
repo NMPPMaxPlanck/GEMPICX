@@ -59,7 +59,8 @@ function(gempic_confirm_git_tag)# NAME LOCATION (mandatory) #GIT_TAG ALLOW_DIRTY
     string(REGEX MATCH "([^-]*)" _ "${REPO_TAG}")
   endif()
 
-  execute_process(COMMAND git rev-parse "${CMAKE_MATCH_0}"
+  # ^{commit} appended to be sure to get commit hash
+  execute_process(COMMAND git rev-parse "${CMAKE_MATCH_0}^{commit}"
                   WORKING_DIRECTORY ${wanted_LOCATION}
                   OUTPUT_VARIABLE REPO_COMMIT_ID
                   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -79,7 +80,7 @@ function(gempic_confirm_git_tag)# NAME LOCATION (mandatory) #GIT_TAG ALLOW_DIRTY
   set(${wanted_NAME}_VERSION_FOUND ${VERSION_NAME} PARENT_SCOPE)
   # We check if the repository matches our requirements
   if(DEFINED wanted_GIT_TAG)
-    execute_process(COMMAND git rev-parse "${wanted_GIT_TAG}"
+    execute_process(COMMAND git rev-parse "${wanted_GIT_TAG}^{commit}"
                     WORKING_DIRECTORY ${wanted_LOCATION}
                     OUTPUT_VARIABLE wanted_COMMIT_ID
                     OUTPUT_STRIP_TRAILING_WHITESPACE
