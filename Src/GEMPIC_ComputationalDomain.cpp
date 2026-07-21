@@ -164,7 +164,7 @@ void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandl
 #else
     // Remove unused warnings by casting datatype
     UNUSED(label);
-    UNUSED(time);
+    UNUSED(grid);
     UNUSED(group);
     throw_hdf5_unavailable();
 #endif
@@ -226,7 +226,7 @@ void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle co
 #else
     // Remove unused warnings by casting datatype
     UNUSED(label);
-    UNUSED(time);
+    UNUSED(grid);
     UNUSED(group);
     throw_hdf5_unavailable();
 #endif

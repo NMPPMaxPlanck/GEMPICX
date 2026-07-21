@@ -15,6 +15,8 @@ function(gempic_set_compile_options TARGET)
   endif()
   if(BUILD_TYPE MATCHES "debug")
     target_compile_options(${TARGET} PRIVATE -Wall -Wextra)
+    # Don't build deprecated CXX bindings
+    target_compile_definitions(${TARGET} PRIVATE -DOMPI_SKIP_MPICXX)
     if(HDF5_VERSION MATCHES "1.14.1")
       # The following warning is removed to silence https://gitlab.mpcdf.mpg.de/gempic/gempic/-/jobs/4856938
       # The warning is triggered by the macro -D_FORTIFY_SOURCE=2 which propagates 

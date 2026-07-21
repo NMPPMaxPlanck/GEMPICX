@@ -74,7 +74,6 @@ protected:
 TEST_F(MultiLevelFieldTest, SerializeDeserializeUnity)
 {
     MLFiniteDifferenceDeRhamSpaces mLdeRham{m_parameters, m_amr};
-    std::array<Gempic::Impl::BoundaryConditionConfiguration, 3> bcConfig{};
 
     auto field1{
         mLdeRham.create_primal_zero_form("a", Gempic::Impl::BoundaryConditionConfiguration())};
@@ -96,7 +95,6 @@ TEST_F(MultiLevelFieldTest, SerializeDeserializeUnity)
 TEST_F(MultiLevelFieldTest, HodgeCorrection)
 {
     MLFiniteDifferenceDeRhamSpaces mLdeRham{m_parameters, m_amr};
-    std::array<Gempic::Impl::BoundaryConditionConfiguration, 3> bcConfig{};
 
     auto nodal{
         mLdeRham.create_primal_zero_form("nodal", Gempic::Impl::BoundaryConditionConfiguration())};

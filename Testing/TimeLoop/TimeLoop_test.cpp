@@ -38,8 +38,6 @@ protected:
     static int const s_numSpec{1};
     static int const s_spec{0};
 
-    static int const s_nVar = AMREX_SPACEDIM + 1; // x, y, z, t
-
     inline static int const s_maxSplineDegree{
         AMREX_D_PICK(s_degX, std::max(s_degX, s_degY), std::max(std::max(s_degX, s_degY), s_degZ))};
     inline static int const s_hodgeDegree{2};
@@ -1196,13 +1194,15 @@ TEST_F(HamiltonianSplittingTest, ApplyHpireluRotationDirectionTest)
         "-cos(x+y+z-sqrt(3.0))",
     };
 
-    amrex::Array<amrex::ParserExecutor<s_nVar>, 3> funcB;
+    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
+
+    amrex::Array<amrex::ParserExecutor<nVar>, 3> funcB;
     amrex::Array<amrex::Parser, 3> parserB;
     for (int i = 0; i < 3; ++i)
     {
         parserB[i].define(analyticalB[i]);
         parserB[i].registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-        funcB[i] = parserB[i].compile<s_nVar>();
+        funcB[i] = parserB[i].compile<nVar>();
     }
 
     amrex::GpuArray<amrex::Real, 3> bfield = {0.0, 0.0, 0.0};
