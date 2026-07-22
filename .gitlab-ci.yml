@@ -335,7 +335,7 @@ style-test_cpu_3D:
   # needs: ["build-test_clang_cpu_3D"] # clang-tidy is only meaningful on code that compiles normally.
 
 .documentation:
-  image: ubuntu
+  image: debian:stable-slim
   tags:
     - cpu
   before_script:
