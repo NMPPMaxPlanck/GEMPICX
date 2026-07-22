@@ -11,6 +11,7 @@
 
 namespace Gempic
 {
+//! @cond EXCLUDE_API_DOC
 DiscreteAxis::DiscreteAxis(amrex::Real domainLo,
                            amrex::Real domainHi,
                            int nCells,
@@ -31,7 +32,6 @@ DiscreteAxis::DiscreteAxis(amrex::Real domainLo,
     }
 }
 
-//! @cond EXCLUDE_API_DOC
 DiscreteGrid::DiscreteGrid(std::array<amrex::Real, AMREX_SPACEDIM> domainLo,
                            std::array<amrex::Real, AMREX_SPACEDIM> domainHi,
                            std::array<int, AMREX_SPACEDIM> nCells,

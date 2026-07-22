@@ -97,7 +97,7 @@ public:
     // clang-format off
     /**
      *  @brief The degree of freedom (DoF) stored in the DiscreteField can be a pointwise or a 1-D
-     *         integral centered at the position associated through @ref DiscreteGrid. Currently this is
+     *         integral centered at the position associated through @ref DiscreteAxis. Currently this is
      *         only required for the DeRhamFields of the finite-difference de Rham complex.
      * @todo In the future, the DOFCategory could be expressed as a type trait that
      *       e.g. contains the integration rule used for each DoF.
@@ -107,7 +107,7 @@ public:
     {
         // clang-format off
         /**
-         * @brief Assume \f$x_i\f$ is a location on @ref DiscreteGrid::location_1d
+         * @brief Assume \f$x_i\f$ is a location on @ref DiscreteAxis::location
          *        Then a pointwise DoF stored in @ref DiscreteField::operator()(int, int, int) const
          *        is given by \f$f(x_i)\f$
          */
@@ -115,8 +115,8 @@ public:
         PointValue,
         // clang-format off
         /**
-         * @brief Assume \f$x_i\f$ is a location on @ref DiscreteGrid::location_1d
-         *        and \f$\Delta x\f$ is the width of a cell given by @ref DiscreteGrid::dx.
+         * @brief Assume \f$x_i\f$ is a location on @ref DiscreteAxis::location
+         *        and \f$\Delta x\f$ is the width of a cell given by @ref DiscreteAxis::dx.
          *        Then a centered integral DoF stored in @ref DiscreteField::operator()(int, int, int) const
          *        is given by \f$\int_{x_i-\Delta x/2}^{x_i+\Delta x/2}f(x) \mathrm{d}x\f$
          */
@@ -478,7 +478,6 @@ public:
                            amrex::Real t) const
     {
         return m_function(AMREX_D_DECL(x, y, z), t);
-        ;
     }
 
 private:
