@@ -138,6 +138,40 @@ Just do (still in the `gempic_quickstart` run folder)
 cp ../../Examples/Electrostatic/LandauVP.py .
 python3 LandauVP.py
 ```
+## Windows Support
+
+Windows is not a primary development or production platform for GEMPICX.
+
+### Recommended workflow
+
+For Windows users we recommend the following workflow:
+
+- **Visual Studio:** code development, debugging, and small test cases.
+- **WSL2 (Ubuntu):** validation of the Linux build, testing, and ensuring compatibility with the production toolchain. All standard Linux build instructions apply within WSL2.
+
+### Native Windows Support (Experimental)
+
+Native Windows support is experimental, not actively maintained, and intended primarily for development and testing. The build instructions are provided on a best-effort basis. The native Windows workflow assumes the Intel oneAPI compiler toolchain.
+
+### Requirements
+
+- Visual Studio (IDE)
+- Intel oneAPI Toolkit
+- CMake
+
+### Build Procedure
+
+1. Open an **Intel oneAPI Command Prompt** to initialize the Intel compiler toolchain and environment variables.
+
+2. Launch the CMake GUI from the Intel oneAPI command prompt: `cmake-gui.exe`
+
+3. Configure the project using the Visual Studio presets (defined in `CMakePresets.json`), selecting the desired Visual Studio version (e.g. VS22 or VS26...), build configuration (e.g. `Debug` or `Release`) and compiler version (e.g. 2025 or 2026 ...).
+
+4. **Generate** the project solution (in the CMake GUI).
+
+5. Open the generated Visual Studio solution and build the desired target.
+
+The project is now ready for development, debugging, and execution from within Visual Studio. If MPI is required and still it is not detected automatically, add the Intel MPI installation directory to the `PATH` environment variable before configuring the project.
 
 # References
 |   |
