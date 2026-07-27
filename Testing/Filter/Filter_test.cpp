@@ -18,351 +18,327 @@ namespace
 using namespace Gempic;
 using namespace Forms;
 
-void set_rho_parallel_for (amrex::Array4<amrex::Real> const& rhoInArr,
-                           amrex::Array4<amrex::Real> const& rhoOutArr,
-                           amrex::Box const& bx)
-{
-    auto smallEnd = bx.smallEnd().dim3();
-    ParallelFor(bx,
-                [=] AMREX_GPU_DEVICE(int i, int j, int k)
-                {
-                    // Set value of rhoIn to 1 at given point and result for one pass
-                    double constVal{1.0};
-                    if (i == smallEnd.x + 2 && j == smallEnd.y + 2 && k == smallEnd.z + 2)
-                    {
-                        rhoInArr(i, j, k) = constVal;
-                        rhoOutArr(i, j, k) = 0.5 * constVal;
-                        rhoOutArr(i + 1, j, k) = 0.25 * constVal;
-                        rhoOutArr(i - 1, j, k) = 0.25 * constVal;
-                    }
-                });
-}
-
-// Test fixture. Sets up clean environment before each test.
-class BilinearFilterTest : public testing::Test
+class NoFilterTest : public ::testing::Test
 {
 public:
     Io::Parameters m_parameters{};
+    static constexpr int s_nCell{30};
 
-    // Initialize computational_domain
-    ComputationalDomain m_infra;
-
-    static constexpr int s_gSize{5};
-    static constexpr int s_maxSplineDegree{1};
-
-    BilinearFilterTest() : m_infra{Gempic::Test::Utils::get_compdom(s_gSize)}
+    NoFilterTest()
     {
-        amrex::Real k1D{2 * M_PI / s_gSize};
-        amrex::Vector<amrex::Real> k{AMREX_D_DECL(k1D, k1D, k1D)};
-        m_parameters.set("k", k);
-        std::string filterType = "Bilinear";
-        m_parameters.set("Filter.type", filterType);
+        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 2.0, 3.0)};
+        amrex::Vector<int> nCell{AMREX_D_DECL(s_nCell, s_nCell, s_nCell)};
+        amrex::Vector<int> maxGridSize{AMREX_D_DECL(s_nCell, s_nCell, s_nCell)};
+        amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        m_parameters.set("ComputationalDomain.nCell", nCell);
+        m_parameters.set("ComputationalDomain.maxGridSize", maxGridSize);
+        m_parameters.set("ComputationalDomain.domainLo", domainLo);
+        m_parameters.set("ComputationalDomain.domainHi", domainHi);
+        m_parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
+    }
+
+protected:
+    using Dof = DiscreteField::DOFCategory;
+
+    DiscreteField make_scalar_field (std::string const& label)
+    {
+        return DiscreteField{label,
+                             m_parameters,
+                             DiscreteGrid{m_parameters,
+                                          {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell,
+                                                        DiscreteAxis::Cell)}},
+                             {AMREX_D_DECL(Dof::PointValue, Dof::PointValue, Dof::PointValue)}};
     }
 };
 
-class BilinearFilterTestParameter : public BilinearFilterTest,
-                                    public testing::WithParamInterface<int>
+enum ModeType
+{
+    MinMode,
+    GridMode
+};
+
+enum class Compensation
+{
+    True,
+    False
+};
+
+void fill_mode (DiscreteField& f, ModeType mode)
+{
+    std::array<amrex::Real, AMREX_SPACEDIM> k0{};
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        k0[dir] = 2 * M_PI / f.discrete_grid().length(dir);
+        if (ModeType::GridMode == mode)
+        {
+            k0[dir] *= f.discrete_grid().n_cells(dir) / 2;
+        }
+    }
+    auto func = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    {
+        return GEMPIC_D_MULT(std::sin(k0[Direction::xDir] * x), std::sin(k0[Direction::yDir] * y),
+                             std::sin(k0[Direction::zDir] * z));
+    };
+    fill(f, func);
+}
+
+TEST_F(NoFilterTest, Copy)
+{
+    m_parameters.set("Filter.type", "NoFilter");
+    Filter::NoFilter noFilter{};
+    auto src = make_scalar_field("src");
+    auto dst = make_scalar_field("dst");
+    auto ref = make_scalar_field("ref");
+
+    fill_mode(src, ModeType::MinMode);
+    fill_zero(dst);
+    fill_mode(ref, ModeType::MinMode);
+    noFilter(dst, src);
+    EXPECT_LT(l_inf_error(ref, dst), 1.0e-13);
+}
+
+class BilinearFilterTest : public ::testing::TestWithParam<int>
 {
 public:
-    std::vector<int> m_filterNpass;
+    Io::Parameters m_parameters{};
+    static constexpr int s_nCell{30};
 
-    BilinearFilterTestParameter()
+    BilinearFilterTest()
     {
-        m_parameters.set("Filter.enable", true);
-        int filterPass{GetParam()};
-        m_filterNpass = std::vector<int>{AMREX_D_DECL(filterPass, filterPass, filterPass)};
-        m_parameters.set("Filter.nPass", m_filterNpass);
+        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 2.0, 3.0)};
+        amrex::Vector<int> nCell{AMREX_D_DECL(s_nCell, s_nCell, s_nCell)};
+        amrex::Vector<int> maxGridSize{AMREX_D_DECL(s_nCell, s_nCell, s_nCell)};
+        amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        m_parameters.set("ComputationalDomain.nCell", nCell);
+        m_parameters.set("ComputationalDomain.maxGridSize", maxGridSize);
+        m_parameters.set("ComputationalDomain.domainLo", domainLo);
+        m_parameters.set("ComputationalDomain.domainHi", domainHi);
+        m_parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
+    }
+
+protected:
+    using Dof = DiscreteField::DOFCategory;
+
+    DiscreteField make_scalar_field (std::string const& label)
+    {
+        return DiscreteField{label,
+                             m_parameters,
+                             DiscreteGrid{m_parameters,
+                                          {AMREX_D_DECL(DiscreteAxis::Cell, DiscreteAxis::Cell,
+                                                        DiscreteAxis::Cell)}},
+                             {AMREX_D_DECL(Dof::PointValue, Dof::PointValue, Dof::PointValue)}};
     }
 };
 
-TEST_P(BilinearFilterTestParameter, ConstantTest)
+void reference (DiscreteField& f,
+                ModeType mode,
+                std::array<int, AMREX_SPACEDIM> nPass,
+                Compensation comp = Compensation::False)
 {
-    int const hodgeDegree{2};
-    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
-                                                    HodgeScheme::FDHodge);
-    // Define fields
-    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham);
-    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham);
-
-    double constVal{5.0};
-    rhoIn.m_data.setVal(constVal);
-
-    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
-    biFilter->apply(rhoOut, rhoIn);
-
-    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
+    std::array<amrex::Real, AMREX_SPACEDIM> k0{};
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        // Expect all indices to be constVal
-        CHECK_FIELD(rhoOut.m_data.array(mfi), mfi.validbox(), {}, {}, constVal);
+        k0[dir] = 2 * M_PI / f.discrete_grid().length(dir);
+        if (ModeType::GridMode == mode)
+        {
+            k0[dir] *= f.discrete_grid().n_cells(dir) / 2;
+        }
     }
+    std::array<amrex::Real, AMREX_SPACEDIM> dx{f.discrete_grid().dx()};
+    auto func = [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+    {
+        amrex::Real base{1.0};
+        base *= GEMPIC_D_MULT(std::sin(k0[Direction::xDir] * x), std::sin(k0[Direction::yDir] * y),
+                              std::sin(k0[Direction::zDir] * z));
+        for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+        {
+            for (int i = 0; i < nPass[dir]; i++)
+            {
+                base *= 0.5 * (1 + std::cos(k0[dir] * dx[dir]));
+            }
+            if (comp == Compensation::True)
+            {
+                amrex::Real alphaComp{nPass[dir] / 2.0 + 1.0};
+                base *= alphaComp + (1 - alphaComp) * std::cos(k0[dir] * dx[dir]);
+            }
+        }
+        return base;
+    };
+    fill(f, func);
 }
 
-INSTANTIATE_TEST_SUITE_P(FilterPasses, BilinearFilterTestParameter, testing::Range(0, 4));
-
-TEST_F(BilinearFilterTest, LinearTest)
+TEST_P(BilinearFilterTest, AnalyticalComparison)
 {
-    amrex::Real tolerance{2.0e-14};
-    m_parameters.set("Filter.enable", true);
-    std::vector<int> filterNpass{AMREX_D_DECL(1, 1, 1)};
-    m_parameters.set("Filter.nPass", filterNpass);
+    int const passes{GetParam()};
+    std::array<int, AMREX_SPACEDIM> nPass{AMREX_D_DECL(passes, passes, passes)};
+    m_parameters.set("Filter.Bilinear.nPass", nPass);
+    Filter::BilinearFilter bilinearFilter{m_parameters};
+    auto low = make_scalar_field("low");
+    auto high = make_scalar_field("high");
+    auto dst = make_scalar_field("dst");
+    auto ref = make_scalar_field("ref");
 
-    std::string const linearRho{AMREX_D_PICK("x", "1 + x + 2 * y + x * y", "x + y + z")};
-    amrex::Parser parserRho;
-    parserRho.define(linearRho);
-    parserRho.registerVariables({AMREX_D_DECL("x", "y", "z"), "t"});
-    int const nVar{AMREX_SPACEDIM + 1}; // x, y, z, t
-    auto funcRho = parserRho.compile<nVar>();
+    fill_mode(low, ModeType::MinMode);
+    fill_zero(dst);
+    reference(ref, ModeType::MinMode, nPass);
+    bilinearFilter(dst, low);
+    EXPECT_LT(l_inf_error(ref, dst), 1.0e-13);
 
-    int const hodgeDegree{4}; // need 1 ghost cell per pass
-    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
-                                                    HodgeScheme::FDHodge);
-    // Define fields
-    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham, funcRho);
-    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham, funcRho);
-
-    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
-    biFilter->apply(rhoOut, rhoIn);
-
-    for (amrex::MFIter mfi(rhoIn.m_data); mfi.isValid(); ++mfi)
-    {
-        // Expect filter not to change linear function
-        amrex::Box const& bx = mfi.tilebox();
-        amrex::Box const& interiorBox = amrex::grow(bx, -1); // remove boundary terms
-        COMPARE_FIELDS(rhoIn.m_data.array(mfi), rhoOut.m_data.array(mfi), interiorBox, tolerance);
-    }
+    fill_mode(high, ModeType::GridMode);
+    fill_zero(ref);
+    bilinearFilter(dst, high);
+    EXPECT_LT(l_inf_error(ref, dst), 1.0e-13);
 }
 
-TEST_F(BilinearFilterTest, NoFilter)
+TEST_P(BilinearFilterTest, AnalyticalComparisonWithCompensation)
 {
-    m_parameters.set("Filter.enable", false);
+    int const passes{GetParam()};
+    std::array<int, AMREX_SPACEDIM> nPass{AMREX_D_DECL(passes, passes, passes)};
+    m_parameters.set("Filter.Bilinear.nPass", nPass);
+    m_parameters.set("Filter.Bilinear.compensate", true);
+    Filter::BilinearFilter bilinearFilter{m_parameters};
+    auto low = make_scalar_field("low");
+    auto high = make_scalar_field("high");
+    auto dst = make_scalar_field("dst");
+    auto ref = make_scalar_field("ref");
 
-    int const hodgeDegree{2};
-    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
-                                                    HodgeScheme::FDHodge);
-    // Define fields
-    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham);
-    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham);
+    fill_mode(low, ModeType::MinMode);
+    fill_zero(dst);
+    reference(ref, ModeType::MinMode, nPass, Compensation::True);
+    bilinearFilter(dst, low);
+    EXPECT_LT(l_inf_error(ref, dst), 1.0e-13);
 
-    double constVal{5.0};
-    rhoIn.m_data.setVal(constVal);
-
-    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
-    biFilter->apply(rhoOut, rhoIn);
-
-    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
-    {
-        // Expect all indices to be constVal
-        CHECK_FIELD(rhoOut.m_data.array(mfi), mfi.validbox(), {}, {}, constVal);
-    }
+    fill_mode(high, ModeType::GridMode);
+    fill_zero(ref);
+    bilinearFilter(dst, high);
+    EXPECT_LT(l_inf_error(ref, dst), 1.0e-13);
 }
 
-TEST_F(BilinearFilterTest, OneNonZeroValueTest)
-{
-    int const hodgeDegree{2};
-    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, s_maxSplineDegree,
-                                                    HodgeScheme::FDHodge);
-    // Define fields
-    DeRhamField<Grid::dual, Space::cell> rhoIn(deRham);
-    DeRhamField<Grid::dual, Space::cell> rhoOut(deRham);
-    DeRhamField<Grid::dual, Space::cell> rhoOutExpected(deRham);
-
-    rhoIn.m_data.setVal(0.0);
-    rhoOut.m_data.setVal(0.0);
-
-    m_parameters.set("Filter.enable", true);
-    std::vector<int> filterNpass{AMREX_D_DECL(1, 0, 0)};
-    m_parameters.set("Filter.nPass", filterNpass);
-
-    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
-
-    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
-    {
-        amrex::Box const& bx = mfi.tilebox();
-        amrex::Array4<amrex::Real> const& rhoInArr = rhoIn.m_data.array(mfi);
-        amrex::Array4<amrex::Real> const& rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
-
-        set_rho_parallel_for(rhoInArr, rhoOutExpArr, bx);
-    }
-
-    biFilter->apply(rhoOut, rhoIn);
-
-    for (amrex::MFIter mfi(rhoOut.m_data); mfi.isValid(); ++mfi)
-    {
-        amrex::Box const& bx = mfi.tilebox();
-        amrex::Array4<amrex::Real> const& rhoOutArr = rhoOut.m_data.array(mfi);
-        amrex::Array4<amrex::Real> const& rhoOutExpArr = rhoOutExpected.m_data.array(mfi);
-
-        COMPARE_FIELDS(rhoOutArr, rhoOutExpArr, bx);
-    }
-}
-
-TEST_F(BilinearFilterTest, AnalyticalTest)
-{
-    // Parse analytical field and initialize parserEval.
-    std::string const analyticalInit{"sin(kvarx*x)"};
-    //  One pass bilinear filter is
-    //  f(x) + 0.5*(sum_{n=1}^{infty} df^(2n)/d^(2n)x (x) *(dx)^(2n)/(2n)!)
-    //  with dx = 1 and f(x) = sin(k*x), this is
-    //  f(x) + 0.5*(cos(k) - 1)*f(x) = 0.5*f(x)(1 + cos(k))
-    std::string const analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
-
-    m_parameters.set("Function.rhoInit", analyticalInit);
-    m_parameters.set("Function.rhoAnal", analyticalSol);
-
-    [[maybe_unused]] auto [parserInit, funcInit] = Utils::parse_function("rhoInit");
-    [[maybe_unused]] auto [parserSol, funcSol] = Utils::parse_function("rhoAnal");
-
-    constexpr int hodgeDegree{2};
-    constexpr int maxSplineDegree{3};
-    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, maxSplineDegree);
-    DeRhamField<Grid::dual, Space::cell> rho(deRham, funcInit);
-    DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
-    DeRhamField<Grid::dual, Space::cell> rhoSol(deRham, funcSol);
-
-    m_parameters.set("Filter.enable", true);
-    std::vector<int> filterNpass{AMREX_D_DECL(1, 0, 0)};
-    m_parameters.set("Filter.nPass", filterNpass);
-
-    // Test uncompensated filter
-    std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(m_infra);
-    biFilter->apply(rhoTemp, rho);
-
-    for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
-    {
-        amrex::Box const& bx = mfi.tilebox();
-        COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSol.m_data.array(mfi), bx);
-    }
-}
-
-TEST_F(BilinearFilterTest, CompensatedAnalyticalTest)
-{
-    // Parse analytical field and initialize parserEval.
-    std::string const analyticalInit{"sin(kvarx*x)"};
-    std::string const analyticalSol{"0.5*sin(kvarx*x)*(1+cos(kvarx))"};
-    //  One pass bilinear filter with compensation is
-    //  (alpha+(1-alpha)cos(kvarx))*g(x)
-    //  where g(x) is the analytical solution without filter
-    std::string const analyticalSolComp{"(0.5 + 0.5*cos(kvarx))*" + analyticalSol};
-
-    m_parameters.set("Function.rhoInit", analyticalInit);
-    m_parameters.set("Function.rhoAnal", analyticalSolComp);
-
-    [[maybe_unused]] auto [parserInit, funcInit] = Utils::parse_function("rhoInit");
-    [[maybe_unused]] auto [parserSolComp, funcSolComp] = Utils::parse_function("rhoAnal");
-
-    constexpr int hodgeDegree{2};
-    constexpr int maxSplineDegree{3};
-    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, hodgeDegree, maxSplineDegree);
-    DeRhamField<Grid::dual, Space::cell> rho(deRham, funcInit);
-    DeRhamField<Grid::dual, Space::cell> rhoTemp(deRham);
-    DeRhamField<Grid::dual, Space::cell> rhoSolComp(deRham, funcSolComp);
-
-    m_parameters.set("Filter.enable", true);
-    std::vector<int> filterNpass{AMREX_D_DECL(1, 0, 0)};
-    m_parameters.set("Filter.nPass", filterNpass);
-
-    // Test compensated filter
-    m_parameters.set("Filter.compensate", true);
-
-    std::unique_ptr<Filter::Filter> biFilterComp = Filter::make_filter(m_infra);
-    biFilterComp->apply(rhoTemp, rho);
-
-    for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
-    {
-        amrex::Box const& bx = mfi.tilebox();
-        COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSolComp.m_data.array(mfi), bx);
-    }
-}
+INSTANTIATE_TEST_SUITE_P(FilterPasses, BilinearFilterTest, testing::Range(1, 5));
 
 #ifdef AMREX_USE_FFT
-class FourierFilterTest : public testing::TestWithParam<std::string>
+class FourierFilterTest : public ::testing::Test
 {
 public:
     Io::Parameters m_parameters{};
+    static constexpr int s_nCell{30};
 
-    // Initialize computational_domain
-    ComputationalDomain m_infra;
-    static constexpr int s_hodgeDegree{2};
-    static constexpr int s_maxSplineDegree{1};
-
-    FourierFilterTest() : m_infra{Gempic::Test::Utils::get_default_compdom()}
+    FourierFilterTest()
     {
-#if AMREX_SPACEDIM == 1
-        std::string analyticalInit{"1 + sin(x) + cos(2*x)"};
-#elif AMREX_SPACEDIM == 2
-        std::string analyticalInit{"1 + sin(x)*cos(2*y) + cos(2*x)*sin(3*y)"};
-#else
-        std::string analyticalInit{"1 + sin(x)*cos(2*y)*sin(3*z) + cos(2*x)*sin(3*y)*cos(4*z)"};
-#endif
-        std::string analyticalSol;
-        std::vector<int> nMin{};
-        std::vector<int> nMax{};
-        bool enable = true;
+        amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+        amrex::Vector<amrex::Real> domainHi{AMREX_D_DECL(1.0, 2.0, 3.0)};
+        amrex::Vector<int> nCell{AMREX_D_DECL(s_nCell, s_nCell, s_nCell)};
+        amrex::Vector<int> maxGridSize{AMREX_D_DECL(10, 10, 10)};
+        amrex::Vector<int> isPeriodic{AMREX_D_DECL(1, 1, 1)};
+        m_parameters.set("ComputationalDomain.nCell", nCell);
+        m_parameters.set("ComputationalDomain.maxGridSize", maxGridSize);
+        m_parameters.set("ComputationalDomain.domainLo", domainLo);
+        m_parameters.set("ComputationalDomain.domainHi", domainHi);
+        m_parameters.set("ComputationalDomain.isPeriodic", isPeriodic);
+    }
 
-        std::string scenario{GetParam()};
-        if (scenario == "NoFilter")
-        {
-            analyticalSol = analyticalInit;
-            enable = false;
-        }
-        else if (scenario == "Identity")
-        {
-            analyticalSol = analyticalInit;
-            nMin = {0, 0, 0};
-            nMax = {10, 10, 10};
-        }
-        else if (scenario == "Constant")
-        {
-            analyticalSol = "1";
-            nMin = {0, 0, 0};
-            nMax = {0, 0, 0};
-        }
-        else if (scenario == "SingleMode")
-        {
-#if AMREX_SPACEDIM == 1
-            analyticalSol = "sin(x)";
-#elif AMREX_SPACEDIM == 2
-            analyticalSol = "sin(x)*cos(2*y)";
-#else
-            analyticalSol = "sin(x)*cos(2*y)*sin(3*z)";
-#endif
-            nMin = {1, 2, 3};
-            nMax = {1, 2, 3};
-        }
+protected:
+    using Dof = DiscreteField::DOFCategory;
 
-        std::string filterType = "Fourier";
-        m_parameters.set("Filter.type", filterType);
-        m_parameters.set("Function.rhoInit", analyticalInit);
-        m_parameters.set("Function.rhoAnal", analyticalSol);
-        m_parameters.set("Filter.enable", enable);
-        m_parameters.set("Filter.nMin", nMin);
-        m_parameters.set("Filter.nMax", nMax);
+    DiscreteField make_scalar_field (std::string const& label)
+    {
+        return DiscreteField{label,
+                             m_parameters,
+                             DiscreteGrid{m_parameters,
+                                          {AMREX_D_DECL(DiscreteAxis::Node, DiscreteAxis::Cell,
+                                                        DiscreteAxis::Node)}},
+                             {AMREX_D_DECL(Dof::PointValue, Dof::PointValue, Dof::PointValue)}};
     }
 };
 
-TEST_P(FourierFilterTest, AnalyticalTest)
+enum class Initialization
 {
-    [[maybe_unused]] auto [parserInit, funcInit] = Utils::parse_function("rhoInit");
-    [[maybe_unused]] auto [parserSol, funcSol] = Utils::parse_function("rhoAnal");
+    NoFilter,
+    Filtered
+};
 
-    auto deRham = std::make_shared<FDDeRhamComplex>(m_infra, s_hodgeDegree, s_maxSplineDegree);
-    DeRhamField<Grid::primal, Space::node> rho(deRham, funcInit);
-    DeRhamField<Grid::primal, Space::node> rhoTemp(deRham);
-    DeRhamField<Grid::primal, Space::node> rhoSol(deRham, funcSol);
-
-    // Test filter
-    std::unique_ptr<Filter::Filter> filter = Filter::make_filter(m_infra);
-    filter->apply(rhoTemp, rho);
-
-    for (amrex::MFIter mfi(rho.m_data); mfi.isValid(); ++mfi)
+void fill (DiscreteField& f, Initialization init)
+{
+    // wavenumber 2: outside [3, 7], removed
+    // wavenumber 5: inside [3, 7], kept
+    // wavenumber 10: outside [3, 7], removed
+    std::array<amrex::Real, AMREX_SPACEDIM> kKept{}, highMode{}, lowMode{}, nyquistMode;
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
-        amrex::Box const& bx = mfi.tilebox();
-        COMPARE_FIELDS(rhoTemp.m_data.array(mfi), rhoSol.m_data.array(mfi), bx);
+        lowMode[dir] = 2 * M_PI * 2 / f.discrete_grid().length(dir);
+        kKept[dir] = 2 * M_PI * 5 / f.discrete_grid().length(dir);
+        highMode[dir] = 2 * M_PI * 10 / f.discrete_grid().length(dir);
+        nyquistMode[dir] =
+            2 * M_PI * f.discrete_grid().n_cells(dir) / 2.0 / f.discrete_grid().length(dir);
     }
+
+    fill(f,
+         [=] AMREX_GPU_HOST_DEVICE(AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+         {
+             amrex::Real f{};
+             f += GEMPIC_D_MULT(std::sin(kKept[Direction::xDir] * x),
+                                std::sin(kKept[Direction::yDir] * y),
+                                std::sin(kKept[Direction::zDir] * z));
+             if (Initialization::NoFilter == init)
+             {
+                 f += 1;
+                 f += GEMPIC_D_MULT(std::sin(lowMode[Direction::xDir] * x),
+                                    std::sin(lowMode[Direction::yDir] * y),
+                                    std::sin(lowMode[Direction::zDir] * z));
+                 f += GEMPIC_D_MULT(std::sin(highMode[Direction::xDir] * x),
+                                    std::sin(highMode[Direction::yDir] * y),
+                                    std::sin(highMode[Direction::zDir] * z));
+                 f += GEMPIC_D_MULT(std::sin(nyquistMode[Direction::xDir] * x),
+                                    std::sin(nyquistMode[Direction::yDir] * y),
+                                    std::sin(nyquistMode[Direction::zDir] * z));
+             }
+             return f;
+         });
 }
 
-INSTANTIATE_TEST_SUITE_P(FilterScenarios,
-                         FourierFilterTest,
-                         testing::Values("NoFilter", "Identity", "Constant", "SingleMode"));
+TEST_F(FourierFilterTest, RemoveModesOutOfRange)
+{
+    amrex::Vector<int> nMinVec{AMREX_D_DECL(3, 3, 3)};
+    amrex::Vector<int> nMaxVec{AMREX_D_DECL(7, 7, 7)};
+    m_parameters.set("Filter.Fourier.nMin", nMinVec);
+    m_parameters.set("Filter.Fourier.nMax", nMaxVec);
+
+    auto src = make_scalar_field("src");
+    auto dst = make_scalar_field("dst");
+    auto ref = make_scalar_field("ref");
+
+    Filter::FourierFilter fourierFilter{m_parameters, dst.discrete_grid()};
+
+    fill(src, Initialization::NoFilter);
+    fill(ref, Initialization::Filtered);
+
+    fourierFilter(dst, src);
+    EXPECT_LT(l_inf_error(ref, dst), 1.0e-13);
+}
+
+TEST_F(FourierFilterTest, Identity)
+{
+    auto src = make_scalar_field("src");
+    auto dst = make_scalar_field("dst");
+    auto ref = make_scalar_field("ref");
+
+    amrex::Vector<int> nMinVec{AMREX_D_DECL(0, 0, 0)};
+    amrex::Vector<int> nMaxVec{AMREX_D_DECL(dst.discrete_grid().size(Direction::xDir) / 2,
+                                            dst.discrete_grid().size(Direction::yDir) / 2,
+                                            dst.discrete_grid().size(Direction::zDir) / 2)};
+    m_parameters.set("Filter.Fourier.nMin", nMinVec);
+    m_parameters.set("Filter.Fourier.nMax", nMaxVec);
+
+    Filter::FourierFilter fourierFilter{m_parameters, dst.discrete_grid()};
+
+    fill(src, Initialization::NoFilter);
+    fill(ref, Initialization::NoFilter);
+
+    fourierFilter(dst, src);
+    EXPECT_LT(l_inf_error(ref, dst), 1.0e-13);
+}
+
 #endif
 } // namespace

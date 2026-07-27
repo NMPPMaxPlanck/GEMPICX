@@ -46,6 +46,9 @@ TimeLoop.dt = 0.05
 ICs.Bmean = 0.0 1.0 0.0
 Function.idealRho = "0.0"
 
+# Filter
+Filter.type = NoFilter
+
 # Diagnostics
 #Full Diagnostics 
 FullDiagnostics.enable = 1 # 1 for true, 0 for false

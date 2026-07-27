@@ -35,6 +35,9 @@ k = 1.25 6.2831853071795864769252867665590057683 6.28318530717958647692528676655
 TimeLoop.nSteps = 8000
 TimeLoop.dt = 0.05
 
+# Filter
+Filter.type = NoFilter
+
 # Function parameters
 Function.Ex = "0.0"
 Function.Ey = "0.0"

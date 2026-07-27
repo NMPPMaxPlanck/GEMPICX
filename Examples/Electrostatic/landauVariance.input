@@ -33,12 +33,11 @@ TimeLoop.nSteps = 500
 TimeLoop.dt = 0.05
 
 # Filter
-Filter.enable = 1
 Filter.type = Fourier
-Filter.nPass = 4 4 1
-Filter.compensate = 1
-Filter.nMin = 0 0 0
-Filter.nMax = 8 8 0
+Filter.Bilinear.nPass = 4 4 1
+Filter.Bilinear.compensate = 1
+Filter.Fourier.nMin = 0 0 0
+Filter.Fourier.nMax = 8 8 0
 
 # Function parameters
 Function.Ex = "0.0"

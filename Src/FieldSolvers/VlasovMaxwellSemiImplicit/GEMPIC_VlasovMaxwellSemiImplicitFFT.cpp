@@ -311,15 +311,28 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
 
     amrex::FFT::R2C<amrex::Real>::cMF e1Fft(ba0, m_compDom.m_distriMap, e1.m_data.nComp(), 0);
     amrex::FFT::R2C<amrex::Real>::MF e1FftContainer(ba0, m_compDom.m_distriMap, e1.m_data.nComp(),
-                                                    1);
+                                                    0);
 
     amrex::FFT::R2C<amrex::Real>::cMF e2Fft(ba0, m_compDom.m_distriMap, e2.m_data.nComp(), 0);
     amrex::FFT::R2C<amrex::Real>::MF e2FftContainer(ba0, m_compDom.m_distriMap, e2.m_data.nComp(),
-                                                    1);
+                                                    0);
 
     amrex::FFT::R2C<amrex::Real>::cMF e3Fft(ba0, m_compDom.m_distriMap, e3.m_data.nComp(), 0);
     amrex::FFT::R2C<amrex::Real>::MF e3FftContainer(ba0, m_compDom.m_distriMap, e3.m_data.nComp(),
-                                                    1);
+                                                    0);
+    // AMReX FFT requires cell-centered input. The source/destination may not be cell-centered,
+    // which on a periodic domain means the high-boundary node is a duplicate of the low-boundary
+    // node.
+    // In the following we drop the duplicated high-boundary node by copying data into a
+    // cell-centered MultiFab. The FFT is applied to the MultiFab with cell-centered data. Finally
+    // the data is written to the result array and an OverrideSync is used to (in MPI terms)
+    // broadcast the result back to the duplicated nodes.
+    amrex::iMultiFab ownermask0{E.m_data[0].boxArray(), E.m_data[0].DistributionMap(), 1, 0};
+    amrex::iMultiFab ownermask1{E.m_data[1].boxArray(), E.m_data[1].DistributionMap(), 1, 0};
+    amrex::iMultiFab ownermask2{E.m_data[2].boxArray(), E.m_data[2].DistributionMap(), 1, 0};
+    ownermask0.setVal(0);
+    ownermask1.setVal(0);
+    ownermask2.setVal(0);
 
     // Copy RHS to FFT containers
     for (amrex::MFIter mfi(e1FftContainer); mfi.isValid(); ++mfi)
@@ -331,22 +344,25 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
         auto const& e3FftContainerPtr = e3FftContainer.array(mfi);
         auto const& f3MDataPtr = rhs.m_data[2].array(mfi);
 
-        amrex::Box const& bx = mfi.validbox();
+        auto const& owner0 = ownermask0.array(mfi);
+        auto const& owner1 = ownermask1.array(mfi);
+        auto const& owner2 = ownermask2.array(mfi);
 
-        amrex::ParallelFor(bx,
+        amrex::ParallelFor(mfi.validbox(),
                            [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
                            {
                                e1FftContainerPtr(i, j, k) = f1MDataPtr(i, j, k);
                                e2FftContainerPtr(i, j, k) = f2MDataPtr(i, j, k);
                                e3FftContainerPtr(i, j, k) = f3MDataPtr(i, j, k);
+                               // The owner mask is the same for the src and dst MultiFab
+                               // since the src and dst MF of the FFT are the same.
+                               owner0(i, j, k) = 1;
+                               owner1(i, j, k) = 1;
+                               owner2(i, j, k) = 1;
                            });
     }
 
-    // Fill boundaries and apply forward FFT
-    e1FftContainer.FillBoundary(rhs.m_deRham->get_periodicity());
-    e2FftContainer.FillBoundary(rhs.m_deRham->get_periodicity());
-    e3FftContainer.FillBoundary(rhs.m_deRham->get_periodicity());
-
+    // Apply forward FFT
     myFft.forward(e1FftContainer, e1Fft);
     myFft.forward(e2FftContainer, e2Fft);
     myFft.forward(e3FftContainer, e3Fft);
@@ -357,8 +373,6 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
         auto const& e1FftPtr = e1Fft.array(mfi);
         auto const& e2FftPtr = e2Fft.array(mfi);
         auto const& e3FftPtr = e3Fft.array(mfi);
-
-        amrex::Box const& bx = mfi.validbox();
 
         // local variables necessary for CUDA
         amrex::Real* eigenM1x = m_eigenM1x;
@@ -375,7 +389,7 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
         amrex::GpuComplex<amrex::Real>* eigenDTz = m_eigenDTz;
 
         amrex::ParallelFor(
-            bx,
+            mfi.validbox(),
             [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
             {
                 // Set up 3x3 system matrix
@@ -414,15 +428,9 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
             });
     }
 
-    // Apply inverse FFT
     myFft.backward(e1Fft, e1FftContainer);
-    e1FftContainer.FillBoundary(rhs.m_deRham->get_periodicity());
-
     myFft.backward(e2Fft, e2FftContainer);
-    e2FftContainer.FillBoundary(rhs.m_deRham->get_periodicity());
-
     myFft.backward(e3Fft, e3FftContainer);
-    e3FftContainer.FillBoundary(rhs.m_deRham->get_periodicity());
 
     // Copy solution back to E field
     for (amrex::MFIter mfi(e1FftContainer); mfi.isValid(); ++mfi)
@@ -435,9 +443,7 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
         auto const& e2MDataPtr = E.m_data[1].array(mfi);
         auto const& e3MDataPtr = E.m_data[2].array(mfi);
 
-        amrex::Box const& bx = mfi.fabbox();
-
-        amrex::ParallelFor(bx,
+        amrex::ParallelFor(mfi.validbox(),
                            [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
                            {
                                e1MDataPtr(i, j, k) = e1FftContainerPtr(i, j, k);
@@ -445,6 +451,10 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
                                e3MDataPtr(i, j, k) = e3FftContainerPtr(i, j, k);
                            });
     }
+    auto const& periodicity = rhs.m_deRham->get_periodicity();
+    E.m_data[0].OverrideSync(ownermask0, periodicity);
+    E.m_data[1].OverrideSync(ownermask1, periodicity);
+    E.m_data[2].OverrideSync(ownermask2, periodicity);
 
     // Fill boundaries
     E.fill_boundary();

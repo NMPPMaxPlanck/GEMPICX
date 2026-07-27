@@ -19,6 +19,125 @@
 
 namespace Gempic::Filter
 {
+
+std::unique_ptr<Filter> make_filter (Gempic::ComputationalDomain const& compDom)
+{
+    Gempic::Io::Parameters params("Filter");
+    std::string filterType{"NoFilter"};
+    params.get_or_set("type", filterType);
+
+    if (filterType == "NoFilter")
+    {
+        return std::make_unique<NoFilter>();
+    }
+    else if (filterType == "Bilinear")
+    {
+        return std::make_unique<BilinearFilter>();
+    }
+    else if (filterType == "Fourier")
+    {
+#ifdef AMREX_USE_FFT
+        return std::make_unique<FourierFilter>(compDom);
+#else
+        UNUSED(compDom);
+        GEMPIC_ERROR("FFT was not compiled with GEMPICX so the Fourier filter is not available");
+#endif
+    }
+    else
+    {
+        GEMPIC_ERROR("Filter type '" + filterType +
+                     "' is not implemented or the parameter file does not appropriately defines "
+                     "the filter!");
+    }
+    exit(1); // Calms the compiler even though we don't technically return anything
+}
+
+void NoFilter::do_filter (amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf)
+{
+    amrex::MultiFab::Copy(dstmf, srcmf, 0, 0, srcmf.nComp(), 0);
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node> const& src)
+{
+    do_filter(dst.m_data, src.m_data);
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge> const& src)
+{
+    for (int d{0}; d < 3; ++d)
+    {
+        do_filter(dst.m_data[d], src.m_data[d]);
+    }
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face> const& src)
+{
+    for (int d{0}; d < 3; ++d)
+    {
+        do_filter(dst.m_data[d], src.m_data[d]);
+    }
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::cell>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::cell> const& src)
+{
+    do_filter(dst.m_data, src.m_data);
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::node>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::node> const& src)
+{
+    do_filter(dst.m_data, src.m_data);
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge> const& src)
+{
+    for (int d{0}; d < 3; ++d)
+    {
+        do_filter(dst.m_data[d], src.m_data[d]);
+    }
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> const& src)
+{
+    for (int d{0}; d < 3; ++d)
+    {
+        do_filter(dst.m_data[d], src.m_data[d]);
+    }
+}
+
+void NoFilter::do_filter (
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& dst,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& src)
+{
+    do_filter(dst.m_data, src.m_data);
+}
+
+void NoFilter::operator ()(Gempic::DiscreteField& dst, Gempic::DiscreteField& src)
+{
+    do_filter(dst.multi_fab(), src.multi_fab());
+}
+
+void NoFilter::operator ()(Gempic::DiscreteVectorField& dst, Gempic::DiscreteVectorField& src)
+{
+    for (Direction d : {xDir, yDir, zDir})
+    {
+        do_filter(dst.multi_fab(d), src.multi_fab(d));
+    }
+}
+
 namespace Impl
 {
 void apply_stencil (amrex::MultiFab& dstmf,
@@ -90,12 +209,12 @@ void convolve_filter (amrex::Vector<amrex::Real>& oldS,
     oldS = newS;
 }
 
-void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
-                      unsigned int const npass,
-                      amrex::Real const alpha,
-                      bool const doCompensation)
+amrex::Gpu::DeviceVector<amrex::Real> compute_bilinear_filter_stencil (unsigned int const npass,
+                                                                       amrex::Real const alpha,
+                                                                       bool const doCompensation)
 {
     BL_PROFILE("Gempic::Filter::Impl::compute_stencil()");
+    amrex::Gpu::DeviceVector<amrex::Real> stencil{};
     amrex::Vector<amrex::Real> oldS(1u + npass + static_cast<size_t>(doCompensation), 0.);
     amrex::Vector<amrex::Real> newS(oldS.size(), 0.);
 
@@ -109,7 +228,7 @@ void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
 
     if (doCompensation)
     {
-        amrex::Real compensationAlpha{0.5 * npass};
+        amrex::Real compensationAlpha{npass / 2.0 + 1.0};
 
         // Convolve using different alpha
         convolve_filter(oldS, newS, compensationAlpha, lastpass);
@@ -123,48 +242,84 @@ void compute_stencil (amrex::Gpu::DeviceVector<amrex::Real>& stencil,
     /// libraries (e.g. MPI)
     /// https://amrex-codes.github.io/amrex/docs_html/GPU.html#stream-and-synchronization
     amrex::Gpu::synchronize();
+    return stencil;
 }
+
 } //namespace Impl
+
+BilinearFilter::BilinearFilter(Io::Parameters& params)
+{
+    // Filter parameters
+    // If true, a bilinear filter is used to smooth charge and currents
+    params.get("Filter.Bilinear.nPass", m_nPass);
+
+    // Do a compensation step?
+    params.get_or_set("Filter.Bilinear.compensate", m_compensate);
+
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        m_stencil[dir] = Impl::compute_bilinear_filter_stencil(m_nPass[dir], m_alpha, m_compensate);
+    }
+}
 
 BilinearFilter::BilinearFilter()
 {
     BL_PROFILE("Gempic::Filter::BilinearFilter::BilinearFilter()");
-    Io::Parameters params("Filter", "class BilinearFilter");
-    // Filter parameters
-    // If true, a bilinear filter is used to smooth charge and currents
-    params.get_or_set("enable", m_useFilter);
-    if (m_useFilter)
+    Io::Parameters params("Filter.Bilinear", "class BilinearFilter");
+
+    params.get("nPass", m_nPass);
+
+    // Do a compensation step?
+    params.get_or_set("compensate", m_compensate);
+
+    std::vector<int> nGhostVector;
+    params.get("nGhost", nGhostVector);
+    if (AMREX_D_TERM((nGhostVector[xDir] < (m_nPass[xDir] + m_compensate)),
+                     || (nGhostVector[yDir] < (m_nPass[yDir] + m_compensate)),
+                     || (nGhostVector[zDir] < (m_nPass[zDir] + m_compensate))))
     {
-        params.get("nPass", m_nPass);
-
-        // Do a compensation step?
-        params.get_or_set("compensate", m_compensate);
-
-        std::vector<int> nGhostVector;
-        params.get("nGhost", nGhostVector);
-        if (AMREX_D_TERM((nGhostVector[xDir] < (m_nPass[xDir] + m_compensate)),
-                         || (nGhostVector[yDir] < (m_nPass[yDir] + m_compensate)),
-                         || (nGhostVector[zDir] < (m_nPass[zDir] + m_compensate))))
-        {
-            AMREX_ALWAYS_ASSERT(
-                "Grid is not large enough to contain the filter stencil. Try increasing the "
-                "amount of extra ghost cells or decreasing the number of filter passes.\n");
-        }
-        compute_stencils();
+        AMREX_ALWAYS_ASSERT(
+            "Grid is not large enough to contain the filter stencil. Try increasing the "
+            "amount of extra ghost cells or decreasing the number of filter passes.\n");
+    }
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        m_stencil[dir] = Impl::compute_bilinear_filter_stencil(m_nPass[dir], m_alpha, m_compensate);
     }
 }
 
 void BilinearFilter::do_filter (amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf)
 {
     AMREX_ALWAYS_ASSERT(dstmf.nComp() == srcmf.nComp());
-    Impl::apply_stencil(dstmf, srcmf, AMREX_D_DECL(m_stencilX, m_stencilY, m_stencilZ));
+    Impl::apply_stencil(dstmf, srcmf,
+                        AMREX_D_DECL(m_stencil[Direction::xDir], m_stencil[Direction::yDir],
+                                     m_stencil[Direction::zDir]));
 }
 
-void BilinearFilter::compute_stencils ()
+void BilinearFilter::operator ()(Gempic::DiscreteField& dst, Gempic::DiscreteField& src)
 {
-    BL_PROFILE("Gempic::Filter::BilinearFilter::compute_stencils()");
-    AMREX_D_DECL(Impl::compute_stencil(m_stencilX, m_nPass[xDir], m_alpha, m_compensate),
-                 Impl::compute_stencil(m_stencilY, m_nPass[yDir], m_alpha, m_compensate),
-                 Impl::compute_stencil(m_stencilZ, m_nPass[zDir], m_alpha, m_compensate));
+    std::array<size_t, AMREX_SPACEDIM> requiredGhostCells{};
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        requiredGhostCells[dir] = m_nPass[dir] + m_compensate;
+    }
+    src.apply_boundary_conditions(requiredGhostCells);
+    do_filter(dst.multi_fab(), src.multi_fab());
 }
+
+void BilinearFilter::operator ()(Gempic::DiscreteVectorField& dst, Gempic::DiscreteVectorField& src)
+{
+    BL_PROFILE("Gempic::Filter::BilinearFilter::operator()(DiscreteVectorField)");
+    std::array<size_t, AMREX_SPACEDIM> requiredGhostCells{};
+    for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        requiredGhostCells[dir] = m_nPass[dir] + m_compensate;
+    }
+    src.apply_boundary_conditions(requiredGhostCells);
+    for (Direction d : {xDir, yDir, zDir})
+    {
+        do_filter(dst.multi_fab(d), src.multi_fab(d));
+    }
+}
+
 } //namespace Gempic::Filter

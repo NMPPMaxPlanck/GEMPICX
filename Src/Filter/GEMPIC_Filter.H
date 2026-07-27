@@ -23,25 +23,6 @@
 
 namespace Gempic::Filter
 {
-namespace Impl
-{
-void apply_stencil(amrex::MultiFab& dstmf,
-                   amrex::MultiFab const& srcmf,
-                   AMREX_D_DECL(amrex::Gpu::DeviceVector<amrex::Real> stencilX,
-                                amrex::Gpu::DeviceVector<amrex::Real> stencilY,
-                                amrex::Gpu::DeviceVector<amrex::Real> stencilZ));
-
-// Only needs newS for optimization reasons that are a bit excessive
-void convolve_filter(amrex::Vector<amrex::Real>& oldS,
-                     amrex::Vector<amrex::Real>& newS,
-                     amrex::Real const alpha,
-                     int const ipass);
-
-void compute_stencil(amrex::Gpu::DeviceVector<amrex::Real>& stencil,
-                     unsigned int const npass,
-                     amrex::Real const alpha,
-                     bool const doCompensation);
-} // namespace Impl
 
 class Filter
 {
@@ -77,24 +58,53 @@ public:
     void apply (Gempic::Forms::DeRhamField<grid, space>& dst,
                 Gempic::Forms::DeRhamField<grid, space> const& src)
     {
-        BL_PROFILE("Gempic::Filter::Filter::apply()");
-
-        if (!m_useFilter)
-        {
-            // just copy
-            copy(dst, src);
-            return;
-        }
         do_filter(dst, src);
     }
+};
 
-protected:
-    bool m_useFilter{false};
+std::unique_ptr<Filter> make_filter(Gempic::ComputationalDomain const& compDom);
+
+class NoFilter : public Filter
+{
+public:
+    NoFilter() = default;
+
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node> const& src) final;
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge> const& src) final;
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face> const& src) final;
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::cell>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::cell> const& src) final;
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::node>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::node> const& src) final;
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge> const& src) final;
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> const& src) final;
+    void do_filter(
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& dst,
+        Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& src) final;
+
+    void operator()(Gempic::DiscreteField& dst, Gempic::DiscreteField& src);
+    void operator()(Gempic::DiscreteVectorField& dst, Gempic::DiscreteVectorField& src);
+
+private:
+    void do_filter(amrex::MultiFab& dst, amrex::MultiFab const& src);
 };
 
 class BilinearFilter : public Filter
 {
 public:
+    BilinearFilter(Io::Parameters&);
     BilinearFilter();
 
     void do_filter (
@@ -146,6 +156,9 @@ public:
         do_filter(dst.m_data, src.m_data);
     }
 
+    void operator()(Gempic::DiscreteField& dst, Gempic::DiscreteField& src);
+    void operator()(Gempic::DiscreteVectorField& dst, Gempic::DiscreteVectorField& src);
+
 private:
     template <Forms::Grid grid, Forms::Space space>
         requires Forms::OneOrTwoFormSpaceC<space>
@@ -158,14 +171,11 @@ private:
         }
     }
     void do_filter(amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf);
-    void compute_stencils();
 
-    // Stencil along each direction.
-    // in 2D, stencilZ is not initialized.
-    amrex::Gpu::DeviceVector<amrex::Real> AMREX_D_DECL(m_stencilX, m_stencilY, m_stencilZ);
+    std::array<amrex::Gpu::DeviceVector<amrex::Real>, AMREX_SPACEDIM> m_stencil;
     // Filter parameter (0.5 for bilinear filters)
     amrex::Real const m_alpha{0.5};
-    // Do a compensation step?
+    // Do a compensation step
     bool m_compensate{false};
     amrex::Array<int, AMREX_SPACEDIM> m_nPass{AMREX_D_DECL(1, 1, 1)};
 };
@@ -180,6 +190,7 @@ void do_filter(amrex::MultiFab& dst, amrex::MultiFab const& src, FourierFilter& 
 class FourierFilter : public Filter
 {
 public:
+    FourierFilter(Io::Parameters& params, DiscreteGrid const& grid);
     FourierFilter(Gempic::ComputationalDomain const& compDom);
 
     void do_filter (
@@ -235,6 +246,9 @@ public:
                                 amrex::MultiFab const& src,
                                 FourierFilter& filter);
 
+    void operator()(DiscreteField& dst, DiscreteField& src);
+    void operator()(DiscreteVectorField& dst, DiscreteVectorField& src);
+
 private:
     template <Forms::Grid grid, Forms::Space space>
         requires Forms::OneOrTwoFormSpaceC<space>
@@ -250,36 +264,8 @@ private:
     std::unique_ptr<amrex::FFT::R2C<amrex::Real>> m_r2c;
     std::array<int, AMREX_SPACEDIM> m_n, m_nMin, m_nMax;
     amrex::Periodicity m_periodicity;
-    int m_numCells{0};
-    amrex::MultiFab m_tmpsrc, m_tmpdst;
 };
 #endif
-
-inline std::unique_ptr<Filter> make_filter (Gempic::ComputationalDomain const& compDom)
-{
-    Gempic::Io::Parameters params("Filter");
-    std::string filterType{"Bilinear"};
-    params.get_or_set("type", filterType);
-
-    if (filterType == "Bilinear")
-    {
-        return std::make_unique<BilinearFilter>();
-    }
-    else if (filterType == "Fourier")
-    {
-#ifdef AMREX_USE_FFT
-        return std::make_unique<FourierFilter>(compDom);
-#else
-        UNUSED(compDom);
-        GEMPIC_ERROR("FFT was not compiled with GEMPICX so the Fourier filter is not available");
-#endif
-    }
-    else
-    {
-        GEMPIC_ERROR("Filter type '" + filterType + "' is not implemented!");
-    }
-    exit(1); // Calms the compiler even though we don't technically return anything
-}
 
 } // namespace Gempic::Filter
 
