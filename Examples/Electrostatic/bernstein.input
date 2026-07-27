@@ -35,9 +35,8 @@ Function.By = "0.0"
 Function.Bz = "1.0"
 
 # Filter
-Filter.enable = 0
 Filter.type = Bilinear
-Filter.nPass = 3 3 3
+Filter.Bilinear.nPass = 3 3 3
 
 # Diagnostics
 # Full Diagnostics

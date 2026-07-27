@@ -113,7 +113,7 @@ int main (int argc, char* argv[])
         init_particles(particles, infra);
 
         // Initializing filter
-        std::unique_ptr<Filter::Filter> biFilter = std::make_unique<Filter::BilinearFilter>();
+        std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(infra);
 
         QuasineutralSolver<hodgeDegree, vdim, ndata, degx, degy, degz> hypreQNLinearSystem(infra);
 

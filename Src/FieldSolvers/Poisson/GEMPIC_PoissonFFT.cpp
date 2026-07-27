@@ -32,10 +32,8 @@ PoissonFFTSolver::PoissonFFTSolver(ComputationalDomain const& compDom,
     }
 
     m_r2c = std::make_unique<amrex::FFT::R2C<amrex::Real>>(compDom.box());
-    // define cell-centered containers for storing data, declaring 1 ghost cell to be able to
-    // copy back to the node-centered MultiFab, phi, without data loss.
-    m_rhoFft.define(compDom.m_grid, compDom.m_distriMap, 1, 1);
-    m_phiFft.define(compDom.m_grid, compDom.m_distriMap, 1, 1);
+    m_rhoFft.define(compDom.m_grid, compDom.m_distriMap, 1, 0);
+    m_phiFft.define(compDom.m_grid, compDom.m_distriMap, 1, 0);
 
     //dimensions in x, y and z directions
     GEMPIC_D_EXCL(int Ny = 0;, int Nz = 0;, ) // nvcc issues a warning when using const
@@ -238,19 +236,33 @@ void PoissonFFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
     AMREX_ALWAYS_ASSERT(phi.m_data.nComp() == rho.m_data.nComp());
     check_charge_neutrality(rho, m_compDom);
 
+    // AMReX FFT requires cell-centered input. The source/destination may not be cell-centered,
+    // which on a periodic domain means the high-boundary node is a duplicate of the low-boundary
+    // node.
+    // In the following we drop the duplicated high-boundary node by copying data into a
+    // cell-centered MultiFab. The FFT is applied to the MultiFab with cell-centered data. Finally
+    // the data is written to the result array and an OverrideSync is used to (in MPI terms)
+    // broadcast the result back to the duplicated nodes.
+    amrex::iMultiFab ownermask{phi.m_data.boxArray(), phi.m_data.DistributionMap(), 1, 0};
+    ownermask.setVal(0);
+
     for (int comp{0}; comp < rho.m_data.nComp(); ++comp)
     {
         // assign values to containers from rho.m_data
         for (amrex::MFIter mfi(m_rhoFft); mfi.isValid(); ++mfi)
         {
             auto const& rhoFftPtr = m_rhoFft.array(mfi);
-
             auto const& rhoMDataPtr = rho.m_data.array(mfi);
+            auto const& owner = ownermask.array(mfi);
 
-            amrex::Box const& bx = mfi.fabbox();
-
-            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
-                               { rhoFftPtr(i, j, k) = rhoMDataPtr(i, j, k, comp); });
+            amrex::ParallelFor(mfi.validbox(),
+                               [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+                               {
+                                   rhoFftPtr(i, j, k) = rhoMDataPtr(i, j, k, comp);
+                                   // The owner mask is the same for the src and dst MultiFab
+                                   // since the src and dst MF of the FFT are the same.
+                                   owner(i, j, k) = 1;
+                               });
         }
 
         // local variables necessary for CUDA
@@ -275,19 +287,16 @@ void PoissonFFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
                                        }
                                    });
 
-        //boundary handling
-        m_phiFft.FillBoundary(rho.m_deRham->get_periodicity());
-
-        for (amrex::MFIter mfi(phi.m_data); mfi.isValid(); ++mfi)
+        // Iterate over cell-centered m_phiFft boxes to avoid accessing the periodic boundary
+        // node that lies outside the cell-centered valid region; OverrideSync handles it below.
+        for (amrex::MFIter mfi(m_phiFft); mfi.isValid(); ++mfi)
         {
             auto const& phiFftPtr = m_phiFft.array(mfi);
-
             auto const& phiMDataPtr = phi.m_data.array(mfi);
 
-            amrex::Box const& bx = mfi.validbox();
-
-            amrex::ParallelFor(bx, [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
                                { phiMDataPtr(i, j, k, comp) = phiFftPtr(i, j, k); });
         }
     }
+    phi.m_data.OverrideSync(ownermask, rho.m_deRham->get_periodicity());
 }

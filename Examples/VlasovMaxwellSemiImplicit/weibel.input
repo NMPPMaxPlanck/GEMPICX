@@ -42,6 +42,9 @@ Function.By = "0.0"
 Function.Bz = "1e-4 * cos(kvarx * x)"
 Function.phi = "0.0" #"4 * 0.5 * cos(0.5 * x)"
 
+# Filter
+Filter.type = NoFilter
+
 # Diagnostics
 #Full Diagnostics 
 FullDiagnostics.enable = 1 # 1 for true, 0 for false

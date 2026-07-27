@@ -10,34 +10,54 @@
 
 namespace Gempic::Filter
 {
+FourierFilter::FourierFilter(Io::Parameters& params, DiscreteGrid const& discreteGrid)
+{
+    amrex::Vector<int> nMin, nMax;
+    params.get("Filter.Fourier.nMin", nMin);
+    params.get("Filter.Fourier.nMax", nMax);
+    for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
+    {
+        m_n[dir] = discreteGrid.n_cells(dir);
+        m_nMin[dir] = nMin[dir];
+        m_nMax[dir] = nMax[dir];
+    }
+
+    m_periodicity = Gempic::Impl::to_amrex_periodicty(discreteGrid);
+    m_r2c = std::make_unique<amrex::FFT::R2C<amrex::Real>>(
+        amrex::convert(Gempic::Impl::to_amrex_box(discreteGrid), amrex::IntVect::TheCellVector()));
+}
+
 FourierFilter::FourierFilter(Gempic::ComputationalDomain const& compDom)
 {
-    Io::Parameters params("Filter", "class FourierFilter");
-    params.get_or_set("enable", m_useFilter);
-    if (m_useFilter)
+    Io::Parameters params("Filter.Fourier", "class FourierFilter");
+    m_periodicity = compDom.geometry().periodicity();
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(m_periodicity.isAllPeriodic(),
+                                      "Fourier filtering only possible in fully periodic domain");
+
+    amrex::Vector<int> nMin, nMax;
+    params.get("nMin", nMin);
+    params.get("nMax", nMax);
+    auto length = compDom.box().length();
+    for (int i = 0; i < AMREX_SPACEDIM; i++)
     {
-        m_periodicity = compDom.geometry().periodicity();
-        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
-            m_periodicity.isAllPeriodic(),
-            "Fourier filtering only possible in fully periodic domain");
-        m_numCells = compDom.box().numPts();
+        m_n[i] = length[i];
+        m_nMin[i] = nMin[i];
+        m_nMax[i] = nMax[i];
+    }
 
-        amrex::Vector<int> nMin, nMax;
-        params.get("nMin", nMin);
-        params.get("nMax", nMax);
-        auto length = compDom.box().length();
-        for (int i = 0; i < AMREX_SPACEDIM; i++)
-        {
-            m_n[i] = length[i];
-            m_nMin[i] = nMin[i];
-            m_nMax[i] = nMax[i];
-        }
+    m_r2c = std::make_unique<amrex::FFT::R2C<amrex::Real>>(compDom.box());
+}
 
-        m_r2c = std::make_unique<amrex::FFT::R2C<amrex::Real>>(compDom.box());
-        // define cell-centered containers for storing data, declaring 1 ghost cell to be able to
-        // copy back to MultiFab with original index type without data loss.
-        m_tmpsrc.define(compDom.m_grid, compDom.m_distriMap, 1, 1);
-        m_tmpdst.define(compDom.m_grid, compDom.m_distriMap, 1, 1);
+void FourierFilter::operator ()(DiscreteField& dst, DiscreteField& src)
+{
+    Impl::do_filter(dst.multi_fab(), src.multi_fab(), *this);
+}
+
+void FourierFilter::operator ()(DiscreteVectorField& dst, DiscreteVectorField& src)
+{
+    for (auto dir : {Direction::xDir, Direction::yDir, Direction::zDir})
+    {
+        this->operator()(dst[dir], src[dir]);
     }
 }
 
@@ -47,25 +67,41 @@ void do_filter (amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf, FourierFil
 {
     AMREX_ALWAYS_ASSERT(dstmf.nComp() == srcmf.nComp());
 
+    amrex::MultiFab tmpsrc{amrex::convert(srcmf.boxArray(), amrex::IntVect::TheCellVector()),
+                           srcmf.DistributionMap(), 1, 0};
+    amrex::MultiFab tmpdst{amrex::convert(dstmf.boxArray(), amrex::IntVect::TheCellVector()),
+                           dstmf.DistributionMap(), 1, 0};
+    // AMReX FFT requires cell-centered input. The source/destination may not be cell-centered,
+    // which on a periodic domain means the high-boundary node is a duplicate of the low-boundary
+    // node.
+    // In the following we drop the duplicated high-boundary node by copying data into a
+    // cell-centered MultiFab. The FFT is applied to the MultiFab with cell-centered data. Finally
+    // the data is written to the result array and an OverrideSync is used to (in MPI terms)
+    // broadcast the result back to the duplicated nodes.
+    amrex::iMultiFab ownermask{dstmf.boxArray(), dstmf.DistributionMap(), 1, 0};
+    ownermask.setVal(0);
     for (int comp{0}; comp < srcmf.nComp(); comp++)
     {
-        for (amrex::MFIter mfi(f.m_tmpsrc); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(tmpsrc); mfi.isValid(); ++mfi)
         {
-            auto const& tmp = f.m_tmpsrc.array(mfi);
+            auto const& tmp = tmpsrc.array(mfi);
             auto const& src = srcmf.array(mfi);
+            auto const& owner = ownermask.array(mfi);
 
-            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
-                               { tmp(i, j, k) = src(i, j, k, comp); });
+            amrex::ParallelFor(mfi.validbox(),
+                               [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                               {
+                                   tmp(i, j, k) = src(i, j, k, comp);
+                                   // The owner mask is the same for the src and dst MultiFab
+                                   // since the src and dst MF of the FFT are the same.
+                                   owner(i, j, k, comp) = 1;
+                               });
         }
 
         f.m_r2c->forwardThenBackward(
-            f.m_tmpsrc, f.m_tmpdst,
-#if AMREX_SPACEDIM == 1
-            [nMin = f.m_nMin, nMax = f.m_nMax, numCells = f.m_numCells] AMREX_GPU_DEVICE(
-#else
-            [n = f.m_n, nMin = f.m_nMin, nMax = f.m_nMax, numCells = f.m_numCells] AMREX_GPU_DEVICE(
-#endif
-                int nx, int j, int k, auto& sp)
+            tmpsrc, tmpdst,
+            [n = f.m_n, nMin = f.m_nMin, nMax = f.m_nMax] AMREX_GPU_DEVICE(int nx, int j, int k,
+                                                                           auto& sp)
             {
                 GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
                 // do actual filtering
@@ -94,21 +130,21 @@ void do_filter (amrex::MultiFab& dstmf, amrex::MultiFab const& srcmf, FourierFil
 #endif
                 else
                 {
-                    sp /= numCells;
+                    sp /= GEMPIC_D_MULT(n[Direction::xDir], n[Direction::yDir], n[Direction::zDir]);
                 }
             });
 
         // copy back to
-        f.m_tmpdst.FillBoundary(f.m_periodicity);
-        for (amrex::MFIter mfi(dstmf); mfi.isValid(); ++mfi)
+        for (amrex::MFIter mfi(tmpdst); mfi.isValid(); ++mfi)
         {
-            auto const& tmp = f.m_tmpdst.array(mfi);
+            auto const& tmp = tmpdst.array(mfi);
             auto const& dst = dstmf.array(mfi);
 
-            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_DEVICE(int i, int j, int k) noexcept
+            amrex::ParallelFor(mfi.validbox(), [=] AMREX_GPU_DEVICE(int i, int j, int k)
                                { dst(i, j, k, comp) = tmp(i, j, k); });
         }
     }
+    dstmf.OverrideSync(ownermask, f.m_periodicity);
 }
 } // namespace Impl
 } //namespace Gempic::Filter
