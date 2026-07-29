@@ -328,7 +328,7 @@ void DiscreteVectorField::apply_boundary_conditions (std::array<size_t, AMREX_SP
     }
 };
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 
 namespace Impl
 {

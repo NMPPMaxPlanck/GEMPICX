@@ -126,7 +126,7 @@ DiscreteGrid::DiscreteGrid(amrex::Geometry const& geom,
 
 void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandle const& group)
 {
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
     H5GroupHandle gridGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::Create};
 
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
@@ -172,7 +172,7 @@ void serialize (std::string const& label, DiscreteGrid const& grid, H5GroupHandl
 
 void deserialize (std::string const& label, DiscreteGrid& grid, H5GroupHandle const& group)
 {
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
     H5GroupHandle gridGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::Create};
     std::array<amrex::Real, AMREX_SPACEDIM> domainLo;
     std::array<amrex::Real, AMREX_SPACEDIM> domainHi;

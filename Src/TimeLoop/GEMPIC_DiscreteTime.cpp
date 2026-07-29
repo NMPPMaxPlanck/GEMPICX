@@ -34,7 +34,7 @@ void DiscreteTime::step() { m_currentStep++; };
 
 void serialize (std::string const& label, DiscreteTime const& time, H5GroupHandle const& group)
 {
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
     H5GroupHandle timeGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::CreateExclusive};
 
     // 2) All attributes are scalar → reuse a single scalar dataspace
@@ -68,7 +68,7 @@ void serialize (std::string const& label, DiscreteTime const& time, H5GroupHandl
 
 void deserialize (std::string const& label, DiscreteTime& time, H5GroupHandle const& group)
 {
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
     H5GroupHandle timeGroup{group.h5id(), label, Gempic::H5GroupHandle::Mode::ReadWrite};
     H5DataspaceHandle scalarSpace{H5DataspaceHandle::Scalar{}};
 

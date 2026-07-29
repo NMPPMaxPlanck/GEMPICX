@@ -21,14 +21,14 @@
  * IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 #include <algorithm>
 #include <iostream>
 #else
 #include <stdexcept>
 #endif
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 #include "GEMPIC_ComputationalDomain.H"
 #endif
 #include "GEMPIC_HDF5Interface.H"
@@ -36,7 +36,7 @@
 namespace Gempic
 {
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 
 H5FileHandle::H5FileHandle(std::string filename, Mode mode, MPI_Comm comm) :
     m_filename{filename + s_extension}, m_mode{mode}
