@@ -322,8 +322,7 @@ style-test_cpu_3D:
   script:
     - start_details configure "CMake Configure Step"
     # HDF5 Compiler specification necessary only for finding the libraries
-    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_C_COMPILER=clang-18 
-                     -DHDF5_C_COMPILER_EXECUTABLE=h5pcc -B ./build
+    - cmake --preset cpu-release-3D -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_C_COMPILER=clang-18 -B ./build
     - end_details configure
     - start_details sanitize
     - python3 scripts/sanitize_with_python.py

@@ -24,7 +24,7 @@
 #ifndef GEMPIC_HDF5INTERFACE_H_
 #define GEMPIC_HDF5INTERFACE_H_
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 #include <array>
 #include <hdf5.h>
 #include <mpi.h>
@@ -38,7 +38,7 @@ using hsize_t = std::size_t;
 namespace Gempic
 {
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 
 template <typename T>
 auto check_hdf5 (T const& status)

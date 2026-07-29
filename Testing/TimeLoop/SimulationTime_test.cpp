@@ -24,7 +24,7 @@ TEST(SimulationTimeTest, MemberProperties)
     };
 }
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 TEST(SimulationTimeTest, SerializeDeserializeUnity)
 {
     double const dt = 0.1;

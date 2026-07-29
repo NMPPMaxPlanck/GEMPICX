@@ -75,7 +75,7 @@ TEST(DiscreteGridTest, Cell)
     }
 }
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 TEST(DiscreteGridTest, SerializeDeserializeUnity)
 {
     std::array<amrex::Real, AMREX_SPACEDIM> domainLo{AMREX_D_DECL(-1.5, -1.0, -0.5)};

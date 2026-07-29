@@ -51,9 +51,9 @@ include(cmake/gempic_install.cmake)
 include(cmake/gempic_FetchContent_Declare.cmake)
 include(cmake/gempic_CompilerConfig.cmake)
 
-include(cmake/gempic_HDF5Config.cmake)
 include(cmake/gempic_KokkosConfig.cmake)
 include(cmake/gempic_AMReXConfig.cmake)
+include(cmake/gempic_HDF5Config.cmake)
 
 add_library(GEMPICX STATIC)
 add_library(GEMPICX::GEMPICX ALIAS GEMPICX)
@@ -83,11 +83,8 @@ set(GIT_WORKING_DIR ${PROJECT_SOURCE_DIR} CACHE STRING "Internal cmake_git_versi
 FetchContent_MakeAvailable(cmake_git_version_tracking)
 gempic_suppress_third_party_warnings(TARGET cmake_git_version_tracking)
 
-if(TARGET GEMPICX::HDF5)
-  message(STATUS "HDF5 is available as GEMPICX::HDF5")
-  target_compile_definitions(GEMPICX PUBLIC GEMPIC_USE_HDF5=1)
-else()
-  message(STATUS "HDF5 target missing at GEMPICX level")
+if(${GEMPIC_USE_HDF5})
+  target_compile_definitions(GEMPICX PRIVATE GEMPIC_USE_HDF5)
 endif()
 
 target_link_libraries(GEMPICX
@@ -96,8 +93,8 @@ target_link_libraries(GEMPICX
   # Info about our repo is already exposed in GEMPICX.H
   PRIVATE
     cmake_git_version_tracking)
-if(TARGET GEMPICX::HDF5)
-  target_link_libraries(GEMPICX PRIVATE ${GEMPIC_HDF5_LINK_TARGET})
+if(GEMPIC_USE_HDF5)
+  target_link_libraries(GEMPICX PRIVATE hdf5::hdf5)
 endif()
 gempic_set_compile_options(GEMPICX)
 if(GEMPIC_BUILD_DOCUMENTATION)
@@ -128,11 +125,7 @@ message(STATUS "   Install directory        = ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "   C++ compiler             = ${CMAKE_CXX_COMPILER}")
 get_target_property(GEMPICX_FLAGS GEMPICX COMPILE_OPTIONS)
 message(STATUS "   C++ flags                = ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} ${GEMPICX_FLAGS}")
-if(TARGET GEMPICX::HDF5)
-  message(STATUS "   HDF5 support             = ON")
-else()
-  message(STATUS "   HDF5 support             = OFF")
-endif()
+message(STATUS "   HDF5 support             = ${GEMPIC_USE_HDF5}")
 if(GEMPIC_USE_HIP)
   message(STATUS "   HIP compiler            = ${CMAKE_HIP_COMPILER}")
   message(STATUS "   HIP flags               = ${CMAKE_HIP_FLAGS}")

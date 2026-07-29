@@ -334,7 +334,7 @@ TEST_F(DiscreteFieldsTest, DiscreteVectorFieldKernelExample)
     EXPECT_EQ(f.multi_fab().norm0(), 0);
 }
 
-#if GEMPIC_USE_HDF5
+#ifdef GEMPIC_USE_HDF5
 TEST_F(DiscreteFieldsTest, DiscreteScalarFieldSerializeDeserializeUnity)
 {
     Gempic::Io::Parameters parameters;

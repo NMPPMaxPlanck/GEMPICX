@@ -1,6 +1,12 @@
 macro(set_amrex_options_from_gempic)
   include(cmake/check_FFT.cmake)
   set(AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
+  # Some parts of fetch_content(HDF5) trigger AMReX shared libraries.
+  # This line configures them to be disabled
+  set(AMReX_BUILD_SHARED_LIBS OFF CACHE BOOL "AMReX Option set within GEMPIC")
+  # HDF5 is searched/fetched after AMReX is configured/searched.
+  # Set it to off to avoid interference
+  set(AMReX_HDF5              OFF CACHE BOOL "AMReX Option set within GEMPIC")
   if(GEMPIC_USE_CUDA)
     # AMReX does not recognise the CUDA language set by Kokkos, so we still need to enable it
     # even if Kokkos handles the performance portability options
