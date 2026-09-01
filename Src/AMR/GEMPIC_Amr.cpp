@@ -251,6 +251,135 @@ amrex::Vector<amrex::MultiFab> make_diagnostic_multifab (std::shared_ptr<GempicA
     return diagnostics;
 }
 
+namespace Impl
+{
+amrex::BoxArray coarsen_fine_summation (amrex::BoxArray const& ba, amrex::IntVect const refRatio)
+{
+    auto bl = ba.boxList();
+    for (auto& box : bl)
+    {
+        auto smallEnd = box.smallEnd();
+        auto bigEnd = box.bigEnd();
+        for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
+        {
+            // clear last bit to make the number even
+            smallEnd[dir] = (smallEnd[dir] + 1) & ~1;
+            bigEnd[dir] = bigEnd[dir] & ~1;
+        }
+        box.setSmall(smallEnd);
+        box.setBig(bigEnd);
+    }
+    amrex::BoxArray newBa(std::move(bl));
+    newBa.coarsen(refRatio);
+    return newBa;
+}
+
+amrex::BoxArray coarsen_fine_interpolation (amrex::BoxArray const& ba,
+                                            amrex::IntVect const refRatio)
+{
+    auto bl = ba.boxList();
+    for (auto& box : bl)
+    {
+        auto smallEnd = box.smallEnd();
+        auto bigEnd = box.bigEnd();
+        for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
+        {
+            if (smallEnd[dir] != bigEnd[dir]) // do not apply in normal direction
+            {
+                // clear last bit to make the number even
+                smallEnd[dir] = smallEnd[dir] & ~1;
+                bigEnd[dir] = (bigEnd[dir] - 1) & ~1;
+            }
+        }
+        box.setSmall(smallEnd);
+        box.setBig(bigEnd);
+    }
+    amrex::BoxArray newBa(std::move(bl));
+    newBa.coarsen(refRatio);
+    return newBa;
+}
+
+SummationShifts build_summation_shifts (amrex::IntVect const boxLength,
+                                        amrex::IntVect const idxType,
+                                        amrex::IntVect const refRatio)
+{
+    std::array<int, AMREX_SPACEDIM> tangentialDirs;
+    int nt = 0;
+    int nshifts = 1;
+
+    for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
+    {
+        if (boxLength[dir] > 1 and idxType[dir] == 0 and
+            refRatio[dir] > 1) // tangential direction, cell centered, and refined
+        {
+            tangentialDirs[nt++] = static_cast<int>(dir);
+            nshifts *= refRatio[dir];
+        }
+    }
+
+    std::array<amrex::IntVect, 1 << (AMREX_SPACEDIM - 1)> shifts;
+    for (int s = 0; s < nshifts; s++)
+    {
+        amrex::IntVect shift = amrex::IntVect::TheZeroVector();
+        int tmp = s;
+        // interpret s as a number in base 2 and use to build a tensor product
+        for (int t = 0; t < nt; t++)
+        {
+            shift[tangentialDirs[t]] = tmp % 2;
+            tmp /= 2;
+        }
+        shifts[s] = shift;
+    }
+    return SummationShifts{shifts, nshifts};
+}
+
+InterpolationShifts build_interpolation_shifts (amrex::IntVect const boxLength,
+                                                amrex::IntVect const idxType,
+                                                amrex::IntVect const refRatio)
+{
+    std::array<int, AMREX_SPACEDIM> tangentialDirs;
+    int nt = 0;
+    int nshifts = 1;
+
+    for (auto dir : {AMREX_D_DECL(xDir, yDir, zDir)})
+    {
+        if (boxLength[dir] > 1 and idxType[dir] == 1 and
+            refRatio[dir] > 1) // tangential direction, node centered, and refined
+        {
+            tangentialDirs[nt++] = static_cast<int>(dir);
+            nshifts *= 3;
+        }
+    }
+
+    std::array<amrex::IntVect, AMREX_D_PICK(0, 1, 5)> shifts;
+    std::array<amrex::IntVect, 1 << (AMREX_SPACEDIM - 1)> cornerShifts;
+    int nActualShifts = 0;
+    int nCorners = 0;
+    for (int s = 0; s < nshifts; s++)
+    {
+        amrex::IntVect shift = amrex::IntVect::TheZeroVector();
+        int tmp = s;
+        // interpret s as a number in base 3 and use to build a tensor product
+        for (int t = 0; t < nt; t++)
+        {
+            shift[tangentialDirs[t]] = tmp % 3;
+            tmp /= 3;
+        }
+
+        // check that there is no overlap with corners
+        if (AMREX_D_TERM(shift[xDir] == 1, or shift[yDir] == 1, or shift[zDir] == 1))
+        {
+            shifts[nActualShifts++] = shift;
+        }
+        else
+        {
+            cornerShifts[nCorners++] = shift;
+        }
+    }
+    return InterpolationShifts{shifts, cornerShifts, nActualShifts, nCorners, tangentialDirs, nt};
+}
+} // namespace Impl
+
 void write_plot_file (amrex::Vector<amrex::MultiFab>& diagnostics,
                       std::shared_ptr<GempicAmrCore> const& amr,
                       DiscreteTime const& time,

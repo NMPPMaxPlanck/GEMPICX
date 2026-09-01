@@ -220,14 +220,14 @@ void apply_boundary_conditions (T& t, std::array<size_t, AMREX_SPACEDIM> width)
     }
 }
 
-template <MLFormC T, MLFormC F>
+template <MLFormC T, typename F>
     requires requires(typename T::reference t, F& f) { project(t, f); }
 void project (T& t, F& f)
 {
     for (auto& lev : t) project(lev, f);
 }
 
-template <MLFormC T, MLFormC F>
+template <MLFormC T, typename F>
     requires requires(typename T::reference t, F& f) { project(t, f, std::declval<amrex::Real>()); }
 void project (T& t, F& f, amrex::Real time)
 {
@@ -404,7 +404,7 @@ amrex::Real sum_unique (T& t)
     for (int lev = 0; lev < static_cast<int>(t.size()); lev++)
     {
         sum += t[lev].multi_fab().sum_unique(
-            0, false, Gempic::Impl::to_amrex_periodicty(t[lev].discrete_grid()));
+            0, false, Gempic::Impl::to_amrex_periodicity(t[lev].discrete_grid()));
     }
     amrex::ParallelDescriptor::ReduceRealSum(sum);
     return sum;
@@ -496,7 +496,387 @@ void do_zero_covered_coarse (T& form, Impl::LevelInterface const& li)
                     [=] AMREX_GPU_DEVICE(int i, int j, int k) { form(i, j, k) *= mask(i, j, k); });
     }
 }
-} //namespace Impl
+
+// make fine box arrays with odd ends coarsenable by adapting the low and high of every box
+// version for summing/averaging shared dof on the boundary
+amrex::BoxArray coarsen_fine_summation(amrex::BoxArray const& ba, amrex::IntVect const refRatio);
+
+// make fine box arrays with odd ends coarsenable by adapting the low and high of every box
+// version for interpolating inbetween shared dof
+// interpolation is applied per cell to fill all hanging fine dof
+amrex::BoxArray coarsen_fine_interpolation(amrex::BoxArray const& ba,
+                                           amrex::IntVect const refRatio);
+
+// shifts for summing fine dof that belong to a single coarse dof. In 3D:
+// point values -> one zero shift
+// edge integrals -> two shifts
+// face integrals -> four shifts
+struct SummationShifts
+{
+    std::array<amrex::IntVect, 1 << (AMREX_SPACEDIM - 1)> m_shifts;
+    int m_num;
+};
+
+SummationShifts build_summation_shifts(amrex::IntVect const boxLength,
+                                       amrex::IntVect const idxType,
+                                       amrex::IntVect const refRatio);
+
+// Shifts for interpolating to fine dof that do not align with a coarse dof in at least one nodal
+// direction.
+// Shifts give the relative position of the fine dof that have not been updated by an averaging.
+// For a fully nodal field the shifts correspond to
+//  - a linear interpolation on edges (2D)
+//  - a bilinear interpolation on faces (3D)
+struct InterpolationShifts
+{
+    std::array<amrex::IntVect, AMREX_D_PICK(0, 1, 5)> m_shifts;
+    std::array<amrex::IntVect, 1 << (AMREX_SPACEDIM - 1)> m_cornerShifts;
+    int m_numShifts;
+    int m_numCornerShifts;
+    std::array<int, AMREX_SPACEDIM> m_tangentialDirs;
+    int m_numTangentialDirs;
+};
+
+InterpolationShifts build_interpolation_shifts(amrex::IntVect const boxLength,
+                                               amrex::IntVect const idxType,
+                                               amrex::IntVect const refRatio);
+
+template <typename T>
+void do_conforming_projection (T& coarseForm, T& fineForm, Impl::LevelInterface const& li)
+{
+    amrex::IntVect idxType = coarseForm.multi_fab().ixType().toIntVect();
+    amrex::IntVect refRatio = li.m_refRatio;
+
+    // create temporary multifabs to parallel copy data of other refinement level
+    amrex::MultiFab fineData;   // for coarse side
+    amrex::MultiFab coarseData; // for fine side
+
+    // these box computations could be moved to 'LevelInterface' since they are the same every time
+    auto baFineSummation = coarsen_fine_summation(li.m_baFine, refRatio);
+    auto baFineInterpolation = coarsen_fine_interpolation(li.m_baFine, refRatio);
+    // cannot refine boxArray with single dof in nodal direction. use workaround via boxList
+    auto tmp = li.m_baCoarse.boxList();
+    tmp.refine(refRatio);
+    auto baCoarse = amrex::BoxArray(std::move(tmp));
+
+    int nComp{1};
+    int nGhost{0};
+    fineData.define(baCoarse, li.m_dmCoarse, nComp, nGhost, amrex::MFInfo());
+    coarseData.define(baFineSummation, li.m_dmFine, nComp, nGhost, amrex::MFInfo());
+
+    // both copy operations need to completed before proceeding to prevent race conditions
+    fineData.ParallelCopy(fineForm.multi_fab(),
+                          Gempic::Impl::to_amrex_periodicity(fineForm.discrete_grid()));
+    coarseData.ParallelCopy(coarseForm.multi_fab(),
+                            Gempic::Impl::to_amrex_periodicity(coarseForm.discrete_grid()));
+
+    // looping over coarse interface
+    for (amrex::MFIter mfi(li.m_baCoarse, li.m_dmCoarse); mfi.isValid(); ++mfi)
+    {
+        amrex::Array4<amrex::Real const> const& arrFine = fineData.const_array(mfi);
+        coarseForm.select_box(li.m_coarseIdx[mfi.LocalIndex()]);
+
+        auto shifts = build_summation_shifts(mfi.validbox().length(), idxType, refRatio);
+
+        ParallelFor(mfi.validbox(),
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+                        amrex::IntVect fineIv = iv * refRatio;
+                        amrex::Real sum = 0;
+                        for (int ii = 0; ii < shifts.m_num; ii++)
+                        {
+                            sum += arrFine(fineIv + shifts.m_shifts[ii]);
+                        }
+                        coarseForm(iv) = 0.5 * (coarseForm(iv) + sum);
+                    });
+    }
+
+    // looping over fine interface
+    for (amrex::MFIter mfi(baFineSummation, li.m_dmFine); mfi.isValid(); ++mfi)
+    {
+        amrex::Array4<amrex::Real const> const& arrCoarse = coarseData.const_array(mfi);
+        fineForm.select_box(li.m_fineIdx[mfi.LocalIndex()]);
+
+        auto shifts = build_summation_shifts(mfi.validbox().length(), idxType, refRatio);
+
+        ParallelFor(mfi.validbox(),
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+                        amrex::IntVect fineIv = iv * refRatio;
+                        amrex::Real sum = 0;
+                        for (int ii = 0; ii < shifts.m_num; ii++)
+                        {
+                            sum += fineForm(fineIv + shifts.m_shifts[ii]);
+                        }
+                        amrex::Real value = 0.5 / shifts.m_num * (sum + arrCoarse(iv));
+                        for (int ii = 0; ii < shifts.m_num; ii++)
+                        {
+                            fineForm(fineIv + shifts.m_shifts[ii]) = value;
+                        }
+                    });
+    }
+
+    // need a second pass over fine in nodal direction to update inbetween fine nodes with
+    // (bi-)linear interpolation
+    for (amrex::MFIter mfi(baFineInterpolation, li.m_dmFine); mfi.isValid(); ++mfi)
+    {
+        auto box = mfi.validbox();
+// in cell-centered directions with refinement, both dof have to be updated -> refine box before
+// parallel for
+#if AMREX_SPACEDIM == 3
+        auto localRefRatio = amrex::IntVect::TheUnitVector(); // store refinement that has to be
+                                                              // applied in parallel for
+        for (auto dir : {xDir, yDir, zDir})
+        {
+            if (idxType[dir] == 0)
+            {
+                auto tmp = amrex::IntVect::TheUnitVector();
+                tmp[dir] = refRatio[dir];
+                box.refine(tmp);
+            }
+            else
+            {
+                localRefRatio[dir] = refRatio[dir];
+            }
+        }
+#endif
+        fineForm.select_box(li.m_fineIdx[mfi.LocalIndex()]);
+
+        auto shifts = build_interpolation_shifts(box.length(), idxType, refRatio);
+
+        if (shifts.m_numTangentialDirs > 0)
+        {
+            ParallelFor(box,
+                        [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                        {
+                            amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+#if AMREX_SPACEDIM == 3
+                            amrex::IntVect fineIv = iv * localRefRatio;
+#else
+                    amrex::IntVect fineIv = iv * refRatio;
+#endif
+
+                            for (int ii = 0; ii < shifts.m_numShifts; ii++)
+                            {
+                                amrex::Real value = 0;
+                                auto shift = shifts.m_shifts[ii];
+
+                                for (int c = 0; c < shifts.m_numCornerShifts; c++)
+                                {
+                                    auto corner = shifts.m_cornerShifts[c];
+
+                                    auto diff = shift - corner;
+                                    amrex::Real interpolationWeight =
+                                        GEMPIC_D_MULT(1.0 - 0.5 * amrex::Math::abs(diff[xDir]),
+                                                      1.0 - 0.5 * amrex::Math::abs(diff[yDir]),
+                                                      1.0 - 0.5 * amrex::Math::abs(diff[zDir]));
+                                    value += interpolationWeight * fineForm(fineIv + corner);
+                                }
+                                fineForm(fineIv + shifts.m_shifts[ii]) = value;
+                            }
+                        });
+        }
+    }
+}
+
+template <typename T>
+void do_conforming_projection_adjoint (T& coarseForm, T& fineForm, Impl::LevelInterface const& li)
+{
+    amrex::IntVect idxType = coarseForm.multi_fab().ixType().toIntVect();
+    amrex::IntVect refRatio = li.m_refRatio;
+
+    // create temporary multifabs to parallel copy data of other refinement level
+    amrex::MultiFab fineData;   // for coarse side
+    amrex::MultiFab coarseData; // for fine side
+    amrex::MultiFab fineTmp;
+
+    auto baFineSummation = coarsen_fine_summation(li.m_baFine, refRatio);
+    auto baFineInterpolation = coarsen_fine_interpolation(li.m_baFine, refRatio);
+    // cannot refine boxArray with single dof in nodal direction. use workaround via boxList
+    auto tmp = li.m_baCoarse.boxList();
+    tmp.refine(refRatio);
+    auto baCoarse = amrex::BoxArray(std::move(tmp));
+
+    int nComp{1};
+    int nGhost{0};
+    fineData.define(baCoarse, li.m_dmCoarse, nComp, nGhost, amrex::MFInfo());
+    coarseData.define(baFineSummation, li.m_dmFine, nComp, nGhost, amrex::MFInfo());
+    /// @todo: this tmp multifab is the complete fine level which is excessive
+    fineTmp.define(fineForm.multi_fab().boxArray(), fineForm.multi_fab().DistributionMap(), nComp,
+                   nGhost, amrex::MFInfo());
+    fineTmp.setVal(0.0);
+
+    // overlap copy of coarse data with local computation on fine
+    coarseData.ParallelCopy_nowait(coarseForm.multi_fab(),
+                                   Gempic::Impl::to_amrex_periodicity(coarseForm.discrete_grid()));
+
+    // looping over fine interface - reverse interpolation
+    for (amrex::MFIter mfi(baFineInterpolation, li.m_dmFine); mfi.isValid(); ++mfi)
+    {
+        auto box = mfi.validbox();
+// in cell-centered directions with refinement, both dof have to be updated -> refine box before
+// parallel for
+#if AMREX_SPACEDIM == 3
+        auto localRefRatio = amrex::IntVect::TheUnitVector(); // store refinement that has to be
+                                                              // applied in parallel for
+        for (auto dir : {xDir, yDir, zDir})
+        {
+            if (idxType[dir] == 0)
+            {
+                auto tmp = amrex::IntVect::TheUnitVector();
+                tmp[dir] = refRatio[dir];
+                box.refine(tmp);
+            }
+            else
+            {
+                localRefRatio[dir] = refRatio[dir];
+            }
+        }
+#endif
+        amrex::Array4<amrex::Real> const& arrTmp = fineTmp.array(li.m_fineIdx[mfi.LocalIndex()]);
+        fineForm.select_box(li.m_fineIdx[mfi.LocalIndex()]);
+
+        auto shifts = build_interpolation_shifts(box.length(), idxType, refRatio);
+
+        int threshold = 0;
+        // edges will already be updated by surrounding faces, exclude them by requiring two
+        // tangential directions
+        // same could be done in primal projection, but there it is just computing values
+        // again without harm
+        if (AMREX_SPACEDIM == 3 and idxType == amrex::IntVect::TheUnitVector()) threshold = 1;
+        if (shifts.m_numTangentialDirs > threshold)
+        {
+            ParallelFor(
+                box,
+                [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                {
+                    amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+#if AMREX_SPACEDIM == 3
+                    amrex::IntVect fineIv = iv * localRefRatio;
+#else
+                    amrex::IntVect fineIv = iv * refRatio;
+#endif
+
+                    for (int ii = 0; ii < shifts.m_numShifts; ii++)
+                    {
+                        auto shift = shifts.m_shifts[ii];
+
+                        for (int c = 0; c < shifts.m_numCornerShifts; c++)
+                        {
+                            auto corner = shifts.m_cornerShifts[c];
+
+                            auto diff = shift - corner;
+                            amrex::Real interpolationWeight =
+                                GEMPIC_D_MULT(1.0 - 0.5 * amrex::Math::abs(diff[xDir]),
+                                              1.0 - 0.5 * amrex::Math::abs(diff[yDir]),
+                                              1.0 - 0.5 * amrex::Math::abs(diff[zDir]));
+
+                            // operations on edges between cells are applied twice, once from each
+                            // side on GPU that could happen simultaneously so we halve the weight
+                            // and postpone setting the fine nodes to zero
+                            if (AMREX_SPACEDIM == 3 and
+                                idxType == amrex::IntVect::TheUnitVector() and
+                                interpolationWeight > 0)
+                            {
+                                interpolationWeight = 0.25;
+                            }
+
+                            amrex::Gpu::Atomic::Add(&arrTmp(fineIv + corner),
+                                                    interpolationWeight * fineForm(fineIv + shift));
+                        }
+
+                        if (not(AMREX_SPACEDIM == 3 and idxType == amrex::IntVect::TheUnitVector()))
+                        {
+                            fineForm(fineIv + shift) = 0;
+                        }
+                    }
+                });
+        }
+    }
+    if (AMREX_SPACEDIM == 3 and idxType == amrex::IntVect::TheUnitVector())
+    {
+        for (amrex::MFIter mfi(baFineInterpolation, li.m_dmFine); mfi.isValid(); ++mfi)
+        {
+            auto box = mfi.validbox();
+            fineForm.select_box(li.m_fineIdx[mfi.LocalIndex()]);
+            auto shifts = build_interpolation_shifts(box.length(), idxType, refRatio);
+
+            if (shifts.m_numTangentialDirs > 0) // only skip vertices, has to be applied to edges
+            {
+                ParallelFor(box,
+                            [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                            {
+                                amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+                                amrex::IntVect fineIv = iv * refRatio;
+
+                                for (int ii = 0; ii < shifts.m_numShifts; ii++)
+                                {
+                                    fineForm(fineIv + shifts.m_shifts[ii]) = 0;
+                                }
+                            });
+            }
+        }
+    }
+    fineForm.multi_fab().ParallelCopy(fineTmp,
+                                      Gempic::Impl::to_amrex_periodicity(fineForm.discrete_grid()),
+                                      amrex::FabArrayBase::ADD);
+
+    fineData.ParallelCopy(fineForm.multi_fab(),
+                          Gempic::Impl::to_amrex_periodicity(fineForm.discrete_grid()));
+
+    coarseData.ParallelCopy_finish();
+
+    // looping over coarse interface
+    for (amrex::MFIter mfi(li.m_baCoarse, li.m_dmCoarse); mfi.isValid(); ++mfi)
+    {
+        amrex::Array4<amrex::Real const> const& arrFine = fineData.const_array(mfi);
+        coarseForm.select_box(li.m_coarseIdx[mfi.LocalIndex()]);
+
+        auto shifts = build_summation_shifts(mfi.validbox().length(), idxType, refRatio);
+
+        ParallelFor(mfi.validbox(),
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+                        amrex::IntVect fineIv = iv * refRatio;
+                        amrex::Real sum = 0;
+                        for (int ii = 0; ii < shifts.m_num; ii++)
+                        {
+                            sum += arrFine(fineIv + shifts.m_shifts[ii]);
+                        }
+                        coarseForm(iv) = 0.5 * (coarseForm(iv) + sum / shifts.m_num);
+                    });
+    }
+
+    // looping over fine interface
+    for (amrex::MFIter mfi(baFineSummation, li.m_dmFine); mfi.isValid(); ++mfi)
+    {
+        amrex::Array4<amrex::Real const> const& arrCoarse = coarseData.const_array(mfi);
+        fineForm.select_box(li.m_fineIdx[mfi.LocalIndex()]);
+
+        auto shifts = build_summation_shifts(mfi.validbox().length(), idxType, refRatio);
+
+        ParallelFor(mfi.validbox(),
+                    [=] AMREX_GPU_DEVICE(int i, int j, int k)
+                    {
+                        amrex::IntVect iv{AMREX_D_DECL(i, j, k)};
+                        amrex::IntVect fineIv = iv * refRatio;
+                        amrex::Real sum = 0;
+                        for (int ii = 0; ii < shifts.m_num; ii++)
+                        {
+                            sum += fineForm(fineIv + shifts.m_shifts[ii]);
+                        }
+                        amrex::Real value = 0.5 * (arrCoarse(iv) + sum / shifts.m_num);
+                        for (int ii = 0; ii < shifts.m_num; ii++)
+                        {
+                            fineForm(fineIv + shifts.m_shifts[ii]) = value;
+                        }
+                    });
+    }
+}
+} // namespace Impl
 
 template <MLFormC T, MLFormC U>
     requires requires(typename T::reference t, typename U::reference u) { hodge(t, u); } &&
@@ -531,6 +911,50 @@ void zero_covered_coarse (T& mlform)
                 mlform.m_levelInterfaces.value()[lev].m_coarseCoveredMask != nullptr,
                 "LevelInterface needs coveredCoarseMask for zero_covered_coarse.");
             Impl::do_zero_covered_coarse(mlform[lev], mlform.m_levelInterfaces.value()[lev]);
+        }
+    }
+}
+
+template <MLPrimalFormC T>
+void conforming_projection (T& mlform)
+{
+    BL_PROFILE("Amr::conforming_projection(primal)");
+    for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
+    {
+        if constexpr (MLVectorFormC<T>)
+        {
+            for (auto dir : {xDir, yDir, zDir})
+            {
+                auto const& li = mlform.m_levelInterfaces.value()[lev][dir];
+                Impl::do_conforming_projection(mlform[lev][dir], mlform[lev + 1][dir], li);
+            }
+        }
+        else
+        {
+            auto const& li = mlform.m_levelInterfaces.value()[lev];
+            Impl::do_conforming_projection(mlform[lev], mlform[lev + 1], li);
+        }
+    }
+}
+
+template <MLDualFormC T>
+void conforming_projection (T& mlform)
+{
+    BL_PROFILE("Amr::conforming_projection(dual)");
+    for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
+    {
+        if constexpr (MLVectorFormC<T>)
+        {
+            for (auto dir : {xDir, yDir, zDir})
+            {
+                auto const& li = mlform.m_levelInterfaces.value()[lev][dir];
+                Impl::do_conforming_projection_adjoint(mlform[lev][dir], mlform[lev + 1][dir], li);
+            }
+        }
+        else
+        {
+            auto const& li = mlform.m_levelInterfaces.value()[lev];
+            Impl::do_conforming_projection_adjoint(mlform[lev], mlform[lev + 1], li);
         }
     }
 }
