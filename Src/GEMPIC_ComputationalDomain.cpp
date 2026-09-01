@@ -334,7 +334,7 @@ amrex::Geometry to_amrex_geometry (DiscreteGrid const& discreteGrid)
                                                                     amrex::CellIndexEnum::CELL)})),
         to_amrex_real_box(discreteGrid), amrex::CoordSys::cartesian, periodicity};
 }
-amrex::Periodicity to_amrex_periodicty (DiscreteGrid const& discreteGrid)
+amrex::Periodicity to_amrex_periodicity (DiscreteGrid const& discreteGrid)
 {
     // amrex::Periodicity object is not a bool but returns the highest index of a periodic domain
     // To avoid errors we return the periodicity instance that is taken from an amrex geometry

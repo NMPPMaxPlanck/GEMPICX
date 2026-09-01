@@ -294,7 +294,7 @@ amrex::IndexType to_amrex_idx_type(DiscreteGrid const& discreteGrid);
 amrex::Box to_amrex_box(DiscreteGrid const& discreteGrid);
 amrex::RealBox to_amrex_real_box(DiscreteGrid const& discreteGrid);
 amrex::Geometry to_amrex_geometry(DiscreteGrid const& discreteGrid);
-amrex::Periodicity to_amrex_periodicty(DiscreteGrid const& discreteGrid);
+amrex::Periodicity to_amrex_periodicity(DiscreteGrid const& discreteGrid);
 } // namespace Impl
 
 /**

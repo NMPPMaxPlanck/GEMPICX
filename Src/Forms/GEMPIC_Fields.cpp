@@ -241,7 +241,7 @@ void DiscreteField::apply_boundary_conditions (std::array<size_t, AMREX_SPACEDIM
         m_view = View{};
         m_selectedBoxIdx = std::numeric_limits<int>::min();
     }
-    this->multi_fab().FillBoundary(ng, Impl::to_amrex_periodicty(this->discrete_grid()));
+    this->multi_fab().FillBoundary(ng, Impl::to_amrex_periodicity(this->discrete_grid()));
     for (auto dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {
         if (not discrete_grid().is_periodic(dir))
@@ -750,7 +750,7 @@ void linear_combination (DiscreteVectorField& result,
 amrex::Real dot_product (DiscreteField& a, DiscreteField& b)
 {
     auto mask =
-        amrex::OwnerMask(a.multi_fab(), Gempic::Impl::to_amrex_periodicty(a.discrete_grid()));
+        amrex::OwnerMask(a.multi_fab(), Gempic::Impl::to_amrex_periodicity(a.discrete_grid()));
     return amrex::MultiFab::Dot(*mask, a.multi_fab(), 0, b.multi_fab(), 0, 1, 0);
 }
 
@@ -818,7 +818,7 @@ namespace Impl
 {
 void override_sync (DiscreteField& a)
 {
-    a.multi_fab().OverrideSync(Gempic::Impl::to_amrex_periodicty(a.discrete_grid()));
+    a.multi_fab().OverrideSync(Gempic::Impl::to_amrex_periodicity(a.discrete_grid()));
 }
 void override_sync (DiscreteVectorField& a)
 {

@@ -22,7 +22,7 @@ FourierFilter::FourierFilter(Io::Parameters& params, DiscreteGrid const& discret
         m_nMax[dir] = nMax[dir];
     }
 
-    m_periodicity = Gempic::Impl::to_amrex_periodicty(discreteGrid);
+    m_periodicity = Gempic::Impl::to_amrex_periodicity(discreteGrid);
     m_r2c = std::make_unique<amrex::FFT::R2C<amrex::Real>>(
         amrex::convert(Gempic::Impl::to_amrex_box(discreteGrid), amrex::IntVect::TheCellVector()));
 }

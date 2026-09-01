@@ -159,6 +159,11 @@ public:
     //! Access indexable degrees of freedom stored in the @ref DiscreteField
     KOKKOS_INLINE_FUNCTION
     amrex::Real& operator()(int ix1, int ix2, int ix3) const { return m_view(ix1, ix2, ix3); }
+    KOKKOS_INLINE_FUNCTION
+    amrex::Real& operator()(amrex::IntVect iv) const
+    {
+        return m_view(GEMPIC_D_PAD(iv[xDir], iv[yDir], iv[zDir]));
+    }
     //! Describes the degree of freedom stored by the @ref DiscreteField
     DOFCategory dof_category (Direction dir) const
     {
@@ -296,6 +301,10 @@ public:
     AMREX_GPU_HOST_DEVICE amrex::Real& operator()(Direction dir, int ix1, int ix2, int ix3) const
     {
         return m_fields[dir](ix1, ix2, ix3);
+    }
+    AMREX_GPU_HOST_DEVICE amrex::Real& operator()(Direction dir, amrex::IntVect iv) const
+    {
+        return m_fields[dir](iv);
     }
     DiscreteField::DOFCategory dof_category (Direction field, Direction grid) const
     {
