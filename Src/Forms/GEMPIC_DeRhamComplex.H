@@ -246,6 +246,9 @@ constexpr Field complement_form ()
             return Field::DualOneForm;
         case Field::DualThreeForm:
             return Field::DualZeroForm;
+        default:
+            GEMPIC_ERROR("Unrecognised Field type passed to complement_form");
+            return Field::PrimalZeroForm;
     }
 }
 
@@ -405,6 +408,10 @@ template <typename T>
 concept DualOneFormC = OneFormC<T> && DualFormC<T>;
 template <typename T>
 concept DualTwoFormC = TwoFormC<T> && DualFormC<T>;
+
+template <typename T>
+concept FormC = ZeroFormC<T> || OneFormC<T> || TwoFormC<T> || ThreeFormC<T>;
+
 template <Sequence sequence, Form form>
 struct DeRhamFormBase
 {

@@ -43,9 +43,9 @@ AMREX_FORCE_INLINE amrex::MultiFab const& subfield_mf (T const& t, Direction dir
 // ----------------------------
 // Collapsed builders for type-erased ops
 
-using InterpFn = void (*)(amrex::MultiFab&, void const*, amrex::Real, int, Direction);
-using RawFn = void (*)(amrex::MultiFab&, void const*, int, Direction);
-using CellCenteredFn = void (*)(amrex::MultiFab&, void const*, amrex::Real, int, Direction);
+using InterpFn = void (*)(amrex::MultiFab&, void const*, amrex::Real, Direction, int);
+using RawFn = void (*)(amrex::MultiFab&, void const*, Direction, int);
+using CellCenteredFn = void (*)(amrex::MultiFab&, void const*, amrex::Real, Direction, int);
 
 struct FieldOps
 {
@@ -57,31 +57,33 @@ struct FieldOps
 template <typename T>
 InterpFn make_interp_fn ()
 {
-    return +[] (amrex::MultiFab& dst, void const* p, amrex::Real scaling, int dcomp, Direction dir)
+    return +[] (amrex::MultiFab& dst, void const* p, amrex::Real scaling, Direction dir,
+                int dstComp)
     {
         auto const& field = *static_cast<T const*>(p);
-        Gempic::Forms::interpolate_field_to_multifab_degree_selector(dst, field, scaling, dcomp,
-                                                                     dir);
+        Gempic::Forms::interpolate_field_to_multifab_degree_selector(dst, field, scaling, dir,
+                                                                     dstComp);
     };
 }
 
 template <typename T>
 RawFn make_raw_fn ()
 {
-    return +[] (amrex::MultiFab& dst, void const* p, int dcomp, Direction dir)
+    return +[] (amrex::MultiFab& dst, void const* p, Direction dir, int dstComp)
     {
         auto const& field = *static_cast<T const*>(p);
-        Gempic::Forms::rawdata_field_to_multifabs(dst, field, dcomp, dir);
+        Gempic::Forms::rawdata_field_to_multifabs(dst, field, dir, dstComp);
     };
 }
 
 template <typename T>
 CellCenteredFn make_cellcentered_fn ()
 {
-    return +[] (amrex::MultiFab& dst, void const* p, amrex::Real scaling, int dcomp, Direction dir)
+    return +[] (amrex::MultiFab& dst, void const* p, amrex::Real scaling, Direction dir,
+                int dstComp)
     {
         auto const& field = *static_cast<T const*>(p);
-        Gempic::Forms::field_to_cellcentered_multifabs(dst, field, scaling, dcomp, dir);
+        Gempic::Forms::field_to_cellcentered_multifabs(dst, field, scaling, dir, dstComp);
     };
 }
 

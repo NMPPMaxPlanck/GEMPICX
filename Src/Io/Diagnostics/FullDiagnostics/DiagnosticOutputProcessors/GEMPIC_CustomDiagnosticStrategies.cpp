@@ -93,9 +93,10 @@ void CustomOperatorOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dc
 {
     BL_PROFILE("CustomOperatorOutputProcessor::operator()");
     int const nComps = this->m_dataSrc->n_comp();
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() == nComps,
+                                      "Incompatible space size in destination multifab");
     amrex::MultiFab const* srcMF = this->m_dataSrc->mf_ptr();
     AMREX_ALWAYS_ASSERT(srcMF != nullptr);
-
     for (amrex::MFIter mfi(mfDst, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx = mfi.tilebox();
@@ -201,16 +202,16 @@ amrex::BoxArray HighResSubcellOutputProcessor::get_box_array (amrex::IndexType& 
 };
 
 void HighResSubcellOutputProcessor::interpolate_any_field_to_multifab (amrex::MultiFab& mfDst,
-                                                                      int dcomp) const
+                                                                      int dstComp) const
 {
-    this->m_dataSrc->interpolate_any_field_to_multifab(mfDst, dcomp);
+    this->m_dataSrc->interpolate_any_field_to_multifab(mfDst, dstComp);
 }
 
-void HighResSubcellOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
+void HighResSubcellOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dstComp) const
 {
     BL_PROFILE("HighResSubcellOutputProcessor::operator()");
     mfDst.setVal(0.0);
-    this->interpolate_any_field_to_multifab(mfDst, dcomp);
+    this->interpolate_any_field_to_multifab(mfDst, dstComp);
 }
 
 } //namespace Gempic::Io

@@ -1639,18 +1639,18 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_curlj_coefficient (
 
     if constexpr (vDim == 1)
     {
-        if (dir == xDir)
+        if constexpr (dir == xDir)
         {
             return 0.0;
         }
-        else if (dir == yDir)
+        else if constexpr (dir == yDir)
         {
             return GEMPIC_D_ADD(
                 0.0, 0.0,
                 (vel[xDir] *
                  spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
         }
-        else if (dir == zDir)
+        else if constexpr (dir == zDir)
         {
             return GEMPIC_D_ADD(
                 0.0,
@@ -1661,21 +1661,21 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_curlj_coefficient (
     }
     else if constexpr (vDim == 2)
     {
-        if (dir == xDir)
+        if constexpr (dir == xDir)
         {
             return GEMPIC_D_ADD(
                 0.0, 0.0,
                 (-vel[yDir] *
                  spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
         }
-        else if (dir == yDir)
+        else if constexpr (dir == yDir)
         {
             return GEMPIC_D_ADD(
                 0.0, 0.0,
                 (vel[xDir] *
                  spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
         }
-        else if (dir == zDir)
+        else if constexpr (dir == zDir)
         {
             return GEMPIC_D_ADD(
                 (vel[yDir] * spline.template eval_b_spline_derivative<form, dir, xDir>(ii, jj, kk)),
@@ -1686,7 +1686,7 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_curlj_coefficient (
     }
     else
     {
-        if (dir == xDir)
+        if constexpr (dir == xDir)
         {
             return GEMPIC_D_ADD(
                 0.0,
@@ -1694,7 +1694,7 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_curlj_coefficient (
                 (-vel[yDir] *
                  spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
         }
-        else if (dir == yDir)
+        else if constexpr (dir == yDir)
         {
             return GEMPIC_D_ADD(
                 (-vel[zDir] *
@@ -1703,13 +1703,18 @@ AMREX_GPU_HOST_DEVICE inline amrex::Real deposit_curlj_coefficient (
                 (vel[xDir] *
                  spline.template eval_b_spline_derivative<form, dir, zDir>(ii, jj, kk)));
         }
-        else if (dir == zDir)
+        else if constexpr (dir == zDir)
         {
             return GEMPIC_D_ADD(
                 (vel[yDir] * spline.template eval_b_spline_derivative<form, dir, xDir>(ii, jj, kk)),
                 (-vel[xDir] *
                  spline.template eval_b_spline_derivative<form, dir, yDir>(ii, jj, kk)),
                 0.0);
+        }
+        else
+        {
+            GEMPIC_ERROR("Unknown direction");
+            return 0.0;
         }
     }
 }

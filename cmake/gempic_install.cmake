@@ -73,13 +73,15 @@ macro(gempic_install_export_targets)
     # List of all (public/interface) header directories of _target
     get_target_property(${_target}_HEADER_DIRS ${_target} INTERFACE_INCLUDE_DIRECTORIES)
     if(NOT ${_target}_HEADER_DIRS STREQUAL "${_target}_HEADER_DIRS-NOTFOUND")
-      # Not allowing generator expressions makes this much simpler
-      # Hopefully also means install-related decisions are localised to this file
-      if(${_target}_HEADER_DIRS MATCHES "BUILD_INTERFACE" OR
-         ${_target}_HEADER_DIRS MATCHES "INSTALL_INTERFACE")
-        message(FATAL_ERROR "Generator expressions in link statements not supported for install\n"
-                            "TARGET ${_target}\n"
-                            "INTERFACE_INCLUDE_DIRECTORIES: ${${_target}_HEADER_DIRS}")
+      # Skip targets that already define install/build interfaces
+      # (typically external or well-behaved third-party targets)
+      if("${${_target}_HEADER_DIRS}" MATCHES "\\$<BUILD_INTERFACE:"
+         OR
+         "${${_target}_HEADER_DIRS}" MATCHES "\\$<INSTALL_INTERFACE:")
+        message(STATUS
+          "Skipping include-dir rewrite for target ${_target} "
+          "(already uses generator expressions)")
+        continue()
       else()
         # Convert all build header paths (whose prefix is this repo) to install paths
         # Ensures #include to individual files without providing entire/relative file path

@@ -11,6 +11,8 @@
 #include "GEMPIC_NumTools.H"
 #include "GEMPIC_Solvers.H"
 
+namespace Gempic
+{
 /**
  * Maxwell MatOp functor class,
  * to solve the Schur complement of the homogeneous Maxwell equations.
@@ -348,5 +350,7 @@ public:
         m_disc.m_tend = tend;
     }
 };
+
+} //namespace Gempic
 
 #endif

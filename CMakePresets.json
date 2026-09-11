@@ -323,13 +323,12 @@
         },
         {
             "name": "vs-intelOneAPI-release",
-            "displayName": "VS2022 + Intel oneAPI Release",
-            "generator": "Visual Studio 17 2022",
+            "displayName": "VS2026 + Intel oneAPI Release",
+            "generator": "Visual Studio 18 2026",
             "architecture": "x64",
-            "toolset": "Intel C++ Compiler 2025,fortran=ifx",
+            "toolset": "Intel C++ Compiler 2026,fortran=ifx",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_Fortran_FLAGS": "/MP",
                 "CMAKE_EXE_LINKER_FLAGS": "/Qopenmp",
                 "GEMPIC_USE_HDF5": false
              },
@@ -341,13 +340,12 @@
         },
         {
             "name": "vs-intelOneAPI-debug",
-            "displayName": "VS2022 + Intel oneAPI Debug",
-            "generator": "Visual Studio 17 2022",
+            "displayName": "VS2026 + Intel oneAPI Debug",
+            "generator": "Visual Studio 18 2026",
             "architecture": "x64",
-            "toolset": "Intel C++ Compiler 2025,fortran=ifx",
+            "toolset": "Intel C++ Compiler 2026,fortran=ifx",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_Fortran_FLAGS": "/MP",
                 "CMAKE_EXE_LINKER_FLAGS": "/Qopenmp",
                 "GEMPIC_USE_HDF5": false
             },

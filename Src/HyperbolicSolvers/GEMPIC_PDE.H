@@ -11,6 +11,9 @@
 
 #include "GEMPIC_Config.H"
 
+namespace Gempic
+{
+
 template <int nvar>
 using varArray = amrex::GpuArray<amrex::Real, nvar>;
 
@@ -92,5 +95,7 @@ AMREX_GPU_HOST_DEVICE void pde_numerical_flux (varArray<nVarPde>& /*ql*/,
     static_assert(gempic_always_false<PdeTagType>(),
                   "pde_numerical_flux is not implemented for this TagType!");
 }
+
+} //namespace Gempic
 
 #endif

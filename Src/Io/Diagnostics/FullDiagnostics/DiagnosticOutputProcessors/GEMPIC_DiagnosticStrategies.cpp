@@ -33,9 +33,9 @@ amrex::BoxArray RawOutputProcessor::get_box_array (amrex::IndexType& t)
     return bx;
 };
 
-void RawOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
+void RawOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dstComp) const
 {
-    this->m_dataSrc->any_field_to_rawdata_multifabs(mfDst, dcomp);
+    this->m_dataSrc->any_field_to_rawdata_multifabs(mfDst, dstComp);
 }
 
 CellCenterOutputProcessor::CellCenterOutputProcessor(AnyFieldPtr const& dataSrc,
@@ -56,10 +56,10 @@ amrex::BoxArray CellCenterOutputProcessor::get_box_array (amrex::IndexType& t)
     return bx;
 };
 
-void CellCenterOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dcomp) const
+void CellCenterOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dstComp) const
 {
     BL_PROFILE("CellCenterOutputProcessor<drc>::operator()");
-    this->m_dataSrc->any_field_to_cellcentered_multifabs(mfDst, dcomp);
+    this->m_dataSrc->any_field_to_cellcentered_multifabs(mfDst, dstComp);
 }
 
 } //namespace Impl

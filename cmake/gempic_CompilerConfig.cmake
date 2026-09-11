@@ -60,6 +60,9 @@ function(gempic_set_compile_options TARGET)
     # https://web.archive.org/web/20200605121301/www.ssl.berkeley.edu/~jimm/grizzly_docs/SSL/opt/intel/cc/9.0/lib/locale/en_US/mcpcom.msg
     target_compile_options(${TARGET} PRIVATE "SHELL:-Xcudafe --diag_suppress=set_but_not_used")
     target_compile_options(${TARGET} PRIVATE "SHELL:-Xcudafe --diag_suppress=declared_but_not_referenced")
+    # Switching to the KOKKOS compiler wrapper adds many, many warnings about __host__/__device__
+    # annotations on explicitly defaulted functions
+    target_compile_options(${TARGET} PRIVATE "SHELL:-Xcudafe --diag_suppress=20012")
   endif()
 endfunction()
 

@@ -74,13 +74,16 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_lagrange (int const polyIndex,
  * respective polyIndex. note that: even number of nodes; odd interpolating polynomial degree.
  */
 template <int nNodes>
-AMREX_GPU_HOST_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Real const y)
+AMREX_GPU_HOST_DEVICE amrex::Real eval_lagrange (int const polyIndex,
+                                                 amrex::Real const y,
+                                                 int const shift = 0)
 {
     constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
     static_assert(nNodes % 2 == 0, "nNodes must be EVEN");
     AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma + 1,
                               "polyIndex must be in [-n, n+1]");
-    AMREX_ASSERT_WITH_MESSAGE(y >= 0.0 && y <= 1.0, "y must be in [0, 1]");
+    AMREX_ASSERT_WITH_MESSAGE(y >= 0.0 - shift && y <= 1.0 - shift,
+                              "y must be in [-shift, 1-shift]");
     amrex::GpuArray<amrex::Real, nNodes> vals;
     amrex::GpuArray<amrex::Real, nNodes> nodes;
     for (int j = 0; j < nNodes; ++j)
@@ -119,15 +122,14 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_lagrange (int const polyIndex, amrex::Rea
  * @return: derivatives of polyIndex-th Lagrange basis functions evaluated at xi
  */
 template <int intDegree>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_lagrange_der (int const polyIndex,
-                                                                        amrex::Real const xk,
-                                                                        amrex::Real const dx,
-                                                                        amrex::Real xi)
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_lagrange_der (int const polyIndex,
+                                                                         amrex::Real const xk,
+                                                                         amrex::Real const dx,
+                                                                         amrex::Real xi)
 {
     constexpr int nNodes{intDegree + 1};
-    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
     AMREX_ASSERT_WITH_MESSAGE(((intDegree - 1) % 2) == 0, "intDegree must be ODD");
-    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma + 1,
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -nNodes / 2 + 1 && polyIndex <= nNodes / 2,
                               "polyIndex must be in [-n, n+1]");
     AMREX_ASSERT_WITH_MESSAGE(xi >= xk && xi <= xk + dx, "xi must be in [xk, xk+dx]");
     amrex::Real phiXi{0.0};
@@ -171,15 +173,15 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_lagrange_der (int cons
  * @return: derivatives of polyIndex-th Lagrange basis functions evaluated at xi
  */
 template <int intDegree>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_lagrange_der (int const polyIndex,
-                                                                        amrex::Real xi)
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_lagrange_der (int const polyIndex,
+                                                                         amrex::Real xi,
+                                                                         int const shift = 0)
 {
     constexpr int nNodes{intDegree + 1};
-    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
     AMREX_ASSERT_WITH_MESSAGE(((intDegree - 1) % 2) == 0, "intDegree must be ODD");
-    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma + 1,
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -nNodes / 2 + 1 && polyIndex <= nNodes / 2,
                               "polyIndex must be in [-n, n+1]");
-    AMREX_ASSERT_WITH_MESSAGE(xi >= 0.0 && xi <= 1.0, "xi must be in [0, 1]");
+    AMREX_ASSERT_WITH_MESSAGE(xi >= 0.0 - shift && xi <= 1.0 - shift, "xi must be in [0, 1]");
     amrex::Real phiXi{0.0};
     int n = (intDegree - 1) / 2;
     int m = polyIndex + n;
@@ -232,7 +234,7 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_lagrange_der (int cons
 // NOLINTBEGIN(readability-magic-numbers)
 
 template <int intDegree>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
     int const polyIndex, amrex::Real const xk, amrex::Real const dx, amrex::Real xi)
 {
     constexpr int nNodes{intDegree + 1};
@@ -275,8 +277,8 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
 // NOLINTBEGIN(readability-magic-numbers)
 
 template <int intDegree>
-AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (int const polyIndex,
-                                                                                amrex::Real xi)
+AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
+    int const polyIndex, amrex::Real xi, int const shift = 0)
 {
     constexpr int nNodes{intDegree + 1};
     constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
@@ -285,13 +287,13 @@ AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
     AMREX_ASSERT_WITH_MESSAGE(((intDegree - 1) % 2) == 0, "intDegree must be ODD");
     AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma,
                               "polyIndex must be in [-n, n]");
-    AMREX_ASSERT_WITH_MESSAGE(xi >= 0.0 && xi <= 1.0, "xi must be in [0, 1]");
+    AMREX_ASSERT_WITH_MESSAGE(xi >= 0.0 - shift && xi <= 1.0 - shift, "xi must be in [0, 1]");
 
-    amrex::Real phiEdge{eval_lagrange_der<intDegree>(polyIdx, xi)};
+    amrex::Real phiEdge{eval_lagrange_der<intDegree>(polyIdx, xi, shift)};
     phiEdge *= -1.0;
     for (int polyIdxLoc = 1 - sigma; polyIdxLoc < polyIndex + 1; ++polyIdxLoc)
     {
-        amrex::Real phiXiInterp{eval_lagrange_der<intDegree>(polyIdxLoc, xi)};
+        amrex::Real phiXiInterp{eval_lagrange_der<intDegree>(polyIdxLoc, xi, shift)};
         phiEdge -= phiXiInterp;
     }
 
@@ -327,10 +329,9 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex,
 {
     constexpr int histDegree{nNodes - 2};
     constexpr int intDegree{histDegree + 1};
-    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
 
     AMREX_ASSERT_WITH_MESSAGE((nNodes % 2) == 0, "nNodes must be EVEN");
-    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma,
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -nNodes / 2 + 1 && polyIndex <= nNodes / 2 - 1,
                               "polyIndex must be in [-n, n]");
     AMREX_ASSERT_WITH_MESSAGE(y >= xk && y <= xk + dx, "y must be in [xk, xk+dx]");
     amrex::Real val = 0;
@@ -414,14 +415,15 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex,
  *
  */
 template <int nNodes>
-AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex, amrex::Real const y)
+AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex,
+                                             amrex::Real const y,
+                                             int const shift = 0)
 {
     constexpr int intDegree{nNodes - 1};
-    constexpr int sigma{nNodes / 2 - 1}; // memo: (hodgeDegree = nIntNodes = 2 sigma + 2 )
     AMREX_ASSERT_WITH_MESSAGE((nNodes % 2) == 0, "nNodes must be EVEN");
-    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -sigma && polyIndex <= sigma,
+    AMREX_ASSERT_WITH_MESSAGE(polyIndex >= -nNodes / 2 + 1 && polyIndex <= nNodes / 2 - 1,
                               "polyIndex must be in [-n, n]");
-    AMREX_ASSERT_WITH_MESSAGE(y >= 0.0 && y <= 1.0, "y must be in [0, 1]");
+    AMREX_ASSERT_WITH_MESSAGE(y >= 0.0 - shift && y <= 1.0 - shift, "y must be in [0, 1]");
 
     amrex::Real val = 0;
     amrex::Real diff = y;
@@ -481,7 +483,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex, amrex::Real co
                 AMREX_ASSERT("Impossible error! ODD orders not implemented");
                 amrex::Abort("Impossible error! ODD orders not implemented");
             }
-            val = eval_edge_arbitrary_order<intDegree>(polyIndex, y);
+            val = eval_edge_arbitrary_order<intDegree>(polyIndex, y, shift);
     }
 
     return val;
@@ -524,31 +526,35 @@ AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex,
 the same but assuming xk=0, dx = 1
 */
 template <int nNodes, OneTwoFormC SrcFormType, Direction dir, Direction coordinate>
-AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex, amrex::Real const y)
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex,
+                                                 amrex::Real const y,
+                                                 int const shift = 0)
 {
     if constexpr ((SrcFormType::s_space == Space::edge && dir != coordinate) ||
                   (SrcFormType::s_space == Space::face && dir == coordinate))
     {
-        return eval_lagrange<nNodes>(polyIndex, y);
+        return eval_lagrange<nNodes>(polyIndex, y - shift, shift);
     }
     else
     {
-        return eval_edge<nNodes>(polyIndex, y);
+        return eval_edge<nNodes>(polyIndex, y - shift, shift);
     }
 }
 /**
 the same but assuming dx = 1
 */
 template <int nNodes, ZeroThreeFormC SrcFormType>
-AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex, amrex::Real const y)
+AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex,
+                                                 amrex::Real const y,
+                                                 int const shift = 0)
 {
     if constexpr (SrcFormType::s_space == Space::node)
     {
-        return eval_lagrange<nNodes>(polyIndex, y);
+        return eval_lagrange<nNodes>(polyIndex, y - shift, shift);
     }
     else // if constexpr (space == Space::edge)
     {
-        return eval_edge<nNodes>(polyIndex, y);
+        return eval_edge<nNodes>(polyIndex, y - shift, shift);
     }
 }
 
@@ -578,7 +584,7 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     int n = 0)
 {
     constexpr int sigma{nNodes / 2 - 1};
-    constexpr std::array<int, 3> dirShift = make_dir_shift<SrcFormType>();
+    constexpr std::array<int, 3> dirShift = staggeringDirShift<SrcFormType>;
 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
@@ -617,10 +623,12 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     int iIn,
     int jIn,
     int kIn,
-    int n = 0)
+    int n = 0,
+    int iShift = 0,
+    int jShift = 0,
+    int kShift = 0)
 {
     constexpr int sigma{nNodes / 2 - 1};
-    static constexpr std::array<int, 3> dirShift{StaggeredDofMapping<SrcFormType>::s_mDirShift};
 
     StaggeredDofMapping<SrcFormType> stagMap(r);
     //m_shiftDualGridIdx add a shift in the indices for dual to primal evaluation
@@ -630,15 +638,16 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
-    // m_dirShift add eventually a degree of freedom to the reconsctruction stencil
-    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + dirShift[xDir]; ++a),
-                        for (int b = -sigma; b < sigma + 1 + dirShift[yDir]; ++b),
-                        for (int c = -sigma; c < sigma + 1 + dirShift[zDir]; ++c))
+    // s_dirShift add eventually a degree of freedom to the reconsctruction stencil
+    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.s_dirShift[xDir]; ++a),
+                        for (int b = -sigma; b < sigma + 1 + stagMap.s_dirShift[yDir]; ++b),
+                        for (int c = -sigma; c < sigma + 1 + stagMap.s_dirShift[zDir]; ++c))
         fval +=
-            funcMF(i + a, j + b, k + c, n) *
-            GEMPIC_D_MULT((Gempic::Forms::choose_eval<nNodes, SrcFormType>(a, stagMap.m_r[xDir])),
-                          (Gempic::Forms::choose_eval<nNodes, SrcFormType>(b, stagMap.m_r[yDir])),
-                          (Gempic::Forms::choose_eval<nNodes, SrcFormType>(c, stagMap.m_r[zDir])));
+            funcMF(i + a + iShift, j + b + jShift, k + c + kShift, n) *
+            GEMPIC_D_MULT(
+                (Gempic::Forms::choose_eval<nNodes, SrcFormType>(a, stagMap.m_r[xDir], iShift)),
+                (Gempic::Forms::choose_eval<nNodes, SrcFormType>(b, stagMap.m_r[yDir], jShift)),
+                (Gempic::Forms::choose_eval<nNodes, SrcFormType>(c, stagMap.m_r[zDir], kShift)));
     GEMPIC_D_LOOP_END
     return fval;
 }
@@ -669,7 +678,7 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     int n = 0)
 {
     constexpr int sigma{nNodes / 2 - 1};
-    constexpr std::array<int, 3> dirShift = make_dir_shift<SrcFormType, dir>();
+    constexpr std::array<int, 3> dirShift = staggeringDirShift<SrcFormType, dir>;
 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
@@ -693,11 +702,12 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     int iIn,
     int jIn,
     int kIn,
-    int n = 0)
+    int n = 0,
+    int iShift = 0,
+    int jShift = 0,
+    int kShift = 0)
 {
     constexpr int sigma{nNodes / 2 - 1};
-    static constexpr std::array<int, 3> dirShift{
-        StaggeredDofMapping<SrcFormType, dir>::s_mDirShift};
 
     StaggeredDofMapping<SrcFormType, dir> stagMap(r);
 
@@ -708,13 +718,14 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
 
-    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + dirShift[xDir]; ++a),
-                        for (int b = -sigma; b < sigma + 1 + dirShift[yDir]; ++b),
-                        for (int c = -sigma; c < sigma + 1 + dirShift[zDir]; ++c))
-        fval += funcMF(i + a, j + b, k + c, n) *
-                GEMPIC_D_MULT((choose_eval<nNodes, SrcFormType, dir, xDir>(a, stagMap.m_r[xDir])),
-                              (choose_eval<nNodes, SrcFormType, dir, yDir>(b, stagMap.m_r[yDir])),
-                              (choose_eval<nNodes, SrcFormType, dir, zDir>(c, stagMap.m_r[zDir])));
+    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.s_dirShift[xDir]; ++a),
+                        for (int b = -sigma; b < sigma + 1 + stagMap.s_dirShift[yDir]; ++b),
+                        for (int c = -sigma; c < sigma + 1 + stagMap.s_dirShift[zDir]; ++c))
+        fval += funcMF(i + a + iShift, j + b + jShift, k + c + kShift, n) *
+                GEMPIC_D_MULT(
+                    (choose_eval<nNodes, SrcFormType, dir, xDir>(a, stagMap.m_r[xDir], iShift)),
+                    (choose_eval<nNodes, SrcFormType, dir, yDir>(b, stagMap.m_r[yDir], jShift)),
+                    (choose_eval<nNodes, SrcFormType, dir, zDir>(c, stagMap.m_r[zDir], kShift)));
     GEMPIC_D_LOOP_END
     return fval;
 }
@@ -792,7 +803,7 @@ void eval_form_component (
     auto nEvals{static_cast<size_t>(evalShift.size())};
     int nComp{srcForm.get_ncomp(dir)};
     int outputNComp{values.nComp()};
-    AMREX_ASSERT_WITH_MESSAGE(nEvals * size_t(nComp) == size_t(outputNComp),
+    AMREX_ASSERT_WITH_MESSAGE(static_cast<int>(nEvals) * nComp == outputNComp,
                               "Output MultiFab of eval_form must have enough components to hold "
                               "all evaluations for all field components (in one direction).");
 
@@ -1000,12 +1011,16 @@ amrex::Real max_error_midpoint (amrex::Geometry geom,
     return values.norm0();
 }
 
+/**
+memo: we copy all source components to a (larger) multi component multifab!
+*/
 // one-, two- form interpolation
 template <OneTwoFormC SrcFormType, int degree, Direction dir>
 void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                     SrcFormType const& srcForm,
                                     amrex::Real scaling,
-                                    int dcomp)
+                                    int dstComp = 0,
+                                    std::optional<int> nCompsIn = {})
 {
     for (amrex::MFIter mfiSrc(srcForm.multi_fab(dir)); mfiSrc.isValid(); // don't use tiling!!
          ++mfiSrc)
@@ -1013,8 +1028,8 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
         std::array<int, 3> shiftCell{0, 0, 0};
         // change box upper limits to compute only the cell-centered output multifab:
         amrex::IntVect shiftCellIVect{AMREX_D_DECL(shiftCell[0], shiftCell[1], shiftCell[2])};
-        int nComp = srcForm.get_ncomp(dir);
-        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dcomp + nComp,
+        int nComp{nCompsIn.value_or(srcForm.get_ncomp(dir))};
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + nComp,
                                           "Insufficient space in destination multifab");
         amrex::Box const& bxSrc = mfiSrc.tilebox(shiftCellIVect);
 
@@ -1058,10 +1073,10 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                         AMREX_D_DECL((iSub + 0.5) / sNSubCellLoc[xDir],
                                                      (jSub + 0.5) / sNSubCellLoc[yDir],
                                                      (kSub + 0.5) / sNSubCellLoc[zDir])};
-                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) =
+                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, dstComp + n) =
                                         eval_form_component_local<degree, SrcFormType, dir>(
                                             src, r, i, j, k, n);
-                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) *=
+                                    dst(iloc + iSub, jloc + jSub, kloc + kSub, dstComp + n) *=
                                         scaling;
                                 }
                             }
@@ -1070,20 +1085,24 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
     }
 }
 
+/**
+memo: we copy all source components to a (larger) multi component multifab!
+*/
 // zero-, three- form interpolation
 template <ZeroThreeFormC SrcFormType, int degree>
 void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                     SrcFormType const& srcForm,
                                     amrex::Real scaling,
-                                    int dcomp)
+                                    int dstComp = 0,
+                                    int nComp = -1)
 {
     for (amrex::MFIter mfiSrc(srcForm.multi_fab()); mfiSrc.isValid(); ++mfiSrc)
     {
         std::array<int, 3> shiftCell{0, 0, 0};
         // change box upper limits to compute only the cell-centered output multifab:
         amrex::IntVect shiftCellIVect{AMREX_D_DECL(shiftCell[0], shiftCell[1], shiftCell[2])};
-        int nComp = srcForm.get_ncomp();
-        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dcomp + nComp,
+        if (nComp < 0) nComp = srcForm.get_ncomp();
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + nComp,
                                           "Insufficient space in destination multifab");
         amrex::Box const& bxSrc = mfiSrc.tilebox(shiftCellIVect);
 
@@ -1131,9 +1150,9 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
                                 AMREX_D_DECL((iSub + 0.5) / sNSubCellLoc[xDir],
                                              (jSub + 0.5) / sNSubCellLoc[yDir],
                                              (kSub + 0.5) / sNSubCellLoc[zDir])};
-                            dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) =
+                            dst(iloc + iSub, jloc + jSub, kloc + kSub, dstComp + n) =
                                 eval_form_component_local<degree, SrcFormType>(src, r, i, j, k, n);
-                            dst(iloc + iSub, jloc + jSub, kloc + kSub, dcomp + n) *= scaling;
+                            dst(iloc + iSub, jloc + jSub, kloc + kSub, dstComp + n) *= scaling;
                         }
                     }
                 }
@@ -1142,22 +1161,26 @@ void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
 }
 
 template <OneTwoFormC SrcFormType, int degree>
-void interpolate_field_to_multifab (
-    amrex::MultiFab& mfDst, SrcFormType const& srcForm, amrex::Real scaling, int dcomp, int dir)
+void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
+                                    SrcFormType const& srcForm,
+                                    amrex::Real scaling,
+                                    Direction dir,
+                                    int dstComp = 0,
+                                    int ncomp = -1)
 {
     switch (dir)
     {
         case xDir:
             interpolate_field_to_multifab<SrcFormType, degree, xDir>(mfDst, srcForm, scaling,
-                                                                     dcomp);
+                                                                     dstComp, ncomp);
             break;
         case yDir:
             interpolate_field_to_multifab<SrcFormType, degree, yDir>(mfDst, srcForm, scaling,
-                                                                     dcomp);
+                                                                     dstComp, ncomp);
             break;
         case zDir:
             interpolate_field_to_multifab<SrcFormType, degree, zDir>(mfDst, srcForm, scaling,
-                                                                     dcomp);
+                                                                     dstComp, ncomp);
             break;
         default:
             GEMPIC_ERROR("Unknown direction.");
@@ -1165,16 +1188,24 @@ void interpolate_field_to_multifab (
 }
 
 template <Forms::ZeroThreeFormC SrcFormType, int degree>
-void interpolate_field_to_multifab (
-    amrex::MultiFab& mfDst, SrcFormType const& srcForm, amrex::Real scaling, int dcomp, int /*dir*/)
+void interpolate_field_to_multifab (amrex::MultiFab& mfDst,
+                                    SrcFormType const& srcForm,
+                                    amrex::Real scaling,
+                                    Direction /*idir*/,
+                                    int dstComp = 0,
+                                    int ncomp = -1)
 {
-    interpolate_field_to_multifab<SrcFormType, degree>(mfDst, srcForm, scaling, dcomp);
+    interpolate_field_to_multifab<SrcFormType, degree>(mfDst, srcForm, scaling, dstComp, ncomp);
 }
 
 template <typename SrcFormType, int testDegInd = 0>
     requires(!HasHodgeScheme<field_to_drc_t<SrcFormType>>)
-void interpolate_field_to_multifab_degree_selector (
-    amrex::MultiFab& mfDst, SrcFormType const& srcForm, amrex::Real scaling, int dcomp, int dir)
+void interpolate_field_to_multifab_degree_selector (amrex::MultiFab& mfDst,
+                                                    SrcFormType const& srcForm,
+                                                    amrex::Real scaling,
+                                                    Direction dir = noDir,
+                                                    int dstComp = 0,
+                                                    int ncomp = -1)
 {
     BL_PROFILE("interpolate_field_to_multifab_degree_selector()")
     constexpr auto validDegreesArray = valid_degrees<HodgeScheme::FDHodge>(); // FDHodge hard coded!
@@ -1183,12 +1214,13 @@ void interpolate_field_to_multifab_degree_selector (
         if (srcForm.get_hodge_degree() == validDegreesArray[testDegInd])
         {
             constexpr int degree = validDegreesArray[testDegInd];
-            interpolate_field_to_multifab<SrcFormType, degree>(mfDst, srcForm, scaling, dcomp, dir);
+            interpolate_field_to_multifab<SrcFormType, degree>(mfDst, srcForm, scaling, dir,
+                                                               dstComp, ncomp);
         }
         else
         {
             interpolate_field_to_multifab_degree_selector<SrcFormType, testDegInd + 1>(
-                mfDst, srcForm, scaling, dcomp, dir);
+                mfDst, srcForm, scaling, dir, dstComp, ncomp);
         }
     }
     else
@@ -1206,8 +1238,9 @@ template <typename SrcTypeWithHodge, int testDegreeIndex = 0>
 void interpolate_field_to_multifab_degree_selector (amrex::MultiFab& mfDst,
                                                     SrcTypeWithHodge const& srcForm,
                                                     amrex::Real scaling,
-                                                    int dcomp,
-                                                    int dir)
+                                                    Direction dir = noDir,
+                                                    int dstComp = 0,
+                                                    int ncomp = -1)
 {
     BL_PROFILE("interpolate_field_to_multifab_degree_selector()")
     constexpr auto validDegreesArray =
@@ -1217,13 +1250,13 @@ void interpolate_field_to_multifab_degree_selector (amrex::MultiFab& mfDst,
         if (srcForm.get_hodge_degree() == validDegreesArray[testDegreeIndex])
         {
             constexpr int degree = validDegreesArray[testDegreeIndex];
-            interpolate_field_to_multifab<SrcTypeWithHodge, degree>(mfDst, srcForm, scaling, dcomp,
-                                                                    dir);
+            interpolate_field_to_multifab<SrcTypeWithHodge, degree>(mfDst, srcForm, scaling, dir,
+                                                                    dstComp, ncomp);
         }
         else
         {
             interpolate_field_to_multifab_degree_selector<SrcTypeWithHodge, testDegreeIndex + 1>(
-                mfDst, srcForm, scaling, dcomp, dir);
+                mfDst, srcForm, scaling, dir, dstComp, ncomp);
         }
     }
     else
@@ -1239,8 +1272,9 @@ void interpolate_field_to_multifab_degree_selector (amrex::MultiFab& mfDst,
 template <typename SrcFormType>
 void rawdata_field_to_multifabs (amrex::MultiFab& /*mfDst*/,
                                  SrcFormType const& /*srcForm*/,
-                                 int /*dcomp*/,
-                                 Direction /*idir*/)
+                                 Direction /*idir*/,
+                                 int /*dstComp*/,
+                                 int /*ncomp*/)
 {
     static_assert(gempic_always_false<SrcFormType>(),
                   "rawdata_field_to_multifabs is not implemented for this srcFormType!");
@@ -1248,58 +1282,81 @@ void rawdata_field_to_multifabs (amrex::MultiFab& /*mfDst*/,
 template <typename SrcFormType>
 void rawdata_field_to_multifabs (std::vector<amrex::MultiFab>& /*mfDst*/,
                                  SrcFormType const& /*srcForm*/,
-                                 int /*dcomp*/,
-                                 Direction /*idir*/)
+                                 Direction /*idir*/,
+                                 int /*dstComp*/,
+                                 int /*ncomp*/)
 {
     static_assert(gempic_always_false<SrcFormType>(),
                   "rawdata_field_to_multifabs is not implemented for this srcFormType!");
 }
 
+/**
+memo: we copy all source components to a (larger) multi component multifab!
+*/
 template <Forms::ZeroThreeFormC SrcFormType>
 void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
                                  SrcFormType const& srcForm,
-                                 int dcomp,
-                                 Direction /*idir*/)
+                                 Direction idir = noDir,
+                                 int dstComp = 0,
+                                 int ncomp = -1)
 {
     // Copying raw MultiFab. You might think this a waste, but amrex's plot function does the same
     // if the MultiFab passed to it has ghost cells.
-    amrex::Copy(mfDst, srcForm.multi_fab(), 0, dcomp, mfDst.nComp(), 0);
-    // mf_dst.ParallelCopy( *m_mf_src, 0, dcomp, m_mf_src->nComp() );
+    if (ncomp < 0) ncomp = srcForm.get_ncomp();
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + ncomp,
+                                      "Insufficient space in destination multifab");
+    amrex::Copy(mfDst, srcForm.multi_fab(), 0, dstComp, ncomp, 0);
+    // mf_dst.ParallelCopy( *m_mf_src, 0, dstComp, m_mf_src->nComp() );
 }
 
+/**
+memo: we copy all source components to a (larger) multi component multifab!
+*/
 template <Forms::OneTwoFormC SrcFormType>
 void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
                                  SrcFormType const& srcForm,
-                                 int dcomp,
-                                 Direction idir = noDir)
+                                 Direction idir,
+                                 int dstComp = 0,
+                                 int ncomp = -1)
 {
     // Copying raw MultiFab. You might think this a waste, but amrex's plot function does the same
     // if the MultiFab passed to it has ghost cells.
-    amrex::Copy(mfDst, srcForm.multi_fab(idir), 0, dcomp, mfDst.nComp(), 0);
-    // mf_dst.ParallelCopy( *m_mf_src, 0, dcomp, m_mf_src->nComp() );
+    if (ncomp < 0) ncomp = srcForm.get_ncomp(idir);
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + ncomp,
+                                      "Insufficient space in destination multifab");
+    amrex::Copy(mfDst, srcForm.multi_fab(idir), 0, dstComp, ncomp, 0);
+    // mf_dst.ParallelCopy( *m_mf_src, 0, dstComp, m_mf_src->nComp() );
 }
 
 template <typename SrcFormType>
 void field_to_cellcentered_multifabs (amrex::MultiFab& /*mfDst*/,
                                       SrcFormType const& /*srcForm*/,
                                       amrex::Real /*scaling*/,
-                                      int /*dcomp*/,
-                                      Direction /*idir*/)
+                                      Direction /*idir*/,
+                                      int /*dstComp*/,
+                                      int /*ncomp*/)
 {
     static_assert(gempic_always_false<SrcFormType>(),
                   "field_to_cellcentered_multifabs is not implemented for this srcFormType!");
 }
 
+/**
+memo: we copy all source components to a (larger) multi component multifab!
+*/
 template <Forms::ZeroThreeFormC SrcFormType>
 void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
                                       SrcFormType const& srcForm,
                                       amrex::Real scaling,
-                                      int dcomp,
-                                      Direction /*idir*/)
+                                      Direction idir = noDir,
+                                      int dstComp = 0,
+                                      int nComps = -1)
 {
     // In cartesian geometry, interpolate from simulation MultiFab, m_dataSrc,
     // to output diagnostic MultiFab, mfDst.
-    int nComps = srcForm.get_ncomp();
+    if (nComps < 0) nComps = srcForm.get_ncomp();
+    int nCompsDst = mfDst.nComp();
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + nComps,
+                                      "Insufficient space in destination multifab");
 
     for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)
     {
@@ -1321,7 +1378,7 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
             bx, nComps,
             [=] AMREX_GPU_DEVICE(int i, int j, int k, int srcComp)
             {
-                dst(i, j, k, dcomp + srcComp) =
+                dst(i, j, k, dstComp + srcComp) =
                     0.125 * scaling *
                     (src(i + ishift, j + jshift, k + kshift, srcComp) + src(i, j, k, srcComp) +
                      src(i + ishift, j + jshift, k, srcComp) + src(i, j, k + kshift, srcComp) +
@@ -1331,16 +1388,22 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
     }
 }
 
+/**
+memo: we copy all source components to a (larger) multi component multifab!
+*/
 template <OneTwoFormC SrcFormType>
 void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
                                       SrcFormType const& srcForm,
                                       amrex::Real scaling,
-                                      int dcomp,
-                                      Direction idir = noDir)
+                                      Direction idir = noDir,
+                                      int dstComp = 0,
+                                      int nComps = -1)
 {
     // In cartesian geometry, interpolate from simulation MultiFab, m_dataSrc,
     // to output diagnostic MultiFab, mfDst.
-    int nComps = srcForm.get_ncomp(idir);
+    if (nComps < 0) nComps = srcForm.get_ncomp(idir);
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + nComps,
+                                      "Insufficient space in destination multifab");
 
     for (amrex::MFIter mfi(mfDst); mfi.isValid(); ++mfi)
     {
@@ -1362,7 +1425,7 @@ void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
             bx, nComps,
             [=] AMREX_GPU_DEVICE(int i, int j, int k, int srcComp)
             {
-                dst(i, j, k, dcomp + srcComp) =
+                dst(i, j, k, dstComp + srcComp) =
                     0.125 * scaling *
                     (src(i + ishift, j + jshift, k + kshift, srcComp) + src(i, j, k, srcComp) +
                      src(i + ishift, j + jshift, k, srcComp) + src(i, j, k + kshift, srcComp) +

@@ -9,7 +9,7 @@
 #include <string>
 #include <variant>
 
-#ifndef M_PI /// M_PI is gnu, so we need to define it elsewhere
+#ifndef M_PI /// M_PI is gnu and needs to be defined explicitly for other compilers
 #define M_PI std::numbers::pi_v<amrex::Real>
 #endif
 
@@ -17,6 +17,10 @@
 #define GEMPIC_FORCE_INLINE inline
 #else
 #define GEMPIC_FORCE_INLINE AMREX_FORCE_INLINE
+#endif
+
+#if defined(GEMPIC_USE_LAPACK) || defined(GEMPIC_USE_MKL)
+#define GEMPIC_USE_LAPACK_OR_MKL
 #endif
 
 /**
