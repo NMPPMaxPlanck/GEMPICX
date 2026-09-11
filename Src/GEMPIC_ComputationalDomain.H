@@ -111,7 +111,8 @@ public:
 
     private:
         friend class DiscreteAxis;
-        Location(int index, amrex::Real offset) : m_index{index}, m_offset{offset} {};
+        AMREX_GPU_HOST_DEVICE Location(int index, amrex::Real offset) :
+            m_index{index}, m_offset{offset} {};
         int m_index{};
         amrex::Real m_offset{};
     };

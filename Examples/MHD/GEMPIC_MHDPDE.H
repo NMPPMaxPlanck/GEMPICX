@@ -25,8 +25,9 @@
 #include "GEMPIC_PDE.H"
 #include "GEMPIC_Parameters.H"
 
+namespace Gempic
+{
 // MHD PDE specialization:
-
 /**
  * auxiliary PDE parameter struct;
  */
@@ -1252,5 +1253,7 @@ public:
         }
     }
 };
+
+} //namespace Gempic
 
 #endif

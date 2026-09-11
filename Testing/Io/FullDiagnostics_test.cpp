@@ -316,23 +316,23 @@ public:
 
     void copy_any_field_to_multifabs (amrex::MultiFab& mfDst,
                                       Gempic::Io::AnyFieldPtr const& dataSrc,
-                                      int dcomp) const noexcept
+                                      int dstComp) const noexcept
     {
         // Raw copy of the selected subfield into destination
-        dataSrc.any_field_to_rawdata_multifabs(mfDst, dcomp);
+        dataSrc.any_field_to_rawdata_multifabs(mfDst, dstComp);
 
         // If you want cell-centered output instead:
-        // dataSrc.anyField_to_cellcentered_multifabs(mfDst, dcomp);
+        // dataSrc.anyField_to_cellcentered_multifabs(mfDst, dstComp);
 
         // Or interpolation on-the-fly:
-        // dataSrc.interpolate_anyField_to_multifab(mfDst, dcomp);
+        // dataSrc.interpolate_anyField_to_multifab(mfDst, dstComp);
     }
 
-    void operator()(amrex::MultiFab& mfDst, int dcomp) const final
+    void operator()(amrex::MultiFab& mfDst, int dstComp) const final
     {
         BL_PROFILE("DumbOutputProcessor::operator()");
         ++s_counter;
-        copy_any_field_to_multifabs(mfDst, *this->m_dataSrc, dcomp);
+        copy_any_field_to_multifabs(mfDst, *this->m_dataSrc, dstComp);
     }
 };
 

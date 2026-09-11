@@ -56,7 +56,7 @@ int main (int argc, char* argv[])
         IMEXRKTBtype imexrKreference;
 
         // the Maxwell numerical scheme class
-        MaxwellNumericalScheme maxwell;
+        Gempic::MaxwellNumericalScheme maxwell;
 
         // the IMEX RK class
         Gempic::TimeLoop::ImexRk<MaxwellFieldsHandlerStruct, imExRkTag, MaxwellDeRham>

@@ -49,6 +49,10 @@ if(GEMPIC_USE_HDF5)
   target_link_libraries(GtestTests PRIVATE hdf5::hdf5)
 endif()
 
+if(GEMPIC_USE_MKL OR GEMPIC_USE_LAPACK)
+    target_link_libraries(GtestTests PRIVATE gempic_linalg)
+endif()
+
 gtest_discover_tests(
   GtestTests
   PROPERTIES DISCOVERY_TIMEOUT 15

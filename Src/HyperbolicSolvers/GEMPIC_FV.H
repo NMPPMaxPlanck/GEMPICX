@@ -18,6 +18,9 @@
 #include "GEMPIC_PDE.H"
 #include "GEMPIC_Parameters.H"
 
+namespace Gempic
+{
+
 enum class ReconstructionMode
 {
     CharacteristicVars, // do reconstruction in characteristic variables
@@ -3554,5 +3557,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v2z_to_z_face_reconstruc
         }
     }
 }
+
+} //namespace Gempic
 
 #endif

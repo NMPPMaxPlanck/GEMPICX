@@ -48,6 +48,11 @@ gempic_FetchContent_Declare(AMReX
 if(NOT ${AMReX_FOUND}) # AMReX_FOUND is only true if the package was installed
   set_amrex_options_from_gempic() # and only if not do the settings matter.
   FetchContent_MakeAvailable(AMReX)
+  if(GEMPIC_USE_CUDA)
+    get_target_property(_amrex_ico amrex_${AMReX_SPACEDIM}d INTERFACE_COMPILE_OPTIONS)
+    set_target_properties(amrex_${AMReX_SPACEDIM}d PROPERTIES INTERFACE_COMPILE_OPTIONS
+      "SHELL:-Xcudafe --diag_suppress=20012;${_amrex_ico}")
+  endif()
   if(AMReX_HYPRE)
     gempic_suppress_third_party_warnings(TARGET HYPRE)
   endif()

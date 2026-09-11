@@ -30,23 +30,23 @@ struct Concept
     virtual ~Concept() = default;
 
     // Geometry/layout
-    virtual int n_comp(Direction) const = 0;
-    virtual amrex::BoxArray box_array(Direction) const = 0;
-    virtual amrex::IndexType ix_type(Direction) const = 0;
-    virtual amrex::DistributionMapping dm(Direction) const = 0;
+    virtual int n_comp(Direction dir) const = 0;
+    virtual amrex::BoxArray box_array(Direction dir) const = 0;
+    virtual amrex::IndexType ix_type(Direction dir) const = 0;
+    virtual amrex::DistributionMapping dm(Direction dir) const = 0;
     virtual amrex::Geometry geom() const = 0;
-    virtual amrex::MultiFab const* mf_ptr(Direction) const = 0;
+    virtual amrex::MultiFab const* mf_ptr(Direction dir) const = 0;
 
     // Operations used by diagnostics
     virtual void interpolate_to_multifab(amrex::MultiFab& dst,
                                          amrex::Real scaling,
-                                         int dcomp,
-                                         Direction) const = 0;
-    virtual void rawdata_to_multifab(amrex::MultiFab& dst, int dcomp, Direction) const = 0;
+                                         Direction dir,
+                                         int dstComp) const = 0;
+    virtual void rawdata_to_multifab(amrex::MultiFab& dst, Direction dir, int dstComp) const = 0;
     virtual void to_cellcentered_multifab(amrex::MultiFab& dst,
                                           amrex::Real scaling,
-                                          int dcomp,
-                                          Direction) const = 0;
+                                          Direction dir,
+                                          int dstComp) const = 0;
 };
 
 template <typename T>
@@ -82,23 +82,23 @@ struct Model : Concept
 
     void interpolate_to_multifab (amrex::MultiFab& dst,
                                   amrex::Real scaling,
-                                  int dcomp,
-                                  Direction dir) const override
+                                  Direction dir,
+                                  int dstComp) const override
     {
-        m_ops.m_interp(dst, m_ptr, scaling, dcomp, dir);
+        m_ops.m_interp(dst, m_ptr, scaling, dir, dstComp);
     }
 
-    void rawdata_to_multifab (amrex::MultiFab& dst, int dcomp, Direction dir) const override
+    void rawdata_to_multifab (amrex::MultiFab& dst, Direction dir, int dstComp) const override
     {
-        m_ops.m_raw(dst, m_ptr, dcomp, dir);
+        m_ops.m_raw(dst, m_ptr, dir, dstComp);
     }
 
     void to_cellcentered_multifab (amrex::MultiFab& dst,
                                    amrex::Real scaling,
-                                   int dcomp,
-                                   Direction dir) const override
+                                   Direction dir,
+                                   int dstComp) const override
     {
-        m_ops.m_cell(dst, m_ptr, scaling, dcomp, dir);
+        m_ops.m_cell(dst, m_ptr, scaling, dir, dstComp);
     }
 
     T* get_ptr () const { return m_ptr; } // getter
@@ -140,19 +140,19 @@ struct AnyFieldPtr
     }
 
     // ---- diagnostics operations
-    void interpolate_any_field_to_multifab (amrex::MultiFab& dst, int dcomp) const
+    void interpolate_any_field_to_multifab (amrex::MultiFab& dst, int dstComp) const
     {
-        m_self->interpolate_to_multifab(dst, m_scaling, dcomp, m_dir);
+        m_self->interpolate_to_multifab(dst, m_scaling, m_dir, dstComp);
     }
 
-    void any_field_to_rawdata_multifabs (amrex::MultiFab& dst, int dcomp) const
+    void any_field_to_rawdata_multifabs (amrex::MultiFab& dst, int dstComp) const
     {
-        m_self->rawdata_to_multifab(dst, dcomp, m_dir);
+        m_self->rawdata_to_multifab(dst, m_dir, dstComp);
     }
 
-    void any_field_to_cellcentered_multifabs (amrex::MultiFab& dst, int dcomp) const
+    void any_field_to_cellcentered_multifabs (amrex::MultiFab& dst, int dstComp) const
     {
-        m_self->to_cellcentered_multifab(dst, m_scaling, dcomp, m_dir);
+        m_self->to_cellcentered_multifab(dst, m_scaling, m_dir, dstComp);
     }
 
     // ---- optional downcast

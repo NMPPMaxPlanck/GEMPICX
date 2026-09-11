@@ -1,7 +1,4 @@
-cmake_minimum_required(VERSION 3.24.0)
-
-# Enable IDE folder hierarchy
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+cmake_minimum_required(VERSION 3.26.0)
 
 include(cmake/gempic_utils.cmake)
 include(cmake/gempic_version.cmake)
@@ -23,6 +20,8 @@ else()
 endif()
 
 option(GEMPIC_USE_CUDA "Use CUDA Backend of AMReX" OFF)
+option(GEMPIC_USE_LAPACK "Enable Netlib LAPACK" OFF)
+option(GEMPIC_USE_MKL "Enable MKL" OFF)
 option(GEMPIC_USE_HIP "Use HIP Backend of AMReX" OFF)
 option(GEMPIC_USE_OMP "Use OpenMP Backend of AMReX (Not recommended due to reduced performance)" OFF)
 if(GEMPIC_USE_CUDA OR GEMPIC_USE_HIP OR AMReX_SPACEDIM EQUAL 1)
@@ -40,6 +39,7 @@ option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build" OFF)
 
 option(GEMPIC_PROFILE_KERNELS "Enable tiny profiling in host device functions when executed on host" OFF)
 option(USE_DIRTY_AMREX_REPO "Allow building from dirty AMReX git repositories" OFF)
+option(USE_DIRTY_LAPACK_REPO "Allow building from dirty Lapack git repositories" OFF)
 option(GEMPIC_DEBUG_MESSAGES "Turns on GEMPIC-specific debug messages" OFF)
 
 option(GEMPIC_USE_HDF5 "Enable HDF5 support" ON) 
@@ -54,6 +54,8 @@ include(cmake/gempic_CompilerConfig.cmake)
 include(cmake/gempic_KokkosConfig.cmake)
 include(cmake/gempic_AMReXConfig.cmake)
 include(cmake/gempic_HDF5Config.cmake)
+
+include(cmake/gempic_LapackConfig.cmake)
 
 add_library(GEMPICX STATIC)
 add_library(GEMPICX::GEMPICX ALIAS GEMPICX)
@@ -109,6 +111,12 @@ if(GEMPIC_BUILD_TESTS)
   enable_testing()
   # Add subfolder with tests
   add_subdirectory(Testing)
+endif()
+
+
+
+if(TARGET gempic_linalg)
+    target_link_libraries(GEMPICX PUBLIC gempic_linalg)
 endif()
 
 gempic_install_export_targets()

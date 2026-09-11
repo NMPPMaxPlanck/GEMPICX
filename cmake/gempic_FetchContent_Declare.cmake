@@ -66,7 +66,7 @@ function(gempic_confirm_git_tag)# NAME LOCATION (mandatory) #GIT_TAG ALLOW_DIRTY
                   OUTPUT_STRIP_TRAILING_WHITESPACE
                   )
 
-  if(TAGGED_REPO AND ${CMAKE_MATCH_COUNT} EQUAL 1)
+  if(TAGGED_REPO AND "${CMAKE_MATCH_COUNT}" EQUAL 1)
     set(VERSION_NAME "Version ${CMAKE_MATCH_0}")
   else()
     set(VERSION_NAME "Commit ${REPO_COMMIT_ID}")

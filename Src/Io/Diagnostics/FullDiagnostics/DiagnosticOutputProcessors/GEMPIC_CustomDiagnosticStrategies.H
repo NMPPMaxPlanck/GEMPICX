@@ -337,7 +337,7 @@ public:
     /**
      * @brief evaluate field to destination multifab grid points
      */
-    void interpolate_any_field_to_multifab(amrex::MultiFab& mfDst, int dcomp) const;
+    void interpolate_any_field_to_multifab(amrex::MultiFab& mfDst, int dstComp) const;
 };
 
 } //namespace Gempic::Io
