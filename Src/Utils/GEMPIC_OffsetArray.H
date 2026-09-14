@@ -68,8 +68,8 @@ public:
 
     struct Iterator
     {
-        T* m_ptr;
         int m_index;
+        T* m_ptr;
 
         AMREX_GPU_HOST_DEVICE Entry operator*() { return {m_index, *m_ptr}; }
         AMREX_GPU_HOST_DEVICE Iterator& operator++()
@@ -84,8 +84,8 @@ public:
 
     struct ConstIterator
     {
-        T const* m_ptr;
         int m_index;
+        T const* m_ptr;
 
         AMREX_GPU_HOST_DEVICE ConstEntry operator*() const { return {m_index, *m_ptr}; }
         AMREX_GPU_HOST_DEVICE ConstIterator& operator++()
@@ -104,15 +104,15 @@ public:
         }
     };
 
-    AMREX_GPU_HOST_DEVICE Iterator begin () { return {m_values.data(), m_firstIndex}; }
+    AMREX_GPU_HOST_DEVICE Iterator begin () { return {m_firstIndex, m_values.data()}; }
     AMREX_GPU_HOST_DEVICE Iterator end ()
     {
-        return {m_values.data() + n, m_firstIndex + static_cast<int>(n)};
+        return {m_firstIndex + static_cast<int>(n), m_values.data() + n};
     }
-    AMREX_GPU_HOST_DEVICE ConstIterator begin () const { return {m_values.data(), m_firstIndex}; }
+    AMREX_GPU_HOST_DEVICE ConstIterator begin () const { return {m_firstIndex, m_values.data()}; }
     AMREX_GPU_HOST_DEVICE ConstIterator end () const
     {
-        return {m_values.data() + n, m_firstIndex + static_cast<int>(n)};
+        return {m_firstIndex + static_cast<int>(n), m_values.data() + n};
     }
 
 private:
