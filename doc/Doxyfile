@@ -285,6 +285,7 @@ PREDEFINED             = "AMREX_GPU_HOST_DEVICE= " \
                          "AMREX_INLINE=inline" \
                          "AMREX_FORCE_INLINE=inline" \
                          "GEMPIC_FORCE_INLINE=inline" \
+                         "KOKKOS_INLINE_FUNCTION=inline" \
                          "AMREX_USE_FFT" \
                          "AMREX_USE_HYPRE" \
                          "AMREX_SPACEDIM=3"

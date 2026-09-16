@@ -170,6 +170,7 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_lagrange_der (int con
  * @param polyIndex in {-n,...,0,...,n+1} identifies the polynomial interplating 1 at the
  * polyIndex-th node of the stencil.
  * @param xi amrex::Real, the evaluation point
+ * @param shift integer shift of allowed the evaluation domain: xi is in \f$[-shift, 1 - shift]\f$
  * @return: derivatives of polyIndex-th Lagrange basis functions evaluated at xi
  */
 template <int intDegree>
@@ -270,7 +271,8 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_edge_arbitrary_order 
  * of the histopolating basis function)
  * @param polyIndex int, indicates the edge function w.r.t. \f$[x_k, x_{k+1}]\f$, in
  * {-n,...,0,...,n}
- * @param xi Real, point in \f$[0, 1]\f$, where \f$e_i\f$ is to be evaluated
+ * @param xi Real, point in \f$[-shift, 1 - shift]\f$, where \f$e_i\f$ is to be evaluated
+ * @param shift integer shift of allowed the evaluation domain: xi is in \f$[-shift, 1 - shift]\f$
  *
  * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
  */
@@ -614,6 +616,7 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
  * @param kIn spatial indices of the reference (primal or dual) cell where we want to evaluate the
  * field.
  * @param n
+ * @param iShift,jShift,kShift integer shifts of the evaluation domains
  * @return
  */
 template <int nNodes, ZeroThreeFormC SrcFormType>
@@ -1296,7 +1299,7 @@ memo: we copy all source components to a (larger) multi component multifab!
 template <Forms::ZeroThreeFormC SrcFormType>
 void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
                                  SrcFormType const& srcForm,
-                                 Direction idir = noDir,
+                                 Direction /*idir = noDir*/,
                                  int dstComp = 0,
                                  int ncomp = -1)
 {
@@ -1347,14 +1350,13 @@ template <Forms::ZeroThreeFormC SrcFormType>
 void field_to_cellcentered_multifabs (amrex::MultiFab& mfDst,
                                       SrcFormType const& srcForm,
                                       amrex::Real scaling,
-                                      Direction idir = noDir,
+                                      Direction /*idir = noDir*/,
                                       int dstComp = 0,
                                       int nComps = -1)
 {
     // In cartesian geometry, interpolate from simulation MultiFab, m_dataSrc,
     // to output diagnostic MultiFab, mfDst.
     if (nComps < 0) nComps = srcForm.get_ncomp();
-    int nCompsDst = mfDst.nComp();
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + nComps,
                                       "Insufficient space in destination multifab");
 

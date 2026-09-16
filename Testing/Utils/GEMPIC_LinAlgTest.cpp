@@ -29,42 +29,6 @@ using namespace Forms;
 
 namespace
 {
-constexpr amrex::Real sTol = 1e-9;
-
-template <int nSize>
-void solve_with_lapack (std::array<std::array<amrex::Real, nSize>, nSize>& xOut,
-                        std::array<std::array<amrex::Real, nSize>, nSize> const& aIn,
-                        std::array<std::array<amrex::Real, nSize>, nSize> const& bIn)
-{
-#ifdef GEMPIC_USE_LAPACK_OR_MKL
-    constexpr lapack_int n = static_cast<lapack_int>(nSize);
-    constexpr lapack_int nrhs = 1;
-
-    for (int j = 0; j < nSize; ++j)
-    {
-        std::array<amrex::Real, nSize * nSize> A_flat{};
-        std::array<amrex::Real, nSize> b{};
-        std::array<lapack_int, nSize> ipiv{};
-
-        // Flatten row-major
-        for (int i = 0; i < nSize; ++i)
-            for (int k = 0; k < nSize; ++k) A_flat[i * nSize + k] = aIn[i][k];
-
-        for (int i = 0; i < nSize; ++i) b[i] = bIn[i * nSize + j];
-
-        lapack_int info =
-            LAPACKE_dgesv(LAPACK_ROW_MAJOR, n, nrhs, A_flat.data(), n, ipiv.data(), b.data(), nrhs);
-        if (info != 0)
-        {
-            std::cerr << "Error in LAPACK dgesv: " << info << std::endl;
-            return;
-        }
-
-        for (int i = 0; i < nSize; ++i) xOut[i * nSize + j] = b[i];
-    }
-#endif
-}
-
 template <typename IntType>
 void print_int_vector (char const* desc, IntType n, IntType* a)
 {
@@ -76,9 +40,12 @@ void print_int_vector (char const* desc, IntType n, IntType* a)
 
 TEST(LapackTest, SolveSmallSystem)
 {
-#ifdef GEMPIC_USE_LAPACK_OR_MKL
-
+#ifndef GEMPIC_USE_LAPACK_OR_MKL
+    GTEST_SKIP() << "No LAPACK tests because the LAPACK package is not available";
+#else
     {
+        constexpr amrex::Real sTol = 1e-9;
+
         // Solve Ax = b using LAPACK
         constexpr lapack_int nSize = 3;
         constexpr lapack_int mklN = static_cast<lapack_int>(nSize);
@@ -411,11 +378,11 @@ TEST(GaussJordanTest, MatchesLUInverse)
 
     std::vector<std::vector<amrex::Real>> invGj(nSize, std::vector<amrex::Real>(nSize));
 
-    matrix_inverse_gj(invGj, A, nSize);
+    matrix_inverse_gj(invGj, A);
 
     std::vector<std::vector<amrex::Real>> invLu(nSize, std::vector<amrex::Real>(nSize));
 
-    matrix_inverse(invLu, A, nSize);
+    matrix_inverse(invLu, A);
 
     for (int i = 0; i < nSize; ++i)
     {

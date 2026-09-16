@@ -74,7 +74,7 @@ std::unique_ptr<amrex::MultiFab> get_shared_bnd_mask (amrex::MultiFab& thisMF,
 
 /**
  * @brief overload from
-template <typename dataStruct>
+template \<typename dataStruct\>
 void sum_boundary_sync (amrex::FabArray<amrex::BaseFab<dataStruct>>& thisMF,
                             amrex::Periodicity const& period)
  */

@@ -115,23 +115,25 @@ void aos2soa_fab (amrex::MultiFab& soaMFA, amrex::FabArray<amrex::BaseFab<DataSt
 /**
  * multidof (AoS) MultiFab to multicomponents (SoA) MultiFab transformation
  * **/
-template <typename DataStruct, int nDim>
+template <typename DataStruct, std::size_t nDim>
 void aos2soa_fab (amrex::Array<amrex::MultiFab, nDim>& soaMFA,
                   amrex::Array<amrex::FabArray<amrex::BaseFab<DataStruct>>, nDim>& aosMFA)
 {
     // using signed int because `nComp` always returns an `int`
-    constexpr int size = int(get_array_size<DataStruct>::s_myValue);
+    constexpr int size = static_cast<int>(get_array_size<DataStruct>::s_myValue);
     BL_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
-#if nDim > 1
-    BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
-    BL_ASSERT(aosMFA[yDir].nComp() == aosMFA[xDir].nComp());
-#endif
-#if nDim > 2
-    BL_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
-    BL_ASSERT(aosMFA[zDir].nComp() == aosMFA[yDir].nComp());
-#endif
+    if constexpr (nDim > 1)
+    {
+        BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
+        BL_ASSERT(aosMFA[yDir].nComp() == aosMFA[xDir].nComp());
+    }
+    if constexpr (nDim > 1)
+    {
+        BL_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
+        BL_ASSERT(aosMFA[zDir].nComp() == aosMFA[yDir].nComp());
+    }
 
-    for (int iDir = 0; iDir < nDim; ++iDir)
+    for (std::size_t iDir = 0; iDir < nDim; ++iDir)
     {
         for (amrex::MFIter mfi(aosMFA[iDir]); mfi.isValid(); ++mfi)
         {
@@ -191,24 +193,26 @@ void soa2aos_fab (amrex::FabArray<amrex::BaseFab<DataStruct>>& aosMFA, amrex::Mu
  * @param soaMFA input multicomponent MultiFab
  * @param aosMFA output FabArray of BaseFab of dataStruct
  */
-template <typename DataStruct, int nDim>
+template <typename DataStruct, std::size_t nDim>
 void soa2aos_fab (amrex::Array<amrex::FabArray<amrex::BaseFab<DataStruct>>, nDim>& aosMFA,
                   amrex::Array<amrex::MultiFab, nDim>& soaMFA)
 {
     // using signed int because `nComp` always returns an `int`
     constexpr int size = get_array_size<DataStruct>::s_myValue;
     BL_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
-#if nDim > 1
-    BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
-    BL_ASSERT(soaMFA[yDir].nComp() == BL_ASSERT(soaMFA[xDir].nComp());
-    BL_ASSERT(aosMFA[yDir].nComp() == BL_ASSERT(aosMFA[xDir].nComp());
-#endif
-#if nDim > 2
-    BL_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
-    BL_ASSERT(soaMFA[zDir].nComp() == BL_ASSERT(soaMFA[yDir].nComp());
-    BL_ASSERT(aosMFA[zDir].nComp() == BL_ASSERT(aosMFA[yDir].nComp());
-#endif
-    for (int iDir = 0; iDir < nDim; ++iDir)
+    if constexpr (nDim > 1)
+    {
+        BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
+        BL_ASSERT(soaMFA[yDir].nComp() == soaMFA[xDir].nComp());
+        BL_ASSERT(aosMFA[yDir].nComp() == aosMFA[xDir].nComp());
+    }
+    if constexpr (nDim > 2)
+    {
+        BL_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
+        BL_ASSERT(soaMFA[zDir].nComp() == soaMFA[yDir].nComp());
+        BL_ASSERT(aosMFA[zDir].nComp() == aosMFA[yDir].nComp());
+    }
+    for (std::size_t iDir = 0; iDir < nDim; ++iDir)
     {
         for (amrex::MFIter mfi(aosMFA[iDir]); mfi.isValid(); ++mfi)
         {
@@ -602,10 +606,9 @@ void unflatten_rm (std::array<std::array<T, n>, n>& nonFlat, std::array<T, n * n
 
 // Unflatten to std::vector (row-major)
 template <typename T>
-void unflatten_rm (std::vector<std::vector<T>>& nonFlat, T const* flat, int N = -1)
+void unflatten_rm (std::vector<std::vector<T>>& nonFlat, T const* flat)
 {
-    if (N == -1) N = static_cast<int>(nonFlat.size());
-    AMREX_ASSERT_WITH_MESSAGE(N == nonFlat.size(), "nonFlat Matrix size must be a NxN square");
+    std::size_t N{nonFlat.size()};
     for (std::size_t i = 0; i < N; ++i)
     {
         AMREX_ASSERT_WITH_MESSAGE(nonFlat[i].size() == N, "non square matrix in unflatten_RM!");
@@ -613,11 +616,10 @@ void unflatten_rm (std::vector<std::vector<T>>& nonFlat, T const* flat, int N = 
     }
 }
 template <typename T>
-void unflatten_rm (std::vector<std::vector<T>>& nonFlat, std::vector<T> const& flat, int N = -1)
+void unflatten_rm (std::vector<std::vector<T>>& nonFlat, std::vector<T> const& flat)
 {
-    if (N == -1) N = static_cast<int>(nonFlat.size());
+    std::size_t N{nonFlat.size()};
     AMREX_ASSERT_WITH_MESSAGE(N * N == flat.size(), "flat Matrix size must be a NxN square");
-    AMREX_ASSERT_WITH_MESSAGE(N == nonFlat.size(), "nonFlat Matrix size must be a NxN square");
     for (std::size_t i = 0; i < N; ++i)
     {
         AMREX_ASSERT_WITH_MESSAGE(nonFlat[i].size() == N, "non square matrix in unflatten_RM!");
@@ -763,7 +765,7 @@ struct LUdcmp
                  x[ip] = x[i];
                  if (ii >= 0)
                  {
-                     for (std::size_t j = ii; j < i; ++j) sum -= lu[i * nSize + j] * x[j];
+                     for (int j = ii; j < i; ++j) sum -= lu[i * nSize + j] * x[j];
                  }
                  else if (sum != 0)
                  {
@@ -857,19 +859,11 @@ struct LUdcmpRuntime
     T m_rowSwapParity = 1; // parity of row swaps
     int m_n = 0;
 
-    LUdcmpRuntime(std::vector<T> const& aIn, int nin = -1 // optional, auto-detect from size
-    )
+    LUdcmpRuntime(std::vector<T> const& aIn)
     {
         AMREX_ASSERT(!aIn.empty());
-        if (nin == -1)
-        {
-            // Determine size m_n from aIn
-            m_n = static_cast<int>(std::sqrt(aIn.size()));
-        }
-        else
-        {
-            m_n = nin;
-        }
+        // Determine size m_n from aIn
+        m_n = static_cast<int>(std::sqrt(aIn.size()));
 
         AMREX_ASSERT_WITH_MESSAGE(m_n * m_n == static_cast<int>(aIn.size()),
                                   "aIn size is not a NxN square");
@@ -932,13 +926,13 @@ struct LUdcmpRuntime
     }
 
     // Solve single RHS
-    void solve (std::vector<T>& x, std::vector<T> const& b) const
+    void solve_vector (std::vector<T>& x, std::vector<T> const& b) const
     {
         if (m_n == 0)
         {
             throw std::runtime_error("LUdcmpRuntime: solve() called on unfactorized matrix");
         }
-        if (b.size() != static_cast<size_t>(m_n)) throw std::runtime_error("Dimension mismatch");
+        if (static_cast<int>(b.size()) != m_n) throw std::runtime_error("Dimension mismatch");
         x = b; // this also allows solve(b,b);
         int ii = -1;
 
@@ -969,24 +963,26 @@ struct LUdcmpRuntime
     }
 
     // Solve multiple RHS (flattened B: m_n*nrhs row-major)
-    void solve (std::vector<T>& X, std::vector<T> const& bIn, int nrhs) const
+    void solve (std::vector<T>& X, std::vector<T> const& bIn) const
     {
-        if (nrhs == -1)
+        int nrhs{static_cast<int>(bIn.size()) / m_n};
+        AMREX_ASSERT_WITH_MESSAGE(m_n * nrhs == static_cast<int>(bIn.size()),
+                                  "bIn size inconsistent with m_n");
+        if (nrhs == 1)
         {
-            nrhs = static_cast<int>(bIn.size()) / m_n;
-            AMREX_ASSERT_WITH_MESSAGE(m_n * nrhs == static_cast<int>(bIn.size()),
-                                      "bIn size inconsistent with m_n");
+            solve_vector(X, bIn);
         }
-        AMREX_ASSERT_WITH_MESSAGE(bIn.size() == static_cast<size_t>(m_n * nrhs),
-                                  "Dimension mismatch");
-        X = bIn;
-        std::vector<T> col(m_n);
-
-        for (int j = 0; j < nrhs; ++j)
+        else
         {
-            for (int i = 0; i < m_n; ++i) col[i] = bIn[i * nrhs + j];
-            solve(col, col);
-            for (int i = 0; i < m_n; ++i) X[i * nrhs + j] = col[i];
+            X = bIn;
+            std::vector<T> col(m_n);
+
+            for (int j = 0; j < nrhs; ++j)
+            {
+                for (int i = 0; i < m_n; ++i) col[i] = bIn[i * nrhs + j];
+                solve_vector(col, col);
+                for (int i = 0; i < m_n; ++i) X[i * nrhs + j] = col[i];
+            }
         }
     }
 
@@ -1046,7 +1042,7 @@ std::array<T, nSize * nSize> lu_inverse (std::array<T, nSize * nSize> const& a)
 }
 
 // ------------------------------
-template <size_t nSize>
+template <std::size_t nSize>
 AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real condition_number (
     std::array<amrex::Real, nSize * nSize> const& aFlat)
 {
@@ -1070,10 +1066,10 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real condition_number (
     lu.inverse(aInv);
 
     amrex::Real normA = 0.0, normInvA = 0.0;
-    for (size_t j = 0; j < nSize; ++j)
+    for (std::size_t j = 0; j < nSize; ++j)
     {
         amrex::Real colSumA = 0.0, colSumInv = 0.0;
-        for (size_t i = 0; i < nSize; ++i)
+        for (std::size_t i = 0; i < nSize; ++i)
         {
             colSumA += std::abs(aFlat[i * nSize + j]);
             colSumInv += std::abs(aInv[i * nSize + j]);
@@ -1087,9 +1083,11 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real condition_number (
 
 // Runtime version with std::vector (fallback using LUdcmp if LAPACK/MKL unavailable)
 GEMPIC_FORCE_INLINE amrex::Real condition_number (std::vector<amrex::Real> const& flatA,
-                                                  int nSize,
                                                   std::vector<amrex::Real>* flatAinvOut = nullptr)
 {
+    int nSize{static_cast<int>(std::sqrt(flatA.size()))};
+    GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(nSize * nSize == static_cast<int>(flatA.size()),
+                                      "flatA is not an NxN square");
 #ifdef GEMPIC_USE_LAPACK_OR_MKL
     std::vector<lapack_int> ipiv(nSize);
     std::vector<amrex::Real> aInv = flatA;
@@ -1137,12 +1135,12 @@ GEMPIC_FORCE_INLINE amrex::Real condition_number (std::vector<amrex::Real> const
 }
 
 // Runtime version with std::vector (fallback using LUdcmp if LAPACK/MKL unavailable)
-GEMPIC_FORCE_INLINE amrex::Real condition_number (std::vector<std::vector<amrex::Real>> const& aIn,
-                                                  int nSize)
+GEMPIC_FORCE_INLINE amrex::Real condition_number (std::vector<std::vector<amrex::Real>> const& aIn)
 {
+    auto nSize{aIn.size()};
     std::vector<amrex::Real> flatA(nSize * nSize);
     flatten_rm(flatA, aIn);
-    return condition_number(flatA, nSize);
+    return condition_number(flatA);
 }
 
 // -----------------------------------------------------------------------------
@@ -1188,14 +1186,9 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void matrix_inverse (
 }
 
 GEMPIC_FORCE_INLINE void matrix_inverse (std::vector<amrex::Real>& aInvFlat,
-                                         std::vector<amrex::Real> const& aFlat,
-                                         int nSize = -1)
+                                         std::vector<amrex::Real> const& aFlat)
 {
-    // Determine nSize if not provided
-    if (nSize == -1)
-    {
-        nSize = static_cast<int>(std::sqrt(aFlat.size()));
-    }
+    int nSize = static_cast<int>(std::sqrt(aFlat.size()));
     AMREX_ASSERT(nSize * nSize == static_cast<int>(aFlat.size()));
 #ifdef GEMPIC_USE_LAPACK_OR_MKL
     std::vector<amrex::Real> A_copy = aFlat; // LAPACK overwrites input
@@ -1225,14 +1218,9 @@ GEMPIC_FORCE_INLINE void matrix_inverse (std::vector<amrex::Real>& aInvFlat,
 }
 
 GEMPIC_FORCE_INLINE void matrix_inverse (std::vector<std::vector<amrex::Real>>& aInv,
-                                         std::vector<std::vector<amrex::Real>> const& A,
-                                         int nSize = -1)
+                                         std::vector<std::vector<amrex::Real>> const& A)
 {
-    // Determine nSize if not provided
-    if (nSize == -1)
-    {
-        nSize = static_cast<int>(A.size());
-    }
+    int nSize = static_cast<int>(A.size());
     AMREX_ASSERT(nSize == static_cast<int>(A[0].size()));
     AMREX_ASSERT(static_cast<int>(A.size()) == static_cast<int>(A[0].size()));
     AMREX_ASSERT(nSize == static_cast<int>(aInv[0].size()));
@@ -1246,11 +1234,11 @@ GEMPIC_FORCE_INLINE void matrix_inverse (std::vector<std::vector<amrex::Real>>& 
     std::vector<amrex::Real> aInvFlat(nSize * nSize);
 
     // Call flattened version
-    matrix_inverse(aInvFlat, aFlat, nSize);
+    matrix_inverse(aInvFlat, aFlat);
 
     // Unflatten into 2D vector
     aInv.resize(nSize, std::vector<amrex::Real>(nSize));
-    unflatten_rm(aInv, aInvFlat, nSize);
+    unflatten_rm(aInv, aInvFlat);
 }
 
 // ------------------------
@@ -1439,12 +1427,14 @@ GEMPIC_FORCE_INLINE void solve_system_gj (std::vector<std::vector<amrex::Real>>&
 // Gauss-Jordan inversion
 // -----------------------------------------------------------------------------
 GEMPIC_FORCE_INLINE void matrix_inverse_gj (std::vector<std::vector<amrex::Real>>& iA,
-                                            std::vector<std::vector<amrex::Real>> const& A,
-                                            int N)
+                                            std::vector<std::vector<amrex::Real>> const& A)
 {
+    int N{static_cast<int>(A.size())};
     std::vector<std::vector<amrex::Real>> C(N, std::vector<amrex::Real>(2 * N, 0.0));
     for (int i = 0; i < N; ++i)
     {
+        GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(N == static_cast<int>(A[i].size()),
+                                          "A is not NxN square");
         for (int j = 0; j < N; ++j) C[i][j] = A[i][j];
         C[i][N + i] = 1.0;
     }
@@ -1490,26 +1480,16 @@ GEMPIC_FORCE_INLINE void matrix_inverse_gj (std::vector<std::vector<amrex::Real>
 
 GEMPIC_FORCE_INLINE void solve_system (std::vector<amrex::Real>& xOut,      // flat row-major N*nrhs
                                        std::vector<amrex::Real> const& aIn, // flat row-major N*N
-                                       std::vector<amrex::Real> const& bIn, // flat row-major N*nrhs
-                                       int N = -1,   // optional, auto-detect from size
-                                       int nrhs = -1 // optional, auto-detect from size
+                                       std::vector<amrex::Real> const& bIn  // flat row-major N*nrhs
 )
 {
-#ifdef GEMPIC_USE_LAPACK_OR_MKL
-    // Auto-detect N if not provided
     assert(!aIn.empty());
-    if (N == -1)
-    {
-        N = static_cast<int>(std::sqrt(aIn.size()));
-        assert(N * N == static_cast<int>(aIn.size()) && "aIn size is not a perfect square");
-    }
 
-    if (nrhs == -1)
-    {
-        nrhs = static_cast<int>(bIn.size()) / N;
-        assert(N * nrhs == static_cast<int>(bIn.size()) && "bIn size inconsistent with N");
-    }
-
+#ifdef GEMPIC_USE_LAPACK_OR_MKL
+    int N{static_cast<int>(std::sqrt(aIn.size()))};
+    assert(N * N == static_cast<int>(aIn.size()) && "aIn size is not a perfect square");
+    int nrhs{static_cast<int>(bIn.size()) / N};
+    assert(N * nrhs == static_cast<int>(bIn.size()) && "bIn size inconsistent with N");
     // Copy inputs into mutable arrays for LAPACK
     std::vector<amrex::Real> A(aIn); // LAPACKE_dgesv modifies A
     std::vector<amrex::Real> B(bIn); // LAPACKE_dgesv overwrites B with solution
@@ -1526,14 +1506,12 @@ GEMPIC_FORCE_INLINE void solve_system (std::vector<amrex::Real>& xOut,      // f
 
     // Output solution
     xOut = std::move(B);
-
 #else
     // Fallback: use LUdcmpRuntime
-    nrhs = static_cast<int>(bIn.size()) / N;
     std::vector<amrex::Real> xFlat(bIn); // copy bIn as starting X
 
-    LUdcmpRuntime<amrex::Real> lu(aIn, N);
-    lu.solve(xFlat, bIn, nrhs); // solve multiple RHS in-place
+    LUdcmpRuntime<amrex::Real> lu(aIn);
+    lu.solve(xFlat, bIn); // solve multiple RHS in-place
 
     xOut = std::move(xFlat); // result in flat row-major vector
 #endif
@@ -1544,23 +1522,14 @@ GEMPIC_FORCE_INLINE void solve_system (std::vector<amrex::Real>& xOut,      // f
 // ------------------------
 GEMPIC_FORCE_INLINE void solve_system (std::vector<std::vector<amrex::Real>>& xOut,
                                        std::vector<std::vector<amrex::Real>> const& aIn,
-                                       std::vector<std::vector<amrex::Real>> const& bIn,
-                                       int N = -1,   // optional, auto-detect from size
-                                       int nrhs = -1 // optional, auto-detect from size
-)
+                                       std::vector<std::vector<amrex::Real>> const& bIn)
 {
     // Auto-detect N if not provided
     AMREX_ASSERT(!aIn.empty());
-    if (N == -1)
-    {
-        N = static_cast<int>(std::sqrt(aIn.size()));
-    }
+    int N = static_cast<int>(aIn.size());
 
-    if (nrhs == -1)
-    {
-        nrhs = static_cast<int>(bIn[0].size());
-    }
-    AMREX_ASSERT_WITH_MESSAGE(N == static_cast<int>(aIn.size()), "aIn size is not NxN");
+    int nrhs = static_cast<int>(bIn[0].size());
+    AMREX_ASSERT_WITH_MESSAGE(N == static_cast<int>(aIn[0].size()), "aIn size is not NxN");
     AMREX_ASSERT_WITH_MESSAGE(N == static_cast<int>(bIn.size()), "bIn size is not Nxnrhs");
 
     // Flatten A (NxN) and B (Nxnrhs)
@@ -1572,10 +1541,10 @@ GEMPIC_FORCE_INLINE void solve_system (std::vector<std::vector<amrex::Real>>& xO
     // Prepare flattened output
     std::vector<amrex::Real> xFlat(N * nrhs);
 
-    solve_system(xFlat, aFlat, bFlat, N, nrhs);
+    solve_system(xFlat, aFlat, bFlat);
     // Unflatten X_flat into X_out
     xOut.resize(N, std::vector<amrex::Real>(nrhs));
-    unflatten_rm(xOut, xFlat, N);
+    unflatten_rm(xOut, xFlat);
 }
 
 template <typename T>

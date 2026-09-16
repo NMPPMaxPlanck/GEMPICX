@@ -1666,7 +1666,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
     solve_system_mkl(Mloc_vec[polyrec_degree_FV], phipsi, hist2int_loc, polyrec_degree_FV + 1);
 #else
     // compute IMloc_hist
-    matrix_inverse(iMlocHist, mlocHist, polyrecDegreeFv + 1);
+    matrix_inverse(iMlocHist, mlocHist);
 
     // basis conversion between stencil-histopolating basis and local GL quadrature points
     // interpolating basis.

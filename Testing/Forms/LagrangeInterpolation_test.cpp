@@ -16,29 +16,8 @@ using namespace Forms;
 
 namespace
 {
-
 // Smooth test function (infinitely differentiable)
 double f (double x) { return std::sin(2.0 * M_PI * x) + 0.5 * std::cos(4.0 * M_PI * x); }
-
-// reconstruct at point x using stencil centered at i0
-template <int nNodes>
-double reconstruct (
-    std::vector<double> const& grid, std::vector<double> const& u, int i0, double x, int shift)
-{
-    constexpr int sigma = nNodes / 2 - 1;
-
-    double result = 0.0;
-
-    for (int j = 0; j < nNodes; ++j)
-    {
-        int polyIndex = j - sigma;
-
-        double lj = eval_lagrange<nNodes>(polyIndex, x, shift);
-        result += u[i0 + polyIndex] * lj;
-    }
-
-    return result;
-}
 
 template <int nNodes>
 int get_int_stencil_small (int const i)
