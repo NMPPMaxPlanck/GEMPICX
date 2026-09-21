@@ -641,10 +641,10 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
-    // s_dirShift add eventually a degree of freedom to the reconsctruction stencil
-    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.s_dirShift[xDir]; ++a),
-                        for (int b = -sigma; b < sigma + 1 + stagMap.s_dirShift[yDir]; ++b),
-                        for (int c = -sigma; c < sigma + 1 + stagMap.s_dirShift[zDir]; ++c))
+    // dir_shift add eventually a degree of freedom to the reconsctruction stencil
+    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.dir_shift(xDir); ++a),
+                        for (int b = -sigma; b < sigma + 1 + stagMap.dir_shift(yDir); ++b),
+                        for (int c = -sigma; c < sigma + 1 + stagMap.dir_shift(zDir); ++c))
         fval +=
             funcMF(i + a + iShift, j + b + jShift, k + c + kShift, n) *
             GEMPIC_D_MULT(
@@ -721,9 +721,9 @@ GEMPIC_FORCE_INLINE AMREX_GPU_HOST_DEVICE amrex::Real eval_form_component_local 
     amrex::Real fval = 0.0;
     GEMPIC_D_EXCL(int b{0};, int c{0};, )
 
-    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.s_dirShift[xDir]; ++a),
-                        for (int b = -sigma; b < sigma + 1 + stagMap.s_dirShift[yDir]; ++b),
-                        for (int c = -sigma; c < sigma + 1 + stagMap.s_dirShift[zDir]; ++c))
+    GEMPIC_D_LOOP_BEGIN(for (int a = -sigma; a < sigma + 1 + stagMap.dir_shift(xDir); ++a),
+                        for (int b = -sigma; b < sigma + 1 + stagMap.dir_shift(yDir); ++b),
+                        for (int c = -sigma; c < sigma + 1 + stagMap.dir_shift(zDir); ++c))
         fval += funcMF(i + a + iShift, j + b + jShift, k + c + kShift, n) *
                 GEMPIC_D_MULT(
                     (choose_eval<nNodes, SrcFormType, dir, xDir>(a, stagMap.m_r[xDir], iShift)),

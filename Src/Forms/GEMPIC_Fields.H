@@ -139,6 +139,8 @@ public:
                   amrex::DistributionMapping dm,
                   Impl::BoundaryConditionConfiguration const& boundaryConditionConfiguration =
                       Impl::BoundaryConditionConfiguration{});
+    DiscreteField(DiscreteField&) = default;
+    DiscreteField(DiscreteField const&) = default;
     //!@endcond
 
     inline std::string label () const { return m_data->m_label; }
@@ -168,7 +170,7 @@ public:
     DOFCategory dof_category (Direction dir) const
     {
         return static_cast<DOFCategory>(m_data->m_dofCategory[dir]);
-    };
+    }
     std::array<DOFCategory, AMREX_SPACEDIM> const dof_category () const
     {
         std::array<DOFCategory, AMREX_SPACEDIM> dofCategory{};
@@ -177,7 +179,7 @@ public:
             dofCategory[dir] = static_cast<DOFCategory>(dof_category(dir));
         }
         return dofCategory;
-    };
+    }
     // clang-format off
     //! Select a box from an amrex::MultiFab to use in the @ref DiscreteField::operator()(int, int, int) const
     // clang-format on
