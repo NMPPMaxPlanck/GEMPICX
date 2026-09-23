@@ -1,0 +1,23 @@
+# Input for lower branch of R-wave (cold plasma case)
+# Current is initialized via mean velocity of Maxwellian (charge q=-1 needs to be taken into account)
+FILE = Lwave.input
+
+# Gaussian parameters
+Particle.electrons.G0.vMean.x = "0.0"
+Particle.electrons.G0.vMean.y = "-0.002899 * sin(kvarx * x)"
+Particle.electrons.G0.vMean.z = "-0.002899 * cos(kvarx * x)"
+Particle.electrons.G0.vThermal = 0.05 0.05 0.05
+Particle.electrons.G0.vWeight = 1.0
+
+# Function parameters
+Function.Ex = "0."
+Function.Ey = "0.001 * cos(kvarx * x)"
+Function.Ez = "-0.001 * sin(kvarx * x)"
+Function.Bx = "0.5"
+Function.By = "0.004371 * sin(kvarx * x)"
+Function.Bz = "0.004371 * cos(kvarx * x)"
+
+# Diagnostics
+# Reduced Diagnostics
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
+ReducedDiagnostics.GaussError.types = GaussError

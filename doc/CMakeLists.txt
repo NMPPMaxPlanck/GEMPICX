@@ -9,7 +9,7 @@
 ############################################################################################
 # ToDo: Automatically detect file which are to be converted with pandoc
 # Opt out if a file should not be used.
-list(APPEND GEMPIC_RST_TEX_FILES MaxwellDiscreteForms.rst Examples.rst DeRhamComplexes.rst CodeUnits.rst FormsAndOperators.rst ParticleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst CodeEditorVSCode.rst Particles.rst FieldSolvers.rst Filter.rst)
+list(APPEND GEMPIC_RST_TEX_FILES MaxwellDiscreteForms.rst Examples.rst DeRhamComplexes.rst CodeUnits.rst FormsAndOperators.rst ParticleMesh.rst TimeLoops.rst GoogleTest.rst CodeStyle.rst InputFiles.rst ContributingToDoc.rst Diagnostics.rst CodeEditorVSCode.rst Particles.rst FieldSolvers.rst Filter.rst DispersionRelation.rst)
 cmake_policy(SET CMP0094 NEW)
 set(GEMPIC_DOC_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(Python3 REQUIRED)

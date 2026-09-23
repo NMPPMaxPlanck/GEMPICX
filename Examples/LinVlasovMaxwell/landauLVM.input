@@ -47,7 +47,7 @@ FullDiagnostics.part.varNames = electrons
 FullDiagnostics.part.saveInterval = 1
 
 FullDiagnostics.field.varNames = Ex
-FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter
 FullDiagnostics.field.saveInterval = 1
 
 # Reduced Diagnostics

@@ -76,8 +76,8 @@ An input file consists of separate lines of variables, each with the variable na
 simName = "etc"
 
 # Input for class Filter
-Filter.enable = 1 # enable filtering
-Filter.nPass = 3 3 3 # pass the filter three times in each direction
+Filter.type = Bilinear # String. Can be "Bilinear", "Fourier" or "NoFilter" (default)
+Filter.Bilinear.nPass = 3 3 3 # pass the filter three times in each direction
 \end{lstlisting}
 %
 Notice that, like the class and variable counterparts:
@@ -135,21 +135,15 @@ ComputationalDomain.domainHi = 10.0 10.0 5.0 # Real vector of AMReX_SPACEDIM ent
 Controls the filtering behaviour of the simulation (assuming your simulation has this option).
 \begin{lstlisting}[language=pkgconfig]
 # Filter class options
-
-# To filter or not to filter 
-Filter.enable = 1 # Boolean (1/0). Default 0.
-Filter.type = Bilinear # String. Default Bilinear
+Filter.type = Bilinear # String. Can also be "Fourier". Default "NoFilter"
 \end{lstlisting}
 
 Specific settings for the bilinear filter. See \ref{sec:BilinearFilter} for details.
 \begin{lstlisting}[language=pkgconfig]
-Filter.type = Bilinear
-
-# How many times to pass the filter in each direction
-Filter.nPass = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. No default.
-     
+# How many times to pass the bilinear filter in each direction
+Filter.Bilinear.nPass = 2 2 2 # Integer vector of AMReX_SPACEDIM entries. No default.
 # Whether or not to do an extra compensation step when calculating the filter stencil
-Filter.compensate = 1 # Boolean (1/0). Default 0.
+Filter.Bilinear.compensate = 1 # Boolean (1/0). Default 0.
 \end{lstlisting}
 
 Specific settings for the Fourier filter. This filter is only implemented for fully periodic domains. See \ref{sec:FourierFilter} for details.
@@ -157,10 +151,10 @@ Specific settings for the Fourier filter. This filter is only implemented for fu
 Filter.type = Fourier
 
 # The minimum Fourier mode number that should be kept in each direction
-Filter.nMin = 0 0 0 # Integer vector of AMReX_SPACEDIM entries. No default.
+Filter.Fourier.nMin = 0 0 0 # Integer vector of AMReX_SPACEDIM entries. No default.
 
 # The maximum Fourier mode number that should be kept in each direction
-Filter.nMax = 10 10 10 # Integer vector of AMReX_SPACEDIM entries. No default.
+Filter.Fourier.nMax = 10 10 10 # Integer vector of AMReX_SPACEDIM entries. No default.
 \end{lstlisting}
 
 
@@ -578,9 +572,9 @@ Particle.ions.G0.vThermal = 1.0 1.0 1.0
 Particle.ions.G0.vWeight = 1.0
 
 # Filter
-Filter.enable = 1
-Filter.nPass = 3 3 3
-Filter.compensate = 1
+Filter.type = Bilinear
+Filter.Bilinear.nPass = 3 3 3
+Filter.Bilinear.compensate = 1
 
 # Full Diagnostics
 FullDiagnostics.enable = 1

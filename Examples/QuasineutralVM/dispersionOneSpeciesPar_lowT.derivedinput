@@ -12,5 +12,5 @@ TimeLoop.dt = 0.1
 ICs.Bmean = 1.0 0.0 0.0
 Function.idealRho = "-1.0"
 
-#Full Diagnostics
+# Full Diagnostics
 FullDiagnostics.field.saveInterval = 1

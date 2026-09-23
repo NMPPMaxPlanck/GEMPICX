@@ -44,19 +44,19 @@ Function.Bz = "1e-4 * cos(0.4  * x)"
 Function.By = "2.0"
 
 # Diagnostics
-#Full Diagnostics 
+# Full Diagnostics
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
-FullDiagnostics.groupNames = part field 
+FullDiagnostics.groupNames = part field
 FullDiagnostics.part.varNames = electrons
 FullDiagnostics.part.saveInterval = 1000
 FullDiagnostics.field.varNames = rho Ex phi
-FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter
 FullDiagnostics.field.saveInterval = 1
 
-# Reduced Diagnostics 
+# Reduced Diagnostics
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
 ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
-ReducedDiagnostics.saveInterval = 1 # saveInterva
+ReducedDiagnostics.saveInterval = 1 # output every time step
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
 ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
 ReducedDiagnostics.GaussError.types = GaussError

@@ -46,18 +46,18 @@ inline AMREX_GPU_HOST_DEVICE void lsrk_stage_dk_particle (
 
     // grad Bpar = grad Bz is neglected for the moment and B_par^* = Bz (assuming initial B contains
     // background field)
-    s2R[0] = coeffsAStageIndex * s2R[0] + dt * velGC[0];
-    s2R[1] = coeffsAStageIndex * s2R[1] + dt * velGC[1];
-    s2R[2] = coeffsAStageIndex * s2R[2] + dt * velGC[2];
+    for (int d = 0; d < AMREX_SPACEDIM; d++)
+    {
+        s2R[d] = coeffsAStageIndex * s2R[d] + dt * velGC[d];
+        R[d] += coeffsBStageIndex * s2R[d];
+    }
+
     s2V[0] = 0;                                       // not used in DK model
     s2V[1] = 0;                                       // not used in DK model
     s2V[2] = coeffsAStageIndex * s2V[2] + dt * accGC; // Vpar
-    for (int d = 0; d < AMREX_SPACEDIM; d++)
-    {
-        R[d] += coeffsBStageIndex * s2R[d];
-    }
-    V[0] += coeffsBStageIndex * s2V[0];
-    V[1] += coeffsBStageIndex * s2V[1];
+
+    V[0] = 0; // not used in DK model
+    V[1] = 0; // not used in DK model
     V[2] += coeffsBStageIndex * s2V[2];
 }
 

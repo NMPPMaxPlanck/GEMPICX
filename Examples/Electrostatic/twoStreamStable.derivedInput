@@ -1,0 +1,12 @@
+FILE = twoStream.input
+
+# Particle parameters
+Particle.electrons.density = "1.0 + 0.01 * cos(kvarx * x)"
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 1.3 0.0 0.0
+Particle.electrons.G0.vThermal = 1 1 1
+Particle.electrons.G0.vWeight = 0.5
+Particle.electrons.G1.vMean = -1.3 0.0 0.0
+Particle.electrons.G1.vThermal = 1 1 1
+Particle.electrons.G1.vWeight = 0.5

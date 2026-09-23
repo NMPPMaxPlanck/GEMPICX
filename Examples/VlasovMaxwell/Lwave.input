@@ -1,0 +1,68 @@
+# Input file for the simulation of an L-wave parallel to magnetic field
+# General setting
+#Sim.Type = "Vlasov-Maxwell"
+rhoBackground = 1.0
+
+#Scalings
+sV = 1.0
+sOmega =  1.0
+
+# Grid parameters
+ComputationalDomain.nCell = 64 8 8
+ComputationalDomain.maxGridSize = 8 8 8
+ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
+
+
+# Particle parameters
+Particle.speciesNames = electrons
+Particle.sampler = Sobol
+Particle.electrons.nPartPerCell = 100 # number of particles per cell
+Particle.electrons.charge = -1.0 # vector (one entry per species)
+Particle.electrons.mass = 1.0 # vector (one entry per species)
+Particle.electrons.density = "1.0" # + 0.04 * cos(kvarx * x)"
+Particle.electrons.numGaussians = 1
+
+# Gaussian parameters
+Particle.electrons.G0.vMean.x = "0.0"
+Particle.electrons.G0.vMean.y = "0.000634 * sin(kvarx * x)"
+Particle.electrons.G0.vMean.z = "-0.000634 * cos(kvarx * x)"
+Particle.electrons.G0.vThermal = .05 0.05 0.05
+Particle.electrons.G0.vWeight = 1.0
+
+# wave vector
+k = 0.7 0.1 0.1
+
+# Simulation parameters
+TimeLoop.nSteps = 1000
+TimeLoop.dt = 0.1
+
+# Filter
+Filter.type = NoFilter
+Filter.Bilinear.nPass = 3 3 3
+
+# Function parameters
+Function.Ex = "0."
+Function.Ey = "0.001 * cos(kvarx * x)"
+Function.Ez = "0.001 * sin(kvarx * x)"
+Function.Bx = "0.5"
+Function.By = "-0.000645 * sin(kvarx *x)"
+Function.Bz = "0.000645 * cos(kvarx * x)"
+
+# Diagnostics
+# Full Diagnostics
+FullDiagnostics.enable = 1 # 1 for true, 0 for false
+FullDiagnostics.groupNames = part field
+FullDiagnostics.part.varNames = electrons
+FullDiagnostics.part.saveInterval = 1000
+FullDiagnostics.part.outputProcessor = raw
+FullDiagnostics.field.varNames = Ex Ey Ez Bx By Bz Jx Jy Jz Dx Dy Dz
+FullDiagnostics.field.outputProcessor = CellCenter
+FullDiagnostics.field.saveInterval = 1
+
+# Reduced Diagnostics
+ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
+ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
+ReducedDiagnostics.saveInterval = 1 # output every time step
+ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
+ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
+ReducedDiagnostics.Part.types = Particle

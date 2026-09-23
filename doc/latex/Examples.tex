@@ -72,14 +72,14 @@ with \verb|HamiltonianSplittingExact| and \verb|HamiltonianSplittingNested| resp
 \begin{figure}
     \centering
     \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelExact.png}
-    \caption{Energyplots for the Weibel instability using the \verb|HamiltonianSplittingExact| splitting method.}
+    \caption{Energyplots for the Weibel instability using the \texttt{HamiltonianSplittingExact} splitting method.}
     \label{fig:vmaxweibelfourier}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/VlasovMaxwell_WeibelNested.png}
-    \caption{Energyplots for the Weibel instability using the \verb|HamiltonianSplittingNested| splitting method.}
+    \caption{Energyplots for the Weibel instability using the \texttt{HamiltonianSplittingNested} splitting method.}
     \label{fig:vmaxweibelenergy}
 \end{figure}
 
@@ -229,18 +229,19 @@ The initial condition for the rescaled distribution function is
 \begin{equation}
     g(t = 0, \bx, \bv) = \alpha \cos(\bk\cdot\bx) \sqrt{f_0 (\bx, \bv)}.
 \end{equation}
-The input file \verb|Examples/LinVlasovMaxwell/landauLVM.input| uses the parameters $k=0.4$ and $\alpha=0.04$. The resulting total energy composition and electric energy decay are shown in figures \ref*{fig:linvlasovmaxwell_energy} and \ref*{fig:linvlasovmaxwell_landau}, respectively.
-\begin{figure}
-    \centering
-    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/LinVlasovMaxwell_LandauTotalEnergy.png}
-    \caption{Total energy composition during a Landau damping simulation.}
-    \label{fig:linvlasovmaxwell_energy}
-\end{figure}
+The input file \verb|Examples/LinVlasovMaxwell/landauLVM.input| uses the parameters $k=0.4$ and $\alpha=0.04$. The resulting total energy composition and electric energy decay are shown in figures \ref*{fig:numericalDispersionRelationParallelEx} and \ref*{fig:linvlasovmaxwell_landau}, respectively.
 \begin{figure}
     \centering
     \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/LinVlasovMaxwell_Landau.png}
     \caption{Landau damping: Exponential decay of the electric energy due to particle-wave interaction.}
     \label{fig:linvlasovmaxwell_landau}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/LinVlasovMaxwell_LandauTotalEnergy.png}
+    \caption{Total energy composition during a Landau damping simulation.}
+    \label{fig:numericalDispersionRelationParallelEx}
 \end{figure}
 
 \end{document}

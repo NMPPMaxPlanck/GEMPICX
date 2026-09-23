@@ -1,63 +1,17 @@
-# General setting
-Sim.Type = "VlasovPoisson"
+FILE = landauVP.input
 
 # Grid parameters
 nGhostExtra = 4
 ComputationalDomain.nCell = 32 16 8
 ComputationalDomain.maxGridSize = 8 8 8
-ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
 # Particle parameters
-Particle.speciesNames = electrons
-rhoBackground = 1 # one species
-Particle.sampler = Sobol
 Particle.electrons.nPartPerCell = 1000 # number of particles per cell
-Particle.electrons.charge = -1.0 # vector (one entry per species)
-Particle.electrons.mass = 1.0 # vector (one entry per species)
-Particle.electrons.density = "1.0 + 0.04 * cos(kvarx * x)"
-Particle.electrons.numGaussians = 1
-
-# Gaussian parameters
-Particle.electrons.G0.vMean = 0.0 0.0 0.0
-Particle.electrons.G0.vThermal = 1 1 1
-Particle.electrons.G0.vWeight = 1.0
-
-# wave vector
-k = 0.4 0.4 0.4
-
-# Simulation parameters
-TimeLoop.nSteps = 500
-TimeLoop.dt = 0.02
-
-# Filter
-Filter.type = Bilinear
-Filter.Bilinear.nPass = 3 3 3
-
-# Function parameters
-Function.Bx = "0.0"
-Function.By = "0.0"
-Function.Bz = "0.0"
 
 # Diagnostics
-# Full Diagnostics 
+# Full Diagnostics
 FullDiagnostics.enable = 0 # 1 for true, 0 for false
-FullDiagnostics.groupNames = part field 
-FullDiagnostics.part.varNames = electrons
-FullDiagnostics.part.saveInterval = 1000
-FullDiagnostics.field.varNames = rho Ex phi
-FullDiagnostics.field.outputProcessor = CellCenter 
-FullDiagnostics.field.saveInterval = 1
 FullDiagnostics.saveFolder = "2D_o6_hy/1/" # String. Default "FullDiagnostics/".
-
-# Reduced Diagnostics 
-ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
-ReducedDiagnostics.saveInterval = 1 #
-
-ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy
-ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
-ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
-ReducedDiagnostics.Part.types = Particle
-
 
 ############ HYPRE OPTIONS ############ refer to AMReX_HypreIJIface.cpp for checking below options
 

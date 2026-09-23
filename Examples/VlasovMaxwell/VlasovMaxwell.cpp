@@ -280,7 +280,8 @@ int main (int argc, char* argv[])
                 hodge(H, B, deRham->scaling_bto_h());
                 add_dt_curl(D, H, 0.5 * dt);
 
-                // compute div D for diagnostics
+                // compute E and div D for diagnostics
+                hodge(E, D, deRham->scaling_dto_e());
                 div(divD, D);
                 simTime = dt * (tStep + 1);
                 diagnostics.compute_and_write_to_file(tStep + 1, simTime);

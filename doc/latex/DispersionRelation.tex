@@ -1,0 +1,273 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\renewcommand{\Affilfont}{\footnotesize}
+
+\usepackage{listings}
+\usepackage{comment}
+\usepackage{soul}
+
+%%%%%%%% MACROS
+\include{GempicLatexMacros}
+
+\begin{document}
+
+\section{Dispersion relations}
+
+\subsection{Analytical dispersion relation for the Vlasov-Maxwell equations}
+
+The analytical dispersion relation is obtained by performing a Fourier transform of the linearized Vlasov-Maxwell equations for a hot plasma or the cold plasma model.
+Note that the Vlasov-Maxwell dispersion relation converges to the cold plasma dispersion relation in the limit of small thermal velocity. 
+The resulting dispersion relation can be solved for the frequency $\omega$ as a function of the wave vector $\bk$. 
+
+All the dispersion relations can be found in plasma physics textbooks, such as \cite{swanson2020} or \cite{stix1992}. We use in our python scripts the formulas given in the online book by Fitzpatrick \url{https://farside.ph.utexas.edu/teaching/plasma/Plasmahtml/Plasma2html.html}. Note that there is a slight difference due to our definition of the thermal velocities, which are defined as $v_{ts} = \sqrt{2 k_B T_s / m_s}$, while Fitzpatrick uses $v_{ts} = \sqrt{k_B T_s / m_s}$.
+
+For a two species plasma, the dispersion relation for the parallel case ($\bfB = (B_0, 0,0)$) is given by $\det M(\omega,k) = 0$, where
+$$ M(\omega, k) = 
+\begin{pmatrix}
+    P & 0 & 0 \\
+    0 & S-n^2 & -iD \\
+    0 & iD & S-n^2
+\end{pmatrix}$$
+where $n = ck/\omega$ and for a hot plasma
+\begin{align}
+    S &= 1 + \frac12 \sum_s \frac{\omega_{ps}^2}{\sqrt{2}\omega k v_{ts}} 
+    \left( Z\left(\frac{\omega-\omega_{cs}}{\sqrt{2}kv_{ts}}\right)
+    + Z\left(\frac{\omega+\omega_{cs}}{\sqrt{2}kv_{ts}}\right) \right) \\ 
+    D &= \frac{i}{2}\sum_s \frac{\omega_{ps}^2}{\sqrt{2}\omega k v_{ts}} 
+    \left( Z\left(\frac{\omega-\omega_{cs}}{\sqrt{2}kv_{ts}}\right)
+    - Z\left(\frac{\omega+\omega_{cs}}{\sqrt{2}kv_{ts}}\right) \right), \\ 
+    P &= 1 + \sum_s \frac{\omega_{ps}^2}{ k v_{ts}} \left(
+        1 + \frac{\omega}{\sqrt{2}kv_{ts}} Z\left(\frac{\omega}{\sqrt{2}kv_{ts}}\right)
+    \right).
+\end{align}
+where $\omega_{pe}$ and $\omega_{pi}$ are the electron and ion plasma frequencies, respectively, $\omega_{ce}=\frac{q_eB_0}{m_e}$ and $\omega_{ci}=\frac{q_iB_0}{m_i}$ are the electron and ion cyclotron frequencies, respectively, and $v_{te} = \sqrt{\frac{2 k_B T_e}{m_e}}$ and $v_{ti} = \sqrt{\frac{2 k_B T_i}{m_i}}$ are the electron and ion thermal velocities, respectively, and $Z(x)$ is the plasma dispersion function. Note that as the electron charge is negative, the electron cyclotron frequency is negative as well.\\
+For a cold plasma, instead
+\begin{align}
+    S &= 1 - \frac{\omega_{pe}^2}{2\omega^2} \left( \frac{\omega}{\omega+\omega_{ce}}
+    +\frac{\omega}{\omega-\omega_{ce}}\right)
+    - \frac{\omega_{pi}^2}{2\omega^2} \left( \frac{\omega}{\omega+\omega_{ci}}
+    +\frac{\omega}{\omega-\omega_{ci}}\right), \\ 
+    D &= 1 - \frac{\omega_{pe}^2}{2\omega^2} \left( \frac{\omega}{\omega+\omega_{ce}}
+    -\frac{\omega}{\omega-\omega_{ce}}\right)
+    - \frac{\omega_{pi}^2}{2\omega^2} \left( \frac{\omega}{\omega+\omega_{ci}}
+    -\frac{\omega}{\omega-\omega_{ci}}\right), \\ 
+    P &= 1 - \frac{\omega_{pi}^2 + \omega_{pe}^2}{\omega^2} .
+\end{align}
+
+
+The solutions of $\det M(\omega,k)$ can be readily obtained.
+First, the longitudinal mode along $k$ and $B$, with eigenvector $(E_x,0,0)$ is given by the solution of
+$$ P(\omega,k) = 0.$$
+The transverse modes, with eigenvector $(0,E_y,E_z)$ are given by the solutions of
+$$ S(\omega,k) - n^2(\omega,k) = \pm D.$$
+The solutions are computed in the script \verb|Examples/SupplementaryScripts/DispersionRelations/HPDRparallel.py| for the parallel case. The analytical dispersion relation can be compared to the numerical results with the script \verb|Examples/SupplementaryScripts/DispersionRelations/verify_dispersion_relation.py|, where the all the dispersion relations, parallel and perpendicular, for one and two species, hot and cold plasmas are computed.
+
+The perpendicular case ($B_z\neq0$) is more complicated in the case of a hot plasma, as it involves an infinite sum over Bessel functions, which will result in Bernstein waves.
+In the python script \verb|verify_dispersion_relation.py| we use the formulas (7.107) and (7.111) given in the online book by Fitzpatrick \url{https://farside.ph.utexas.edu/teaching/plasma/Plasmahtml/node96.html} to compute the dispersion relation for the perpendicular case. The analytical dispersion relation for the cold plasma model is given by $\det M(\omega,k) = 0$, where
+$$ M(\omega, k) = 
+\begin{pmatrix}
+    S & -iD & 0\\
+    iD & S-n^2 & 0\\
+    0 & 0 & P-n^2
+\end{pmatrix},$$
+$S$, $D$, $P$ are defined as above, and $n = ck/\omega$.
+
+All the python files to compute the dispersion relations can be found in the directory \verb|Examples/SupplementaryScripts/DispersionRelations|. 
+
+For a detailed study of the parallel Vlasov-Maxwell dispersion relation, see the script \verb|Examples/SupplementaryScripts/DispersionRelations/HPDRparallel.py|. It computes the analytical dispersion relation for a hot plasma and can be used to visualize the dispersion function for waves propagating parallel to the magnetic field. The resulting plots of the frequencies and damping rates of the different modes can be created. See Figures 
+\ref{fig:DispersionFunction}, \ref{fig:DispersionRelationLongitudinalReal}, \ref{fig:DispersionRelationLongitudinalImag} and \ref{fig:DispersionRelationTransverseReal}, \ref{fig:DispersionRelationTransverseImag}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionFunction.png}
+    \caption{Complex plot of the dispersion function for Vlasov-Maxwell for waves propagating parallel to the magnetic field. Top longitudinal mode, bottom transverse mode.}
+    \label{fig:DispersionFunction}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionRelationLongitudinalReal.png}
+    \caption{Real part of the solution of the analytical Vlasov-Maxwell dispersion relation for longitudinal waves propagating parallel to the magnetic field.}
+    \label{fig:DispersionRelationLongitudinalReal}
+\end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionRelationLongitudinalImag.png}
+    \caption{Imaginary part of the solution of the analytical Vlasov-Maxwell dispersion relation for longitudinal waves propagating parallel to the magnetic field.}
+    \label{fig:DispersionRelationLongitudinalImag}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionRelationTransverseReal.png}
+    \caption{Real part of the solution of the analytical Vlasov-Maxwell dispersion relation for transverse waves propagating parallel to the magnetic field.}
+    \label{fig:DispersionRelationTransverseReal}
+\end{figure}
+\begin{figure}
+    \centering 
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionRelationTransverseImag.png}
+    \caption{Imaginary part of the solution of the analytical Vlasov-Maxwell dispersion relation for transverse waves propagating parallel to the magnetic field.}
+    \label{fig:DispersionRelationTransverseImag}
+\end{figure}
+
+The transverse modes for $k=0.5$ can be seen on the complex function plot in Figure \ref{fig:DispersionFunctionModes}. The black crosses correspond to the main zeros of the dispersion function. The almost undamped ones on the real axis correspond from left to right to the L mode, the ion cyclotron mode, the electron cyclotron mode and the R-mode.
+The two crosses further down on the imaginary axis correspond to the least damped of the higher order modes; the one on the left centered at the electron cyclotron frequency and the one on the right at the ion cyclotron frequency. 
+The higher order modes can be seen as colored cone in the numerical dispersion relation, as shown for example in figure \ref{fig:DispRelParEzTwoSpeciesVth0.5}. A similar cone can also be seen in the numerical dispersion relation of the longitudinal mode \ref{fig:DispRelParExTwoSpeciesVth0.5}. This corresponds to the higher order modes for the Landau damping of the Langmuir wave. Here the cone is centered around 0.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionFunctionModes.png}
+    \caption{Complex plot of the dispersion function for Vlasov-Maxwell for transverse waves propagating parallel to the magnetic field.}
+    \label{fig:DispersionFunctionModes}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/ExTwoSpecParVth0.5.png}
+    
+    \caption{Two species: Numerical dispersion relation parallel to the magnetic field: $E_x$ component for a hot plasma.}
+    \label{fig:DispRelParExTwoSpeciesVth0.5}
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/EzTwoSpecVth0.5.png}
+    \caption{Two species: Numerical dispersion relation parallel to the magnetic field: $E_z$ component for a hot plasma.}
+    \label{fig:DispRelParEzTwoSpeciesVth0.5}
+\end{figure}
+
+\subsection{Comparison with numerical dispersion relation}
+
+The numerical dispersion relation is a very simple verification test for particle in cell codes. It is based on the fact that the dispersion relation of a plasma can be computed by running a simulation with a constant background magnetic field and computing the Fourier transform of the electric field. The resulting dispersion relation can then be compared to the analytical dispersion relation for the cold plasma model or for the linearized Vlasov-Maxwell equations.
+
+We computed only 1D analytical dispersion relations. However, the verification simulations can be run in 1D, 2D or 3D. For 2D and 3D simulations, the electric field is averaged over the additional dimensions in the script \verb|CreateSpaceTimeArrays.py| which produces the fields $E_x$ and $E_z$ used in \verb|verify_dispersion_relation.py|. 
+
+
+In order to have short run times, the simulation is run in 1D with periodic boundary conditions. The wave vector $\bk$ is aligned with the $x$ direction. The magnetic field is set to a constant value at the initial time, i.e. $B_x$ is set to one at the initial time and the other components are set to zero for the case of a wave vector parallel to the magnetic field. For the case of a wave vector perpendicular to the magnetic field, $B_z$ is set to one at the initial time and the other components are set to zero.
+The electric field is initialized to zero and the simulation is run for a long time. 
+The density is set to one and the waves are initialized from particle noise.
+The electron thermal velocity is set to $v_{te} = 0.5$. The ion thermal velocity is set to $v_{ti} = 0.25$ in the two species simulations. The mass ratio for the two species simulations is set to $m_i/m_e = 4$.
+
+For the one species simulation, the input files are \verb|dispersionOneSpeciesPar.input| and \verb|dispersionOneSpeciesPerp.input|. The resulting numerical results are shown in figures \ref{fig:DispRelPerpEx} and \ref{fig:DispRelPerpEz}. The black dotted lines correspond to the analytical dispersion relation for the cold plasma model and the red dotted lines correspond to the dispersion relation for the Bernstein waves.
+
+The analytical dispersion relation can be compared to the numerical results with the script \verb|verify_dispersion_relation.py|
+The analytical dispersion relation for the parallel case can be computed base on the hot plasma dispersion relation including the plasma dispersion function and damping or with the cold plasma dispersion relation. This can be chosen in the script.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionOneSpeciesParEx.png}
+    
+    \caption{One species: Numerical dispersion relation parallel to the magnetic field: $E_x$ component.}
+    \label{fig:DispRelParEx}
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionOneSpeciesParEz.png}
+    \caption{One species: Numerical dispersion relation parallel to the magnetic field: $E_z$ component.}
+    \label{fig:DispRelParEz}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionOneSpeciesPerpEx.png}
+    
+    \caption{One species: Numerical dispersion relation perpendicular to the magnetic field: $E_x$ component.}
+    \label{fig:DispRelPerpEx}
+\end{figure}
+
+\begin{figure}
+    \centering
+
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionOneSpeciesPerpEz.png}
+    \caption{One species: Numerical dispersion relation perpendicular to the magnetic field: $E_z$ component.}
+    \label{fig:DispRelPerpEz}
+\end{figure}
+
+
+The input files for the two species simulations are \verb|DispersionTwoSpeciesPar.input| and \verb|DispersionTwoSpeciesPerp.input|. The numerical results are shown in Figures 
+\ref{fig:DispRelParTwoSpecies} and \ref{fig:DispRelPerpTwoSpecies}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionRelationParTwoSpecies.pdf}
+    \caption{Two species: Numerical dispersion relation parallel to the magnetic field: $E_x$ and $E_z$ components.}
+    \label{fig:DispRelParTwoSpecies}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/DispersionRelationPerpTwoSpecies.pdf}
+    \caption{Two species: Numerical dispersion relation perpendicular to the magnetic field: $E_x$ and $E_z$ component.}
+    \label{fig:DispRelPerpTwoSpecies}
+\end{figure}
+
+\subsection{Single wave simulations}
+
+We can also run simulations with a single wave vector $k$ and compare the temporal evolution of the electric field to the analytical solution obtained from the dispersion relation. We consider only single species electron simulations with a wave vector parallel to the magnetic field.
+In this the R-wave has two branches, one above the electron cyclotron frequency and one below, and the L-wave has one branch. For some values of $k$ and $v_{th}$, the R waves can be damped due to Landau damping. Note that the L-wave is damped only when positively charged ions are included in the simulation. This is because the L-wave is a left-hand polarized wave and can only interact with positively charged particles. The R-wave is a right-hand polarized wave and can interact with negatively charged particles, such as electrons, and can be damped due to Landau damping in our setting.
+
+The input files for the single wave simulations are in the directory \verb|Examples/VlasovMaxwell|. The script \verb|RLWavesVlasovMaxwell.py| can be used to find the parameters for the simulations and compare the numerical results to the analytical solution obtained from the dispersion relation. The resulting plots of the temporal evolution of the electric field for the different branches can be created.
+
+- For the L-wave. As this is not affected by Landau damping, we have only considered a cold plasma case. The results are shown in Figures \ref{fig:WaveL}. The input file for this case is \verb|Lwave.input|.
+
+- For the R-wave, we have considered the cold plasma case and the hot plasma case, for both the upper branch and the lower branch. The input files for these cases are \verb|upperRcold.input|, \verb|upperRhot.input|, \verb|lowerRcold.input| and \verb|lowerRhot.input|. The resulting plots of the temporal evolution of the electric field for the different branches are shown in Figures \ref{fig:upperRcold}, \ref{fig:upperRhot}, \ref{fig:lowerRcold} and \ref{fig:lowerRhot}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/Lwave.png}
+    \caption{Propagation of the L-wave in a single species cold plasma. The orange line corresponds to the numerical solution and the blue line corresponds to the analytical solution obtained from the dispersion relation.}
+    \label{fig:WaveL}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/upperRcold.png}
+    \caption{Propagation of the upper branch of the R-wave in a single species cold plasma. The orange line corresponds to the numerical solution and the blue line corresponds to the analytical solution obtained from the dispersion relation.}
+    \label{fig:upperRcold}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/upperRhot.png}
+    \caption{Propagation of the upper branch of the R-wave in a single species hot plasma. The orange line corresponds to the numerical solution and the blue line corresponds to the analytical solution obtained from the dispersion relation.}
+    \label{fig:upperRhot}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/lowerRcold.png}
+    \caption{Propagation of the lower branch of the R-wave in a single species cold plasma. The orange line corresponds to the numerical solution and the blue line corresponds to the analytical solution obtained from the dispersion relation.}
+    \label{fig:lowerRcold}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.7\linewidth]{../_static/graphics/Examples/lowerRhot.png}
+    \caption{Propagation of the lower branch of the R-wave in a single species hot plasma. The orange line corresponds to the numerical solution and the blue line corresponds to the analytical solution obtained from the dispersion relation.}
+    \label{fig:lowerRhot}
+\end{figure}
+
+\end{document}
