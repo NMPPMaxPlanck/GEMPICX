@@ -1,0 +1,21 @@
+FILE = twoStream.input
+
+Particle.sampler = Sobol
+
+# Gaussian parameters
+Particle.electrons.G0.vMean = 0.0 0.0 0.0
+Particle.electrons.G0.vThermal = 1 1 1
+Particle.electrons.G0.vWeight = 0.9
+Particle.electrons.G1.vMean = 4.5 0.0 0.0
+Particle.electrons.G1.vThermal = 0.5 0.5 0.5
+Particle.electrons.G1.vWeight = 0.1
+
+# wave vector
+k = 0.3 0.3 0.3
+
+# Simulation parameters
+TimeLoop.dt = 0.02
+
+# Filter
+Filter.type = Bilinear
+Filter.Bilinear.nPass = 1 1 1

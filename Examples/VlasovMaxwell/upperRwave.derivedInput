@@ -1,0 +1,16 @@
+FILE = Lwave.input
+
+# Gaussian parameters
+Particle.electrons.G0.vMean.x = "0.0"
+Particle.electrons.G0.vMean.y = "0.011886 * sin(kvarx * x)"
+Particle.electrons.G0.vMean.z = "0.011886 * cos(kvarx * x)"
+Particle.electrons.G0.vThermal = 0.5 0.5 0.5
+Particle.electrons.G0.vWeight = 1.0
+
+# Function parameters
+Function.Ex = "0."
+Function.Ey = "0.01 * cos(kvarx * x)"
+Function.Ez = "-0.01 * sin(kvarx * x)"
+Function.Bx = "0.5"
+Function.By = "0.004628 * sin(kvarx *x)"
+Function.Bz = "0.004628 * cos(kvarx * x)"

@@ -29,7 +29,7 @@ Particle.electrons.G0.vThermal = 0.01414213562 0.04898979486 0.04898979486 # 0.0
 Particle.electrons.G0.vWeight = 1.0
 
 # wave vector
-k = 1.25 6.2831853071795864769252867665590057683 6.2831853071795864769252867665590057683 #1.25 1.25 
+k = 1.25 6.2831853071795864769252867665590057683 6.2831853071795864769252867665590057683 #1.25 1.25
 
 # Simulation parameters
 TimeLoop.nSteps = 8000
@@ -48,19 +48,19 @@ Function.Bz = "1e-4 * cos(kvarx * x)"
 Function.phi = "0.0" #"4 * 0.5 * cos(0.5 * x)"
 
 # Diagnostics
-#Full Diagnostics 
+# Full Diagnostics
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
-FullDiagnostics.groupNames = part field 
+FullDiagnostics.groupNames = part field
 FullDiagnostics.part.varNames = electrons
 FullDiagnostics.part.saveInterval = 1000
 FullDiagnostics.field.varNames = rho phi Ex Ey Bz
-FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter
 FullDiagnostics.field.saveInterval = 1
 
-# Reduced Diagnostics 
+# Reduced Diagnostics
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
 ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
-ReducedDiagnostics.saveInterval = 1 # saveInterval
+ReducedDiagnostics.saveInterval = 1 # output every time step
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
 ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
 ReducedDiagnostics.GaussError.types = GaussError

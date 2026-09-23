@@ -1,0 +1,6 @@
+FILE = dispersionOneSpeciesPar.input
+
+# Function parameters
+Function.Bx = "0.0"
+Function.By = "0.0"
+Function.Bz = "1.0"

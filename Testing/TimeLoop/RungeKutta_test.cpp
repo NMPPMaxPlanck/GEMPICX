@@ -311,7 +311,7 @@ TEST_F(RungeKuttaTest, DriftKineticParticleSpecies)
 
     constexpr int numParticles{1};
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> r0{AMREX_D_DECL(0.0, 0.0, 0.0)};
-    amrex::GpuArray<amrex::Real, 3> v0{{1.0, 1.0, 0.1}};
+    amrex::GpuArray<amrex::Real, 3> v0{{0, 0, 0.1}};
     amrex::Real weight{1};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions{r0};
     amrex::Array<amrex::GpuArray<amrex::Real, 3>, numParticles> velocities{v0};

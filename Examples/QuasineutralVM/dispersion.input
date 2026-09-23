@@ -50,19 +50,19 @@ Function.idealRho = "0.0"
 Filter.type = NoFilter
 
 # Diagnostics
-#Full Diagnostics 
+# Full Diagnostics
 FullDiagnostics.enable = 1 # 1 for true, 0 for false
-FullDiagnostics.groupNames = part field 
+FullDiagnostics.groupNames = part field
 FullDiagnostics.part.varNames = electrons
 FullDiagnostics.part.saveInterval = 100000
 FullDiagnostics.field.varNames = rho Ex Ey Ez Bx By Bz
-FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter
 FullDiagnostics.field.saveInterval = 5
 
-# Reduced Diagnostics 
+# Reduced Diagnostics
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
 ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy #GaussError
-ReducedDiagnostics.saveInterval = 1 # saveInterval
+ReducedDiagnostics.saveInterval = 1 # output every time step
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
 ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
 #ReducedDiagnostics.GaussError.types = GaussError

@@ -18,13 +18,13 @@ Particle.speciesNames = electrons ions
 
 rhoBackground = 0 # ions explicitely set up
 
-Particle.electrons.nPartPerCell = 7813 # ceil(2000000particles/(16*4*4grid points)) 
+Particle.electrons.nPartPerCell = 7813 # ceil(2000000particles/(16*4*4grid points))
 Particle.electrons.charge = -1.0 # vector (one entry per species)
 Particle.electrons.mass = 1.0 # vector (one entry per species)
 Particle.electrons.density = "1 + 0.01*cos(kvarx * x)" # 1+alpha_e*cos(k*x1)
 Particle.electrons.numGaussians = 1
 
-Particle.ions.nPartPerCell = 7813 # ceil(2000000particles/(16*4*4grid points)) 
+Particle.ions.nPartPerCell = 7813 # ceil(2000000particles/(16*4*4grid points))
 Particle.ions.charge = 1.0 # vector (one entry per species)
 Particle.ions.mass = 100.0 # vector (one entry per species) mi_me=100
 Particle.ions.density = "1.0" # no disturbtion in ions
@@ -34,24 +34,27 @@ Particle.sampler = Sobol
 # GPU settings
 
 # Gaussian parameters
+#veThermal = 1/10 # c/10
+veThermal = 1/100 # c/100
 Particle.electrons.G0.vMean = 0.0 0.0 0.0 # gaussian centered around 0
-#Particle.electrons.G0.vThermal = 1/10 1/10 1/10 # c/10 c/10 c/10 
-Particle.electrons.G0.vThermal = 1/100 1/100 1/100 # c/100 c/100 c/100 
+Particle.electrons.G0.vThermal = veThermal veThermal veThermal
 Particle.electrons.G0.vWeight = 1.0
 Particle.ions.G0.vMean = 0.0 0.0 0.0
-#Particle.ions.G0.vThermal = 0.01 0.01 0.01 # sqrt(me/mi)*v_e,thermal = sqrt(1/100)*1/10
-Particle.ions.G0.vThermal = 0.001 0.001 0.001 # sqrt(me/mi)*v_e,thermal = sqrt(1/100)*1/100
+me = Particle.electrons.mass
+mi = Particle.ions.mass
+viThermal = sqrt(me/mi)*veThermal
+Particle.ions.G0.vThermal = viThermal viThermal viThermal
 Particle.ions.G0.vWeight = 1.0
 
 # wave vector
-k = 0.4 0.4 0.4 # k = 0.4
+k = 0.4 0.4 0.4
 
 # Filter
 Filter.type = NoFilter
 
 # Simulation parameters
-TimeLoop.nSteps = 320 # 16/0.05
 TimeLoop.dt = 0.05
+TimeLoop.nSteps = 16/TimeLoop.dt
 
 # Function parameters
 Function.Ex = "0.0"
@@ -63,7 +66,7 @@ Function.Bz = "0.00025 * cos(kvarx * x)" # beta * cos(k1x1)
 Function.phi = "0.0"
 
 # Diagnostics
-#Full Diagnostics 
+# Full Diagnostics
 #FullDiagnostics.enable = 1 # 1 for true, 0 for false
 #FullDiagnostics.groupNames = part field
 #FullDiagnostics.part.varNames = electrons ions
@@ -71,10 +74,10 @@ Function.phi = "0.0"
 #FullDiagnostics.field.varNames = rho phi Ex Ey Bz
 #FullDiagnostics.field.outputProcessor = CellCenter
 #FullDiagnostics.field.saveInterval = 1
-# Reduced Diagnostics 
+# Reduced Diagnostics
 ReducedDiagnostics.enable = 1 # 1 for true, 0 for false
 ReducedDiagnostics.groupNames = Part ElecEnergy MagEnergy GaussError
-ReducedDiagnostics.saveInterval = 1 # saveInterval
+ReducedDiagnostics.saveInterval = 1 # output every time step
 ReducedDiagnostics.ElecEnergy.types = ElecFieldEnergy
 ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
 ReducedDiagnostics.GaussError.types = GaussError

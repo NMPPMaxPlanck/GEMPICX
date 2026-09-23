@@ -1,7 +1,0 @@
-FILE = landauVP.input
-
-ComputationalDomain.nCell = 64 6 6
-
-# Reduced Diagnostics 
-ReducedDiagnostics.groupNames = Part VarianceElectrons ElecEnergy MagEnergy 
-ReducedDiagnostics.VarianceElectrons.types = electronsVariance

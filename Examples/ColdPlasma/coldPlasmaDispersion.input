@@ -29,7 +29,7 @@ FullDiagnostics.enable = 1 # 0 for true, 0 for false
 FullDiagnostics.groupNames = field
 
 FullDiagnostics.field.varNames = Ez
-FullDiagnostics.field.outputProcessor = CellCenter 
+FullDiagnostics.field.outputProcessor = CellCenter
 FullDiagnostics.field.saveInterval = 1
 
 # Reduced Diagnostics

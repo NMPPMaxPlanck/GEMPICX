@@ -22,6 +22,7 @@ Table of Contents
    
    self
    latex/Examples
+   latex/DispersionRelation
    latex/MaxwellDiscreteForms
    latex/DeRhamComplexes
    Forms/Forms
