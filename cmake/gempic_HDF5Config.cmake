@@ -18,8 +18,11 @@ if(GEMPIC_USE_HDF5)
     set(HDF5_BUILD_EXAMPLES    OFF CACHE BOOL "HDF5 Option set within GEMPIC")
     set(HDF5_BUILD_HL_LIB      OFF CACHE BOOL "HDF5 Option set within GEMPIC")
     set(HDF5_BUILD_TOOLS       OFF CACHE BOOL "HDF5 Option set within GEMPIC")
+    set(_crq_org ${CMAKE_REQUIRED_QUIET}) # Avoid check file spam from HDF5
+    set(CMAKE_REQUIRED_QUIET ON)
 
     FetchContent_MakeAvailable(HDF5)
+    set(CMAKE_REQUIRED_QUIET ${_crq_org})
   endif()
 
   if(NOT HDF5_FOUND)
