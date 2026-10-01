@@ -56,6 +56,9 @@ function(assign_folders_by_origin)
         elseif(_src_norm MATCHES "third_party/googletest(-.*)?$")
             set_target_properties(${t} PROPERTIES FOLDER "ThirdParty/GTest")
 
+        elseif(_src_norm MATCHES "third_party/kokkos(-.*)?$")
+            set_target_properties(${t} PROPERTIES FOLDER "ThirdParty/KOKKOS")
+
         elseif(_src_norm MATCHES "third_party")
             set_target_properties(${t} PROPERTIES FOLDER "ThirdParty/Other")
 

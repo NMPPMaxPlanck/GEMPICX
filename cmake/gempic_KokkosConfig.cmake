@@ -20,6 +20,8 @@ macro(set_kokkos_options_from_gempic)
   else()
     set(Kokkos_ENABLE_OPENMP OFF CACHE BOOL "Kokkos Option set within GEMPIC")
   endif()
+  # Stops Kokkos CDash targets from polluting targets lists
+  set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1)
 endmacro()
 
 include(cmake/gempic_FetchContent_Declare.cmake)
