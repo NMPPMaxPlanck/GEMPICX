@@ -523,12 +523,14 @@ struct field_to_drc<FDDeRhamFieldMF<g, s>>
 {
     using type = FDDeRhamComplexMF; // always maps to the same DeRhamComplex
 };
+//!@cond EXCLUDE_API_DOC
 // Partial specialization for any FDDeRhamField<G,S>
 template <Grid g, Space s>
 struct field_to_drc<GDECDeRhamFieldMF<g, s>>
 {
     using type = GDECDeRhamComplexMF; // always maps to the same DeRhamComplex
 };
+/// @endcond
 
 template <typename DstFormType, typename SrcFormType>
     requires MutualDual<SrcFormType, DstFormType> && HasHodgeScheme<field_to_drc_t<SrcFormType>>
