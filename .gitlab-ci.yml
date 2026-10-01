@@ -357,7 +357,7 @@ warning-check_documentation:
   allow_failure: true
   script:
     - configure_build "--preset documentation" 1
-    - '! grep -E "warning:" build.err'
+    - '! grep -E -i "warning:" build.err'
 
 pages:
   extends: .documentation
