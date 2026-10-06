@@ -3,6 +3,8 @@ macro(set_amrex_options_from_gempic)
   set(AMReX_PARTICLES ON CACHE BOOL "AMReX Option set within GEMPIC")
   # Some parts of fetch_content(HDF5) trigger AMReX shared libraries.
   # This line configures them to be disabled
+  # ToDo: Shared libraries should not depend on the HDF5 build.
+  #       Further investigation required
   set(AMReX_BUILD_SHARED_LIBS OFF CACHE BOOL "AMReX Option set within GEMPIC")
   # HDF5 is searched/fetched after AMReX is configured/searched.
   # Set it to off to avoid interference
@@ -57,4 +59,3 @@ if(NOT ${AMReX_FOUND}) # AMReX_FOUND is only true if the package was installed
     gempic_suppress_third_party_warnings(TARGET HYPRE)
   endif()
 endif()
-

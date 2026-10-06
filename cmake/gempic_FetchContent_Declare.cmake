@@ -114,7 +114,7 @@ endfunction()
 # to be set to a non-default directory at the same time.
 # Takes one mandatory command and three optional ones:
 #
-#   NAME:           The name of the library to fetch
+#   fc_name:           The name of the library to fetch
 #   SOURCE_DIR:     The location of said library.
 #                   A search is first done to see if the library already exists in this location.
 #   SOURCE_SUBDIR:  The location of the main CMakeLists.txt file of said library, relative to
@@ -124,112 +124,111 @@ endfunction()
 #                   the downloaded library is checked against the tag/commit ID.
 #   ALLOW_DIRTY:    Downloads the GIT_TAG version if given, but allows the user to modify the repo.
 #   ...             Any other arguments are passed on to FetchContent_Declare unmodified.
-function(gempic_FetchContent_Declare NAME)
+macro(gempic_FetchContent_Declare fc_name)
   set(oneValueArgs GIT_REPOSITORY GIT_TAG SOURCE_DIR SOURCE_SUBDIR ALLOW_DIRTY)
   set(multiValueArgs FIND_PACKAGE_ARGS)
-  cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  cmake_parse_arguments(${fc_name}_fcarg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  message(STATUS "Searching for ${NAME} installs ...")
-  if(NOT DEFINED ${NAME}_SOURCE_DIR)
-    set(${NAME}_SOURCE_DIR ${arg_SOURCE_DIR})
+  message(STATUS "Searching for ${fc_name} installs ...")
+  if(NOT DEFINED ${fc_name}_SOURCE_DIR)
+    set(${fc_name}_SOURCE_DIR ${${fc_name}_fcarg_SOURCE_DIR})
   endif()
-  if(arg_FIND_PACKAGE_ARGS)
-    find_package(${NAME} ${arg_FIND_PACKAGE_ARGS})
+  if(${fc_name}_fcarg_FIND_PACKAGE_ARGS)
+    find_package(${fc_name} ${${fc_name}_fcarg_FIND_PACKAGE_ARGS})
   else()
-    find_package(${NAME} CONFIG)
+    find_package(${fc_name} CONFIG)
   endif()
 
-  if(${${NAME}_FOUND})
-    message(STATUS "Found ${NAME} install: ${${NAME}_DIR}")
-    if(${NAME}_VERSION)
-      set(GEMPICX_${NAME}_VERSION ${${NAME}_VERSION} CACHE STRING
+  if(${${fc_name}_FOUND})
+    message(STATUS "Found ${fc_name} install: ${${fc_name}_DIR}")
+    if(${fc_name}_VERSION)
+      set(GEMPICX_${fc_name}_VERSION ${${fc_name}_VERSION} CACHE STRING
           "Version set by find_package" FORCE)
-      if(${arg_GIT_TAG} MATCHES ${${NAME}_VERSION})
-        set(${NAME}_CORRECT_VERSION_INSTALLED TRUE)
+      if(${${fc_name}_fcarg_GIT_TAG} MATCHES ${${fc_name}_VERSION})
+        set(${fc_name}_CORRECT_VERSION_INSTALLED TRUE)
       endif()
     else()
-      unset(GEMPICX_${NAME}_VERSION CACHE)
-      unset(GEMPICX_${NAME}_VERSION)
+      unset(GEMPICX_${fc_name}_VERSION CACHE)
+      unset(GEMPICX_${fc_name}_VERSION)
     endif()
-    if(arg_GIT_TAG)
-      if(${${NAME}_CORRECT_VERSION_INSTALLED})
-        message(STATUS "${NAME} version matches")
+    if(${fc_name}_fcarg_GIT_TAG)
+      if(${${fc_name}_CORRECT_VERSION_INSTALLED})
+        message(STATUS "${fc_name} version matches")
       else()
         message(WARNING "No version compatibility check is executed for the installed package: "
-                "'${NAME}'. Proceed at your own risk.")
+                "'${fc_name}'. Proceed at your own risk.")
       endif()
     endif()
   else()
-    message(STATUS "Searching for ${NAME} source folders ...")
-    if(NOT DEFINED ${NAME}_SOURCE_DIR)
-      string(TOLOWER ${NAME} NAME_LOWER)
-      set(${NAME}_SOURCE_DIR "${PROJECT_SOURCE_DIR}/third_party/${NAME_LOWER}-src/")
-      message(STATUS "No SOURCE_DIR provided for ${NAME}. Assuming: ${${NAME}_SOURCE_DIR}")
+    message(STATUS "Searching for ${fc_name} source folders ...")
+    if(NOT DEFINED ${fc_name}_SOURCE_DIR)
+      string(TOLOWER ${fc_name} ${fc_name}_LOWER)
+      set(${fc_name}_SOURCE_DIR "${PROJECT_SOURCE_DIR}/third_party/${${fc_name}_LOWER}-src/")
+      message(STATUS "No SOURCE_DIR provided for ${fc_name}. Assuming: ${${fc_name}_SOURCE_DIR}")
     endif()
 
-    string(TOUPPER "${NAME}" NAME_UPPERCASE)
+    string(TOUPPER "${fc_name}" ${fc_name}_UPPERCASE)
 
     # Find the library
-    if(DEFINED arg_GIT_TAG)
-      set(GIT_TAG_LINE GIT_TAG ${arg_GIT_TAG})
-      if(arg_ALLOW_DIRTY)
-        set(ALLOW_DIRTY_LINE ALLOW_DIRTY)
+    if(DEFINED ${fc_name}_fcarg_GIT_TAG)
+      set(${fc_name}_GIT_TAG_LINE GIT_TAG ${${fc_name}_fcarg_GIT_TAG})
+      if(${fc_name}_fcarg_ALLOW_DIRTY)
+        set(${fc_name}_ALLOW_DIRTY_LINE ALLOW_DIRTY)
       endif()
     endif()
-    gempic_confirm_git_tag(NAME ${NAME}
-                LOCATION ${${NAME}_SOURCE_DIR}
-                ${GIT_TAG_LINE}
-                ${ALLOW_DIRTY_LINE})
-    if(${${NAME}_CORRECT_VERSION_FOUND})
-      set(GEMPICX_${NAME}_VERSION ${${NAME}_VERSION_FOUND} CACHE STRING
+    gempic_confirm_git_tag(NAME ${fc_name}
+                LOCATION ${${fc_name}_SOURCE_DIR}
+                ${${fc_name}_GIT_TAG_LINE}
+                ${${fc_name}_ALLOW_DIRTY_LINE})
+    if(${${fc_name}_CORRECT_VERSION_FOUND})
+      set(GEMPICX_${fc_name}_VERSION ${${fc_name}_VERSION_FOUND} CACHE STRING
           "Version set by confirm_git_tag" FORCE)
-      set(FETCHCONTENT_SOURCE_DIR_${NAME_UPPERCASE} ${${NAME}_SOURCE_DIR})
+      set(FETCHCONTENT_SOURCE_DIR_${${fc_name}_UPPERCASE} ${${fc_name}_SOURCE_DIR})
 
       # Strictly speaking unnecessary, because the library source was found
-      set(GIT_REPOSITORY_LINE)
-      set(GIT_TAG_LINE)
-      set(GIT_UPDATE_LINE)
+      set(${fc_name}_GIT_REPOSITORY_LINE)
+      set(${fc_name}_GIT_TAG_LINE)
+      set(${fc_name}_GIT_UPDATE_LINE)
     else()
-      unset(FETCHCONTENT_SOURCE_DIR_${NAME_UPPERCASE} CACHE)
-      unset(FETCHCONTENT_SOURCE_DIR_${NAME_UPPERCASE})
+      unset(FETCHCONTENT_SOURCE_DIR_${${fc_name}_UPPERCASE} CACHE)
+      unset(FETCHCONTENT_SOURCE_DIR_${${fc_name}_UPPERCASE})
       # Library wasn't found
-      if(NOT DEFINED arg_GIT_REPOSITORY)
+      if(NOT DEFINED ${fc_name}_fcarg_GIT_REPOSITORY)
         message(FATAL_ERROR "gempic_FetchContent_Declare() requires a GIT_REPOSITORY when no "
-                            "matching library is found. The call for ${NAME} gave none.")
+                            "matching library is found. The call for ${fc_name} gave none.")
       else()
-        set(GIT_REPOSITORY_LINE GIT_REPOSITORY ${arg_GIT_REPOSITORY})
+        set(${fc_name}_GIT_REPOSITORY_LINE GIT_REPOSITORY ${${fc_name}_fcarg_GIT_REPOSITORY})
       endif()
-      message(STATUS "No suitable source folders found. Fetching ${NAME} from ${arg_GIT_REPOSITORY} ...")
+      message(STATUS "No suitable source folders found. Fetching ${fc_name} from ${${fc_name}_fcarg_GIT_REPOSITORY} ...")
       # Ensure repository is updated (CHECKOUT) and changes are not permanently deleted (REBASE_)
       # See https://cmake.org/cmake/help/latest/module/ExternalProject.html#git
-      #set(${NAME}_GIT_UPDATE_LINE GIT_REMOTE_UPDATE_STRATEGY CHECKOUT)
+      #set(${fc_name}_${fc_name}_GIT_UPDATE_LINE GIT_REMOTE_UPDATE_STRATEGY CHECKOUT)
     endif()
-    if(DEFINED arg_SOURCE_SUBDIR)
+    if(DEFINED ${fc_name}_fcarg_SOURCE_SUBDIR)
       # Unfortunately, cmake redefines _SOURCE_DIR to include _SOURCE_SUBDIR, so when reconfiguring
       # without deleting, we have to omit the latter.
-      file(REAL_PATH ${${NAME}_SOURCE_DIR} REAL_SOURCE_DIR)
-      file(REAL_PATH ${arg_SOURCE_DIR}/${arg_SOURCE_SUBDIR} REAL_SOURCE_SUBDIR)
+      file(REAL_PATH ${${fc_name}_SOURCE_DIR} REAL_SOURCE_DIR)
+      file(REAL_PATH ${${fc_name}_fcarg_SOURCE_DIR}/${${fc_name}_fcarg_SOURCE_SUBDIR} REAL_SOURCE_SUBDIR)
       if(NOT ${REAL_SOURCE_DIR} STREQUAL ${REAL_SOURCE_SUBDIR})
-        set(SOURCE_SUBDIR_LINE SOURCE_SUBDIR ${arg_SOURCE_SUBDIR})
+        set(${fc_name}_SOURCE_SUBDIR_LINE SOURCE_SUBDIR ${${fc_name}_fcarg_SOURCE_SUBDIR})
       endif()
     endif()
 
     FetchContent_Declare(
-      ${NAME}
-      ${GIT_REPOSITORY_LINE}
-      ${GIT_TAG_LINE}
-      ${GIT_UPDATE_LINE}
-      SOURCE_DIR ${${NAME}_SOURCE_DIR}
-      ${SOURCE_SUBDIR_LINE}
-      ${arg_UNPARSED_ARGUMENTS}  # Give remaining arguments to FetchContent_Declare()
+      ${fc_name}
+      ${${fc_name}_GIT_REPOSITORY_LINE}
+      ${${fc_name}_GIT_TAG_LINE}
+      ${${fc_name}_GIT_UPDATE_LINE}
+      SOURCE_DIR ${${fc_name}_SOURCE_DIR}
+      ${${fc_name}_SOURCE_SUBDIR_LINE}
+      ${${fc_name}_fcarg_UNPARSED_ARGUMENTS}  # Give remaining arguments to FetchContent_Declare()
     )
 
     # Get version variables 
-    if(NOT ${NAME}_CORRECT_VERSION_FOUND AND arg_GIT_TAG)
-      set(GEMPICX_${NAME}_VERSION ${arg_GIT_TAG} CACHE STRING
+    if(NOT ${fc_name}_CORRECT_VERSION_FOUND AND ${fc_name}_fcarg_GIT_TAG)
+      set(GEMPICX_${fc_name}_VERSION ${${fc_name}_fcarg_GIT_TAG} CACHE STRING
           "Version downloaded by FetchContent" FORCE)
     endif()
-    set(${NAME}_NOT_INSTALLED TRUE PARENT_SCOPE)
+    set(${fc_name}_NOT_INSTALLED TRUE)
   endif()
-  set(${NAME}_FOUND ${${NAME}_FOUND} PARENT_SCOPE)
-endfunction()
+endmacro()
