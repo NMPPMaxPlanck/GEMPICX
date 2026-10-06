@@ -101,6 +101,7 @@ using `-D GEMPIC_OPTION Argument`
 | `GEMPIC_DEBUG_MESSAGES`           | Turns on GEMPIC-specific debug messages                                                           | `OFF`           |
 | `USE_DIRTY_AMREX_REPO`            | Allow building from dirty AMReX git repositories                                                  | `OFF`           |
 | `USE_DIRTY_LAPACK_REPO`           | Allow building from dirty Lapack git repositories                                                 | `OFF`           |
+| `USE_DIRTY_HDF5_REPO`             | Allow building from dirty HDF5 git repositories                                                   | `OFF`           |
 
 [^1]: Conditional logic for the default value of `AMReX_HYPRE`: <br> `OFF` if `AMReX_SPACEDIM=1` or `GEMPIC_USE_CUDA=ON` or `GEMPIC_USE_HIP=ON` <br> `ON` otherwise <br> (Explicitly setting `AMReX_HYPRE=ON` in these cases results in a configuration error.)
 
