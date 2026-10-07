@@ -3,11 +3,6 @@
 # Handles LAPACK / MKL configuration for GEMPIC
 # ------------------------------------------------------------
 
-# Only proceed if LAPACK or MKL is requested
-if(NOT GEMPIC_USE_LAPACK AND NOT GEMPIC_USE_MKL)
-    return()
-endif()
-
 # currently we don't support both MKL and LAPACK at the same time, so error out if both are enabled
 if(GEMPIC_USE_MKL AND GEMPIC_USE_LAPACK)
   message(FATAL_ERROR "Cannot enable both MKL and LAPACK")
@@ -45,66 +40,58 @@ if(GEMPIC_USE_MKL)
   endif()
     find_package(MKL REQUIRED)
     if(NOT TARGET MKL::MKL)
-        message(FATAL_ERROR "MKL target not found!")
+      message(FATAL_ERROR "MKL target not found!")
     endif()
     # Provide a unified interface target
     add_library(gempic_linalg INTERFACE)
     target_link_libraries(gempic_linalg INTERFACE MKL::MKL)
     set_target_properties(gempic_linalg PROPERTIES FOLDER "GEMPIC")
-    return()
+    target_compile_definitions(gempic_linalg INTERFACE GEMPIC_USE_MKL=1)
 endif()
 
 # -----------------------------------------------------------------------------
 # Option 2: Use Netlib LAPACK / LAPACKE
 # -----------------------------------------------------------------------------
 if(GEMPIC_USE_LAPACK)
+  # Set LAPACKE build options
+  set(LAPACKE ON CACHE BOOL "" FORCE)
+  set(LAPACK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+  set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
-    # Set LAPACKE build options
-    set(LAPACKE ON CACHE BOOL "" FORCE)
-    set(LAPACK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-    
-    # Declare LAPACK via FetchContent
-    gempic_FetchContent_Declare(
-        LAPACK
-        GIT_REPOSITORY https://github.com/Reference-LAPACK/lapack.git
-        GIT_TAG 05a6d9f4e9004977b6ecc045ec1c42756134468e
-        ALLOW_DIRTY ${USE_DIRTY_LAPACK_REPO}
-        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/lapack-src
-        GIT_PROGRESS ON
+  # Declare LAPACK via FetchContent
+  gempic_FetchContent_Declare(
+    LAPACK
+    GIT_REPOSITORY https://github.com/Reference-LAPACK/lapack.git
+    GIT_TAG 05a6d9f4e9004977b6ecc045ec1c42756134468e
+    ALLOW_DIRTY ${USE_DIRTY_LAPACK_REPO}
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/lapack-src
+    GIT_PROGRESS ON
+  )
+
+  FetchContent_MakeAvailable(LAPACK)
+  add_library(gempic_linalg INTERFACE)
+  set_target_properties(gempic_linalg PROPERTIES FOLDER "GEMPIC")
+
+  if(TARGET lapacke)
+    target_link_libraries(gempic_linalg INTERFACE lapacke)
+  else()
+    message(FATAL_ERROR "LAPACKE target not found")
+  endif()
+
+  # Link LAPACK / LAPACKE / BLAS
+  if(TARGET LAPACK::LAPACK)
+    target_link_libraries(gempic_linalg INTERFACE
+      LAPACK::LAPACK
+      lapacke
+      BLAS::BLAS
     )
-
-    FetchContent_MakeAvailable(LAPACK)
-    add_library(gempic_linalg INTERFACE)
-    set_target_properties(gempic_linalg PROPERTIES FOLDER "GEMPIC")
-    
-    if(TARGET lapacke)
-        target_link_libraries(gempic_linalg INTERFACE lapacke)
-    else()
-        message(FATAL_ERROR "LAPACKE target not found")
-    endif()
-
-    # Link LAPACK / LAPACKE / BLAS
-    if(TARGET LAPACK::LAPACK)
-        target_link_libraries(gempic_linalg INTERFACE
-            LAPACK::LAPACK
-            lapacke
-            BLAS::BLAS
-        )
-    else()
-        # Fallback for older versions / raw library names
-        target_link_libraries(gempic_linalg INTERFACE
-            lapack
-            lapacke
-            blas
-        )
-    endif()
-endif()
-
-if(GEMPIC_USE_MKL)
-    target_compile_definitions(gempic_linalg INTERFACE GEMPIC_USE_MKL=1)
-endif()
-
-if(GEMPIC_USE_LAPACK)
-    target_compile_definitions(gempic_linalg INTERFACE GEMPIC_USE_LAPACK=1)
+  else()
+    # Fallback for older versions / raw library names
+    target_link_libraries(gempic_linalg INTERFACE
+      lapack
+      lapacke
+      blas
+    )
+  endif()
+  target_compile_definitions(gempic_linalg INTERFACE GEMPIC_USE_LAPACK=1)
 endif()
