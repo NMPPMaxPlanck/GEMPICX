@@ -1,4 +1,4 @@
-if (AMReX_FFT)
+if(AMReX_FFT)
   set(FFTSource GEMPIC_FFTFilter.cpp)
 endif()
 

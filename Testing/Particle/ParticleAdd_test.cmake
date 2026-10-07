@@ -6,7 +6,7 @@ execute_process(COMMAND mpirun -np 1 ${TEST_EXECUTABLE}
 if(ERROR_CODE)
   message(FATAL_ERROR "Executable '${TEST_EXECUTABLE}' failed to run!")
 endif()
-if (Python3_FOUND)
+if(Python3_FOUND)
   execute_process(COMMAND ${Python3_EXECUTABLE} ${PYTHON_TEST}
                   RESULT_VARIABLE ERROR_CODE)
   if(ERROR_CODE)
