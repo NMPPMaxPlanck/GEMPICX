@@ -384,10 +384,9 @@ public:
             // loop over particles: add contribution of old particle position to J and push
             auto plo = m_infra.geometry().ProbLoArray();
             auto dxInverse = m_infra.inv_cell_size_array();
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "GEMPIC::RungeKutta::lsrk_stage_push_particle_deposit_j_fully_kinetic()", np,
+                KOKKOS_LAMBDA(long const pp) {
                     // Read out particle data
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> R;
                     AMREX_D_EXPR(R[xDir] = ptd.rdata(ii.m_iposx)[pp],
@@ -474,10 +473,9 @@ public:
             // loop over particles: add contribution of old particle position to J and push
             auto plo = m_infra.geometry().ProbLoArray();
             auto dxInverse = m_infra.inv_cell_size_array();
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "GEMPIC::RungeKutta::lsrk_stage_dk_push_particle_deposit_j_drift_kinetic()", np,
+                KOKKOS_LAMBDA(long const pp) {
                     // Read out particle position
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> R{
                         AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],

@@ -784,7 +784,7 @@ public:
 
                 amrex::ParallelFor(
                     np,
-                    [=, bA = bA, jA = jA, *this] AMREX_GPU_DEVICE(long pp)
+                    [=, bA = bA, jA = jA, *this] AMREX_GPU_DEVICE(long const pp)
                     {
                         // Read out particle position and compute according
                         // splines

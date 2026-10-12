@@ -1813,21 +1813,19 @@ void deposit_particle_density (
             auto const ii = particleSpecies->get_data_indices();
 
             amrex::Array4<amrex::Real> const& pdArr = particleDensity.m_data[particleGrid].array();
-            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> lowerCorner{
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const lowerCorner{
                 compDom.geometry().ProbLoArray()};
 
-            amrex::ParallelFor(np,
-                               [=] AMREX_GPU_DEVICE(long pp)
-                               {
-                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                   AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
-                                                positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
-                                                positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
-                                   SplineBase<degX, degY, degZ> spline(
-                                       positionParticle, lowerCorner,
-                                       compDom.inv_cell_size_array());
-                                   deposit_rho(pdArr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
-                               });
+            Kokkos::parallel_for(
+                "deposit_particle_density", np, KOKKOS_LAMBDA(long const pp) {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                    AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                 positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                 positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+                    SplineBase<degX, degY, degZ> spline(positionParticle, lowerCorner,
+                                                        compDom.inv_cell_size_array());
+                    deposit_rho(pdArr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
+                });
         }
     }
 
@@ -1868,21 +1866,19 @@ void deposit_individual_particle_density (
 
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
 
-            amrex::ParallelFor(np,
-                               [=] AMREX_GPU_DEVICE(long pp)
-                               {
-                                   amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                                   AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
-                                                positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
-                                                positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+            Kokkos::parallel_for(
+                "deposit_individual_particle_density", np, KOKKOS_LAMBDA(long const pp) {
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                    AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                 positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                 positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
 
-                                   SplineBase<degX, degY, degZ> spline(
-                                       positionParticle, plo, compDom.inv_cell_size_array());
+                    SplineBase<degX, degY, degZ> spline(positionParticle, plo,
+                                                        compDom.inv_cell_size_array());
 
-                                   deposit_rho(rhoA, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
-                                   deposit_rho(rhoMassA, spline,
-                                               mass * ptd.rdata(ii.m_iweight)[pp]);
-                               });
+                    deposit_rho(rhoA, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
+                    deposit_rho(rhoMassA, spline, mass * ptd.rdata(ii.m_iweight)[pp]);
+                });
         }
         if (doSync)
         {
@@ -1923,10 +1919,8 @@ void deposit_current_density (
             }
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
 
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "deposit_current_density", np, KOKKOS_LAMBDA(long const pp) {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                     AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                  positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -1987,7 +1981,7 @@ void deposit_rho_weighted_electric_field (
 
             amrex::ParallelFor(
                 np,
-                [=] AMREX_GPU_DEVICE(long pp)
+                [=] AMREX_GPU_DEVICE(long const pp)
                 {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                     AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
@@ -2058,10 +2052,8 @@ void deposit_rho_j_jcrossb_deldots (
             }
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
 
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "deposit_rho_j_jcrossb_deldots", np, KOKKOS_LAMBDA(long const pp) {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                     AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                  positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -2203,10 +2195,8 @@ void deposit_particle_density_gdec (
                 compDom.geometry().ProbLoArray()};
 
             // loop over particles: add contribution of particle position to rho
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "deposit_particle_density_gdec", np, KOKKOS_LAMBDA(long const pp) {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
                     AMREX_D_EXPR(pos[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                  pos[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -2303,10 +2293,8 @@ void deposit_particle_current_gdec (
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
 
             // loop over particles: add contribution of old particle position to J
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "deposit_particle_current_gdec", np, KOKKOS_LAMBDA(long const pp) {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos;
                     AMREX_D_EXPR(pos[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                  pos[yDir] = ptd.rdata(ii.m_iposy)[pp],

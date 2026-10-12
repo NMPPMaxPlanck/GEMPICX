@@ -82,7 +82,7 @@ void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face>& D,
 
 int main (int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
     BL_PROFILE_VAR("main()", pmain);
     // Track git version
     if (git::IsPopulated())
@@ -433,5 +433,5 @@ int main (int argc, char* argv[])
         } // end of "time loop" scope
     }
     BL_PROFILE_VAR_STOP(pmain);
-    amrex::Finalize();
+    Gempic::finalize();
 }

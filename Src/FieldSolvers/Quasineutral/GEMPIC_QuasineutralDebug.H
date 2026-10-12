@@ -52,10 +52,8 @@ void check_energies (
             auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
             auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
 
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "QuasineutralDebug::check_energies", np, KOKKOS_LAMBDA(long const pp) {
                     amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
 
                     *kePtr +=

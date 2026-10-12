@@ -5,6 +5,8 @@
 #ifndef GEMPIC_AMREX_INIT_H_
 #define GEMPIC_AMREX_INIT_H_
 
+#include <Kokkos_Core.hpp>
+
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
@@ -27,6 +29,19 @@ inline void overwrite_amrex_parser_defaults ()
     bool abortOnOutOfGpuMemory = true; // AMReX' default: false
     ppAmrex.queryAdd("abort_on_out_of_gpu_memory", abortOnOutOfGpuMemory);
 }
+
+inline void initialize (int argc, char* argv[])
+{
+    amrex::Initialize(argc, argv);
+    Kokkos::initialize(argc, argv);
+}
+
+inline void finalize ()
+{
+    Kokkos::finalize();
+    amrex::Finalize();
+}
+
 } // namespace Gempic
 
 #endif // GEMPIC_AMREX_INIT_H_

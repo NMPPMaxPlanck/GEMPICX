@@ -33,7 +33,7 @@ using namespace FieldSolvers;
 
 int main (int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
 
     // Linear splines is ok, and lower dimension Hodge is good enough
     constexpr int vdim{3};
@@ -157,45 +157,49 @@ int main (int argc, char* argv[])
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
                 rho.m_data.setVal(0.0);
-                for (auto& particleSpecies : ions)
                 {
-                    amrex::Real charge = particleSpecies->get_charge();
-
-                    for (auto& particleGrid : *particleSpecies)
+                    BL_PROFILE("ElectrostaticMain::particle_loop1");
+                    for (auto& particleSpecies : ions)
                     {
-                        long const np = particleGrid.numParticles();
-                        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-                        auto const ii = particleSpecies->get_data_indices();
+                        amrex::Real charge = particleSpecies->get_charge();
 
-                        amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
-                            infra.geometry().ProbLoArray()};
+                        for (auto& particleGrid : *particleSpecies)
+                        {
+                            long const np = particleGrid.numParticles();
+                            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                            auto const ii = particleSpecies->get_data_indices();
 
-                        amrex::ParallelFor(
-                            np,
-                            [=] AMREX_GPU_DEVICE(long pp)
-                            {
-                                // Local arrays for particle position and velocities
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
-                                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp] +
-                                                     0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
-                                                 ptd.rdata(ii.m_iposy)[pp] +
-                                                     0.5 * dt * ptd.rdata(ii.m_ively)[pp],
-                                                 ptd.rdata(ii.m_iposz)[pp] +
-                                                     0.5 * dt * ptd.rdata(ii.m_ivelz)[pp])};
-                                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = positionParticle[xDir],
-                                             ptd.rdata(ii.m_iposy)[pp] = positionParticle[yDir],
-                                             ptd.rdata(ii.m_iposz)[pp] = positionParticle[zDir]);
+                            amrex::Array4<amrex::Real> const& rhoarr =
+                                rho.m_data[particleGrid].array();
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
+                                infra.geometry().ProbLoArray()};
 
-                                SplineBase<degx, degy, degz> spline(positionParticle, plo,
-                                                                    infra.inv_cell_size_array());
+                            Kokkos::parallel_for(
+                                "Electrostatic::particle_loop1", np, KOKKOS_LAMBDA(long const pp) {
+                                    // Local arrays for particle position and velocities
+                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                        AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp] +
+                                                         0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
+                                                     ptd.rdata(ii.m_iposy)[pp] +
+                                                         0.5 * dt * ptd.rdata(ii.m_ively)[pp],
+                                                     ptd.rdata(ii.m_iposz)[pp] +
+                                                         0.5 * dt * ptd.rdata(ii.m_ivelz)[pp])};
+                                    AMREX_D_EXPR(
+                                        ptd.rdata(ii.m_iposx)[pp] = positionParticle[xDir],
+                                        ptd.rdata(ii.m_iposy)[pp] = positionParticle[yDir],
+                                        ptd.rdata(ii.m_iposz)[pp] = positionParticle[zDir]);
 
-                                deposit_rho(rhoarr, spline, charge * ptd.rdata(ii.m_iweight)[pp]);
-                            });
+                                    SplineBase<degx, degy, degz> spline(
+                                        positionParticle, plo, infra.inv_cell_size_array());
+
+                                    deposit_rho(rhoarr, spline,
+                                                charge * ptd.rdata(ii.m_iweight)[pp]);
+                                });
+                        }
+
+                        particleSpecies->Redistribute();
                     }
-
-                    particleSpecies->Redistribute();
-                }
+                } // profile ElectrostaticMain::particle_loop1
 
                 rho.post_particle_loop_sync();
                 // add neutralizing background charge
@@ -222,92 +226,97 @@ int main (int argc, char* argv[])
 
                 rho.m_data.setVal(0.0);
 
-                for (auto& particleSpecies : ions)
                 {
-                    amrex::Real charge = particleSpecies->get_charge();
-                    amrex::Real chargemass = charge / particleSpecies->get_mass();
-                    amrex::Real a = 0.5 * chargemass * dt * Bz;
-
-                    for (auto& particleGrid : *particleSpecies)
+                    BL_PROFILE("ElectrostaticMain::particle_loop2");
+                    for (auto& particleSpecies : ions)
                     {
-                        long const np = particleGrid.numParticles();
-                        auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
-                        auto const ii = particleSpecies->get_data_indices();
+                        amrex::Real charge = particleSpecies->get_charge();
+                        amrex::Real chargemass = charge / particleSpecies->get_mass();
+                        amrex::Real a = 0.5 * chargemass * dt * Bz;
 
-                        amrex::Array4<amrex::Real> const& rhoarr = rho.m_data[particleGrid].array();
-                        amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
-
-                        // Extract E
-                        for (int cc = 0; cc < vdim; cc++)
+                        for (auto& particleGrid : *particleSpecies)
                         {
-                            eA[cc] = (E.m_data[cc])[particleGrid].array();
-                        }
-                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
-                            infra.geometry().ProbLoArray()};
+                            long const np = particleGrid.numParticles();
+                            auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
+                            auto const ii = particleSpecies->get_data_indices();
 
-                        amrex::ParallelFor(
-                            np,
-                            [=] AMREX_GPU_DEVICE(long pp)
+                            amrex::Array4<amrex::Real> const& rhoarr =
+                                rho.m_data[particleGrid].array();
+                            amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eA;
+
+                            // Extract E
+                            for (int cc = 0; cc < vdim; cc++)
                             {
-                                // Read out particle position
-                                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
-                                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
-                                                 ptd.rdata(ii.m_iposy)[pp],
-                                                 ptd.rdata(ii.m_iposz)[pp])};
-                                amrex::GpuArray<amrex::Real, vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
-                                                                       ptd.rdata(ii.m_ively)[pp],
-                                                                       ptd.rdata(ii.m_ivelz)[pp]};
+                                eA[cc] = (E.m_data[cc])[particleGrid].array();
+                            }
+                            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const plo{
+                                infra.geometry().ProbLoArray()};
 
-                                SplineBase<degx, degy, degz> spline(positionParticle, plo,
-                                                                    infra.inv_cell_size_array());
+                            Kokkos::parallel_for(
+                                "Electrostatic::particle_loop2", np, KOKKOS_LAMBDA(long const pp) {
+                                    // Read out particle position
+                                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
+                                        AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp],
+                                                     ptd.rdata(ii.m_iposy)[pp],
+                                                     ptd.rdata(ii.m_iposz)[pp])};
 
-                                // evaluate the electric field
-                                amrex::GpuArray<amrex::Real, vdim> efield =
-                                    spline.template eval_spline_field<Field::PrimalOneForm>(eA);
+                                    amrex::GpuArray<amrex::Real, vdim> vel{
+                                        ptd.rdata(ii.m_ivelx)[pp], ptd.rdata(ii.m_ively)[pp],
+                                        ptd.rdata(ii.m_ivelz)[pp]};
 
-                                // push v with the electric field over dt/2
-                                for (int i = 0; i < vdim; i++)
-                                {
-                                    vel[i] += 0.5 * dt * chargemass * efield[i];
-                                }
-                                // rotate v with magnetic field over dt
-                                amrex::Real vx = vel[xDir];
-                                amrex::Real vy = vel[yDir];
+                                    SplineBase<degx, degy, degz> spline(
+                                        positionParticle, plo, infra.inv_cell_size_array());
 
-                                // Crank Nicolson update
-                                vel[xDir] = (vx * (1. - a * a) + 2. * a * vy) / (1. + a * a);
-                                vel[yDir] = (vy * (1. - a * a) - 2. * a * vx) / (1. + a * a);
+                                    // evaluate the electric field
+                                    amrex::GpuArray<amrex::Real, vdim> efield =
+                                        spline.template eval_spline_field<Field::PrimalOneForm>(eA);
 
-                                // push v with the electric field over dt/2
-                                for (int i = 0; i < vdim; i++)
-                                {
-                                    vel[i] += 0.5 * dt * chargemass * efield[i];
-                                }
+                                    // push v with the electric field over dt/2
+                                    for (int i = 0; i < vdim; i++)
+                                    {
+                                        vel[i] += 0.5 * dt * chargemass * efield[i];
+                                    }
+                                    // rotate v with magnetic field over dt
+                                    amrex::Real vx = vel[xDir];
+                                    amrex::Real vy = vel[yDir];
 
-                                // update global particle velocities arrays
-                                ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
-                                ptd.rdata(ii.m_ively)[pp] = vel[yDir];
-                                ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
+                                    // Crank Nicolson update
+                                    vel[xDir] = (vx * (1. - a * a) + 2. * a * vy) / (1. + a * a);
+                                    vel[yDir] = (vy * (1. - a * a) - 2. * a * vx) / (1. + a * a);
 
-                                AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] +=
-                                             0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
-                                             ptd.rdata(ii.m_iposy)[pp] +=
-                                             0.5 * dt * ptd.rdata(ii.m_ively)[pp],
-                                             ptd.rdata(ii.m_iposz)[pp] +=
-                                             0.5 * dt * ptd.rdata(ii.m_ivelz)[pp]);
-                                AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
-                                             positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
-                                             positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+                                    // push v with the electric field over dt/2
+                                    for (int i = 0; i < vdim; i++)
+                                    {
+                                        vel[i] += 0.5 * dt * chargemass * efield[i];
+                                    }
 
-                                SplineBase<degx, degy, degz> splineNew(positionParticle, plo,
-                                                                       infra.inv_cell_size_array());
+                                    // update global particle velocities arrays
+                                    ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
+                                    ptd.rdata(ii.m_ively)[pp] = vel[yDir];
+                                    ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
 
-                                deposit_rho(rhoarr, splineNew,
-                                            charge * ptd.rdata(ii.m_iweight)[pp]);
-                            });
+                                    AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] +=
+                                                 0.5 * dt * ptd.rdata(ii.m_ivelx)[pp],
+                                                 ptd.rdata(ii.m_iposy)[pp] +=
+                                                 0.5 * dt * ptd.rdata(ii.m_ively)[pp],
+                                                 ptd.rdata(ii.m_iposz)[pp] +=
+                                                 0.5 * dt * ptd.rdata(ii.m_ivelz)[pp]);
+
+                                    AMREX_D_EXPR(
+                                        positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                        positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                        positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+
+                                    SplineBase<degx, degy, degz> splineNew(
+                                        positionParticle, plo, infra.inv_cell_size_array());
+
+                                    deposit_rho(rhoarr, splineNew,
+                                                charge * ptd.rdata(ii.m_iweight)[pp]);
+                                });
+                        }
+                        particleSpecies->Redistribute();
                     }
-                    particleSpecies->Redistribute();
-                }
+                } // profile ElectrostaticMain::particle_loop2
                 rho.post_particle_loop_sync();
                 // add neutralizing background charge
                 rho += rhoBackground * infra.cell_volume();
@@ -322,5 +331,5 @@ int main (int argc, char* argv[])
             }
         } // end of "time loop" scope
     }
-    amrex::Finalize();
+    Gempic::finalize();
 }
