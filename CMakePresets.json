@@ -162,6 +162,7 @@
             "displayName": "GPU settings for Raven 3D",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
+            "generator": "Ninja",
             "inherits": [
                 "kokkos-compiler-wrapper",
                 "gempic-cuda-cache-vars"
@@ -176,6 +177,7 @@
             "displayName": "GPU settings for Raven 2D",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
+            "generator": "Ninja",
             "inherits": [
                 "kokkos-compiler-wrapper",
                 "gempic-cuda-cache-vars"
@@ -190,6 +192,7 @@
             "displayName": "GPU settings for Raven 1D",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "installDir": "${sourceDir}/install/${presetName}",
+            "generator": "Ninja",
             "inherits": [
                 "kokkos-compiler-wrapper",
                 "gempic-cuda-cache-vars"

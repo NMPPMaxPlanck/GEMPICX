@@ -38,7 +38,7 @@ using namespace TimeLoop;
 
 int main (int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
 
     constexpr int vdim{3};
 
@@ -219,5 +219,5 @@ int main (int argc, char* argv[])
             }
         }
     }
-    amrex::Finalize();
+    Gempic::finalize();
 }

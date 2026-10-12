@@ -36,7 +36,7 @@ using namespace FieldSolvers;
 
 int main (int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
 
     constexpr int vdim{3};
     constexpr int ndata{1};
@@ -196,5 +196,5 @@ int main (int argc, char* argv[])
             amrex::Print() << "\nFINISHED TIME LOOP.\n";
         }
     }
-    amrex::Finalize();
+    Gempic::finalize();
 }

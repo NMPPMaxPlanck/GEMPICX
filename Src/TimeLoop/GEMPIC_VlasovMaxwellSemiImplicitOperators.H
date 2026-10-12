@@ -39,15 +39,15 @@ void push_all_x_using_v_gdec (
             auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
             auto const ii = particleSpecies->get_data_indices();
 
-            amrex::ParallelFor(np,
-                               [=] AMREX_GPU_DEVICE(long pp)
-                               {
-                                   // update particle position
-                                   AMREX_D_EXPR(
-                                       ptd.rdata(ii.m_iposx)[pp] += dt * ptd.rdata(ii.m_ivelx)[pp],
-                                       ptd.rdata(ii.m_iposy)[pp] += dt * ptd.rdata(ii.m_ively)[pp],
-                                       ptd.rdata(ii.m_iposz)[pp] += dt * ptd.rdata(ii.m_ivelz)[pp]);
-                               });
+            Kokkos::parallel_for(
+                "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::push_all_x_using_v_"
+                "gdec()",
+                np, KOKKOS_LAMBDA(long const pp) {
+                    // update particle position
+                    AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] += dt * ptd.rdata(ii.m_ivelx)[pp],
+                                 ptd.rdata(ii.m_iposy)[pp] += dt * ptd.rdata(ii.m_ively)[pp],
+                                 ptd.rdata(ii.m_iposz)[pp] += dt * ptd.rdata(ii.m_ivelz)[pp]);
+                });
         }
         particleSpecies->Redistribute();
     }
@@ -573,10 +573,10 @@ void semi_implicit_gdec_particle_loop (
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{infra.geometry().ProbLoArray()};
             amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxi{infra.inv_cell_size_array()};
 
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::semi_implicit_gdec_"
+                "particle_loop1()",
+                np, KOKKOS_LAMBDA(long const pp) {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{
                         AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
                                      ptd.rdata(ii.m_iposz)[pp])};
@@ -715,10 +715,10 @@ void semi_implicit_gdec_particle_loop (
                 AMREX_D_DECL(infra.geometry().InvCellSize(xDir), infra.geometry().InvCellSize(yDir),
                              infra.geometry().InvCellSize(zDir))};
 
-            amrex::ParallelFor(
-                np,
-                [=] AMREX_GPU_DEVICE(long pp)
-                {
+            Kokkos::parallel_for(
+                "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::semi_implicit_gdec_"
+                "particle_loop2()",
+                np, KOKKOS_LAMBDA(long const pp) {
                     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{
                         AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
                                      ptd.rdata(ii.m_iposz)[pp])};

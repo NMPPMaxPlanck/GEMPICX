@@ -187,7 +187,7 @@ public:
         Forms::DeRhamField<grid, space>& x,
         Forms::DeRhamField<Forms::oppositeGrid<grid>, Forms::oppositeSpace<space>>& rhs,
         Tmarker&& marker,
-        Tfiller&& filler)
+        Tfiller&& filler) const
     {
         amrex::Vector<amrex::IndexType> idxTypeVector;
         amrex::Vector<amrex::MultiFab*> xPointerVector;
@@ -221,7 +221,7 @@ public:
                             HYPRE_Int& ncols,
                             HYPRE_Int* cols,
                             HYPRE_Real* mat,
-                            std::map<int, int>& mapColsGeneral)
+                            std::map<int, int>& mapColsGeneral) const
     {
         if (mapColsGeneral.find(gdtmp) != mapColsGeneral.end()) // element exists already
         {
@@ -249,7 +249,7 @@ public:
                                      HYPRE_Real* mat,
                                      amrex::MultiArray4<amrex::Real const> const& rhoarrs,
                                      amrex::GpuArray<HYPRE_Real, 3> const edgetoface,
-                                     std::map<int, int>& mapCols)
+                                     std::map<int, int>& mapCols) const
     {
         std::array<int, 3> nc = {0, 0, 0};
         switch (hodgeDegree)
@@ -281,7 +281,7 @@ public:
     void solve_curlcurl_plus_field_charge_e (
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
-        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho)
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho) const
     {
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
@@ -342,7 +342,7 @@ public:
                                  HYPRE_Real* mat,
                                  amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> const fac,
                                  amrex::GpuArray<HYPRE_Real, 3> const edgetoface,
-                                 std::map<int, int>& mapCols)
+                                 std::map<int, int>& mapCols) const
     {
         switch (hodgeDegree)
         {
@@ -439,7 +439,7 @@ public:
     void solve_particle_charge_e (
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
-        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
                                                                              s_nRhoCoeffs);
@@ -464,10 +464,8 @@ public:
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
-                amrex::ParallelFor(
-                    np,
-                    [=, this] AMREX_GPU_DEVICE(long pp)
-                    {
+                Kokkos::parallel_for(
+                    "solve_particle_charge_e", np, KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                      positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -526,7 +524,7 @@ public:
     void get_rho_e_weights_at_particle_positions_and_deposit_to_face (
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& eCoeffsA,
         SplineType const& spline,
-        amrex::Real chargeSqrByMassWeight)
+        amrex::Real chargeSqrByMassWeight) const
     {
         constexpr int nWtsXYZ1f[3][3] = {
             {degx, (degx + 1), (degx + 1)},  // number of 1-form x,y,z-field weights in X-direction
@@ -603,7 +601,7 @@ public:
         HYPRE_Int* cols,
         HYPRE_Real* mat,
         std::array<amrex::MultiArray4<amrex::Real>, 3> const& eCoeffsArrs,
-        std::map<int, int>& mapCols)
+        std::map<int, int>& mapCols) const
     {
         // This function contributes (<= nMmCoeffs[ndir]) columns to ncols
         int AMREX_D_DECL(iiTemp{0}, jjTemp{0}, kkTemp{0});
@@ -633,7 +631,7 @@ public:
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
-        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho)
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho) const
     {
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsJcrosscurl(
             b.m_deRham, s_nJcrosscurlCoeffsTotal);
@@ -660,10 +658,8 @@ public:
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
-                amrex::ParallelFor(
-                    np,
-                    [=, this] AMREX_GPU_DEVICE(long pp)
-                    {
+                Kokkos::parallel_for(
+                    "solve_jcrosscurl_plus_field_charge_e", np, KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                      positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -743,7 +739,7 @@ public:
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& eCoeffsA,
         SplineType const& spline,
         amrex::GpuArray<amrex::Real, vdim> const& vel,
-        amrex::Real chargeSqrByMassWeight)
+        amrex::Real chargeSqrByMassWeight) const
     {
         constexpr int nWtsXYZ2f[3][3] = {
             {(degx + 1), degx, degx},  // number of 2-form x,y,z-field weights in X-direction
@@ -900,7 +896,7 @@ public:
         HYPRE_Int* cols,
         HYPRE_Real* mat,
         std::array<amrex::MultiArray4<amrex::Real>, 3> const& eCoeffsArrs,
-        std::map<int, int>& mapCols)
+        std::map<int, int>& mapCols) const
     {
         // This function contributes (<= s_nJcrosscurlCoeffsTotal[ndir]) columns to ncols
         int AMREX_D_DECL(iiTemp{0}, jjTemp{0}, kkTemp{0});
@@ -939,7 +935,7 @@ public:
     void solve_curlcurl_plus_particle_charge_e (
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
-        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
         BL_PROFILE("solve_curlcurl_plus_particle_charge_e()");
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
@@ -965,10 +961,9 @@ public:
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
-                amrex::ParallelFor(
-                    np,
-                    [=, this] AMREX_GPU_DEVICE(long pp)
-                    {
+                Kokkos::parallel_for(
+                    "solve_curlcurl_plus_particle_charge_e()", np,
+                    KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                      positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -1044,7 +1039,7 @@ public:
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
-        amrex::Real jcrosscurlCoeff)
+        amrex::Real jcrosscurlCoeff) const
     {
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
                                                                              s_nRhoCoeffs);
@@ -1071,10 +1066,10 @@ public:
                     eCoeffsAJcrosscurl[cc] = (eCoeffsJcrosscurl.m_data[cc])[particleGrid].array();
                 }
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
-                amrex::ParallelFor(
-                    np,
-                    [=, this] AMREX_GPU_DEVICE(long pp)
-                    {
+
+                Kokkos::parallel_for(
+                    "solve_curlcurl_plus_particle_charge_plus_jcrosscurl_e", np,
+                    KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                      positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -1157,7 +1152,7 @@ public:
 
     // Function for calculating vector potential A begins
     template <typename DeRhamFieldType>
-    void solve_negative_poisson_equation (DeRhamFieldType& rhs, DeRhamFieldType& x)
+    void solve_negative_poisson_equation (DeRhamFieldType& rhs, DeRhamFieldType& x) const
     {
         BL_PROFILE("solve_negative_poisson_equation()");
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
@@ -1254,7 +1249,7 @@ public:
     // Function for calculating non-periodic phi begins
     void solve_nonperiodic_poisson_equation (
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rhs,
-        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& x)
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& x) const
     {
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
@@ -1338,7 +1333,7 @@ public:
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& phi,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
-        amrex::Real dt)
+        amrex::Real dt) const
     {
         BL_PROFILE("push_particles_and_correct_div_j()");
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge> eCorr(phi.m_deRham);
@@ -1363,7 +1358,7 @@ public:
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& b,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& x,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
-        amrex::Real dt)
+        amrex::Real const dt) const
     {
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> phiCoeffsDivGrad(
             b.m_deRham, s_ndivgradphiCoeffs);
@@ -1385,10 +1380,8 @@ public:
                 phiCoeffsAdivgradphi = (phiCoeffsDivGrad.m_data)[pti].array();
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
-                amrex::ParallelFor(
-                    np,
-                    [=, this] AMREX_GPU_DEVICE(long pp)
-                    {
+                Kokkos::parallel_for(
+                    "solve_particle_div_grad_phi", np, KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
                         AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                      positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
@@ -1450,7 +1443,7 @@ public:
     void get_divgrad_phi_weights_at_particle_positions_and_deposit_to_cell (
         amrex::Array4<amrex::Real> const& phiCoeffsA,
         SplineType const& spline,
-        amrex::Real minusdtChargeSqrByMassWeight)
+        amrex::Real const minusdtChargeSqrByMassWeight) const
     {
         constexpr int nWtsXYZ1f[3][3] = {
             {degx, (degx + 1), (degx + 1)},  // number of 1-form x,y,z-field weights in X-direction
@@ -1553,7 +1546,7 @@ public:
                                    HYPRE_Int* cols,
                                    HYPRE_Real* mat,
                                    amrex::MultiArray4<amrex::Real> const& phiCoeffsArrs,
-                                   std::map<int, int>& mapCols)
+                                   std::map<int, int>& mapCols) const
     {
         // This function contributes (<= s_ndivgradphi_Coeffs) columns to ncols
         int AMREX_D_DECL(iiTemp{0}, jjTemp{0}, kkTemp{0});
@@ -1583,7 +1576,7 @@ public:
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
-        amrex::Real dt)
+        amrex::Real const dt) const
     {
         for (int comp = 0; comp < static_cast<int>(vdim); ++comp)
         {
@@ -1612,10 +1605,9 @@ public:
 
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
-                amrex::ParallelFor(
-                    np,
-                    [=, this] AMREX_GPU_DEVICE(long pp)
-                    {
+                Kokkos::parallel_for(
+                    "update_velocities_using_e_and_calculate_deposit_j", np,
+                    KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle{
                             AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
                                          ptd.rdata(ii.m_iposz)[pp])};
@@ -1649,7 +1641,7 @@ public:
     void push_particles_and_correct_javg (
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
-        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
         BL_PROFILE("push_particles_and_correct_javg()");
         std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoVec;
@@ -1726,7 +1718,7 @@ public:
 
     void push_back_by_v_avg (
         std::vector<amrex::GpuArray<amrex::Real, vdim>> const& vAvg,
-        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles)
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
         int index = 0;
         for (auto& particleSpecies : particles)
@@ -1737,23 +1729,22 @@ public:
                 auto const ptd = pti.GetParticleTile().getParticleTileData();
                 auto const ii = particleSpecies->get_data_indices();
 
-                amrex::ParallelFor(np,
-                                   [=] AMREX_GPU_DEVICE(long pp)
-                                   {
-                                       amrex::GpuArray<amrex::Real, vdim> vel{
-                                           ptd.rdata(ii.m_ivelx)[pp], ptd.rdata(ii.m_ively)[pp],
-                                           ptd.rdata(ii.m_ivelz)[pp]};
+                Kokkos::parallel_for(
+                    "push_back_by_v_avg", np, KOKKOS_CLASS_LAMBDA(long const pp) {
+                        amrex::GpuArray<amrex::Real, vdim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                               ptd.rdata(ii.m_ively)[pp],
+                                                               ptd.rdata(ii.m_ivelz)[pp]};
 
-                                       for (int i = 0; i < static_cast<int>(vdim); i++)
-                                       {
-                                           vel[i] -= vAvg[index][i];
-                                       }
+                        for (int i = 0; i < static_cast<int>(vdim); i++)
+                        {
+                            vel[i] -= vAvg[index][i];
+                        }
 
-                                       // Update global particle velocities arrays
-                                       ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
-                                       ptd.rdata(ii.m_ively)[pp] = vel[yDir];
-                                       ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
-                                   });
+                        // Update global particle velocities arrays
+                        ptd.rdata(ii.m_ivelx)[pp] = vel[xDir];
+                        ptd.rdata(ii.m_ively)[pp] = vel[yDir];
+                        ptd.rdata(ii.m_ivelz)[pp] = vel[zDir];
+                    });
             }
             index++;
         }
@@ -1766,7 +1757,7 @@ public:
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt,
-        RotatePushOrder order)
+        RotatePushOrder order) const
     {
         for (auto& particleSpecies : particles)
         {
@@ -1791,10 +1782,9 @@ public:
 
                 amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{m_infra.geometry().ProbLoArray()};
 
-                amrex::ParallelFor(
-                    np,
-                    [=, this] AMREX_GPU_DEVICE(long pp)
-                    {
+                Kokkos::parallel_for(
+                    "update_particle_positions_and_velocities", np,
+                    KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> pos{
                             AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
                                          ptd.rdata(ii.m_iposz)[pp])};
