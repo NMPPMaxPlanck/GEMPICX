@@ -299,7 +299,7 @@ inline auto make_conjugate_gradient (std::shared_ptr<Forms::DeRhamComplex> drc,
 {
     return ConjugateGradient<Rhs, Sol, Operation, PreconditionOp, SolvableOp>(
         drc, std::forward<Operation> (matMultOp), std::forward<PreconditionOp>(precondOp),
-        std::forward<SolvableOp>(solvableOp), absTol, relTol, verbose);
+        std::forward<SolvableOp>(solvableOp), relTol, absTol, verbose);
 }
 
 /// Helper function for template deduction. Allows you to specify Rhs and Sol explicitly, but have
