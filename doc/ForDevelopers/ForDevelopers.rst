@@ -8,3 +8,4 @@ For Developers
    ../latex/CodeStyle
    ../latex/ContributingToDoc
    ../latex/CodeEditorVSCode
+   ../latex/MachineInstructions

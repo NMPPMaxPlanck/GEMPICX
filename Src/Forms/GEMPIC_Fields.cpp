@@ -138,9 +138,9 @@ DiscreteField::DiscreteField(std::string const& label,
     amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> boundaryCondition{
         Impl::to_amrex_geometry(discrete_grid()), amrex::Vector<amrex::BCRec>{bcConf.m_bcRec}, bc};
 
-    m_data = std::make_shared<Impl::DiscreteFieldData>(
+    m_data = std::make_shared<Impl::DiscreteFieldData>(Impl::DiscreteFieldData{
         label, std::move (data), m_discreteGrid, Impl::convert_to_int(dofCategory),
-        std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition);
+        std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition});
     Kokkos::fence();
 }
 
@@ -177,9 +177,9 @@ DiscreteField::DiscreteField(std::string const& label,
     }
     amrex::PhysBCFunct<amrex::GpuBndryFuncFab<Forms::BoundaryCondition>> boundaryCondition{
         Impl::to_amrex_geometry(discrete_grid()), amrex::Vector<amrex::BCRec>{bcConf.m_bcRec}, bc};
-    m_data = std::make_shared<Impl::DiscreteFieldData>(
+    m_data = std::make_shared<Impl::DiscreteFieldData>(Impl::DiscreteFieldData{
         label, std::move (data), m_discreteGrid, Impl::convert_to_int(dofCategory),
-        std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition);
+        std::array<int, AMREX_SPACEDIM>{AMREX_D_DECL(0, 0, 0)}, boundaryCondition});
     Kokkos::fence();
 };
 
