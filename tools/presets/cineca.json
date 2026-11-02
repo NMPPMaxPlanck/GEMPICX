@@ -1,0 +1,74 @@
+{
+    "version": 7,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 22,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "pitagora_dcgp",
+            "binaryDir"      : "${sourceDir}/build/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE"     : "Release",
+                "GEMPIC_USE_CUDA"      : "OFF",
+                "GEMPIC_USE_HIP"       : "OFF",
+                "GEMPIC_BUILD_TESTS"   : "ON",
+                "AMReX_SPACEDIM"       : "3",
+                "CMAKE_CXX_COMPILER"   : "g++",
+                "CMAKE_C_COMPILER"     : "gcc"
+            }
+        },
+        {
+            "name": "pitagora_booster",
+            "binaryDir"      : "${sourceDir}/build/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE"         : "Release",
+                "GEMPIC_USE_CUDA"          : "On",
+                "GEMPIC_BUILD_TESTS"       : "OFF",
+                "GEMPIC_USE_HIP"           : "Off",
+                "AMReX_SPACEDIM"           : "3",
+                "CMAKE_CUDA_ARCHITECTURES" : "90",
+                "Kokkos_ARCH_HOPPER90"     : "On",
+                "CMAKE_CXX_COMPILER"       : "${sourceDir}/third_party/kokkos/bin/nvcc_wrapper",
+                "CMAKE_C_COMPILER"         : "gcc",
+                "CMAKE_CUDA_COMPILER"      : "nvcc"
+            },
+            "environment" : {
+                "LD_LIBRARY_PATH" : "$penv{LD_LIBRARY_PATH}:$penv{LOCATION_OF_LIBCUDA}"
+            }
+        },
+        {
+            "name": "pitagora_booster-debug",
+            "binaryDir"      : "${sourceDir}/build/${presetName}",
+            "generator": "Ninja",
+            "inherits" : [
+                "pitagora_booster"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE"         : "Debug",
+                "GEMPIC_BUILD_TESTS"       : "ON",
+                "GEMPIC_DEBUG_MESSAGES"    : "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name"                        : "pitagora_dcgp",
+            "configurePreset"             : "pitagora_dcgp",
+            "inheritConfigureEnvironment" : true
+        },
+        {
+            "name"                        : "pitagora_booster",
+            "configurePreset"             : "pitagora_booster",
+            "inheritConfigureEnvironment" : true
+        },
+        {
+            "name"                        : "pitagora_booster-debug",
+            "configurePreset"             : "pitagora_booster-debug",
+            "inheritConfigureEnvironment" : true
+        }
+    ]
+}

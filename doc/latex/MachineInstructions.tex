@@ -1,0 +1,116 @@
+\documentclass[11pt]{article}
+\textwidth 15.9cm
+\textheight 23. cm
+\addtolength{\oddsidemargin}{-11.5mm}
+\addtolength{\evensidemargin}{-11.5mm}
+\addtolength{\topmargin}{-19.0mm}
+
+%\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage[bbgreekl]{mathbbol}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,urlcolor=cyan]{hyperref}%,linkcolor=green]{hyperref}
+\usepackage{url}
+\usepackage[numbers,square]{natbib}
+\usepackage{multirow}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usetikzlibrary{arrows,matrix}
+\usepackage{bbm}
+\usepackage{authblk}
+\usepackage{subcaption}
+\usepackage{xstring}
+\usepackage{xparse}
+\usepackage{comment}
+\renewcommand{\Affilfont}{\footnotesize}
+
+\usepackage{stmaryrd}
+\usepackage{comment}
+\usepackage{showlabels}
+\usepackage{soul}
+\usepackage{listings}
+
+\usetikzlibrary{calc,patterns,shapes.geometric}
+\usetikzlibrary{arrows,shapes,positioning}
+\usetikzlibrary{decorations.markings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{decorations.text,decorations.shapes}
+
+%%%%%%%% MACROS
+\input{GempicLatexMacros}
+
+\title{Machine-specific instructions for GEMPICX}
+
+\author[1]{The Gempic development team}
+\affil[1]{Max-Planck-Institut f\"ur Plasmaphysik, Garching, Germany}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    This document contains building/installation instructions for machines
+    where the default GEMPICX settings do not work.
+\end{abstract}
+
+\tableofcontents
+
+\section{Machines}
+
+\subsection{CINECA --- Pitagora}
+
+As of 2026-10-13, we need a custom spack environment in order to compile/run
+GEMPICX on the pitagora hosted by CINECA.
+Concretely, GEMPICX requires C++20, and gcc 12 does not support this
+version of the standard; later
+versions of gcc are available only through \texttt{spack}.
+
+You may use \texttt{spack} by loading the appropriate module:
+\begin{lstlisting}[language=bash]
+module purge
+module load spack cmake
+\end{lstlisting}
+
+After setting up the \texttt{spack} environment, you should copy the file
+\texttt{tools/presets/cineca.json} to \texttt{CMakeUserPresets.json},
+and then configure/build using the \texttt{pitagora\_booster} preset.
+Please see section \ref{sec:spack} for the rest of the (generic)
+\texttt{spack} setup/usage instructions.
+
+\section{Use of non-default toolchains}
+
+\subsection{\texttt{spack}} \label{sec:spack}
+
+This version of the instructions is valid as of 2026-10-13, and it was
+tested on the "pitagora" machine hosted by CINECA.
+
+A spack environment should be set up as follows:
+\begin{lstlisting}[language=bash]
+spack env create .local/gcc13-spack
+spack env activate .local/gcc13-spack
+spack install --add gcc@13.2.0
+spack compiler find .local/gcc13-spack/.spack-env/view/bin
+spack install --add openmpi@5.0.3 +cuda +lustre fabrics=auto
+spack install --add hdf5 +mpi
+\end{lstlisting}
+
+After the installation, one should make a note of the location of the
+file \texttt{libcuda.so.1}:
+\begin{lstlisting}[language=bash]
+cd .local/gcc13-spack
+find . -name libcuda.so.1
+\end{lstlisting}
+This path (full absolute path) is referred to below as
+\texttt{LOCATION\_OF\_LIBCUDA}.
+
+In any future session, GEMPICX can be compiled as follows:
+\begin{lstlisting}[language=bash]
+spack env activate .local/gcc13-spack
+export LOCATION_OF_LIBCUDA=<location of libcuda.so.1>
+cmake --preset <desired preset>
+cmake --build --preset <desired preset>
+\end{lstlisting}
+
+\end{document}
