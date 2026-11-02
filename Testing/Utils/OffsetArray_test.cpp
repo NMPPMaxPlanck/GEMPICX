@@ -9,6 +9,7 @@
 
 #include <Kokkos_Core.hpp>
 
+#include "GEMPIC_Config.H"
 #include "GEMPIC_OffsetArray.H"
 
 using Gempic::Utils::OffsetArray;
@@ -128,3 +129,26 @@ TEST(OffsetArray, IsTriviallyCopyable)
                   "OffsetArray must be trivially copyable for GPU use.");
     SUCCEED();
 }
+
+void kernel_test ()
+{
+    std::array<int, 6> src{1, 2, 3, 4, 5, 6};
+    OffsetArray<int, 6> arr{-3, src};
+    int sum{}, idxSum{};
+    int iterations{11};
+    Kokkos::parallel_reduce(
+        "SpaceArrayGPUAccess", 11,
+        KOKKOS_LAMBDA(size_t /*i*/, int& lSum, int& lIdxSum) {
+            for (auto [idx, val] : arr)
+            {
+                lSum += val;
+                lIdxSum += idx;
+            }
+        },
+        Kokkos::Sum<int>(sum), Kokkos::Sum<int>(idxSum));
+
+    EXPECT_EQ(sum, 21 * iterations);
+    EXPECT_EQ(idxSum, -3 * iterations);
+}
+
+TEST(OffsetArray, KernelAccessibility) { kernel_test(); }
