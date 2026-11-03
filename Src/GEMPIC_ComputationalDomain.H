@@ -55,7 +55,6 @@ public:
 
     //! @cond EXCLUDE_API_DOC
     DiscreteAxis() = default;
-    AMREX_GPU_HOST_DEVICE
     DiscreteAxis(amrex::Real domainLo,
                  amrex::Real domainHi,
                  int nCells,
