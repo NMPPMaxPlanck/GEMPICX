@@ -563,8 +563,8 @@ void linear_combination(DiscreteVectorField& result,
                         amrex::Real b,
                         DiscreteVectorField const& field2);
 
-amrex::Real dot_product(DiscreteField& a, DiscreteField& b);
-amrex::Real dot_product(DiscreteVectorField& a, DiscreteVectorField& b);
+amrex::Real dot_product(DiscreteField const& a, DiscreteField const& b);
+amrex::Real dot_product(DiscreteVectorField const& a, DiscreteVectorField const& b);
 
 bool is_nan(DiscreteField&);
 std::array<bool, 3> is_nan(DiscreteVectorField&);

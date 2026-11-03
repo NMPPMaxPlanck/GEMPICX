@@ -747,14 +747,14 @@ void linear_combination (DiscreteVectorField& result,
     }
 }
 
-amrex::Real dot_product (DiscreteField& a, DiscreteField& b)
+amrex::Real dot_product (DiscreteField const& a, DiscreteField const& b)
 {
     auto mask =
         amrex::OwnerMask(a.multi_fab(), Gempic::Impl::to_amrex_periodicity(a.discrete_grid()));
     return amrex::MultiFab::Dot(*mask, a.multi_fab(), 0, b.multi_fab(), 0, 1, 0);
 }
 
-amrex::Real dot_product (DiscreteVectorField& a, DiscreteVectorField& b)
+amrex::Real dot_product (DiscreteVectorField const& a, DiscreteVectorField const& b)
 {
     amrex::Real result = 0;
     for (Direction dir : {Direction::xDir, Direction::yDir, Direction::zDir})

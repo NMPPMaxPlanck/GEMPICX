@@ -177,6 +177,7 @@ void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>&
     grad(m_primalEdge, phi);
     m_primalEdge *= -1; // E = -grad phi
     m_cgHodge->solve(m_dualFace, m_primalEdge);
+    m_dualFace.fill_boundary(); // the dual div reads ghost cells
     div(rho, m_dualFace);
 
     // Sum of rhs needs to be 0 if domain is periodic in all directions

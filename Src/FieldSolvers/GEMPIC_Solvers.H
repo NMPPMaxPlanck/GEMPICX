@@ -30,11 +30,16 @@ public:
  *
  * User must provide an operation that takes x and yields b (e.g. a matrix multiplication)
  * Additionally, one can provide
- * - a precondition operation that provides an initial guess for x based on b
+ * - a precondition operation that applies z = P^{-1} r to a residual r (used only by
+ *   precond_solve(), solve() ignores it)
  * - a function that checks whether the system is solvable for a given b
  * - relative tolerance for the solver
  * - absolute tolerance for the solver
  * - verbosity level
+ *
+ * Rhs and Sol may be different types. They must support copy, linear_combination and dot_product
+ * between each other. The solver does not fill ghost cells of the solution; callers that read
+ * ghosts of x afterwards must call fill_boundary() themselves.
  */
 template <class Rhs,
           class Sol,
@@ -54,6 +59,17 @@ private:
     int m_convergedAtIter;
     amrex::Real m_convergedWithTol;
 
+    static_assert(std::is_invocable_r_v<void, Operation, Rhs&, Sol const&>,
+                  "Given operator must compute A*x (signature void(Rhs&, Sol const&), meaning "
+                  "void(A*x, x))");
+    static_assert(std::is_null_pointer_v<PreconditionOp> ||
+                      std::is_invocable_r_v<void, PreconditionOp, Sol&, Rhs&>,
+                  "Given precondition operation must follow the precondition signature "
+                  "(void(Sol&, Rhs&))");
+    static_assert(std::is_null_pointer_v<SolvableOp> ||
+                      std::is_invocable_r_v<void, SolvableOp, Rhs const&>,
+                  "Given solvability check must follow the signature void(Rhs const&)");
+
 public:
     Operation m_operator;
 
@@ -64,34 +80,61 @@ public:
                       amrex::Real relTol = 1e-10,
                       amrex::Real absTol = 1e-12,
                       int verbose = 0) :
-        m_precondOp{std::move(precondOp)},
-        m_solvableOp{std::move(solvableOp)},
-        m_residual(drc),
-        m_ap(drc),
-        m_p(drc),
-        m_z(drc),
-        m_relTol{relTol},
-        m_absTol{absTol},
-        m_operator{std::move(matMultOp)}
-
+        ConjugateGradient(Rhs(drc),
+                          Rhs(drc),
+                          Sol(drc),
+                          Sol(drc),
+                          std::move(matMultOp),
+                          std::move(precondOp),
+                          std::move(solvableOp),
+                          relTol,
+                          absTol,
+                          verbose)
     {
-        m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
-        static_assert(
-            std::is_invocable_r_v<void, Operation, Rhs&, Sol&>,
-            "Given operator must compute A*x (signature void(Rhs&, Sol&), meaning void(A*x, x))");
-        static_assert(std::is_null_pointer_v<PreconditionOp> ||
-                          std::is_invocable_r_v<void, PreconditionOp, Sol&, Rhs&>,
-                      "Given precondition operation must follow the precondition signature "
-                      "(void(Sol&, Rhs&))");
-        static_assert(
-            std::is_null_pointer_v<SolvableOp> || std::is_invocable_r_v<void, SolvableOp, Rhs&>,
-            "Given average_b_zero operation must follow the signature void(Rhs&)");
     }
 
     /**
-     * Solves the linear system using Conjugate Gradient method.
+     * Constructor for field types that are not built from a DeRhamComplex. The work fields are
+     * allocated by the caller and must not share memory with each other or with the fields passed
+     * to solve() (copies of DiscreteField are shallow).
      *
-     * @param[out] x The solution vector
+     * @param residual, ap work fields of the right-hand side type
+     * @param p, z work fields of the solution type
+     * @param matMultOp operation computing A x, signature void(Rhs& ax, Sol const& x)
+     * @param precondOp preconditioner z = P^{-1} r, signature void(Sol& z, Rhs& r) (only used by
+     * precond_solve())
+     * @param solvableOp solvability check, signature void(Rhs const& b)
+     * @param relTol relative tolerance (to the norm of b)
+     * @param absTol absolute tolerance
+     * @param verbose verbosity level (at least the global GEMPIC verbosity)
+     */
+    ConjugateGradient(Rhs residual,
+                      Rhs ap,
+                      Sol p,
+                      Sol z,
+                      Operation&& matMultOp,
+                      PreconditionOp&& precondOp = nullptr,
+                      SolvableOp&& solvableOp = nullptr,
+                      amrex::Real relTol = 1e-10,
+                      amrex::Real absTol = 1e-12,
+                      int verbose = 0) :
+        m_precondOp{std::move(precondOp)},
+        m_solvableOp{std::move(solvableOp)},
+        m_residual(std::move(residual)),
+        m_ap(std::move(ap)),
+        m_p(std::move(p)),
+        m_z(std::move(z)),
+        m_relTol{relTol},
+        m_absTol{absTol},
+        m_operator{std::move(matMultOp)}
+    {
+        m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
+    }
+
+    /**
+     * Solves the linear system using Conjugate Gradient method. PreconditionOp is not used.
+     *
+     * @param[inout] x The solution vector (on input: the initial guess)
      * @param b The right-hand side vector
      */
     void solve (Sol& x, Rhs const& b) override
@@ -165,9 +208,7 @@ public:
         {
             m_convergedAtIter = m_maxiter;
             m_convergedWithTol = sqrt(normResSquareNew);
-            ;
         }
-        x.fill_boundary();
     }
 
     /**
@@ -175,7 +216,7 @@ public:
      * Does not work well with the AMReX solver as a preconditioner (at least in periodic domain).
      * Can be useful later with a better preconditioner (from HYPRE for example)
      *
-     * @param[out] x The solution vector
+     * @param[out] x The solution vector (on input: the initial guess)
      * @param b The right-hand side vector
      */
     void precond_solve (Sol& x, Rhs const& b)
@@ -194,6 +235,8 @@ public:
         amrex::Real normResSquare = dot_product(m_residual, m_residual);
         if ((sqrt(normResSquare) < m_relTol * sqrt(normbSquare)) || sqrt(normResSquare) < m_absTol)
         {
+            m_convergedAtIter = 0;
+            m_convergedWithTol = sqrt(normResSquare);
             return;
         }
 
@@ -252,7 +295,6 @@ public:
             m_convergedAtIter = m_maxiter;
             m_convergedWithTol = sqrt(normResSquare);
         }
-        x.fill_boundary();
     }
 
     inline void cg_mat_mul (Rhs& mResidual, Sol const& x) { m_operator(mResidual, x); }
