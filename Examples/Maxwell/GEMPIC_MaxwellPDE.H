@@ -197,6 +197,7 @@ public:
         m_disc.m_fieldsTmpIm->fill_boundary();
         m_maxwell.rhs_op(m_rhs, m_disc.m_fieldsTmpIm->m_e, m_disc.m_fieldsTmpIm->m_b, dtLoc);
         m_myCg2->solve(m_disc.m_fieldsNew->m_e, m_rhs);
+        m_disc.m_fieldsNew->m_e.fill_boundary(); // CG does not fill ghost cells
 
         if (Gempic::Utils::Verbosity::level() > 0)
         {
