@@ -2,6 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_FFT.H>
 #include <AMReX_GpuComplex.H>
 
@@ -19,7 +21,7 @@ VlasovMaxwellSemiImplicitFFTSolver::VlasovMaxwellSemiImplicitFFTSolver(
     int const hodgeDegree) :
     m_compDom{compDom}, m_deRham{deRham}, m_hodgeDegree{hodgeDegree}
 {
-    BL_PROFILE(
+    Kokkos::Profiling::ScopedRegion region(
         "Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::"
         "VlasovMaxwellSemiImplicitFFTSolver()");
 
@@ -35,7 +37,8 @@ VlasovMaxwellSemiImplicitFFTSolver::VlasovMaxwellSemiImplicitFFTSolver(
 
 void VlasovMaxwellSemiImplicitFFTSolver::setup_eigenvalues ()
 {
-    BL_PROFILE("Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::setup_eigenvalues()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::setup_eigenvalues()");
 
     setup_derivative_eigenvalues();
     setup_mass_matrix_eigenvalues();
@@ -282,7 +285,8 @@ void VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step (
     DeRhamField<Grid::primal, Space::face>& B,
     amrex::Real dt)
 {
-    BL_PROFILE("Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::solve_implicit_step()");
 
     // Create temporary fields for the solve
     DeRhamField<Grid::primal, Space::edge> eOld(m_deRham);
@@ -470,7 +474,8 @@ void VlasovMaxwellSemiImplicitFFTSolver::setup_rhs (DeRhamField<Grid::dual, Spac
                                                    DeRhamField<Grid::primal, Space::face>& B,
                                                    amrex::Real dt)
 {
-    BL_PROFILE("Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::setup_rhs()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::setup_rhs()");
 
     // This implements the RHS calculation from rhs_op1 in VlasovMaxwellSemiImplicit.cpp
     DeRhamField<Grid::dual, Space::edge> bstar(m_deRham);
@@ -492,7 +497,8 @@ void VlasovMaxwellSemiImplicitFFTSolver::update_magnetic_field (
     DeRhamField<Grid::primal, Space::face>& B,
     amrex::Real dt)
 {
-    BL_PROFILE("Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::update_magnetic_field()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::FieldSolvers::VlasovMaxwellSemiImplicitFFTSolver::update_magnetic_field()");
 
     // Crank-Nicolson update: B^{n+1} = B^n - dt/2 * curl(E^n) - dt/2 * curl(E^{n+1})
     add_dt_curl(B, eOld, -0.5 * dt);

@@ -2,6 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_CustomDiagnosticStrategies.H"
 
 //STRATEGY: free registry function + public static API on the class
@@ -38,7 +40,8 @@ CustomOutputProcessor::CustomOutputProcessor(Io::AnyFieldPtr const& dataSrc,
                                              amrex::IntVect const crseRatio) :
     ComputeDiagOutputProcessor{dataSrc.n_comp(), crseRatio}, m_dataSrc(&dataSrc)
 {
-    BL_PROFILE("ComputeDiagOutputProcessor::ComputeDiagOutputProcessor()");
+    Kokkos::Profiling::ScopedRegion region(
+        "ComputeDiagOutputProcessor::ComputeDiagOutputProcessor()");
 }
 
 /** \brief Overridable custom operator that should store results in mfDst starting from component
@@ -82,7 +85,8 @@ CustomOperatorOutputProcessor::CustomOperatorOutputProcessor(Io::AnyFieldPtr con
                                                              Impl::CustomOperatorType const& f) :
     CustomOutputProcessor{dataSrc, crseRatio}, m_f{f}
 {
-    BL_PROFILE("CustomOperatorOutputProcessor::CustomOperatorOutputProcessor()");
+    Kokkos::Profiling::ScopedRegion region(
+        "CustomOperatorOutputProcessor::CustomOperatorOutputProcessor()");
 
     amrex::IntVect const indexTypeSrc = dataSrc.box_array().ixType().toIntVect();
     AMREX_D_TERM(m_ishift = indexTypeSrc[xDir];, m_jshift = indexTypeSrc[yDir];
@@ -91,7 +95,7 @@ CustomOperatorOutputProcessor::CustomOperatorOutputProcessor(Io::AnyFieldPtr con
 
 void CustomOperatorOutputProcessor::operator ()(amrex::MultiFab& mfDst, int /*dcomp*/) const
 {
-    BL_PROFILE("CustomOperatorOutputProcessor::operator()");
+    Kokkos::Profiling::ScopedRegion region("CustomOperatorOutputProcessor::operator()");
     int const nComps = this->m_dataSrc->n_comp();
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() == nComps,
                                       "Incompatible space size in destination multifab");
@@ -152,7 +156,8 @@ HighResSubcellOutputProcessor::HighResSubcellOutputProcessor(Io::AnyFieldPtr con
                                                              amrex::IntVect const crseRatio) :
     CustomOutputProcessor{dataSrc, crseRatio}
 {
-    BL_PROFILE("HighResSubcellOutputProcessor::HighResSubcellOutputProcessor()");
+    Kokkos::Profiling::ScopedRegion region(
+        "HighResSubcellOutputProcessor::HighResSubcellOutputProcessor()");
     Io::Parameters paramsIO("FullDiagnostics.HighResSubcellOutputProcessor");
     amrex::IntVect sNSubCellTempvec;
     paramsIO.get("nSubCells", sNSubCellTempvec);
@@ -209,7 +214,7 @@ void HighResSubcellOutputProcessor::interpolate_any_field_to_multifab (amrex::Mu
 
 void HighResSubcellOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dstComp) const
 {
-    BL_PROFILE("HighResSubcellOutputProcessor::operator()");
+    Kokkos::Profiling::ScopedRegion region("HighResSubcellOutputProcessor::operator()");
     mfDst.setVal(0.0);
     this->interpolate_any_field_to_multifab(mfDst, dstComp);
 }

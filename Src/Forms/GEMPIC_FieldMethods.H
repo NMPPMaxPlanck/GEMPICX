@@ -5,6 +5,8 @@
 #ifndef GEMPIC_FIELDMETHODS_H_
 #define GEMPIC_FIELDMETHODS_H_
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_Interpolation.H"
 #include "GEMPIC_NumericalIntegrationDifferentiation.H"
@@ -266,7 +268,7 @@ inline void projection (amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 
 template <OneTwoFormC OneTwoFormOut, OneTwoFormC OneTwoFormIn>
 inline void copy (OneTwoFormOut& fieldOut, OneTwoFormIn const& fieldIn)
 {
-    BL_PROFILE("DeRhamField<isOneOrTwoForm>::copy");
+    Kokkos::Profiling::ScopedRegion region("DeRhamField<isOneOrTwoForm>::copy");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -278,7 +280,7 @@ inline void copy (OneTwoFormOut& fieldOut, OneTwoFormIn const& fieldIn)
 template <ZeroThreeFormC ZeroThreeFormOut, ZeroThreeFormC ZeroThreeFormIn>
 inline void copy (ZeroThreeFormOut& fieldOut, ZeroThreeFormIn const& fieldIn)
 {
-    BL_PROFILE("DeRhamField<isZeroOrThreeForm>::copy");
+    Kokkos::Profiling::ScopedRegion region("DeRhamField<isZeroOrThreeForm>::copy");
     auto nGhost = fieldIn.m_deRham->get_n_ghost();
     amrex::Copy(fieldOut.m_data, fieldIn.m_data, 0, 0, fieldIn.m_data.nComp(), nGhost);
 }
@@ -299,7 +301,7 @@ inline void linear_combination (ZeroThreeForm1& result,
                                 amrex::Real b,
                                 ZeroThreeForm2 const& field2)
 {
-    BL_PROFILE("Gempic::Forms::linearCombination()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::linearCombination()");
     auto nGhost = result.m_deRham->get_n_ghost();
     amrex::LinComb(result.m_data, a, field1.m_data, 0, b, field2.m_data, 0, 0,
                    field1.m_data.nComp(), nGhost);
@@ -321,7 +323,7 @@ inline void linear_combination (OneTwoForm1& result,
                                 amrex::Real b,
                                 OneTwoForm2 const& field2)
 {
-    BL_PROFILE("Gempic::Forms::linearCombination()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::linearCombination()");
     auto nGhost = result.m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -341,7 +343,7 @@ inline void linear_combination (OneTwoForm1& result,
 template <ZeroThreeFormC ZeroThreeForm1, ZeroThreeFormC ZeroThreeForm2>
 inline void multiply_and_add (ZeroThreeForm1& field1, amrex::Real a, ZeroThreeForm2 const& field2)
 {
-    BL_PROFILE("Gempic::Forms::multiply_and_add()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::multiply_and_add()");
     auto nGhost = field1.m_deRham->get_n_ghost();
     mult_and_add(field1.m_data, a, field2.m_data, 0, 0, field2.m_data.nComp(), nGhost);
 }
@@ -356,7 +358,7 @@ inline void multiply_and_add (ZeroThreeForm1& field1, amrex::Real a, ZeroThreeFo
 template <OneTwoFormC OneTwoForm1, OneTwoFormC OneTwoForm2>
 inline void multiply_and_add (OneTwoForm1& field1, amrex::Real a, OneTwoForm2 const& field2)
 {
-    BL_PROFILE("Gempic::Forms::multiply_and_add()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::multiply_and_add()");
     auto nGhost = field1.m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -432,7 +434,7 @@ inline amrex::Real dot_product (ZeroThreeForm1 const& field1, ZeroThreeForm2 con
 template <PrimalTwoFormC PrimalTwoFormType, PrimalOneFormC PrimalOneFormType>
 void curl (PrimalTwoFormType& twoForm, PrimalOneFormType const& oneForm)
 {
-    BL_PROFILE("Gempic::Forms::curl(primal,face,primal,edge)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::curl(primal,face,primal,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -526,7 +528,7 @@ void curl (PrimalTwoFormType& twoForm, PrimalOneFormType const& oneForm)
 template <PrimalTwoFormC PrimalTwoFormType, PrimalOneFormC PrimalOneFormType>
 void add_dt_curl (PrimalTwoFormType& twoForm, PrimalOneFormType const& oneForm, amrex::Real dt)
 {
-    BL_PROFILE("Gempic::Forms::add_dt_curl(primal,face,primal,edge)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::add_dt_curl(primal,face,primal,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -619,7 +621,7 @@ void add_dt_curl (PrimalTwoFormType& twoForm, PrimalOneFormType const& oneForm, 
 template <DualTwoFormC DualTwoFormType, DualOneFormC DualOneFormType>
 void curl (DualTwoFormType& twoForm, DualOneFormType const& oneForm)
 {
-    BL_PROFILE("Gempic::Forms::curl(dual,face,dual,edge)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::curl(dual,face,dual,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -716,7 +718,7 @@ void curl (DualTwoFormType& twoForm, DualOneFormType const& oneForm)
 template <DualTwoFormC DualTwoFormType, DualOneFormC DualOneFormType>
 void add_dt_curl (DualTwoFormType& twoForm, DualOneFormType const& oneForm, amrex::Real dt)
 {
-    BL_PROFILE("Gempic::Forms::add_dt_curl(dual,face,dual,edge)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::add_dt_curl(dual,face,dual,edge)");
     int nComps{oneForm.m_data[xDir].nComp()};
     // Component-0 of curl
     for (amrex::MFIter mfi(twoForm.m_data[xDir]); mfi.isValid(); ++mfi)
@@ -812,7 +814,7 @@ void add_dt_curl (DualTwoFormType& twoForm, DualOneFormType const& oneForm, amre
 template <PrimalOneFormC PrimalOneFormType, PrimalZeroFormC PrimalZeroFormType>
 void grad (PrimalOneFormType& oneForm, PrimalZeroFormType const& zeroForm)
 {
-    BL_PROFILE("Gempic::Forms::grad(primal,edge,primal,node)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::grad(primal,edge,primal,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -879,7 +881,7 @@ void grad (PrimalOneFormType& oneForm, PrimalZeroFormType const& zeroForm)
 template <PrimalOneFormC PrimalOneFormType, PrimalZeroFormC PrimalZeroFormType>
 void a_times_grad (PrimalOneFormType& oneForm, PrimalZeroFormType const& zeroForm, amrex::Real a)
 {
-    BL_PROFILE("Gempic::Forms::a_times_grad(primal,edge,primal,node)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::a_times_grad(primal,edge,primal,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -949,7 +951,7 @@ void a_times_grad (PrimalOneFormType& oneForm, PrimalZeroFormType const& zeroFor
 template <DualOneFormC DualOneFormType, DualZeroFormC DualZeroFormType>
 void grad (DualOneFormType& oneForm, DualZeroFormType const& zeroForm)
 {
-    BL_PROFILE("Gempic::Forms::grad(dual,edge,dual,node)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::grad(dual,edge,dual,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1017,7 +1019,7 @@ void grad (DualOneFormType& oneForm, DualZeroFormType const& zeroForm)
 template <DualOneFormC DualOneFormType, DualZeroFormC DualZeroFormType>
 void a_times_grad (DualOneFormType& oneForm, DualZeroFormType const& zeroForm, amrex::Real a)
 {
-    BL_PROFILE("Gempic::Forms::a_times_grad(dual,edge,dual,node)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::a_times_grad(dual,edge,dual,node)");
     int nComps{zeroForm.m_data.nComp()};
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1088,7 +1090,7 @@ void a_times_grad (DualOneFormType& oneForm, DualZeroFormType const& zeroForm, a
 template <PrimalThreeFormC PrimalThreeFormType, PrimalTwoFormC PrimalTwoFormType>
 void div (PrimalThreeFormType& threeForm, PrimalTwoFormType const& twoForm)
 {
-    BL_PROFILE("Gempic::Forms::div(primal,cell,primal,face)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::div(primal,cell,primal,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
@@ -1134,7 +1136,7 @@ void div (PrimalThreeFormType& threeForm, PrimalTwoFormType const& twoForm)
 template <DualThreeFormC DualThreeFormType, DualTwoFormC DualTwoFormType>
 void div (DualThreeFormType& threeForm, DualTwoFormType const& twoForm)
 {
-    BL_PROFILE("Gempic::Forms::div(dual,cell,dual,face)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::div(dual,cell,dual,face)");
     int nComps{twoForm.m_data[xDir].nComp()};
     for (amrex::MFIter mfi(threeForm.m_data); mfi.isValid(); ++mfi)
     {
@@ -1172,7 +1174,8 @@ void div (DualThreeFormType& threeForm, DualTwoFormType const& twoForm)
 template <int intDegree>
 auto inline compute_v0_mass_matrix_1d_stencil_gdec()
 {
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_V0_mass_matrix_1d_stencil()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::FDDeRhamComplex::compute_V0_mass_matrix_1d_stencil()");
     // Select stencil according to degree
 
     static constexpr int massStencilLength{2 * intDegree + 1};
@@ -1241,7 +1244,8 @@ template <int intDegree>
 std::array<std::array<std::array<amrex::Real, intDegree + 1>, intDegree + 1>, 2 * intDegree + 1>
 compute_v0_weighted_mass_matrix_1d_stencil_gdec ()
 {
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_v0_weighted_mass_matrix_1d_stencil_gdec()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::FDDeRhamComplex::compute_v0_weighted_mass_matrix_1d_stencil_gdec()");
     // Select stencil according to degree
     static constexpr int massStencilLength{2 * intDegree + 1};
     static constexpr int nQuadraturePoints{intDegree + 1};
@@ -1306,7 +1310,8 @@ compute_v0_weighted_mass_matrix_1d_stencil_gdec ()
 template <int intDegree>
 auto inline compute_v1_mass_matrix_1d_stencil_gdec()
 {
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_v1_mass_matrix_1d_stencil_gdec()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::FDDeRhamComplex::compute_v1_mass_matrix_1d_stencil_gdec()");
     // Select stencil according to degree
 
     constexpr int degree{intDegree - 1};
@@ -1375,7 +1380,8 @@ template <int intDegree>
 std::array<std::array<std::array<amrex::Real, intDegree + 1>, intDegree>, 2 * intDegree - 1>
 compute_v1_weighted_mass_matrix_1d_stencil_gdec ()
 {
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::compute_v1_weighted_mass_matrix_1d_stencil_gdec()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::FDDeRhamComplex::compute_v1_weighted_mass_matrix_1d_stencil_gdec()");
     // Select stencil according to degree
     constexpr int degree{intDegree - 1};
     constexpr int massStencilLength{2 * intDegree - 1};
@@ -1447,7 +1453,7 @@ compute_v1_weighted_mass_matrix_1d_stencil_gdec ()
 template <int degree, HodgeScheme scheme>
 inline auto get_hodge_stencils ()
 {
-    BL_PROFILE("Gempic::Forms::get_hodge_stencils()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::get_hodge_stencils()");
     if constexpr (scheme == HodgeScheme::FDHodge)
     {
         constexpr unsigned int stencilLength{degree - 1};
@@ -1712,7 +1718,7 @@ inline void apply_1d_hodge (amrex::Geometry geom,
                             amrex::MultiFab const& multiInput,
                             amrex::MultiFab& multiOutput)
 {
-    BL_PROFILE("Gempic::Forms::apply_1d_hodge()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::apply_1d_hodge()");
     int nComps{multiInput.nComp()};
     for (amrex::MFIter mfi(multiOutput); mfi.isValid(); ++mfi)
     {
@@ -1792,7 +1798,7 @@ void hodge_operator (typename DRC::Primal0Form& zeroForm,
                      typename DRC::Dual3Form const& threeForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(dual,cell,primal,node,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(dual,cell,primal,node,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -1841,7 +1847,7 @@ void hodge_operator (typename DRC::Dual0Form& zeroForm,
                      typename DRC::Primal3Form const& threeForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(primal,cell,dual,node,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(primal,cell,dual,node,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -1890,7 +1896,7 @@ void hodge_operator (typename DRC::Primal1Form& oneForm,
                      typename DRC::Dual2Form const& twoForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(dual,face,primal,edge,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(dual,face,primal,edge,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -1958,7 +1964,7 @@ void hodge_operator (typename DRC::Dual1Form& oneForm,
                      typename DRC::Primal2Form const& twoForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(primal,face,dual,edge,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(primal,face,dual,edge,weight)");
     // select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -2024,7 +2030,7 @@ void hodge_operator (typename DRC::Primal2Form& twoForm,
                      typename DRC::Dual1Form const& oneForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(dual,edge,primal,face,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(dual,edge,primal,face,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -2093,7 +2099,7 @@ void hodge_operator (typename DRC::Dual2Form& twoForm,
                      typename DRC::Primal1Form const& oneForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(primal,edge,dual,face,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(primal,edge,dual,face,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -2161,7 +2167,7 @@ void hodge_operator (typename DRC::Primal3Form& threeForm,
                      typename DRC::Dual0Form const& zeroForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(dual,node,primal,cell,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(dual,node,primal,cell,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -2211,7 +2217,7 @@ void hodge_operator (typename DRC::Dual3Form& threeForm,
                      typename DRC::Primal0Form const& zeroForm,
                      amrex::Real weight = 1.0)
 {
-    BL_PROFILE("hodge_operator(primal,node,dual,cell,weight)");
+    Kokkos::Profiling::ScopedRegion region("hodge_operator(primal,node,dual,cell,weight)");
     // Select stencil according to degree
     auto [stencilNodeToCell, stencilCellToNode] = get_hodge_stencils<hodgeDegree, hodgeScheme>();
 
@@ -2261,7 +2267,7 @@ template <HodgeScheme hodgeScheme,
 void hodge_degree_selector (DstFormType& dstForm, SrcFormType& srcForm, amrex::Real weight)
 {
     using DRC = field_to_drc_t<SrcFormType>;
-    BL_PROFILE("hodge_degree_selector()")
+    Kokkos::Profiling::ScopedRegion region("hodge_degree_selector()");
     AMREX_ASSERT(srcForm.m_deRham->get_hodge_degree() == dstForm.m_deRham->get_hodge_degree());
     constexpr auto validDegreesArray = valid_degrees<hodgeScheme>();
     if constexpr (hodgeDegreeIdx < validDegreesArray.size())
@@ -2298,7 +2304,7 @@ template <typename DstFormType, typename SrcFormType>
     requires MutualDual<SrcFormType, DstFormType> && (!HasHodgeScheme<field_to_drc_t<SrcFormType>>)
 void hodge(DstFormType& dstForm, SrcFormType const& srcForm, amrex::Real weight = 1.)
 {
-    BL_PROFILE("hodge()");
+    Kokkos::Profiling::ScopedRegion region("hodge()");
     AMREX_ASSERT(dstForm.m_deRham->get_hodge_scheme() == srcForm.m_deRham->get_hodge_scheme());
     // Access m_deRham->m_hodgeScheme safely
     switch (dstForm.m_deRham->get_hodge_scheme())
@@ -2339,7 +2345,7 @@ inline void hodge_dk (DstFormType& formOut,
                       DstFormType& matrix,
                       amrex::Real weight = 1.)
 {
-    BL_PROFILE("Gempic::Forms::HodgeDK");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::HodgeDK");
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(formOut.m_data[xDir].nComp() == 1,
                                       "hodge_dk not implemented for multi-component fields");
     // Start by applying the standard Hodge operator. Needs to be stored in temporary multifab
@@ -2440,7 +2446,7 @@ void eval_form_degree_selector (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
-    BL_PROFILE("eval_form_degree_selector()")
+    Kokkos::Profiling::ScopedRegion region("eval_form_degree_selector()");
     constexpr auto validDegreesArray = valid_degrees<HodgeScheme::FDHodge>();
     if constexpr (testDegInd < validDegreesArray.size())
     {
@@ -2468,7 +2474,7 @@ void eval_form_degree_selector (
     amrex::Vector<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>> const& evalShift,
     amrex::MultiFab& pointValues)
 {
-    BL_PROFILE("eval_form_degree_selector()")
+    Kokkos::Profiling::ScopedRegion region("eval_form_degree_selector()");
     constexpr auto validDegreesArray = valid_degrees<HodgeScheme::FDHodge>();
     if constexpr (testDegInd < validDegreesArray.size())
     {

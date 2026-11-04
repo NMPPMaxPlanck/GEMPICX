@@ -2,6 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_BaseFwd.H>
 #include <AMReX_IntVect.H>
@@ -15,7 +17,8 @@ namespace Gempic::Io
 ComputeDiagOutputProcessor::ComputeDiagOutputProcessor(int ncomp, amrex::IntVect crseRatio) :
     m_crseRatio(crseRatio), m_ncomp(ncomp)
 {
-    BL_PROFILE("ComputeDiagOutputProcessor::ComputeDiagOutputProcessor()");
+    Kokkos::Profiling::ScopedRegion region(
+        "ComputeDiagOutputProcessor::ComputeDiagOutputProcessor()");
 }
 
 namespace Impl
@@ -24,7 +27,7 @@ namespace Impl
 RawOutputProcessor::RawOutputProcessor(AnyFieldPtr const& dataSrc, amrex::IntVect const crseRatio) :
     ComputeDiagOutputProcessor(dataSrc.n_comp(), crseRatio), m_dataSrc(&dataSrc)
 {
-    BL_PROFILE("RawOutputProcessor<drc>::RawOutputProcessor()");
+    Kokkos::Profiling::ScopedRegion region("RawOutputProcessor<drc>::RawOutputProcessor()");
 }
 
 amrex::BoxArray RawOutputProcessor::get_box_array (amrex::IndexType& t)
@@ -42,7 +45,8 @@ CellCenterOutputProcessor::CellCenterOutputProcessor(AnyFieldPtr const& dataSrc,
                                                      amrex::IntVect const crseRatio) :
     ComputeDiagOutputProcessor(dataSrc.n_comp(), crseRatio), m_dataSrc(&dataSrc)
 {
-    BL_PROFILE("CellCenterOutputProcessor<drc>::CellCenterOutputProcessor()");
+    Kokkos::Profiling::ScopedRegion region(
+        "CellCenterOutputProcessor<drc>::CellCenterOutputProcessor()");
     amrex::IntVect const indexTypeSrc = dataSrc.box_array().ixType().toIntVect();
     AMREX_D_TERM(m_ishift = indexTypeSrc[xDir];, m_jshift = indexTypeSrc[yDir];
                  , m_kshift = indexTypeSrc[zDir];)
@@ -58,7 +62,7 @@ amrex::BoxArray CellCenterOutputProcessor::get_box_array (amrex::IndexType& t)
 
 void CellCenterOutputProcessor::operator ()(amrex::MultiFab& mfDst, int dstComp) const
 {
-    BL_PROFILE("CellCenterOutputProcessor<drc>::operator()");
+    Kokkos::Profiling::ScopedRegion region("CellCenterOutputProcessor<drc>::operator()");
     this->m_dataSrc->any_field_to_cellcentered_multifabs(mfDst, dstComp);
 }
 

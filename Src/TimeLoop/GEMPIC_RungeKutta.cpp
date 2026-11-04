@@ -2,6 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_RungeKutta.H"
 
 using namespace Gempic::TimeLoop;
@@ -67,7 +69,7 @@ void RungeKutta::lsrk_stage_ampere (DeRhamField<Grid::dual, Space::face>& D,
                                    amrex::Real dt,
                                    int stageIndex)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::lsrk_stage_ampere()");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::lsrk_stage_ampere()");
     amrex::Real const coeffsAStageIndex = m_coeffsA[stageIndex];
     amrex::Real const coeffsBStageIndex = m_coeffsB[stageIndex];
     // Component-0 of Ampere's equation
@@ -164,7 +166,7 @@ void RungeKutta::lsrk_stage_faraday (DeRhamField<Grid::primal, Space::face>& B,
                                     amrex::Real dt,
                                     int stageIndex)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::lsrk_stage_faraday()");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::lsrk_stage_faraday()");
     amrex::Real const coeffsAStageIndex = m_coeffsA[stageIndex];
     amrex::Real const coeffsBStageIndex = m_coeffsB[stageIndex];
     // Component-0 of Faraday's equation

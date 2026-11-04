@@ -5,6 +5,8 @@
 #include <iostream>
 #include <random>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
@@ -46,7 +48,6 @@ int main (int argc, char* argv[])
     constexpr int hodgeDegree{2};
 
     {
-        BL_PROFILE("ElectrostaticMain()");
         // Parameters::setPrintOutput();  // uncomment to print an output file
         Io::Parameters parameters{};
 
@@ -158,7 +159,7 @@ int main (int argc, char* argv[])
             {
                 rho.m_data.setVal(0.0);
                 {
-                    BL_PROFILE("ElectrostaticMain::particle_loop1");
+                    Kokkos::Profiling::ScopedRegion scope("ElectrostaticMain::particle_loop1");
                     for (auto& particleSpecies : ions)
                     {
                         amrex::Real charge = particleSpecies->get_charge();
@@ -227,7 +228,7 @@ int main (int argc, char* argv[])
                 rho.m_data.setVal(0.0);
 
                 {
-                    BL_PROFILE("ElectrostaticMain::particle_loop2");
+                    Kokkos::Profiling::ScopedRegion scope("ElectrostaticMain::particle_loop2");
                     for (auto& particleSpecies : ions)
                     {
                         amrex::Real charge = particleSpecies->get_charge();

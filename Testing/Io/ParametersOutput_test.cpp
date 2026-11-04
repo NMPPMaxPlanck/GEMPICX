@@ -32,7 +32,6 @@ int main (int argc, char* argv[])
     // amrex::Initialize(argc, argv);
     bool const buildParmParse = true;
     amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD, overwrite_amrex_parser_defaults);
-    BL_PROFILE_VAR("main()", pmain);
     // Initialize the main parameters instance and tell it to print output
     Io::Parameters::set_print_output();
     Io::Parameters parameters{};
@@ -78,6 +77,5 @@ int main (int argc, char* argv[])
             // a time loop would be run here, using the variables just loaded
         }
     }
-    BL_PROFILE_VAR_STOP(pmain);
     amrex::Finalize();
 }

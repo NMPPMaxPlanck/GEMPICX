@@ -54,7 +54,7 @@ void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face>& D,
                                  amrex::Real vAlfven,
                                  amrex::Real /*somega*/)
 {
-    BL_PROFILE("Gempic::Forms::getDfromE_DriftKinetic()");
+    Kokkos::Profiling::ScopedRegion scope("Gempic::Forms::getDfromE_DriftKinetic()");
     // Compute the dielectric tensor to convert electric field E to D.
     // This tensor is used only once during the calculation of the initial D.
     DeRhamField<Grid::dual, Space::face> tensor(deRham, 3);
@@ -83,7 +83,6 @@ void get_d_from_e_drift_kinetic (DeRhamField<Grid::dual, Space::face>& D,
 int main (int argc, char* argv[])
 {
     Gempic::initialize(argc, argv);
-    BL_PROFILE_VAR("main()", pmain);
     // Track git version
     if (git::IsPopulated())
     {
@@ -432,6 +431,5 @@ int main (int argc, char* argv[])
             }
         } // end of "time loop" scope
     }
-    BL_PROFILE_VAR_STOP(pmain);
     Gempic::finalize();
 }

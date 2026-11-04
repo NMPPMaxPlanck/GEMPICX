@@ -5,6 +5,8 @@
 #ifndef GEMPIC_INTERPOLATION_H_
 #define GEMPIC_INTERPOLATION_H_
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_SPACE.H>
 #include <AMReX_Vector.H>
 
@@ -869,7 +871,7 @@ amrex::Real max_error_midpoint (amrex::Geometry geom,
                                 int comp = 0,
                                 amrex::Real t = 0.)
 {
-    BL_PROFILE("Gempic::Forms::max_error_midpoint()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::max_error_midpoint()");
     amrex::BoxArray const& ba = funcH.boxArray();
     amrex::DistributionMapping const& dm = funcH.DistributionMap();
     int nghost = funcH.nGrow();
@@ -1210,7 +1212,7 @@ void interpolate_field_to_multifab_degree_selector (amrex::MultiFab& mfDst,
                                                     int dstComp = 0,
                                                     int ncomp = -1)
 {
-    BL_PROFILE("interpolate_field_to_multifab_degree_selector()")
+    Kokkos::Profiling::ScopedRegion region("interpolate_field_to_multifab_degree_selector()");
     constexpr auto validDegreesArray = valid_degrees<HodgeScheme::FDHodge>(); // FDHodge hard coded!
     if constexpr (testDegInd < validDegreesArray.size())
     {
@@ -1245,7 +1247,7 @@ void interpolate_field_to_multifab_degree_selector (amrex::MultiFab& mfDst,
                                                     int dstComp = 0,
                                                     int ncomp = -1)
 {
-    BL_PROFILE("interpolate_field_to_multifab_degree_selector()")
+    Kokkos::Profiling::ScopedRegion region("interpolate_field_to_multifab_degree_selector()");
     constexpr auto validDegreesArray =
         valid_degrees<field_to_drc_t<SrcTypeWithHodge>::s_hodgeScheme>();
     if constexpr (testDegreeIndex < validDegreesArray.size())

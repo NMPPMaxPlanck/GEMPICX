@@ -12,6 +12,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_OffsetView.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <AMReX.H>
 #include <AMReX_Box.H>
@@ -387,7 +388,7 @@ concept VectorAnalyticalExpressionSpaceTime =
 template <ScalarAnalyticalExpressionSpace SF>
 void fill (DiscreteField& field, SF const& f)
 {
-    BL_PROFILE("fill(DiscreteField&)");
+    Kokkos::Profiling::ScopedRegion region("fill(DiscreteField&)");
     for (amrex::MFIter mfi{field.multi_fab()}; mfi.isValid(); ++mfi)
     {
         field.select_box(mfi);
@@ -828,7 +829,8 @@ public:
     ///              (times one component for 0-/3-forms, times three components for 1-/2-forms)
     void initialize_field (DeRhamField<Grid::primal, Space::node>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,node,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(primal,node,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalNodeIndex), m_distriMap, nVar, m_nGhost);
         field.m_data.setVal(0.0);
     }
@@ -836,7 +838,8 @@ public:
     // Function overloads for the initializations
     void initialize_field (DeRhamField<Grid::primal, Space::edge>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,edge,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(primal,edge,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap,
                                   nVar, m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -850,7 +853,8 @@ public:
 
     void initialize_field (DeRhamField<Grid::primal, Space::face>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,face,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(primal,face,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap,
                                   nVar, m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -865,7 +869,8 @@ public:
     void initialize_field (DeRhamField<Grid::primal, Space::edge>& field,
                            std::array<int, 3> ncomponents)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,edge,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(primal,edge,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap,
                                   ncomponents[xDir], m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -880,7 +885,8 @@ public:
     void initialize_field (DeRhamField<Grid::primal, Space::face>& field,
                            std::array<int, 3> ncomponents)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,face,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(primal,face,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap,
                                   ncomponents[xDir], m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -894,7 +900,8 @@ public:
 
     void initialize_field (DeRhamField<Grid::primal, Space::cell>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(primal,cell,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(primal,cell,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalCellIndex), m_distriMap, nVar, m_nGhost);
         field.m_data.setVal(0.0);
     }
@@ -902,14 +909,16 @@ public:
     // Centering is always set by the primal grid
     void initialize_field (DeRhamField<Grid::dual, Space::node>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,node,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(dual,node,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalCellIndex), m_distriMap, nVar, m_nGhost);
         field.m_data.setVal(0.0);
     }
 
     void initialize_field (DeRhamField<Grid::dual, Space::edge>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,edge,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(dual,edge,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap,
                                   nVar, m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -923,7 +932,8 @@ public:
 
     void initialize_field (DeRhamField<Grid::dual, Space::face>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,face,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(dual,face,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap,
                                   nVar, m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -938,7 +948,8 @@ public:
     void initialize_field (DeRhamField<Grid::dual, Space::edge>& field,
                            std::array<int, 3> ncomponents)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,edge,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(dual,edge,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalFaceIndex[xDir]), m_distriMap,
                                   ncomponents[xDir], m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -953,7 +964,8 @@ public:
     void initialize_field (DeRhamField<Grid::dual, Space::face>& field,
                            std::array<int, 3> ncomponents)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,face,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(dual,face,field)");
         field.m_data[xDir].define(amrex::convert(m_grid, m_primalEdgeIndex[xDir]), m_distriMap,
                                   ncomponents[xDir], m_nGhost);
         field.m_data[xDir].setVal(0.0);
@@ -967,7 +979,8 @@ public:
 
     void initialize_field (DeRhamField<Grid::dual, Space::cell>& field, int nVar = 1)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex::initialize_field(dual,cell,field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex::initialize_field(dual,cell,field)");
         field.m_data.define(amrex::convert(m_grid, m_primalNodeIndex), m_distriMap, nVar, m_nGhost);
         field.m_data.setVal(0.0);
     }
@@ -978,7 +991,8 @@ public:
         requires OneOrTwoFormSpaceC<space>
     void fill_boundary (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary(field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary(field)");
         field.m_data[xDir].FillBoundary(m_geom.periodicity());
         field.m_data[yDir].FillBoundary(m_geom.periodicity());
         field.m_data[zDir].FillBoundary(m_geom.periodicity());
@@ -990,7 +1004,8 @@ public:
         requires ZeroOrThreeFormSpaceC<space>
     void fill_boundary (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary(field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary(field)");
         field.m_data.FillBoundary(m_geom.periodicity());
     }
     /// @endcond
@@ -1001,7 +1016,8 @@ public:
         requires OneOrTwoFormSpaceC<space>
     void fill_boundary_nowait (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary_nowait(field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary_nowait(field)");
         field.m_data[xDir].FillBoundary_nowait(m_geom.periodicity());
         field.m_data[yDir].FillBoundary_nowait(m_geom.periodicity());
         field.m_data[zDir].FillBoundary_nowait(m_geom.periodicity());
@@ -1013,7 +1029,8 @@ public:
         requires ZeroOrThreeFormSpaceC<space>
     void fill_boundary_nowait (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary_nowait(field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary_nowait(field)");
         field.m_data.FillBoundary_nowait(m_geom.periodicity());
     }
     /// @endcond
@@ -1023,7 +1040,8 @@ public:
         requires OneOrTwoFormSpaceC<space>
     void fill_boundary_finish (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary_finish()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::fill_boundary_finish()");
         field.m_data[xDir].FillBoundary_finish();
         field.m_data[yDir].FillBoundary_finish();
         field.m_data[zDir].FillBoundary_finish();
@@ -1035,7 +1053,8 @@ public:
         requires ZeroOrThreeFormSpaceC<space>
     void fill_boundary_finish (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary_finish()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::fill_boundary_finish()");
         field.m_data.FillBoundary_finish();
     }
     /// @endcond
@@ -1056,7 +1075,8 @@ public:
         requires OneOrTwoFormSpaceC<space>
     void apply_bc (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::apply_bc(field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isOneOrTwoForm>::apply_bc(field)");
         if (not m_geom.isAllPeriodic())
         {
             // call bcFunc with MultiFab& mf, int icomp, int ncomp, IntVect const& nghost, Real
@@ -1075,7 +1095,8 @@ public:
         requires ZeroOrThreeFormSpaceC<space>
     void apply_bc (DeRhamField<grid, space>& field)
     {
-        BL_PROFILE("Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::apply_bc(field)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Forms::DeRhamComplex<isZeroOrThreeForm>::apply_bc(field)");
         if (not m_geom.isAllPeriodic())
         {
             field.m_bcFunc->operator()(field.m_data, 0, 1, m_nGhostRequired, 0., 0);
@@ -1107,7 +1128,8 @@ DeRhamField<grid, space12>::DeRhamField(std::shared_ptr<DeRhamComplex> drc,
                                         std::array<int, 3> ncomponents) :
     m_deRham{drc}
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc)");
     m_deRham->initialize_field(*this, ncomponents);
 
     if (not m_deRham->get_geom().isAllPeriodic())
@@ -1147,7 +1169,8 @@ template <Grid grid, Space space03>
 DeRhamField<grid, space03>::DeRhamField(std::shared_ptr<DeRhamComplex> drc, int nVar) :
     m_deRham{drc}
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc)");
     m_deRham->initialize_field(*this, nVar);
 
     if (not m_deRham->get_geom().isAllPeriodic())
@@ -1179,7 +1202,8 @@ DeRhamField<grid, space12>::DeRhamField(
     amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>& func) :
     DeRhamField{drc, 1}
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,func)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,func)");
     projection(func, 0.0, *this);
 }
 
@@ -1190,7 +1214,8 @@ DeRhamField<grid, space12>::DeRhamField(
     amrex::Vector<amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, 3>> const& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,funcs)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::DeRhamField(drc,funcs)");
     projection(funcs, 0.0, *this);
 }
 
@@ -1200,7 +1225,8 @@ inline DeRhamField<grid, space03>::DeRhamField (std::shared_ptr<DeRhamComplex> d
                                                amrex::ParserExecutor<AMREX_SPACEDIM + 1>& func) :
     DeRhamField{drc, 1}
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,func)");
     projection(func, 0.0, *this);
 }
 
@@ -1211,7 +1237,8 @@ inline DeRhamField<grid, space03>::DeRhamField (
     amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const& funcs) :
     DeRhamField{drc, static_cast<int>(funcs.size())}
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,funcs)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::DeRhamField(drc,funcs)");
     projection(funcs, 0.0, *this);
 }
 
@@ -1346,7 +1373,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::post_particle_loop_sync()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::post_particle_loop_sync()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::post_particle_loop_sync()");
     for (int comp = 0; comp < 3; ++comp)
     {
         m_data[comp].SumBoundary(0, m_data[comp].nComp(), m_deRham->get_n_ghost(),
@@ -1365,7 +1393,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::post_particle_loop_sync()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
     m_data.SumBoundary(0, m_data.nComp(), m_deRham->get_n_ghost(), amrex::IntVect::Zero,
                        m_deRham->get_periodicity());
     // See comment on OverrideSync in function for OneOrTwoForm above
@@ -1378,7 +1407,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::fill_boundary()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
 }
 
@@ -1386,7 +1416,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::fill_boundary()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
     m_deRham->fill_boundary(*this);
 }
 
@@ -1395,7 +1426,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::fill_boundary_nowait()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary_nowait()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary_nowait()");
     m_deRham->fill_boundary_nowait(*this);
 }
 
@@ -1403,7 +1435,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::fill_boundary_nowait()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary()");
     m_deRham->fill_boundary_nowait(*this);
 }
 
@@ -1412,7 +1445,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::fill_boundary_finish()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary_finish()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::fill_boundary_finish()");
     m_deRham->fill_boundary_finish(*this);
 }
 
@@ -1420,7 +1454,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::fill_boundary_finish()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary_finish()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::fill_boundary_finish()");
     m_deRham->fill_boundary_finish(*this);
 }
 
@@ -1429,7 +1464,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::apply_bc()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::apply_bc()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::apply_bc()");
     m_deRham->apply_bc(*this);
 }
 
@@ -1437,7 +1473,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::apply_bc()
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::apply_bc()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::apply_bc()");
     m_deRham->apply_bc(*this);
 }
 
@@ -1446,7 +1483,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator*=(amrex::Real dt)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=()");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1458,7 +1496,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::operator*=(amrex::Real dt)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=()");
     auto nGhost = m_deRham->get_n_ghost();
     m_data.mult(dt, nGhost[xDir]);
 }
@@ -1468,7 +1507,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=(function)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator*=(function)");
 
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx = m_deRham->m_geom.CellSizeArray();
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_deRham->get_prob_lo();
@@ -1516,7 +1556,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=(function)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator*=(function)");
 
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const dx = m_deRham->m_geom.CellSizeArray();
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> const r0 = m_deRham->get_prob_lo();
@@ -1558,7 +1599,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator+=(DeRhamField<grid, space>& form)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=(MultiFab)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=(MultiFab)");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1570,7 +1612,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator+=(amrex::Real c)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=(amrex::Real)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=(amrex::Real)");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1582,7 +1625,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator+=(amrex::Vector<amrex::Real> c)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=(amrex::Real)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator+=(amrex::Real)");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1594,7 +1638,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator+=(DeRhamField<grid, space>& form)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator+=(MultiFab)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator+=(MultiFab)");
     auto nGhost = m_deRham->get_n_ghost();
     m_data.plus(form.m_data, 0, m_data.nComp(), nGhost[xDir]);
 }
@@ -1603,7 +1648,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::operator+=(amrex::Real c)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator+=(amrex::Real)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator+=(amrex::Real)");
     auto nGhost = m_deRham->get_n_ghost();
     m_data.plus(c, nGhost[xDir]);
 }
@@ -1613,7 +1659,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator-=(DeRhamField<grid, space>& form)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-=(MultiFab)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-=(MultiFab)");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1625,7 +1672,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline void DeRhamField<grid, space>::operator-=(amrex::Real c)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-=(amrex::Real)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-=(amrex::Real)");
     auto nGhost = m_deRham->get_n_ghost();
     for (int comp = 0; comp < 3; ++comp)
     {
@@ -1637,7 +1685,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::operator-=(DeRhamField<grid, space>& form)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator-=(MultiFab)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator-=(MultiFab)");
     auto nGhost = m_deRham->get_n_ghost();
     m_data.minus(form.m_data, 0, m_data.nComp(), nGhost[xDir]);
 }
@@ -1646,7 +1695,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::operator-=(amrex::Real c)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator-=(amrex::Real)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator-=(amrex::Real)");
     auto nGhost = m_deRham->get_n_ghost();
     m_data.plus(-c, nGhost[xDir]);
 }
@@ -1656,7 +1706,8 @@ template <Grid grid, Space space>
     requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
 inline DeRhamField<grid, space> DeRhamField<grid, space>::operator-(DeRhamField<grid, space>& form)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-(MultiFab)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::operator-(MultiFab)");
     DeRhamField<grid, space> result(m_deRham);
     auto nGhost = m_deRham->get_n_ghost();
 
@@ -1673,7 +1724,8 @@ template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline DeRhamField<grid, space> DeRhamField<grid, space>::operator-(DeRhamField<grid, space>& form)
 {
-    BL_PROFILE("Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator-(MultiFab)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::operator-(MultiFab)");
     DeRhamField<grid, space> result(m_deRham);
 
     amrex::Copy(result.m_data, m_data, 0, 0, m_data.nComp(), 0);

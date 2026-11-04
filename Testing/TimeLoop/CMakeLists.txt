@@ -23,10 +23,6 @@ target_link_libraries(
   TimeStepper_test
   GEMPICX)
 
-if(GEMPIC_USE_CUDA)
-  setup_target_for_cuda_compilation(TimeStepper_test)
-endif()
-
 add_test(
   NAME TimeStepperBase_test
   COMMAND TimeStepperBase_test TSBTest00)

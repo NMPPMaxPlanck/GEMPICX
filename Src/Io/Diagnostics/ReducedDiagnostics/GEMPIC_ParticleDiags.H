@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_Particle.H>
 #include <AMReX_Reduce.H>
 
@@ -42,7 +44,7 @@ public:
              std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
-        BL_PROFILE("Gempic::Io::Particle::Particle()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Particle::Particle()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
@@ -84,7 +86,7 @@ public:
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles) final
     {
-        BL_PROFILE("Gempic::Io::Particle::compute_diags()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Particle::compute_diags()");
         constexpr int noutputs = 4;
         this->m_data.assign(noutputs, 0.0);
 
@@ -297,7 +299,7 @@ public:
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles) final
     {
-        BL_PROFILE("Gempic::Io::Particle::compute_diags()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Particle::compute_diags()");
         constexpr int noutputs = 4;
         this->m_data.assign(noutputs, 0.0);
 
@@ -381,7 +383,7 @@ public:
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName),
         m_speciesName{speciesName}
     {
-        BL_PROFILE("Gempic::Io::ParticleVariance::ParticleVariance()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::ParticleVariance::ParticleVariance()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
@@ -433,7 +435,7 @@ public:
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles) final
     {
-        BL_PROFILE("Gempic::Io::ParticleVariance::compute_diags()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::ParticleVariance::compute_diags()");
         constexpr int noutputs = 8; // number of outputs for this reduced diagnostic: varN, varNuX,
                                     // varNuY, varNuZ, varKinX, varKinY, varKinZ, varNmode1
         this->m_data.assign(noutputs, 0.0);

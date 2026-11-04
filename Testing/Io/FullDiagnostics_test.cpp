@@ -5,6 +5,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 
 #include "GEMPIC_ComputationalDomain.H"
@@ -330,7 +332,7 @@ public:
 
     void operator()(amrex::MultiFab& mfDst, int dstComp) const final
     {
-        BL_PROFILE("DumbOutputProcessor::operator()");
+        Kokkos::Profiling::ScopedRegion region("DumbOutputProcessor::operator()");
         ++s_counter;
         copy_any_field_to_multifabs(mfDst, *this->m_dataSrc, dstComp);
     }

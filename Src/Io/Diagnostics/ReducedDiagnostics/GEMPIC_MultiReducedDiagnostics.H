@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_CurrentFieldEnergy.H"
 #include "GEMPIC_ElecFieldEnergy.H"
 #include "GEMPIC_Fields.H"
@@ -67,7 +69,7 @@ public:
     /// constructor
     MultiReducedDiagnostics(std::shared_ptr<Forms::DeRhamComplex> drc, FieldRegistry const& reg)
     {
-        BL_PROFILE("Gempic::Io::MultiReduceDiagnostics()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::MultiReduceDiagnostics()");
         read_params();
         if (!m_plotRd)
         {
@@ -82,7 +84,7 @@ public:
     template <Forms::DeRhamComplexC DRC>
     void init_data (std::shared_ptr<DRC> drc, FieldRegistry const& reg)
     {
-        BL_PROFILE("Gempic::Io::MultiReduceDiagnostics::init_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::MultiReduceDiagnostics::init_data()");
         if (!m_plotRd)
         {
             return;
@@ -101,7 +103,8 @@ public:
      */
     void load_balance ()
     {
-        BL_PROFILE("Gempic::Io::MultiReduceDiagnostics::load_balance()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiReduceDiagnostics::load_balance()");
         // loop over all reduced diags
         for (size_t iRd{0}; iRd < m_rdNames.size(); ++iRd)
         {
@@ -118,7 +121,8 @@ public:
         std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>> const&
             particles)
     {
-        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::compute_diags()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiReducedDiagnostics::compute_diags()");
         if (!m_plotRd)
         {
             return;
@@ -137,7 +141,8 @@ public:
     /** Loop over all ReducedDiagnostics and call their write_to_file */
     void write_to_file (int step, amrex::Real simTime)
     {
-        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::write_to_file()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiReducedDiagnostics::write_to_file()");
         if (!m_plotRd)
         {
             return;
@@ -165,7 +170,8 @@ public:
             particles,
         bool forceWrite = false)
     {
-        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::update_and_write_to_file()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiReducedDiagnostics::update_and_write_to_file()");
         if (!m_plotRd)
         {
             return;
@@ -187,7 +193,8 @@ public:
 private:
     void read_params ()
     {
-        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::read_params()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiReducedDiagnostics::read_params()");
         // read reduced diags names
         Parameters ppGempic("ReducedDiagnostics");
         m_plotRd = !ppGempic.get_or_set("groupNames", m_rdNames);
@@ -269,7 +276,8 @@ private:
         bool isLastType,
         std::string const& fileName)
     {
-        BL_PROFILE("Gempic::Io::MultiReducedDiagnostics::get_diagnostics_type()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiReducedDiagnostics::get_diagnostics_type()");
         if (diagType == "ElecFieldEnergy")
         {
             using ElecEnergy = ElecFieldEnergy<vdim, degx, degy, degz, ndata>;

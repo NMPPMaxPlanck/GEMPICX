@@ -4,6 +4,8 @@
  **************************************************************************************************/
 #include <array>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_HDF5Interface.H"
@@ -351,7 +353,8 @@ ComputationalDomain::ComputationalDomain(std::array<amrex::Real, AMREX_SPACEDIM>
                                          amrex::CoordSys::CoordType coordType) :
     m_nCell{nCell}
 {
-    BL_PROFILE("Gempic::ComputationalDomain::ComputationalDomain(args)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::ComputationalDomain::ComputationalDomain(args)");
     amrex::Box domain;
     amrex::IntVect domLo(AMREX_D_DECL(0, 0, 0));
     domain.setSmall(domLo);

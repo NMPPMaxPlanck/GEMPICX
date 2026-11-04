@@ -2,6 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_FFT.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -17,7 +19,8 @@ PoissonFFTSolver::PoissonFFTSolver(ComputationalDomain const& compDom,
                                    HodgeScheme hodgeScheme) :
     m_compDom{compDom}
 {
-    BL_PROFILE("Gempic::FieldSolvers::PoissonFFTSolver::PoissonFFTSolver()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::FieldSolvers::PoissonFFTSolver::PoissonFFTSolver()");
     if (hodgeScheme != HodgeScheme::FDHodge && hodgeScheme != HodgeScheme::GDECHodge)
     {
         GEMPIC_ERROR(
@@ -231,7 +234,7 @@ PoissonFFTSolver::PoissonFFTSolver(ComputationalDomain const& compDom,
 void PoissonFFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
                              DeRhamField<Grid::dual, Space::cell> const& rho)
 {
-    BL_PROFILE("Gempic::FieldSolvers::PoissonFFTSolver::solve()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::FieldSolvers::PoissonFFTSolver::solve()");
 
     AMREX_ALWAYS_ASSERT(phi.m_data.nComp() == rho.m_data.nComp());
     check_charge_neutrality(rho, m_compDom);

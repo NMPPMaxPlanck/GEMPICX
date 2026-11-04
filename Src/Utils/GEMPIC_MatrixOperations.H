@@ -9,6 +9,8 @@
 #include <math.h>
 #include <type_traits>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_GpuComplex.H>
 
 namespace Gempic
@@ -25,7 +27,7 @@ template <typename T>
 std::vector<std::vector<T>> matmul (std::vector<std::vector<T>> const& aMatrix,
                                     std::vector<std::vector<T>> const& bMatrix)
 {
-    BL_PROFILE("GEMPIC::FVreconstruction::myMatmul(a,b) vec");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::FVreconstruction::myMatmul(a,b) vec");
     int a = static_cast<int>(aMatrix.size());
     int b = static_cast<int>(bMatrix.size());
     int c = static_cast<int>(bMatrix[0].size());
@@ -51,7 +53,6 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE
     matmul (amrex::Array2D<T, 0, adim - 1, 0, bdim - 1, amrex::Order::C> const& aMatrix,
             amrex::Array2D<T, 0, bdim - 1, 0, cdim - 1, amrex::Order::C> const& bMatrix)
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::myMatmul(a,b) arr");
     amrex::Array2D<T, 0, adim - 1, 0, cdim - 1, amrex::Order::C> result;
     for (int i = 0; i < adim; i++)
     {
@@ -76,7 +77,7 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE
 template <typename T>
 std::vector<std::vector<T>> mattranspose (std::vector<std::vector<T>> const& matrix)
 {
-    BL_PROFILE("GEMPIC::FVreconstruction::myTranspose() vec");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::FVreconstruction::myTranspose() vec");
     int rows = matrix.size();
     int cols = matrix[0].size();
     std::vector<std::vector<T>> result(cols, std::vector<T>(rows));
@@ -94,7 +95,7 @@ template <typename T>
 std::vector<std::vector<T>> matsum (std::vector<std::vector<T>> const& aMatrix,
                                     std::vector<std::vector<T>> const& bMatrix)
 {
-    BL_PROFILE("GEMPIC::FVreconstruction::mySum() vec");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::FVreconstruction::mySum() vec");
     int rows = aMatrix.size();
     int cols = aMatrix[0].size();
     std::vector<std::vector<T>> result(rows, std::vector<T>(cols, 0.0));

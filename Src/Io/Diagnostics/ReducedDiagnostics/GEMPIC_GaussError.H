@@ -9,6 +9,8 @@
 #include <memory>
 #include <string>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_FieldRegistry.H"
@@ -60,7 +62,7 @@ public:
                std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
-        BL_PROFILE("Gempic::Io::GaussError::GaussError()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::GaussError::GaussError()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
@@ -99,7 +101,7 @@ public:
                     FieldRegistry const& reg,
                     bool cmf) final
     {
-        BL_PROFILE("Gempic::Io::GaussError::init_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::GaussError::init_data()");
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, reg, cmf);
         m_computeMethod = choose_computation_method(reg);
     }
@@ -112,7 +114,7 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& /*particles*/)
         final
     {
-        BL_PROFILE("Gempic::Io::GaussError::compute_diags()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::GaussError::compute_diags()");
 
         switch (m_computeMethod)
         {
@@ -144,7 +146,8 @@ private:
      */
     ComputeMethod choose_computation_method (FieldRegistry const& registry)
     {
-        BL_PROFILE("Gempic::Io::GaussError::choose_computation_method()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::GaussError::choose_computation_method()");
         using namespace Forms;
         using DRC = Forms::DeRhamComplex;
         auto const* rhoPtr = get_field_ptr_or_null<DRC::Dual3Form>(registry, "rho");
@@ -203,7 +206,7 @@ private:
                       Forms::DeRhamComplex::Dual3Form const& divD,
                       ComputationalDomain const& infra)
     {
-        BL_PROFILE("Gempic::Io::GaussError::update_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::GaussError::update_data()");
         constexpr int noutputs = 3;
         this->m_data.resize(noutputs, 0.0);
 

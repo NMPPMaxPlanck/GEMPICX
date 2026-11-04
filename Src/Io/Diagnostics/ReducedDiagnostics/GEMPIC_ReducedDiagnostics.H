@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_ParallelDescriptor.H>
 #include <AMReX_REAL.H>
@@ -80,7 +82,8 @@ public:
                        std::string const& fileName) :
         m_rdName{rdName}, m_isLastType{isLastType}
     {
-        BL_PROFILE("Gempic::Io::ReducedDiagnostics::ReducedDiagnostics()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::ReducedDiagnostics::ReducedDiagnostics()");
         m_isFirstType = (indexNum == 0);
         // BackwardCompatibility();
         std::filesystem::path fileNamePathIn{fileName};
@@ -162,7 +165,7 @@ public:
                             Io::FieldRegistry const& /*reg*/,
                             bool cmf)
     {
-        BL_PROFILE("Gempic::Io::ReducedDiagnostics::init_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::ReducedDiagnostics::init_data()");
         m_deRham = drc;
         m_computeMissingFields = cmf;
     }
@@ -183,7 +186,7 @@ public:
      */
     virtual void write_to_file (int step, amrex::Real simTime) const
     {
-        BL_PROFILE("Gempic::Io::ReducedDiagnostics::write_to_file()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::ReducedDiagnostics::write_to_file()");
         // Only the I/O rank does I/O
         if (!amrex::ParallelDescriptor::IOProcessor())
         {

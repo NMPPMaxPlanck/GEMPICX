@@ -51,7 +51,6 @@ int main (int argc, char* argv[])
     constexpr int hodgeDegree{2};
 
     {
-        BL_PROFILE("QuasineutralVlasovMaxwellMain()");
         Io::Parameters parameters{};
         // Initialize computational_domain
         ComputationalDomain infra;

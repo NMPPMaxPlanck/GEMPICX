@@ -5,6 +5,8 @@
 #ifndef GEMPIC_FUNCTION_PARSE_H_
 #define GEMPIC_FUNCTION_PARSE_H_
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_GpuContainers.H>
 #include <AMReX_Parser.H>
 
@@ -31,7 +33,8 @@ template <size_t functionNumber>
 auto parse_functions (amrex::Array<std::string, functionNumber> const& variableStrings,
                       Io::Parameters& params)
 {
-    BL_PROFILE("Gempic::Utils::parse_functions(variableStrings,params)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Utils::parse_functions(variableStrings,params)");
     amrex::Vector<amrex::Real> k;
     bool kExists{params.exists("k")};
     if (kExists)
@@ -82,7 +85,7 @@ auto parse_functions (amrex::Array<std::string, functionNumber> const& variableS
 template <size_t functionNumber>
 auto parse_functions (amrex::Array<std::string, functionNumber> const& variableStrings)
 {
-    BL_PROFILE("Gempic::Utils::parse_functions(variableStrings)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Utils::parse_functions(variableStrings)");
     Io::Parameters params{"Function", "function parse_functions"};
     return parse_functions(variableStrings, params);
 }
@@ -102,7 +105,7 @@ auto parse_functions (amrex::Array<std::string, functionNumber> const& variableS
 template <size_t functionNumber>
 auto compile_functions (amrex::Array<amrex::Parser, functionNumber> parseArray)
 {
-    BL_PROFILE("Gempic::Utils::compile_functions(parseArray)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Utils::compile_functions(parseArray)");
 
     amrex::Array<amrex::ParserExecutor<AMREX_SPACEDIM + 1>, functionNumber> evalArray;
 
@@ -128,7 +131,7 @@ auto compile_functions (amrex::Array<amrex::Parser, functionNumber> parseArray)
  */
 inline auto parse_function (std::string const& variableString, Io::Parameters& params)
 {
-    BL_PROFILE("Gempic::Utils::parse_function(variableString,params)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Utils::parse_function(variableString,params)");
     auto [parser, eval] = parse_functions<1>({variableString}, params);
     return std::make_tuple(parser[0], eval[0]);
 }
@@ -147,7 +150,7 @@ inline auto parse_function (std::string const& variableString, Io::Parameters& p
  */
 inline auto parse_function (std::string const& variableString)
 {
-    BL_PROFILE("Gempic::Utils::parse_function(variableString)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Utils::parse_function(variableString)");
     Io::Parameters params{"Function", "function parseFunction"};
     return parse_function(variableString, params);
 }
@@ -165,7 +168,7 @@ inline auto parse_function (std::string const& variableString)
  */
 inline auto compile_function (amrex::Parser parser)
 {
-    BL_PROFILE("Gempic::Utils::compile_function(parser)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Utils::compile_function(parser)");
     auto eval = parser.template compile<AMREX_SPACEDIM + 1>();
     return eval;
 }

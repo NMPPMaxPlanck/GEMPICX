@@ -5,6 +5,8 @@
 #include <numbers>
 #include <type_traits>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_ParallelDescriptor.H>
 
 #include "GEMPIC_Parameters.H"
@@ -19,14 +21,15 @@ namespace Impl
  */
 std::ostream& operator<<(std::ostream& os, parmParseType const& val)
 {
-    BL_PROFILE("Gempic::Io::Impl::operator(os,parmParseType& val)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::operator(os,parmParseType& val)");
     std::visit([&os] (auto&& arg) { os << arg; }, val);
     return os;
 }
 
 std::ostream& operator<<(std::ostream& os, parmParseParameterType const& val)
 {
-    BL_PROFILE("Gempic::Io::Impl::operator(os,parmParseParameterType& val)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Io::Impl::operator(os,parmParseParameterType& val)");
     std::visit(
         [&os] (auto&& arg)
         {
@@ -55,7 +58,7 @@ std::ostream& operator<<(std::ostream& os, parmParseParameterType const& val)
 
 std::ostream& operator<<(std::ostream& os, parmParseVectorType const& inputVector)
 {
-    BL_PROFILE("Gempic::Io::Impl::operator(os,inputVector)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::operator(os,inputVector)");
     for (auto const& elem : inputVector)
     {
         os << elem << " ";
@@ -65,7 +68,7 @@ std::ostream& operator<<(std::ostream& os, parmParseVectorType const& inputVecto
 
 std::ostream& operator<<(std::ostream& os, parmParseArrayType const& inputArray)
 {
-    BL_PROFILE("Gempic::Io::Impl::operator(os,inputArray)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::operator(os,inputArray)");
     for (auto const& elem : inputArray)
     {
         os << elem << " ";
@@ -119,7 +122,7 @@ std::string parm_parse_typename (parmParseType const& val)
 
 void Parameters::set_print_output (bool printOrNot)
 {
-    BL_PROFILE("Gempic::Io::set_print_output()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::set_print_output()");
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
                                       "Parameters class already previously initialized!");
     s_printOutput = printOrNot;
@@ -128,7 +131,7 @@ void Parameters::set_print_output (bool printOrNot)
 Parameters::Parameters(std::string const& classPrefix, std::string printName) :
     m_classPrefix{classPrefix}
 {
-    BL_PROFILE("Gempic::Io::Parameters(class)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters(class)");
     using namespace Impl; // utility functions for this class
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances != 0,
                                       "Parameters class not previously initialized!");
@@ -147,7 +150,7 @@ Parameters::Parameters(std::string const& classPrefix, std::string printName) :
 
 Parameters::Parameters()
 {
-    BL_PROFILE("Gempic::Io::Parameters(main)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters(main)");
     m_className = "Parameters class";
     m_classPrefix = "";
 
@@ -184,7 +187,7 @@ Parameters::Parameters()
 
 Parameters::~Parameters()
 {
-    BL_PROFILE("Gempic::Io::~Parameters()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::~Parameters()");
     if (--s_numParameterInstances)
     {
         print_class_parameters();
@@ -207,7 +210,7 @@ Parameters::~Parameters()
 
 void Parameters::reset ()
 {
-    BL_PROFILE("Gempic::Io::reset()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::reset()");
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(s_numParameterInstances == 0,
                                       "Parameters class already exists!");
     amrex::ParmParse::Finalize();
@@ -219,7 +222,7 @@ void Parameters::hide_class_output() { m_hideOutput = true; }
 // Probably just have this in the destructor.
 void Parameters::print_class_parameters ()
 {
-    BL_PROFILE("Gempic::Io::print_class_parameters()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::print_class_parameters()");
     if (s_printOutput && !m_hideOutput && m_classOutput.rdbuf()->in_avail() && m_isIOProcess)
     {
         // Space for next output section
@@ -234,7 +237,7 @@ void Parameters::print_class_parameters ()
 // Probably just have this in the destructor.
 void Parameters::print_shared_parameters ()
 {
-    BL_PROFILE("Gempic::Io::print_shared_parameters()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::print_shared_parameters()");
     using namespace Impl; // utility functions for this class
     if (s_printOutput && m_isIOProcess)
     {
@@ -260,7 +263,7 @@ void Parameters::print_shared_parameters ()
 
 bool Parameters::exists (std::string const& variableName)
 {
-    BL_PROFILE("Gempic::Io::exists()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::exists()");
     // Check if variable is a shared parameter (contains is c++20).
     auto search{s_sharedParams.find(variableName)};
     if (search != s_sharedParams.end())
@@ -277,7 +280,7 @@ bool Parameters::exists (std::string const& variableName)
 
 bool Parameters::is_in_input_file (std::string const& variableName)
 {
-    BL_PROFILE("Gempic::Io::is_in_input_file");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::is_in_input_file");
     // Check if variable is a shared parameter (contains is c++20).
     auto search{s_sharedParams.find(variableName)};
     if (search != s_sharedParams.end())
@@ -294,7 +297,7 @@ bool Parameters::is_in_input_file (std::string const& variableName)
 
 std::string Parameters::has_been_set_by (std::string const& variableName)
 {
-    BL_PROFILE("Gempic::Io::has_been_set_by");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::has_been_set_by");
     // Check if variable is a shared parameter (contains is c++20).
     auto search{s_sharedParams.find(variableName)};
     if (search != s_sharedParams.end())

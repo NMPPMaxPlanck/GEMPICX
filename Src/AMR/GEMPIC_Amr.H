@@ -7,6 +7,8 @@
 
 #include <filesystem>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_AmrCore.H>
 #include <AMReX_PlotFileUtil.H>
 
@@ -458,7 +460,7 @@ void do_hodge_correction (T& form,
 template <MLFormC T>
 void hodge_correction (T& mlform)
 {
-    BL_PROFILE("Amr::hodge_correction");
+    Kokkos::Profiling::ScopedRegion region("Amr::hodge_correction");
     CHECK_LEVEL_INTERFACES(mlform);
     for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
     {
@@ -891,7 +893,7 @@ void hodge (T& t, U& u)
 template <MLFormC T>
 void zero_covered_coarse (T& mlform)
 {
-    BL_PROFILE("Amr::zero_covered_coarse");
+    Kokkos::Profiling::ScopedRegion region("Amr::zero_covered_coarse");
     CHECK_LEVEL_INTERFACES(mlform);
     for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
     {
@@ -918,7 +920,7 @@ void zero_covered_coarse (T& mlform)
 template <MLPrimalFormC T>
 void conforming_projection (T& mlform)
 {
-    BL_PROFILE("Amr::conforming_projection(primal)");
+    Kokkos::Profiling::ScopedRegion region("Amr::conforming_projection(primal)");
     for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
     {
         if constexpr (MLVectorFormC<T>)
@@ -940,7 +942,7 @@ void conforming_projection (T& mlform)
 template <MLDualFormC T>
 void conforming_projection (T& mlform)
 {
-    BL_PROFILE("Amr::conforming_projection(dual)");
+    Kokkos::Profiling::ScopedRegion region("Amr::conforming_projection(dual)");
     for (int lev = 0; lev < static_cast<int>(mlform.size()) - 1; ++lev)
     {
         if constexpr (MLVectorFormC<T>)

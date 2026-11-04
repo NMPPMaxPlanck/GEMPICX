@@ -8,6 +8,8 @@
 #elif defined(GEMPIC_USE_LAPACK)
 #include <lapacke.h>
 #endif
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_NumTools.H"
 
 namespace Gempic
@@ -109,8 +111,6 @@ void mult_and_add (amrex::Real const dstVal,
                    int numcomp,
                    amrex::IntVect const& nghost)
 {
-    //BL_PROFILE("amrex::Add()");
-
 #ifdef AMREX_USE_GPU
     if (amrex::Gpu::inLaunchRegion() && dst.isFusingCandidate())
     {
@@ -157,7 +157,6 @@ void mult_and_add (amrex::MultiFab& dst,
                    int numcomp,
                    amrex::IntVect const& nghost)
 {
-    //BL_PROFILE("amrex::Add()");
 #ifdef AMREX_USE_GPU
     if (amrex::Gpu::inLaunchRegion() && dst.isFusingCandidate())
     {
@@ -217,7 +216,7 @@ amrex::Real multi_fab_wgt_dot (amrex::MultiFab const& wgt,
 {
     AMREX_ASSERT(x.nGrowVect().allGE(nghost));
 
-    BL_PROFILE("multi_fab_wgt_dot()");
+    Kokkos::Profiling::ScopedRegion region("multi_fab_wgt_dot()");
 
     auto sm = amrex::Real(0.0);
 #ifdef AMREX_USE_GPU

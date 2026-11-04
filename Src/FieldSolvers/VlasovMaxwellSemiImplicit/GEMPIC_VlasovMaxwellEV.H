@@ -13,6 +13,8 @@
 #include <_hypre_sstruct_mv.h>
 #include <map>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_HypreSolver.H>
 #include <AMReX_MultiFab.H>
@@ -137,7 +139,7 @@ public:
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& eGDECCoeffsRho,
         Gempic::ComputationalDomain const& infra)
     {
-        BL_PROFILE(
+        Kokkos::Profiling::ScopedRegion region(
             "Gempic::FieldSolvers::VlasovMaxwellEV::solve_hodge_plus_particle_matrix_e_gdec()");
 
         auto dx{infra.cell_size_3darray()};
