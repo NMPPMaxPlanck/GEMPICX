@@ -4,6 +4,8 @@
  **************************************************************************************************/
 #include <filesystem>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_MultiFabUtil.H>
 
 #include "GEMPIC_AmrLevelInterface.H"
@@ -114,7 +116,7 @@ std::vector<BoxOrientation> get_orientation (amrex::BoxList const& bl,
                                              amrex::BoxArray const& ba,
                                              amrex::IndexType const idxType)
 {
-    BL_PROFILE("Amr::Impl::getOrientation()");
+    Kokkos::Profiling::ScopedRegion region("Amr::Impl::getOrientation()");
     std::vector<BoxOrientation> result;
     result.reserve(bl.size());
 
@@ -300,7 +302,7 @@ amrex::BoxList split_boxes (amrex::BoxList const& inputBl,
                             amrex::IntVect const refRatio,
                             bool isCoarse)
 {
-    BL_PROFILE("Amr::Impl::splitBoxes()");
+    Kokkos::Profiling::ScopedRegion region("Amr::Impl::splitBoxes()");
     amrex::BoxList outputBl(idxType);
     outputBl.reserve(inputBl.size());
 
@@ -457,7 +459,7 @@ std::shared_ptr<amrex::iMultiFab> build_covered_mask (amrex::FabArrayBase const&
                                                       amrex::IntVect const refRatio,
                                                       amrex::IndexType const idxType)
 {
-    BL_PROFILE("Amr::Impl::LevelInterface::build_covered_mask()");
+    Kokkos::Profiling::ScopedRegion region("Amr::Impl::LevelInterface::build_covered_mask()");
 
     auto coarseCoveredMask =
         std::make_shared<amrex::iMultiFab>(coarsefa.boxArray(), coarsefa.DistributionMap(), 1, 0);
@@ -499,7 +501,7 @@ LevelInterface::LevelInterface(amrex::FabArrayBase const& finefa,
                                amrex::Geometry fineGeom,
                                bool buildCoveredMask)
 {
-    BL_PROFILE("Amr::Impl::LevelInterface::LevelInterface()");
+    Kokkos::Profiling::ScopedRegion region("Amr::Impl::LevelInterface::LevelInterface()");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(finefa.boxArray().ixType() == coarsefa.boxArray().ixType(),
                                      "Coarse and fine level need the same index type!");
     AMREX_ALWAYS_ASSERT_WITH_MESSAGE(not refinement_touches_boundary(finefa.boxArray(), fineGeom),
@@ -578,7 +580,7 @@ void LevelInterface::write_to_file (std::string folderName)
 
 void LevelInterface::build_fine_interface (amrex::FabArrayBase const& finefa)
 {
-    BL_PROFILE("Amr::Impl::LevelInterface::build_fine_interface()");
+    Kokkos::Profiling::ScopedRegion region("Amr::Impl::LevelInterface::build_fine_interface()");
     amrex::BoxArray const& fba = amrex::convert(finefa.boxArray(), amrex::IndexType::TheCellType());
     // REMARK: Needs to be CellType. Otherwise the complementIn removes dof on the interface
     amrex::DistributionMapping const& fdm = finefa.DistributionMap();
@@ -621,7 +623,7 @@ void LevelInterface::build_fine_interface (amrex::FabArrayBase const& finefa)
 void LevelInterface::build_coarse_interface (amrex::FabArrayBase const& finefa,
                                             amrex::FabArrayBase const& coarsefa)
 {
-    BL_PROFILE("Amr::Impl::LevelInterface::build_coarse_interface()");
+    Kokkos::Profiling::ScopedRegion region("Amr::Impl::LevelInterface::build_coarse_interface()");
     amrex::BoxArray const& fba = amrex::coarsen(
         amrex::convert(finefa.boxArray(), amrex::IndexType::TheCellType()), m_refRatio);
     amrex::BoxArray const& cba =

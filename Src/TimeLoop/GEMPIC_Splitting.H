@@ -121,7 +121,6 @@ public:
         amrex::Real const chargeOverMass,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::OperatorHamilton::apply_h_e_particle()");
         // evaluate the electric field
         amrex::GpuArray<amrex::Real, vdim> efield =
             spline.template eval_spline_field<Forms::Field::PrimalOneForm>(eA);
@@ -178,8 +177,6 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i()");
-
         amrex::Real posNew = pos[dir] + dt * vel[dir];
         spline.template update_1d_splines<dir>(posNew, infra.geometry_data().ProbLo(dir),
                                                1.0 / infra.geometry_data().CellSize(dir));
@@ -229,8 +226,6 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i_nested_d()");
-
         amrex::Real posNew = pos[dir] + dt * vel[dir];
 
         spline.template update_1d_splines<dir>(posNew, infra.geometry_data().ProbLo(dir),
@@ -273,8 +268,6 @@ public:
         amrex::Real const dt,
         amrex::Real const gamma) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_rel_u()");
-
         amrex::Real uX = u[xDir];
         amrex::Real uY = u[yDir];
         amrex::Real uZ = u[zDir];
@@ -332,8 +325,6 @@ public:
         amrex::Real const chargeOverMass,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested_rot()");
-
         amrex::Real uXtemp = vel[xDir];
         amrex::Real uYtemp = vel[yDir];
         amrex::Real uZtemp = vel[zDir];
@@ -407,8 +398,6 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i_euler()");
-
         amrex::Real const dtv = dt * vel[pDir];
 
         if constexpr (pDir == yDir)
@@ -461,8 +450,6 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE(
-            "Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_i_nested_d_euler()");
         static_assert(pDir != xDir,
                       "apply_h_p_i_nested_d_euler should not be called for the x-direction!");
         amrex::Real const dtv = dt * vel[pDir];
@@ -504,8 +491,6 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_exact_x()");
-
         amrex::GpuArray<amrex::Real, 2> bfields{0., 0.};
 
         apply_h_p_i<xDir>(pos, vel, infra, spline, bfields, jA, bA, chargeOverMass, chargeWeight,
@@ -568,8 +553,6 @@ public:
         amrex::Real const dt,
         amrex::Real const c) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested_rel()");
-
         amrex::GpuArray<amrex::Real, 3> vel{0., 0., 0.};
         amrex::Real gamma = sqrt(1 + (u[xDir] * u[xDir] + u[yDir] * u[yDir] + u[zDir] * u[zDir]) /
                                          (c * c)); // Lorentz factor: sqrt(1+u^2/c^2)
@@ -656,8 +639,6 @@ public:
         amrex::Real const chargeWeight,
         amrex::Real const dt) const
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_p_nested()");
-
 #if AMREX_SPACEDIM == 3
 
         apply_h_p_i_nested_d<xDir>(pos, vel, infra, spline, jA, chargeWeight, 0.5 * dt);
@@ -713,7 +694,6 @@ public:
                            Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
                            amrex::Real const dt)
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_b()");
         // Operator H_B for dt/2
         // Solve Ampere-Maxwell with no current
         hodge(H, B, deRham->scaling_bto_h());
@@ -736,7 +716,6 @@ public:
                                  Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& D,
                                  amrex::Real const dt)
     {
-        BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Forms::OperatorHamilton::apply_h_e_field()");
         hodge(E, D, deRham->scaling_dto_e());
         // Operator H_E for dt (-dt for the Faraday equation)
         add_dt_curl(B, E, -dt);

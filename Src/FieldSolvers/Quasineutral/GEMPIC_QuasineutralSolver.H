@@ -13,6 +13,8 @@
 #include <_hypre_sstruct_mv.h>
 #include <map>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_HypreSolver.H>
 #include <AMReX_MultiFab.H>
@@ -937,7 +939,7 @@ public:
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
-        BL_PROFILE("solve_curlcurl_plus_particle_charge_e()");
+        Kokkos::Profiling::ScopedRegion region("solve_curlcurl_plus_particle_charge_e()");
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
                                                                              s_nRhoCoeffs);
 
@@ -1154,7 +1156,7 @@ public:
     template <typename DeRhamFieldType>
     void solve_negative_poisson_equation (DeRhamFieldType& rhs, DeRhamFieldType& x) const
     {
-        BL_PROFILE("solve_negative_poisson_equation()");
+        Kokkos::Profiling::ScopedRegion region("solve_negative_poisson_equation()");
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
         amrex::GpuArray<amrex::Real, 3> dxi{GEMPIC_D_PAD_ONE(m_infra.geometry().InvCellSize(xDir),
@@ -1335,7 +1337,7 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt) const
     {
-        BL_PROFILE("push_particles_and_correct_div_j()");
+        Kokkos::Profiling::ScopedRegion region("push_particles_and_correct_div_j()");
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge> eCorr(phi.m_deRham);
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> divJ(phi.m_deRham);
 
@@ -1643,7 +1645,7 @@ public:
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
-        BL_PROFILE("push_particles_and_correct_javg()");
+        Kokkos::Profiling::ScopedRegion region("push_particles_and_correct_javg()");
         std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoVec;
         std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoMassVec;
 

@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Array.H>
 #include <AMReX_BLassert.H>
@@ -43,7 +45,7 @@ public:
         m_saveInterval{saveInterval},
         m_saveFolder{saveFolder}
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::FullDiagnostics()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::FullDiagnostics::FullDiagnostics()");
         read_parameters();
     }
 
@@ -57,7 +59,7 @@ public:
      */
     void compute_and_pack ()
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::compute_and_pack()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::FullDiagnostics::compute_and_pack()");
         // compute the necessary fields and store result in m_mf_outputs.
         if (!m_plotParticles)
         {
@@ -81,7 +83,7 @@ public:
         FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& ions)
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::init_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::FullDiagnostics::init_data()");
         // initialize member variables and arrays in base class::Diagnostics
         init_base_data();
         initialize_field_operators_and_buffer_data(compDom, fieldRegistry, ions);
@@ -96,8 +98,8 @@ public:
      */
     void filter_compute_pack_flush (int step, amrex::Real simTime, bool forceFlush = false)
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::filter_compute_pack_flush()");
-        // GEMPIC_PROFILE("Diagnostics::FilterComputePackFlush()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::FullDiagnostics::filter_compute_pack_flush()");
 
         if (do_compute_and_pack(step, forceFlush))
         {
@@ -117,7 +119,7 @@ private:
     /** Read user-requested parameters for full diagnostics */
     void read_parameters () // computational_domain infra)
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::read_parameters()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::FullDiagnostics::read_parameters()");
         // Read list of full diagnostics fields requested by the user.
         Parameters ppDiagName("FullDiagnostics." + m_diagName);
 
@@ -167,7 +169,7 @@ private:
     /** Initialize formats and data required to construct the buffers
      */
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::init_base_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::FullDiagnostics::init_base_data()");
         // Construct Flush class.
         if (m_format == "plotfile")
         {
@@ -251,7 +253,7 @@ private:
     /** Flush m_mf_outputs and particles to file for the i^th buffer */
     inline void flush (int step, amrex::Real simTime)
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::flush()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::FullDiagnostics::flush()");
         int nlev{1}; // number of levels. 1 for now.
         for (int i{0}; i < m_mfOutputs.size(); ++i)
         {
@@ -282,7 +284,8 @@ private:
      * \return bool, whether to flush
      */
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::do_compute_and_pack()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::FullDiagnostics::do_compute_and_pack()");
         // Data must be computed and packed for full diagnostics
         // whenever the data needs to be flushed.
         return (forceFlush || (step % m_saveInterval == 0));
@@ -302,7 +305,7 @@ private:
         FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles)
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::get_diag_type()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::FullDiagnostics::get_diag_type()");
         bool particleType{false};
         bool fieldType{false};
         for (auto const& diagName : m_diagVarnames)
@@ -361,7 +364,8 @@ private:
         FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const& particles)
     {
-        BL_PROFILE("Gempic::Io::FullDiagnostics::initialize_field_operators_and_buffer_data()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::FullDiagnostics::initialize_field_operators_and_buffer_data()");
         using namespace Impl;
         DiagnosticType diagType{get_diag_type(fieldRegistry, particles)};
 

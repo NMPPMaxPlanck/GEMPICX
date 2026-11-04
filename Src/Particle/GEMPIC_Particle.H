@@ -5,6 +5,8 @@
 #ifndef PARTICLE_GROUPS_H_
 #define PARTICLE_GROUPS_H_
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_ArrayOfStructs.H>
 #include <AMReX_Box.H>
@@ -240,7 +242,7 @@ public:
 
     void copy (ParticleSpecies<vDim, nData>& source, bool local = false)
     {
-        BL_PROFILE("Gempic::Particle::ParticleSpecies::copy()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Particle::ParticleSpecies::copy()");
         this->m_charge = source.get_charge();
         this->m_mass = source.get_mass();
         this->m_name = source.get_name();

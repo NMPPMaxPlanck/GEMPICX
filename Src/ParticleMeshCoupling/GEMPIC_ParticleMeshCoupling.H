@@ -7,6 +7,8 @@
 
 #include <cmath>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_Array.H>
 #include <AMReX_FArrayBox.H>
 #include <AMReX_Math.H>
@@ -493,7 +495,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
@@ -560,7 +561,6 @@ AMREX_GPU_HOST_DEVICE void time_integrated_j (
     SplineType& spline,
     amrex::Real const chargeWeight)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::time_integrated_j()");
     using namespace Impl; // utility functions for this function
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
@@ -681,7 +681,6 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
     constexpr int degX = SplineType::s_splineDegrees[xDir];
     constexpr int degY = SplineType::s_splineDegrees[yDir];
@@ -854,7 +853,6 @@ AMREX_GPU_HOST_DEVICE void accumulate_j_integrate_b (
     amrex::GpuArray<amrex::Array4<amrex::Real>, bDim> const& bArray,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j_integrate_b()");
     using namespace Impl; // utility functions for this function
 
     constexpr int degPx = SplineType::s_splineDegrees[xDir];
@@ -937,7 +935,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
     using namespace Impl; // utility functions for this function
     constexpr int pDir1 = (pDir + 1) % 3;
     constexpr int pDir2 = (pDir + 2) % 3;
@@ -1057,7 +1054,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
     using namespace Impl; // utility functions for this function
     constexpr int degX = SplineType::s_splineDegrees[xDir];
     constexpr int degY = SplineType::s_splineDegrees[yDir];
@@ -1235,7 +1231,6 @@ AMREX_GPU_HOST_DEVICE inline void accumulate_j (
     amrex::Real const chargeWeight,
     amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> const& jArray)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::accumulate_j()");
     using namespace Impl; // utility functions for this function
 
     constexpr int degPx = SplineType::s_splineDegrees[xDir];
@@ -1464,7 +1459,6 @@ AMREX_GPU_HOST_DEVICE inline void deposit_rho (amrex::Array4<amrex::Real> const&
                                                SplineBase<degX, degY, degZ> const& spline,
                                                amrex::Real const chargeWeight)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_rho()");
     GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -1497,7 +1491,6 @@ AMREX_GPU_HOST_DEVICE inline void deposit_twoform (
     amrex::GpuArray<amrex::Real, vDim> const& depVector,
     amrex::Real coeff)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_twoform()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -1582,7 +1575,6 @@ AMREX_GPU_HOST_DEVICE inline void deposit_deldot_s (
     amrex::GpuArray<amrex::Real, vDim> const& vel,
     amrex::Real massWeight)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_deldot_s()")
     AMREX_D_PICK(int jj{0}; int kk{0};, int kk{0};, )
     GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
                         for (int kk = 0; kk <= degZ; ++kk))
@@ -1726,8 +1718,6 @@ AMREX_GPU_HOST_DEVICE inline void deposit_curlj (
     amrex::GpuArray<amrex::Real, vDim> const& vel,
     amrex::Real chargeWeight)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::ParticleMeshCoupling::deposit_curlj()")
-
     bool xCond{false};
     bool yCond{false};
     bool zCond{false};
@@ -2016,7 +2006,7 @@ void deposit_rho_j_jcrossb_deldots (
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
-    BL_PROFILE("deposit_rho_j_jcrossb_deldots()");
+    Kokkos::Profiling::ScopedRegion region("deposit_rho_j_jcrossb_deldots()");
     rho.m_data.setVal(0.0);
     for (int comp = 0; comp < static_cast<int>(vDim); ++comp)
     {
@@ -2175,7 +2165,7 @@ void deposit_particle_density_gdec (
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
-    BL_PROFILE("deposit_particle_density_gdec()");
+    Kokkos::Profiling::ScopedRegion region("deposit_particle_density_gdec()");
     using PrimalNodeField = Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>;
     auto dr = compDom.cell_size_array();
 
@@ -2270,7 +2260,7 @@ void deposit_particle_current_gdec (
     amrex::Real dt,
     bool doSync = true)
 {
-    BL_PROFILE("deposit_particle_current_gdec()");
+    Kokkos::Profiling::ScopedRegion region("deposit_particle_current_gdec()");
     using PrimalEdgeField = Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>;
     auto dr = compDom.cell_size_array();
 

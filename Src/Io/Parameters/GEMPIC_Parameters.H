@@ -9,6 +9,8 @@
 #include <string>
 #include <variant>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Box.H>
 #include <AMReX_ParmParse.H>
@@ -63,7 +65,7 @@ std::string parm_parse_typename(parmParseType const& val);
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, T const& value)
 {
-    BL_PROFILE("Gempic::Io::Impl::set_shared_param()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::set_shared_param()");
     sharedParam = value;
 }
 
@@ -76,7 +78,7 @@ void set_shared_param (parmParseType& sharedParam, T const& value)
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, std::vector<T> const& value)
 {
-    BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::vector)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::set_shared_param(std::vector)");
     sharedParam = parmParseVectorType(value.begin(), value.end());
 }
 
@@ -89,7 +91,7 @@ void set_shared_param (parmParseType& sharedParam, std::vector<T> const& value)
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, amrex::Vector<T> const& value)
 {
-    BL_PROFILE("Gempic::Io::Impl::set_shared_param(amrex::Vector)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::set_shared_param(amrex::Vector)");
     sharedParam = parmParseVectorType(value.begin(), value.end());
 }
 
@@ -102,7 +104,7 @@ void set_shared_param (parmParseType& sharedParam, amrex::Vector<T> const& value
 template <typename T>
 void set_shared_param (parmParseType& sharedParam, std::array<T, AMREX_SPACEDIM> const& value)
 {
-    BL_PROFILE("Gempic::Io::Impl::set_shared_param(std::array)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::set_shared_param(std::array)");
     parmParseArrayType tmp;
 #ifdef _WIN32
     auto tmpIt{tmp.begin()};
@@ -126,7 +128,7 @@ void set_shared_param (parmParseType& sharedParam, std::array<T, AMREX_SPACEDIM>
 template <typename T>
 void get_shared_param (T& variable, parmParseType const& sharedParam)
 {
-    BL_PROFILE("Gempic::Io::Impl::get_shared_param()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::get_shared_param()");
     auto tmp = std::get<parmParseParameterType>(sharedParam);
     variable = std::get<T>(tmp);
 }
@@ -140,7 +142,7 @@ void get_shared_param (T& variable, parmParseType const& sharedParam)
 template <typename T>
 void get_shared_param (std::vector<T>& variable, parmParseType const& sharedParam)
 {
-    BL_PROFILE("Gempic::Io::Impl::get_shared_param(std::vector)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::get_shared_param(std::vector)");
     auto tmp = std::get<parmParseVectorType>(sharedParam);
     variable.resize(tmp.size());
     for (size_t i{0}; i < tmp.size(); i++)
@@ -158,7 +160,7 @@ void get_shared_param (std::vector<T>& variable, parmParseType const& sharedPara
 template <typename T>
 void get_shared_param (amrex::Vector<T>& variable, parmParseType const& sharedParam)
 {
-    BL_PROFILE("Gempic::Io::Impl::get_shared_param(amrex::Vector)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::get_shared_param(amrex::Vector)");
     auto tmp = std::get<parmParseVectorType>(sharedParam);
     variable.resize(tmp.size());
     for (size_t i{0}; i < tmp.size(); i++)
@@ -176,7 +178,7 @@ void get_shared_param (amrex::Vector<T>& variable, parmParseType const& sharedPa
 template <typename T>
 void get_shared_param (std::array<T, AMREX_SPACEDIM>& variable, parmParseType const& sharedParam)
 {
-    BL_PROFILE("Gempic::Io::Impl::get_shared_param(std::array)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::get_shared_param(std::array)");
     auto tmp = std::get<parmParseArrayType>(sharedParam);
     for (size_t i{0}; i < AMREX_SPACEDIM; i++)
     {
@@ -195,7 +197,7 @@ void get_shared_param (std::array<T, AMREX_SPACEDIM>& variable, parmParseType co
 template <typename T>
 parmParseType convert_to_param (T const& variable)
 {
-    BL_PROFILE("Gempic::Io::Impl::convert_to_param()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::convert_to_param()");
     parmParseType parameterVariable;
     set_shared_param(parameterVariable, variable);
     return parameterVariable;
@@ -363,7 +365,7 @@ public:
     template <typename T>
     bool get_or_set (std::string const& variableName, T& variable)
     {
-        BL_PROFILE("Gempic::Io::Parameters::get_or_set()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::get_or_set()");
         // Check if variable is a shared parameter ('.contains' is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -404,7 +406,7 @@ public:
     template <typename T>
     void get (std::string const& variableName, T& variable)
     {
-        BL_PROFILE("Gempic::Io::Parameters::get()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::get()");
         using namespace Impl; // Necessary to access operator<<() nicely;
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
@@ -465,7 +467,7 @@ public:
     template <typename T>
     void set (std::string const& variableName, T const& variable)
     {
-        BL_PROFILE("Gempic::Io::Parameters::set()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::set()");
         using namespace Impl; // Necessary to access operator<<() nicely;
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
@@ -578,7 +580,7 @@ private:
     template <typename T>
     bool query (std::string const& variableName, T& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::query()");
         amrex::ParmParse ppPrefix(m_classPrefix);
         return ppPrefix.query(variableName.c_str(), value);
     }
@@ -595,7 +597,7 @@ private:
     template <typename T>
     bool query (std::string const& variableName, std::vector<T>& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query(std::vector)");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::query(std::vector)");
         amrex::ParmParse ppPrefix(m_classPrefix);
         return ppPrefix.queryarr(variableName.c_str(), value);
     }
@@ -609,7 +611,7 @@ private:
     template <typename T>
     bool query (std::string const& variableName, amrex::Vector<T>& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query(amrex::Vector)");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::query(amrex::Vector)");
         amrex::ParmParse ppPrefix(m_classPrefix);
         return ppPrefix.queryarr(variableName.c_str(), value);
     }
@@ -622,7 +624,7 @@ private:
      */
     bool query (std::string const& variableName, amrex::IntVect& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query(amrex::IntVect)");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::query(amrex::IntVect)");
         amrex::Vector<int> tmp(AMREX_SPACEDIM);
         amrex::ParmParse ppPrefix(m_classPrefix);
         bool found = ppPrefix.queryarr(variableName.c_str(), tmp);
@@ -645,7 +647,7 @@ private:
     template <typename T>
     bool query_shared (std::string const& variableName, T& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query_shared()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::query_shared()");
         amrex::ParmParse pp;
         return pp.query(variableName.c_str(), value);
     }
@@ -659,7 +661,7 @@ private:
     template <typename T>
     bool query_shared (std::string const& variableName, std::vector<T>& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query_shared(std::vector)");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::query_shared(std::vector)");
         amrex::ParmParse pp;
         return pp.queryarr(variableName.c_str(), value);
     }
@@ -673,7 +675,8 @@ private:
     template <typename T>
     bool query_shared (std::string const& variableName, amrex::Vector<T>& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query_shared(amrex::Vector)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::Parameters::query_shared(amrex::Vector)");
         amrex::ParmParse pp;
         return pp.queryarr(variableName.c_str(), value);
     }
@@ -686,7 +689,8 @@ private:
      */
     bool query_shared (std::string const& variableName, amrex::IntVect& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::query_shared(amrex::IntVect)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::Parameters::query_shared(amrex::IntVect)");
         amrex::Vector<int> tmp(AMREX_SPACEDIM);
         amrex::ParmParse pp;
         bool found = pp.queryarr(variableName.c_str(), tmp);
@@ -709,7 +713,7 @@ private:
     template <typename T>
     void set_local_param (std::string const& variableName, T const& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::set_local_param()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::set_local_param()");
         amrex::ParmParse ppPrefix(m_classPrefix);
         ppPrefix.add(variableName.c_str(), value);
     }
@@ -723,7 +727,8 @@ private:
     template <typename T>
     void set_local_param (std::string const& variableName, std::vector<T> const& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::set_local_param(std::vector)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::Parameters::set_local_param(std::vector)");
         amrex::ParmParse ppPrefix(m_classPrefix);
         ppPrefix.addarr(variableName.c_str(), value);
     }
@@ -737,7 +742,8 @@ private:
     template <typename T, size_t s>
     void set_local_param (std::string const& variableName, std::array<T, s> const& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::set_local_param(std::array)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::Parameters::set_local_param(std::array)");
         amrex::ParmParse ppPrefix(m_classPrefix);
         std::vector<T> v;
         v.resize(s);
@@ -757,7 +763,8 @@ private:
     template <typename T>
     void set_local_param (std::string const& variableName, amrex::Vector<T> const& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::set_local_param(amrex::Vector)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::Parameters::set_local_param(amrex::Vector)");
         amrex::ParmParse ppPrefix(m_classPrefix);
         ppPrefix.addarr(variableName.c_str(), value);
     }
@@ -771,7 +778,8 @@ private:
     template <typename T>
     void set_local_param (std::string const& variableName, amrex::IntVect const& value)
     {
-        BL_PROFILE("Gempic::Io::Parameters::set_local_param(amrex::IntVect)");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::Parameters::set_local_param(amrex::IntVect)");
         amrex::Vector<int> tmp(AMREX_SPACEDIM);
         for (int i = 0; i < AMREX_SPACEDIM; ++i)
         {
@@ -795,7 +803,7 @@ private:
     template <typename T>
     void print_shared_parameter (std::ofstream& ofs, std::string const& variableName, T& variable)
     {
-        BL_PROFILE("Gempic::Io::Parameters::print_shared_parameter()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::print_shared_parameter()");
         using namespace Impl; // Necessary to access operator<<() nicely;
         if (s_sharedParams.at(variableName).get()->m_isSet)
         {

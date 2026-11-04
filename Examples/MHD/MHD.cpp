@@ -33,7 +33,6 @@ using namespace Forms;
 
 int main_new_mhdpde ()
 {
-    BL_PROFILE_VAR("mainNewMHDPDE()", pmain2);
     Gempic::Utils::Verbosity::set_level(1);
     int myrank, nMPIranks;
     mpi_debugging(myrank, nMPIranks);
@@ -127,20 +126,17 @@ int main_new_mhdpde ()
     auto endTotal = amrex::second() - strtTotal;
     amrex::Print() << "\nTotal Time: " << endTotal << '\n';
 
-    BL_PROFILE_VAR_STOP(pmain2);
     return 0;
 }
 
 int main (int argc, char* argv[])
 {
     int runNewMHDPDE;
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
     {
-        BL_PROFILE_VAR("main()", pmain);
         runNewMHDPDE = main_new_mhdpde();
 
-        BL_PROFILE_VAR_STOP(pmain);
     } // namespace amrex
-    amrex::Finalize();
+    Gempic::finalize();
     return runNewMHDPDE;
 }

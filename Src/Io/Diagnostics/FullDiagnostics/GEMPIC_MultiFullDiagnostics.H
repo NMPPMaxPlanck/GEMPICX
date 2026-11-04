@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_REAL.H>
 #include <AMReX_Vector.H>
@@ -31,7 +33,7 @@ public:
         FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vDim, nData>>> const& particles)
     {
-        BL_PROFILE("Gempic::Io::MultiDiagnostics()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::MultiDiagnostics()");
         read_parameters();
         /** Resize alldiags and initialize each element to a pointer to a
          * diagnostics. Calls the corresponding diagnostics constructor.
@@ -49,7 +51,7 @@ public:
     /** \brief Read Input parameters. Called in constructor. */
     void read_parameters ()
     {
-        BL_PROFILE("Gempic::Io::MultiDiagnostics::read_parameters()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::MultiDiagnostics::read_parameters()");
         Parameters params("FullDiagnostics");
 
         bool enableDiags{false};
@@ -67,7 +69,7 @@ public:
         FieldRegistry const& fieldRegistry,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vDim, nData>>> const& particles)
     {
-        BL_PROFILE("Gempic::Io::MultiDiagnostics::init_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::MultiDiagnostics::init_data()");
         for (auto& diag : m_alldiags)
         {
             diag->init_data(compDom, fieldRegistry, particles);
@@ -76,7 +78,8 @@ public:
     /** \brief Called at each iteration. Compute diags and flush. */
     void filter_compute_pack_flush (int step, amrex::Real simTime, bool forceFlush = false)
     {
-        BL_PROFILE("Gempic::Io::MultiDiagnostics::filter_compute_pack_flush()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiDiagnostics::filter_compute_pack_flush()");
         for (auto& diag : m_alldiags)
         {
             diag->filter_compute_pack_flush(step, simTime, forceFlush);
@@ -86,7 +89,8 @@ public:
      *         is true, compute diags and flush with force_flush=true. */
     void filter_compute_pack_flush_last_timestep (int step, amrex::Real simTime)
     {
-        BL_PROFILE("Gempic::Io::MultiDiagnostics::filter_compute_pack_flush_last_timestep()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::MultiDiagnostics::filter_compute_pack_flush_last_timestep()");
         for (auto& diag : m_alldiags)
         {
             if (diag->DoDumpLastTimestep())

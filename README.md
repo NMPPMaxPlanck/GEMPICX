@@ -96,8 +96,6 @@ using `-D GEMPIC_OPTION Argument`
 | `GEMPIC_BUILD_EXAMPLES`           | Build the examples. Currently only toggles all or none.                                           | `ON`            |
 | `GEMPIC_BUILD_DOCUMENTATION`      | Build the documentation.                                                                          | `OFF`           |
 | `GEMPIC_BUILD_ONLY_DOCUMENTATION` | Build only the documentation of GEMPICX                                                           | `OFF`           |
-| `AMReX_TINY_PROFILE`              | Use the built in tiny profiler                                                                    | `OFF`           |
-| `GEMPIC_PROFILE_KERNELS`          | Enable tiny profiling in host device functions when executed on host. Requires `AMReX_TINY_PROFILE` | `OFF`         |
 | `GEMPIC_DEBUG_MESSAGES`           | Turns on GEMPIC-specific debug messages                                                           | `OFF`           |
 | `USE_DIRTY_AMREX_REPO`            | Allow building from dirty AMReX git repositories                                                  | `OFF`           |
 | `USE_DIRTY_LAPACK_REPO`           | Allow building from dirty Lapack git repositories                                                 | `OFF`           |

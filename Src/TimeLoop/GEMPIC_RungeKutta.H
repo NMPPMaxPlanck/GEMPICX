@@ -8,6 +8,8 @@
 #include <cmath>
 #include <vector>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_BLProfiler.H>
 #include <AMReX_Box.H>
@@ -42,8 +44,6 @@ inline AMREX_GPU_HOST_DEVICE void lsrk_stage_dk_particle (
     amrex::Real coeffsAStageIndex,
     amrex::Real coeffsBStageIndex)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Impl::lsrk_stage_dk_particle()");
-
     // grad Bpar = grad Bz is neglected for the moment and B_par^* = Bz (assuming initial B contains
     // background field)
     for (int d = 0; d < AMREX_SPACEDIM; d++)
@@ -73,7 +73,6 @@ inline AMREX_GPU_HOST_DEVICE void lsrk_stage_kinetic_particle (
     amrex::Real coeffsAStageIndex,
     amrex::Real coeffsBStageIndex)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Impl::lsrk_stage_kinetic_particle()");
     for (int d = 0; d < AMREX_SPACEDIM; d++)
     {
         s2R[d] = coeffsAStageIndex * s2R[d] + dt * V[d];
@@ -113,7 +112,6 @@ inline AMREX_GPU_HOST_DEVICE void dxvpardt_drift_kinetic (
     amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& eA,
     amrex::GpuArray<amrex::Array4<amrex::Real>, 3> const& bA)
 {
-    BL_PROFILE_HOST_DEVICE("Gempic::TimeLoop::Impl::dxvpardt_drift_kinetic");
     // grad Bpar = grad Bz is neglected for the moment and B_par^* = Bz (assuming initial B contains
     // background field)
 
@@ -188,7 +186,7 @@ public:
         Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
         amrex::Real dt)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_vlasov_maxwell()");
+        Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::lsrk_vlasov_maxwell()");
         for (int stageIndex = 0; stageIndex < m_stages; stageIndex++)
         {
             amrex::Real const coeffsAStageIndex = m_coeffsA[stageIndex];
@@ -220,7 +218,7 @@ public:
         Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& tensor,
         amrex::Real dt)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_dk_vlasov_maxwell()");
+        Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::lsrk_dk_vlasov_maxwell()");
         for (int stageIndex = 0; stageIndex < m_stages; stageIndex++)
         {
             amrex::Real const coeffsAStageIndex = m_coeffsA[stageIndex];
@@ -251,7 +249,7 @@ public:
         Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& tensor,
         amrex::Real dt)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_DeFi_vlasov_maxwell()");
+        Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::lsrk_DeFi_vlasov_maxwell()");
         for (int stageIndex = 0; stageIndex < m_stages; stageIndex++)
         {
             amrex::Real const coeffsAStageIndex = m_coeffsA[stageIndex];
@@ -281,7 +279,8 @@ public:
         amrex::Real coeffsAStageIndex,
         amrex::Real coeffsBStageIndex)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_stage_push_particle_deposit_j()");
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::RungeKutta::lsrk_stage_push_particle_deposit_j()");
         // particle loop
         for (int i = 0; i < 3; i++)
         {
@@ -305,7 +304,8 @@ public:
         amrex::Real const coeffsAStageIndex,
         amrex::Real const coeffsBStageIndex)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_stage_dk_push_particle_deposit_j()");
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::RungeKutta::lsrk_stage_dk_push_particle_deposit_j()");
         // particle loop
         for (int i = 0; i < 3; i++)
         {
@@ -329,7 +329,8 @@ public:
         amrex::Real const coeffsAStageIndex,
         amrex::Real const coeffsBStageIndex)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_stage_DeFi_push_particle_deposit_j()");
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::RungeKutta::lsrk_stage_DeFi_push_particle_deposit_j()");
         // particle loop
         for (int i = 0; i < 3; i++)
         {
@@ -361,7 +362,8 @@ public:
         amrex::Real coeffsAStageIndex,
         amrex::Real coeffsBStageIndex)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_stage_push_particle_deposit_j_fully_kinetic()");
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::RungeKutta::lsrk_stage_push_particle_deposit_j_fully_kinetic()");
         amrex::Real charge = particleSpecies->get_charge();
         amrex::Real chargeMass = charge / particleSpecies->get_mass();
 
@@ -449,7 +451,8 @@ public:
         amrex::Real const coeffsAStageIndex,
         amrex::Real const coeffsBStageIndex)
     {
-        BL_PROFILE("GEMPIC::RungeKutta::lsrk_stage_dk_push_particle_deposit_j_drift_kinetic()");
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::RungeKutta::lsrk_stage_dk_push_particle_deposit_j_drift_kinetic()");
         amrex::Real charge = particleSpecies->get_charge();
         amrex::Real chargeMass = charge / particleSpecies->get_mass();
 
@@ -869,7 +872,8 @@ private:
 template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DRC>
 void ExplicitRK<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_explicit (amrex::Real rkTime)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::one_step_solve_dqdt_explicit()");
+    Kokkos::Profiling::ScopedRegion region(
+        "GEMPIC::RungeKutta::ExplicitRK::one_step_solve_dqdt_explicit()");
     m_scheme.one_step_solve_dqdt_explicit(rkTime);
 }
 
@@ -884,7 +888,7 @@ void ExplicitRK<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const d
                                                             std::shared_ptr<FieldsHandler>& dst,
                                                             RKStagesArray const& srcArray)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::finalize_rk()");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::ExplicitRK::finalize_rk()");
     for (int r = 0; r < s_nRKstages; r++)
     {
         amrex::Real const coeff = m_rkTableau.m_b[r] * dt;
@@ -902,7 +906,7 @@ template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DR
 void ExplicitRK<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real const time,
                                                                amrex::Real const dt)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::ExplicitRK::integrate_step()");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::ExplicitRK::integrate_step()");
     for (int s = 0; s < s_nRKstages; s++)
     {
         *m_solutionTmpExplicit = *m_solutionInOut;
@@ -1020,7 +1024,8 @@ template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DR
 void ImexRk<FieldsHandler, userRkTag, DRC>::one_step_solve_dqdt_semiimplicit (
     amrex::Real const timeI, amrex::Real const dtI, amrex::Real const timeE, amrex::Real const dtE)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::ImexRk::one_step_solve_dqdt_semiimplicit()");
+    Kokkos::Profiling::ScopedRegion region(
+        "GEMPIC::RungeKutta::ImexRk::one_step_solve_dqdt_semiimplicit()");
     m_scheme.one_step_solve_dqdt_semiimplicit(timeI, dtI, timeE, dtE);
 }
 
@@ -1035,7 +1040,7 @@ void ImexRk<FieldsHandler, userRkTag, DRC>::finalize_rk (amrex::Real const dt,
                                                         std::shared_ptr<FieldsHandler>& dst,
                                                         RKStagesArray const& srcArray)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::ImexRk::finalize_rk()");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::ImexRk::finalize_rk()");
     for (int r = 0; r < s_nRKstages; r++)
     {
         amrex::Real const coeff = m_rkTableau.m_implicitRkButcherTableau.m_b[r] * dt;
@@ -1053,7 +1058,7 @@ template <class FieldsHandler, RungeKuttaTag userRkTag, Forms::DeRhamComplexC DR
 void ImexRk<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real const time,
                                                            amrex::Real const dt)
 {
-    BL_PROFILE("GEMPIC::RungeKutta::ImexRk::integrate_step()");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::ImexRk::integrate_step()");
     // use  the multi components to cast the multi-stage vectors;
     if (Gempic::Utils::Verbosity::level() > 0)
     {

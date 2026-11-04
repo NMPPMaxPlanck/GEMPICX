@@ -78,7 +78,6 @@ int main (int argc, char* argv[])
                       sSGdecBWz[zDir])}; // total number of z-field coefficients
 
     {
-        BL_PROFILE("VlasovMaxwellSemiImplicitMain()");
         Io::Parameters parameters{};
         // Initialize computational_domain
         ComputationalDomain infra;

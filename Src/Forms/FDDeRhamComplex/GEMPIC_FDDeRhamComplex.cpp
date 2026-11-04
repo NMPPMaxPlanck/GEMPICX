@@ -4,6 +4,8 @@
  **************************************************************************************************/
 #include <tuple>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -410,7 +412,7 @@ void hodge (DiscreteField& dst,
             DiscreteField& src,
             AMREX_D_DECL(StencilXdir stencilXdir, StencilYdir stencilYdir, StencilZdir stencilZdir))
 {
-    BL_PROFILE("Impl::hodge(DiscreteField, DiscreteField)");
+    Kokkos::Profiling::ScopedRegion region("Impl::hodge(DiscreteField, DiscreteField)");
     amrex::Real scale{hodge_scale(dst, src)};
     std::array<size_t, AMREX_SPACEDIM> ghostWidth{
         AMREX_D_DECL(stencilXdir.s_halfWidth, stencilYdir.s_halfWidth, stencilZdir.s_halfWidth)};
@@ -474,38 +476,38 @@ void hodge (DiscreteField& dst,
 
 void grad (PrimalOneForm& of, PrimalZeroForm& zf)
 {
-    BL_PROFILE("grad(PrimalZeroForm->PrimalOneForm)");
+    Kokkos::Profiling::ScopedRegion region("grad(PrimalZeroForm->PrimalOneForm)");
     Impl::grad(of, zf, Impl::ForwardStencil{});
 }
 void grad (DualOneForm& of, DualZeroForm& zf)
 {
-    BL_PROFILE("grad(DualZeroForm->DualOneForm)");
+    Kokkos::Profiling::ScopedRegion region("grad(DualZeroForm->DualOneForm)");
     zf.apply_boundary_conditions({AMREX_D_DECL(1, 1, 1)});
     Impl::grad(of, zf, Impl::BackwardStencil{});
 }
 
 void curl (PrimalTwoForm& tf, PrimalOneForm& of)
 {
-    BL_PROFILE("curl(PrimalOneForm->PrimalTwoForm)");
+    Kokkos::Profiling::ScopedRegion region("curl(PrimalOneForm->PrimalTwoForm)");
     Impl::curl(tf, of, Impl::ForwardStencil{});
 }
 
 void curl (DualTwoForm& tf, DualOneForm& of)
 {
-    BL_PROFILE("curl(DualOneForm->DualTwoForm)");
+    Kokkos::Profiling::ScopedRegion region("curl(DualOneForm->DualTwoForm)");
     of.apply_boundary_conditions({AMREX_D_DECL(1, 1, 1)});
     Impl::curl(tf, of, Impl::BackwardStencil{});
 }
 
 void div (PrimalThreeForm& threeF, PrimalTwoForm& twoF)
 {
-    BL_PROFILE("div(PrimalTwoForm->PrimalThreeForm)");
+    Kokkos::Profiling::ScopedRegion region("div(PrimalTwoForm->PrimalThreeForm)");
     Impl::div(threeF, twoF, Impl::ForwardStencil{});
 }
 
 void div (DualThreeForm& threeF, DualTwoForm& twoF)
 {
-    BL_PROFILE("div(DualTwoForm->DualThreeForm)");
+    Kokkos::Profiling::ScopedRegion region("div(DualTwoForm->DualThreeForm)");
     twoF.apply_boundary_conditions({AMREX_D_DECL(1, 1, 1)});
     Impl::div(threeF, twoF, Impl::BackwardStencil{});
 }
@@ -619,7 +621,7 @@ FDDeRhamComplex::FDDeRhamComplex(ComputationalDomain const& compDom,
                                  int nComp) :
     DeRhamComplex::DeRhamComplex{compDom, hodgeDegree}
 {
-    BL_PROFILE("Gempic::Forms::FDDeRhamComplex::FDDeRhamComplex()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::FDDeRhamComplex::FDDeRhamComplex()");
     Io::Parameters params("DeRhamComplex");
     /* Number of essential ghost cells is determined by degree of the Hodge and particle
     ** splines:

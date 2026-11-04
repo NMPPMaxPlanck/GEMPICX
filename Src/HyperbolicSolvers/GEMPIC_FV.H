@@ -9,6 +9,8 @@
 #include <iostream>
 #include <vector>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_VisMF.H>
 
 #include "GEMPIC_Array4D.H"
@@ -778,7 +780,6 @@ public:
         squareMatrixArray<3, polyrecDegreeFv + 2> const& wenOint2LocalGLintIn,
         squareMatrix<polyrecDegreeFv + 2> const& wenoOiMatrix2CIn)
     {
-        BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_node2cell_reconstruction_1d()");
         weno_node2cell_reconstruction_1d(whWeno, inputVector, wenOint2LocalGLintIn,
                                          wenoOiMatrix2CIn);
     }
@@ -789,7 +790,6 @@ public:
         squareMatrixArray<3, polyrecDegreeFv + 2> const& wenOint2LocalGLintIn,
         squareMatrix<polyrecDegreeFv + 2> const& wenoOiMatrix2CIn)
     {
-        BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_node2cell_reconstruction_1d()");
         weno_node2cell_reconstruction_1d(whWeno, inputVector, wenOint2LocalGLintIn,
                                          wenoOiMatrix2CIn);
     }
@@ -810,7 +810,6 @@ public:
         squareMatrixArray<3, polyrecDegreeFv + 1> const& wenOhist2LocalGLintIn,
         squareMatrix<polyrecDegreeFv + 1> const& wenoOiMatrixCIn)
     {
-        BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
         // get local transformation matrices: stencil histopolating polynomials to local
         // interpolating polinomials
         amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoHistNDof - 1,
@@ -882,7 +881,6 @@ public:
         squareMatrixArray<3, polyrecDegreeFv + 1> const& wenOhist2LocalGLintIn,
         squareMatrix<polyrecDegreeFv + 1> const& wenoOiMatrixCIn)
     {
-        BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
         amrex::Real omegaSum = 0.0;
         amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, 0, 0, s_wenoHistNDof - 1,
                        amrex::Order::C>
@@ -959,7 +957,6 @@ public:
         squareMatrixArray<3, polyrecDegreeFv + 2> const& wenOint2LocalGLintIn,
         squareMatrix<polyrecDegreeFv + 2> const& wenoOiMatrix2CIn)
     {
-        BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
         amrex::Real omegaSum = 0.0;
         amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoIntNDof - 1,
                        amrex::Order::C>
@@ -1031,7 +1028,6 @@ public:
         squareMatrixArray<3, polyrecDegreeFv + 2> const& wenOint2LocalGLintIn,
         squareMatrix<polyrecDegreeFv + 2> const& wenoOiMatrix2CIn)
     {
-        BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
         amrex::Real omegaSum = 0.0;
         amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, 0, 0, s_wenoIntNDof - 1,
                        amrex::Order::C>
@@ -1386,7 +1382,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::zero_reconstruction_1d(
 template <int nVarFv, int polyrecDegreeFv>
 FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
 {
-    BL_PROFILE("GEMPIC::FVreconstruction::FVreconstruction()");
+    Kokkos::Profiling::ScopedRegion region("GEMPIC::FVreconstruction::FVreconstruction()");
     static_assert((polyrecDegreeFv % 2 == 0), "polyrec_degree_FV must be an even number");
 
     std::vector<std::vector<amrex::Real>> mWeightsGLeg;
@@ -1932,7 +1928,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_cell2cell_reconstruction_1d(
     amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, 2 * polyrecDegreeFv, amrex::Order::C> const&
         inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_cell2cell_reconstruction_1d()");
     //// compute the reconstruction:
     //// 1st order accurate
     //ZERO_reconstruction_1d(wh_weno, InputVector);
@@ -1952,7 +1947,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_cell2cell_reconstruction_1d(
     amrex::Array1D<amrex::Real, 0, polyrecDegreeFv>& whWeno,
     amrex::Array1D<amrex::Real, 0, 2 * polyrecDegreeFv> const& inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_cell2cell_reconstruction_1d()");
     weno_reconstruction_1d(whWeno, inputVector);
 }
 
@@ -1965,7 +1959,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_cell2cell_reconstruction_1d(
     squareMatrixArray<3, polyrecDegreeFv + 1> const& wenOhist2LocalGLintIn,
     squareMatrix<polyrecDegreeFv + 1> const& wenoOiMatrixCIn)
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_cell2cell_reconstruction_1d()");
     // compute the reconstruction:
     weno_reconstruction_1d(whWeno, inputVector, wenOhist2LocalGLintIn, wenoOiMatrixCIn);
 }
@@ -1978,7 +1971,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_cell2cell_reconstruction_1d(
     squareMatrixArray<3, polyrecDegreeFv + 1> const& wenOhist2LocalGLintIn,
     squareMatrix<polyrecDegreeFv + 1> const& wenoOiMatrixCIn)
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_cell2cell_reconstruction_1d()");
     // compute the reconstruction:
     weno_reconstruction_1d(whWeno, inputVector, wenOhist2LocalGLintIn, wenoOiMatrixCIn);
 }
@@ -1995,7 +1987,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_node2cell_reconstruction_1d(
                    2 * (polyrecDegreeFv + 1) - 1,
                    amrex::Order::C> const& inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_node2cell_reconstruction_1d()");
     //// compute the reconstruction:
     //// 1st order accurate
     //ZERO_reconstruction_1d(wh_weno, InputVector);
@@ -2015,7 +2006,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_node2cell_reconstruction_1d(
     amrex::Array1D<amrex::Real, 0, polyrecDegreeFv + 1>& whWeno,
     amrex::Array1D<amrex::Real, 0, 2 * (polyrecDegreeFv + 1) - 1> const& inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::compute_node2cell_reconstruction_1d()");
     weno_node2cell_reconstruction_1d(whWeno, inputVector);
 }
 
@@ -2026,7 +2016,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
     amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, 2 * polyrecDegreeFv, amrex::Order::C> const&
         inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
     // get local transformation matrices: stencil histopolating polynomials to local interpolating
     // polinomials
     amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoHistNDof - 1,
@@ -2098,7 +2087,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
     amrex::Array1D<amrex::Real, 0, polyrecDegreeFv>& whWeno,
     amrex::Array1D<amrex::Real, 0, 2 * polyrecDegreeFv> const& inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_reconstruction_1d()");
     amrex::Real omegaSum = 0.0;
     amrex::Array2D<amrex::Real, 0, s_wenoNStencil - 1, 0, s_wenoHistNDof - 1, amrex::Order::C>
         whRec;
@@ -2166,7 +2154,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
                    2 * (polyrecDegreeFv + 1) - 1,
                    amrex::Order::C> const& inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
     amrex::Real omegaSum = 0.0;
     amrex::Array3D<amrex::Real, 0, s_wenoNStencil - 1, 0, nVarFv - 1, 0, s_wenoIntNDof - 1,
                    amrex::Order::C>
@@ -2238,7 +2225,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
     amrex::Array1D<amrex::Real, 0, polyrecDegreeFv + 1>& whWeno,
     amrex::Array1D<amrex::Real, 0, 2 * (polyrecDegreeFv + 1) - 1> const& inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::weno_node2cell_reconstruction_1d()");
     amrex::Real omegaSum = 0.0;
     amrex::Array2D<amrex::Real, 0, s_wenoNStencil - 1, 0, s_wenoIntNDof - 1, amrex::Order::C> whRec;
 
@@ -2299,7 +2285,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::polynomial_reconstruction_1d(
     amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, 2 * polyrecDegreeFv, amrex::Order::C> const&
         inputVector) const
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::polynomial_reconstruction_1d()");
     for (int iVar = 0; iVar < nVarFv; iVar++)
     {
         for (int i = 0; i < s_wenoHistNDof; i++)
@@ -2333,7 +2318,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::legendre_interpolating_g_leg_nodes_mp
     amrex::GpuArray<amrex::Real, degree + 1>& phiXi,
     amrex::Real const xi)
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::legendre_interpolating_g_leg_nodes_MP()");
     constexpr int nDOF = degree + 1;
     // Access the Gauss-Legendre nodes for this degree from fixed arrays
     auto const& nodesGLeg = m_nodesGLegTable.template get_array<degree>();
@@ -2461,7 +2445,6 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::legendre_interpolating_weno_stencil_n
     amrex::GpuArray<amrex::Real, degree + 1>& phiXi,
     amrex::Real const xi)
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::legendre_interpolating_weno_stencil_nodes()");
     constexpr int nDOF = degree + 1;
     // Initialize variables
     for (int i = 0; i < nDOF; i++)
@@ -2522,7 +2505,6 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE void
 FVreconstruction<nVarFv, polyrecDegreeFv>::legendre_histopolating_weno_stencil_nodes(
     amrex::GpuArray<amrex::Real, degree + 1>& phi, amrex::Real const xi)
 {
-    BL_PROFILE_HOST_DEVICE("GEMPIC::FVreconstruction::legendre_histopolating_weno_stencil_nodes()");
     // Initialize variables
     constexpr int nDofHistop = degree + 1;
     constexpr int nDofInterp = degree + 2;

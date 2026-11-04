@@ -221,7 +221,7 @@ int main (int argc, char* argv[])
                 }
 
                 {
-                    BL_PROFILE("TimeLoop::particle_loop1");
+                    Kokkos::Profiling::ScopedRegion scope("TimeLoop::particle_loop1");
                     for (auto& particleSpecies : particlesLinVlasov)
                     {
                         amrex::Real charge = particleSpecies->get_charge();
@@ -306,7 +306,7 @@ int main (int argc, char* argv[])
                 hodge(E, D);
 
                 {
-                    BL_PROFILE("TimeLoop::particle_loop2");
+                    Kokkos::Profiling::ScopedRegion scope("TimeLoop::particle_loop2");
                     // He,particle
                     for (auto& particleSpecies : particlesLinVlasov)
                     {

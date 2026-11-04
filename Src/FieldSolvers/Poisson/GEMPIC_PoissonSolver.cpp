@@ -4,6 +4,8 @@
  **************************************************************************************************/
 #include <memory>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
@@ -71,7 +73,7 @@ AmrexSolver::AmrexSolver(ComputationalDomain const& compDom,
                          int bottomVerbose) :
     m_compDom{compDom}, m_relTol{relTol}, m_absTol{absTol}
 {
-    BL_PROFILE("Gempic::FieldSolvers::AmrexSolver::AmrexSolver()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::FieldSolvers::AmrexSolver::AmrexSolver()");
     // Check for periodic boundaries, required for this solver
     if (!compDom.geometry().periodicity().isAllPeriodic())
     {
@@ -108,7 +110,7 @@ AmrexSolver::AmrexSolver(ComputationalDomain const& compDom,
 void AmrexSolver::solve (Forms::DeRhamField<Grid::primal, Space::node>& phi,
                         Forms::DeRhamField<Grid::dual, Space::cell> const& rho)
 {
-    BL_PROFILE("Gempic::FieldSolvers::AmrexSolver::solve()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::FieldSolvers::AmrexSolver::solve()");
 
     // Sum of rhs needs to be 0 if domain is periodic in all directions
     check_charge_neutrality(rho, m_compDom);
@@ -137,7 +139,7 @@ PoissonApply::PoissonApply(std::shared_ptr<DeRhamComplex> deRham) :
 void PoissonApply::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
                               DeRhamField<Grid::primal, Space::node> const& phi)
 {
-    BL_PROFILE("Gempic::FieldSolvers::PoissonApply::operator()()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::FieldSolvers::PoissonApply::operator()()");
     grad(m_primalEdge, phi);
     m_primalEdge *= -1; // E = -grad phi
     hodge(m_dualFace, m_primalEdge);
@@ -172,7 +174,8 @@ PoissonApplyInverseHodge::PoissonApplyInverseHodge(std::shared_ptr<DeRhamComplex
 void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>& rho,
                                           DeRhamField<Grid::primal, Space::node> const& phi)
 {
-    BL_PROFILE("Gempic::FieldSolvers::PoissonApplyInverseHodge::operator()()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::FieldSolvers::PoissonApplyInverseHodge::operator()()");
     // Conjugate gradient to compute inverse Hodge
     grad(m_primalEdge, phi);
     m_primalEdge *= -1; // E = -grad phi
@@ -191,7 +194,7 @@ void PoissonApplyInverseHodge::operator ()(DeRhamField<Grid::dual, Space::cell>&
 void check_charge_neutrality (DeRhamField<Grid::dual, Space::cell> const& rho,
                               ComputationalDomain const& compDom)
 {
-    BL_PROFILE("Gempic::FieldSolvers::check_charge_neutrality()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::FieldSolvers::check_charge_neutrality()");
     if (compDom.geometry().isAllPeriodic())
     {
         amrex::Real rhoInt = compute_rho_integral(rho);
@@ -211,13 +214,13 @@ void check_charge_neutrality (DeRhamField<Grid::dual, Space::cell> const& rho,
 
 amrex::Real compute_rho_integral (Forms::DeRhamField<Grid::dual, Space::cell> const& rho)
 {
-    BL_PROFILE("Gempic::FieldSolvers::compute_rho_integral()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::FieldSolvers::compute_rho_integral()");
     return rho.m_data.sum_unique(0, false, rho.m_deRham->m_geom.periodicity());
 }
 
 amrex::Real compute_rho_average (Forms::DeRhamField<Grid::dual, Space::cell> const& rho)
 {
-    BL_PROFILE("Gempic::FieldSolvers::compute_rho_average()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::FieldSolvers::compute_rho_average()");
     return compute_rho_integral(rho) / rho.m_deRham->m_geom.Domain().numPts();
 }
 
@@ -226,7 +229,8 @@ amrex::Real get_and_apply_neutralizing_background (Forms::DeRhamField<Grid::dual
                                                    Io::Parameters& params,
                                                    bool neutralizeTwice)
 {
-    BL_PROFILE("Gempic::FieldSolvers::get_and_apply_neutralizing_background()");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::FieldSolvers::get_and_apply_neutralizing_background()");
     amrex::Real rhoBackground = -1 * compute_rho_average(rho) / infra.cell_volume();
     amrex::Real rhoBackgroundExpected = 0;
     params.get_or_set("rhoBackground", rhoBackgroundExpected);

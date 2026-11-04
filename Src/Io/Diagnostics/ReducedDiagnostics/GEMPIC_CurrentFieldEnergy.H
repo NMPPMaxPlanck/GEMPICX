@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_FieldMethods.H"
@@ -54,7 +56,7 @@ public:
                        std::string const& fileName) :
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>(rdName, indexNum, isLastType, fileName)
     {
-        BL_PROFILE("Gempic::Io::CurrentFieldEnergy()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::CurrentFieldEnergy()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             if (this->m_isNotRestart)
@@ -93,7 +95,7 @@ public:
                     Io::FieldRegistry const& reg,
                     bool cmf) final
     {
-        BL_PROFILE("Gempic::Io::CurrentFieldEnergy::init_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::CurrentFieldEnergy::init_data()");
         ReducedDiagnostics<vdim, degx, degy, degz, ndata>::init_data(drc, reg, cmf);
         m_computeMethod = choose_computation_method(reg);
     }
@@ -105,7 +107,7 @@ public:
         ComputationalDomain const& infra,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>> const&) final
     {
-        BL_PROFILE("Gempic::Io::CurrentFieldEnergy::compute_diags()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::CurrentFieldEnergy::compute_diags()");
 
         switch (m_computeMethod)
         {
@@ -141,7 +143,8 @@ private:
      */
     ComputeMethod choose_computation_method (FieldRegistry const& registry)
     {
-        BL_PROFILE("Gempic::Io::CurrentFieldEnergy::choose_computation_method()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::Io::CurrentFieldEnergy::choose_computation_method()");
         using namespace Forms;
         using DRC = Forms::DeRhamComplex;
         auto const* jPtr = get_field_ptr_or_null<DRC::Primal1Form>(registry, "JFieldx");
@@ -201,7 +204,7 @@ private:
                       Forms::DeRhamComplex::Dual2Form const& fieldJT,
                       amrex::Periodicity const& periodicity)
     {
-        BL_PROFILE("Gempic::Io::CurrentFieldEnergy::update_data()");
+        Kokkos::Profiling::ScopedRegion region("Gempic::Io::CurrentFieldEnergy::update_data()");
         constexpr int noutputs = 3;
         this->m_data.resize(noutputs, 0.0);
 

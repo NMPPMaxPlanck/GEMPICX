@@ -8,6 +8,8 @@
 #include <cassert>
 #include <numeric>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Array.H>
 #include <AMReX_Box.H>
@@ -981,7 +983,7 @@ void init_particles_full_domain_gpu (std::shared_ptr<ParticleSpecies<vDim, nData
                                      int rSeed = 925)
 {
     using namespace Impl;
-    BL_PROFILE("Gempic::Particle::init_particles_full_domain_gpu()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Particle::init_particles_full_domain_gpu()");
 
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> probLo{geom.ProbLoArray()};
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx{geom.CellSizeArray()};
@@ -1104,7 +1106,8 @@ void sample_species (std::shared_ptr<ParticleSpecies<vDim, nData>>& particles,
                      std::string globalSamplerName,
                      int rSeed)
 {
-    BL_PROFILE("Gempic::Particle::sample_species(particles,geom,species,globalSamplerName,rSeed)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Particle::sample_species(particles,geom,species,globalSamplerName,rSeed)");
 
     std::string speciesName{particles->get_name()};
     Io::Parameters params("Particle." + speciesName);
@@ -1185,7 +1188,7 @@ template <unsigned int vDim, unsigned int nData>
 void init_particles (std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>& particles,
                      ComputationalDomain compDom)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(particles,compDom)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Particle::init_particles(particles,compDom)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);
@@ -1229,7 +1232,8 @@ void init_particles (
     std::vector<std::shared_ptr<ParticleSpecies<vDim, nData>>>& particles,
     ComputationalDomain compDom)
 {
-    BL_PROFILE("Gempic::Particle::init_particles(particlesLinVlasov,particles,compDom)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Particle::init_particles(particlesLinVlasov,particles,compDom)");
     Io::Parameters params("Particle");
     amrex::Vector<std::string> speciesNames;
     params.get("speciesNames", speciesNames);

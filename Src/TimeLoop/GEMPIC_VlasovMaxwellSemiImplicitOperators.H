@@ -5,6 +5,8 @@
 #ifndef GEMPIC_VLASOVMAXWELLSEMIIMPLICITOPERATORS_H_
 #define GEMPIC_VLASOVMAXWELLSEMIIMPLICITOPERATORS_H_
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
@@ -28,7 +30,7 @@ void push_all_x_using_v_gdec (
         particlesgroup,
     amrex::Real const dt)
 {
-    BL_PROFILE(
+    Kokkos::Profiling::ScopedRegion region(
         "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::push_all_x_using_v_gdec()");
 
     for (auto const& particleSpecies : particlesgroup)
@@ -81,7 +83,7 @@ AMREX_GPU_HOST_DEVICE void eval_e_field_gdec_weights (
     amrex::Array3D<amrex::Real, 0, hodgeDegree - 1, 0, hodgeDegree - 1, 0, hodgeDegree - 2>&
         basisEdgeZ)
 {
-    BL_PROFILE(
+    Kokkos::Profiling::ScopedRegion region(
         "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::eval_e_field_gdec_weights()");
 
     constexpr std::array<std::array<int, 3>, 3> nGDECWtsXYZ = {{
@@ -167,7 +169,7 @@ void get_gdec_rho_e_weights_at_particle_positions_and_deposit_to_face (
     amrex::Array3D<amrex::Real, 0, hodgeDegree - 1, 0, hodgeDegree - 1, 0, hodgeDegree - 2>&
         basisEdgeZ)
 {
-    BL_PROFILE(
+    Kokkos::Profiling::ScopedRegion region(
         "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::get_gdec_rho_e_weights_at_"
         "particle_positions_and_deposit_to_face()");
     constexpr std::array<std::array<int, 3>, 3> nGDECWtsXYZ = {{
@@ -297,7 +299,7 @@ void deposit_j_and_estar (
     amrex::Array3D<amrex::Real, 0, hodgeDegree - 1, 0, hodgeDegree - 1, 0, hodgeDegree - 2>&
         basisEdgeZ)
 {
-    BL_PROFILE(
+    Kokkos::Profiling::ScopedRegion region(
         "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::deposit_j_and_estar()");
 
     // deposition of J
@@ -390,7 +392,7 @@ void basis_eval_at_position_gdec (
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo,
     amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dx)
 {
-    BL_PROFILE(
+    Kokkos::Profiling::ScopedRegion region(
         "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::basis_eval_at_position_gdec("
         ")");
     using namespace Forms;
@@ -514,7 +516,7 @@ void semi_implicit_gdec_particle_loop (
     FieldSolvers::VlasovMaxwellEV<hodgeDegree, degx, degy, degz, vdim>& hypreVlasovMaxwellEv,
     bool doSync = true)
 {
-    BL_PROFILE(
+    Kokkos::Profiling::ScopedRegion region(
         "Gempic::TimeLoop::GEMPIC_VlasovMaxwellSemiImplicitOperators::semi_implicit_gdec_particle_"
         "loop()");
     using namespace Forms;

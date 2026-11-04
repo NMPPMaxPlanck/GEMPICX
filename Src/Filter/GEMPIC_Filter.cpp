@@ -10,6 +10,8 @@
  */
 #include <memory>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 
 #include "GEMPIC_ComputationalDomain.H"
@@ -146,7 +148,7 @@ void apply_stencil (amrex::MultiFab& dstmf,
                                  amrex::Gpu::DeviceVector<amrex::Real> stencilY,
                                  amrex::Gpu::DeviceVector<amrex::Real> stencilZ))
 {
-    BL_PROFILE("Gempic::Filter::Impl::apply_stencil()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Filter::Impl::apply_stencil()");
     AMREX_D_TERM(amrex::Real const* AMREX_RESTRICT sx = stencilX.data();
                  , amrex::Real const* AMREX_RESTRICT sy = stencilY.data();
                  , amrex::Real const* AMREX_RESTRICT sz = stencilZ.data();)
@@ -193,7 +195,7 @@ void convolve_filter (amrex::Vector<amrex::Real>& oldS,
                       amrex::Real const alpha,
                       int const ipass)
 {
-    BL_PROFILE("Gempic::Filter::Impl::convolve_filter()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Filter::Impl::convolve_filter()");
     amrex::Real const beta{0.5 - 0.5 * alpha};
 
     // element 0 has to be treated in its own way
@@ -213,7 +215,7 @@ amrex::Gpu::DeviceVector<amrex::Real> compute_bilinear_filter_stencil (unsigned 
                                                                        amrex::Real const alpha,
                                                                        bool const doCompensation)
 {
-    BL_PROFILE("Gempic::Filter::Impl::compute_stencil()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Filter::Impl::compute_stencil()");
     amrex::Gpu::DeviceVector<amrex::Real> stencil{};
     amrex::Vector<amrex::Real> oldS(1u + npass + static_cast<size_t>(doCompensation), 0.);
     amrex::Vector<amrex::Real> newS(oldS.size(), 0.);
@@ -264,7 +266,7 @@ BilinearFilter::BilinearFilter(Io::Parameters& params)
 
 BilinearFilter::BilinearFilter()
 {
-    BL_PROFILE("Gempic::Filter::BilinearFilter::BilinearFilter()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Filter::BilinearFilter::BilinearFilter()");
     Io::Parameters params("Filter.Bilinear", "class BilinearFilter");
 
     params.get("nPass", m_nPass);
@@ -309,7 +311,8 @@ void BilinearFilter::operator ()(Gempic::DiscreteField& dst, Gempic::DiscreteFie
 
 void BilinearFilter::operator ()(Gempic::DiscreteVectorField& dst, Gempic::DiscreteVectorField& src)
 {
-    BL_PROFILE("Gempic::Filter::BilinearFilter::operator()(DiscreteVectorField)");
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Filter::BilinearFilter::operator()(DiscreteVectorField)");
     std::array<size_t, AMREX_SPACEDIM> requiredGhostCells{};
     for (Direction dir : {AMREX_D_DECL(Direction::xDir, Direction::yDir, Direction::zDir)})
     {

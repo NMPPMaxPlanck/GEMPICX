@@ -20,6 +20,8 @@
 #include <utility>
 #include <vector>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Array.H>
 #include <AMReX_FabArray.H>
@@ -288,7 +290,7 @@ typename FAB::value_type wgt_dot (amrex::FabArray<FAB> const& wgt,
     AMREX_ASSERT(x.DistributionMap() == y.DistributionMap());
     AMREX_ASSERT(x.nGrowVect().allGE(nghost) && y.nGrowVect().allGE(nghost));
 
-    BL_PROFILE("wgt_dot()");
+    Kokkos::Profiling::ScopedRegion region("wgt_dot()");
 
     using T = typename FAB::value_type;
     auto sm = T(0.0);

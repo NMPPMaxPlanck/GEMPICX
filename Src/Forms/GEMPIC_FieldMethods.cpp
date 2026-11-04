@@ -2,6 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_SPACE.H>
 #include <AMReX_Vector.H>
 
@@ -15,7 +17,7 @@ void projection (amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const&
                  amrex::Real t,
                  DeRhamComplex::Primal0Form& field)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<primal, node>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<primal, node>)");
     size_t nComps{static_cast<size_t>(funcs.size())};
     size_t nCompField{static_cast<size_t>(field.m_data.nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -55,7 +57,7 @@ void projection (amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const&
                  DeRhamComplex::Primal3Form& field,
                  int gaussNodes)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<primal, cell>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<primal, cell>)");
     amrex::Long nComps{funcs.size()};
     int nCompField{field.m_data.nComp()};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -112,7 +114,7 @@ void projection (amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const&
                  amrex::Real t,
                  DeRhamComplex::Dual0Form& field)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<dual, node>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<dual, node>)");
     amrex::Long nComps{funcs.size()};
     int nCompField{field.m_data.nComp()};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -155,7 +157,7 @@ void projection (amrex::Vector<amrex::ParserExecutor<AMREX_SPACEDIM + 1>> const&
                  DeRhamComplex::Dual3Form& field,
                  int gaussNodes)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<dual, cell>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<dual, cell>)");
     amrex::Long nComps{funcs.size()};
     int nCompField{field.m_data.nComp()};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -215,7 +217,7 @@ void projection (
     DeRhamComplex::Dual1Form& field,
     int gaussNodes)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<dual, edge>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<dual, edge>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -300,7 +302,7 @@ void projection (
     DeRhamComplex::Primal2Form& field,
     int gaussNodes)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<primal, face>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<primal, face>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -419,7 +421,7 @@ void projection (
     DeRhamComplex::Primal1Form& field,
     int gaussNodes)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<primal, edge>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<primal, edge>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(
@@ -503,7 +505,7 @@ void projection (
     DeRhamComplex::Dual2Form& field,
     int gaussNodes)
 {
-    BL_PROFILE("Gempic::Forms::projection(DeRhamField<dual, face>)");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::projection(DeRhamField<dual, face>)");
     auto nComps{static_cast<size_t>(funcs.size())};
     auto nCompField{static_cast<size_t>(field.m_data[xDir].nComp())};
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(

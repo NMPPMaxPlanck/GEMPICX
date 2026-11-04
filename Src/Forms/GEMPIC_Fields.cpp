@@ -5,6 +5,8 @@
 #include <cmath>
 #include <memory>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include "GEMPIC_BoundaryConditions.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Fields.H"
@@ -835,7 +837,7 @@ DeRhamComplex::DeRhamComplex(ComputationalDomain const& infra, int const hodgeDe
 /*  :
   m_fieldRegistry(std::make_unique<FieldRegistry>())*/
 {
-    BL_PROFILE("Gempic::Forms::DeRhamComplex:: DeRhamComplex()");
+    Kokkos::Profiling::ScopedRegion region("Gempic::Forms::DeRhamComplex:: DeRhamComplex()");
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(infra.geometry().Ok(), "Uninitialized geometry");
 
     m_grid = infra.m_grid;

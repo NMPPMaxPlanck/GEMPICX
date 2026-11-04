@@ -5,6 +5,8 @@
 #ifndef GEMPIC_FDDERHAMCOMPLEX_H_
 #define GEMPIC_FDDERHAMCOMPLEX_H_
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX_SPACE.H>
 
 #include "GEMPIC_ComputationalDomain.H"
@@ -536,7 +538,7 @@ template <typename DstFormType, typename SrcFormType>
     requires MutualDual<SrcFormType, DstFormType> && HasHodgeScheme<field_to_drc_t<SrcFormType>>
 void hodge (DstFormType& dstForm, SrcFormType const& srcForm, amrex::Real weight = 1.)
 {
-    BL_PROFILE("hodge()");
+    Kokkos::Profiling::ScopedRegion region("hodge()");
     hodge_degree_selector<field_to_drc_t<SrcFormType>::s_hodgeScheme>(dstForm, srcForm, weight);
 }
 

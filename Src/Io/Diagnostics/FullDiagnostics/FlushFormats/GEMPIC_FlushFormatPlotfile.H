@@ -8,6 +8,8 @@
 #include <fstream>
 #include <memory>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Config.H>
 #include <AMReX_MultiFab.H>
@@ -52,7 +54,7 @@ public:
         int /*bufferID = 1*/,
         int /*numBuffers = 1*/) const override
     {
-        BL_PROFILE("FlushFormatPlotfile::write_to_file()");
+        Kokkos::Profiling::ScopedRegion region("FlushFormatPlotfile::write_to_file()");
         std::string filename{amrex::Concatenate(prefix, iteration, fileMinDigits)};
         amrex::VisMF::Header::Version const currentVersion = amrex::VisMF::GetHeaderVersion();
 
@@ -84,7 +86,7 @@ public:
     /** Write general info of the run into the plotfile */
     void write_job_info (std::string const& dir, amrex::Geometry const& geom) const
     {
-        BL_PROFILE("FlushFormatPlotfile::write_job_info()");
+        Kokkos::Profiling::ScopedRegion region("FlushFormatPlotfile::write_job_info()");
         if (amrex::ParallelDescriptor::IOProcessor())
         {
             // job_info file with details about the run
