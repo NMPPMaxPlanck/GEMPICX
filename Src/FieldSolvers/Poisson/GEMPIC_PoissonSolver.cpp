@@ -283,7 +283,7 @@ std::unique_ptr<PoissonSolverMethod> make_specific_poisson_solver (
         if (infra.geometry().isAllPeriodic())
         {
             return std::make_unique<PoissonFFTSolver> (
-                PoissonFFTSolver(infra, deRham->get_hodge_degree(), HodgeScheme::FDHodge));
+                PoissonFFTSolver(infra, deRham->get_hodge_degree(), deRham->get_hodge_scheme()));
         }
         else
         {

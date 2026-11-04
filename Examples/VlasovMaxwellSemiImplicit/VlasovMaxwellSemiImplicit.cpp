@@ -124,8 +124,6 @@ int main (int argc, char* argv[])
 
         std::vector<std::shared_ptr<ParticleSpecies<vdim>>> partGr;
         init_particles(partGr, infra);
-        amrex::Real rhoBackground{0.0};
-        parameters.get_or_set("rhoBackground", rhoBackground);
 
         auto poisson{make_poisson_solver(deRham, infra)};
 
@@ -157,8 +155,9 @@ int main (int argc, char* argv[])
             rho.m_data.setVal(0.0);
             deposit_particle_density_gdec<hodgeDegree, degx, degy, degz>(rho, partGr, infra);
 
-            // Add background charge (needs to be done after post_particle_loop_sync)
-            rho += rhoBackground * infra.cell_volume();
+            // Add neutralizing background charge (needs to be done after post_particle_loop_sync)
+            amrex::Real const rhoBackground =
+                get_and_apply_neutralizing_background(rho, infra, parameters);
 
             // solve Poisson
             poisson->solve(phi, rho);
@@ -209,6 +208,7 @@ int main (int argc, char* argv[])
                 // Deposit charge for diagnostics
                 rho.m_data.setVal(0.0);
                 deposit_particle_density_gdec<hodgeDegree, degx, degy, degz>(rho, partGr, infra);
+                rho += rhoBackground * infra.cell_volume();
                 // compute div D for diagnostics
                 div(divD, D);
                 hodge(H, B, deRham->scaling_bto_h());

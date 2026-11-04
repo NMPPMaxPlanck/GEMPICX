@@ -7,12 +7,69 @@
 #include <AMReX_FFT.H>
 
 #include "GEMPIC_FDDeRhamComplex.H"
+#include "GEMPIC_FieldMethods.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_PoissonFFT.H"
 #include "GEMPIC_PoissonSolver.H"
 
 using namespace Gempic::FieldSolvers;
 using namespace Gempic::Forms;
+
+namespace
+{
+/**
+ * Eigenvalues of the circulant matrix defined by a symmetric 1D stencil on n periodic points:
+ * \f$ \sum_d s_d \cos(2\pi k (d - c) / n) \f$ with c the stencil center
+ */
+template <unsigned int stencilLength>
+amrex::Vector<amrex::Real> stencil_eigenvalues (
+    amrex::GpuArray<amrex::Real, stencilLength> const& stencil, int n)
+{
+    amrex::Vector<amrex::Real> eigenvalues(n, 0.0);
+    int const center = (stencilLength - 1) / 2;
+    for (int k = 0; k < n; k++)
+    {
+        for (unsigned int d = 0; d < stencilLength; d++)
+        {
+            eigenvalues[k] += stencil[d] * std::cos(2 * M_PI * k * (int(d) - center) / n);
+        }
+    }
+    return eigenvalues;
+}
+
+/**
+ * Computes the eigenvalues of both 1D Hodge stencils used by
+ * hodge_operator(Dual2Form&, Primal1Form const&): stencilAlong is applied along the component
+ * direction, stencilAcross along the other directions.
+ */
+template <HodgeScheme hodgeScheme, int hodgeDegreeIdx = 0>
+void hodge_eigenvalues (int hodgeDegree,
+                        int n,
+                        amrex::Vector<amrex::Real>& along,
+                        amrex::Vector<amrex::Real>& across)
+{
+    constexpr auto validDegreesArray = valid_degrees<hodgeScheme>();
+    if constexpr (hodgeDegreeIdx < validDegreesArray.size())
+    {
+        if (hodgeDegree == validDegreesArray[hodgeDegreeIdx])
+        {
+            auto [stencilAcross, stencilAlong] =
+                get_hodge_stencils<validDegreesArray[hodgeDegreeIdx], hodgeScheme>();
+            along = stencil_eigenvalues(stencilAlong, n);
+            across = stencil_eigenvalues(stencilAcross, n);
+        }
+        else
+        {
+            hodge_eigenvalues<hodgeScheme, hodgeDegreeIdx + 1>(hodgeDegree, n, along, across);
+        }
+    }
+    else
+    {
+        GEMPIC_ERROR("Degree " + std::to_string(hodgeDegree) +
+                     " not implemented for the selected Hodge in the FFT Poisson solver");
+    }
+}
+} // namespace
 
 PoissonFFTSolver::PoissonFFTSolver(ComputationalDomain const& compDom,
                                    int const hodgeDegree,
@@ -38,197 +95,43 @@ PoissonFFTSolver::PoissonFFTSolver(ComputationalDomain const& compDom,
     m_rhoFft.define(compDom.m_grid, compDom.m_distriMap, 1, 0);
     m_phiFft.define(compDom.m_grid, compDom.m_distriMap, 1, 0);
 
-    //dimensions in x, y and z directions
-    GEMPIC_D_EXCL(int Ny = 0;, int Nz = 0;, ) // nvcc issues a warning when using const
-    AMREX_D_TERM(int const Nx = compDom.box().length(xDir);
-                 , int const Ny = compDom.box().length(yDir);
-                 , int const Nz = compDom.box().length(zDir);)
-
     // sizes in x, y and z directions
     auto dx = compDom.cell_size_array();
 
-    auto eigenH0x = amrex::Vector<amrex::Real>(Nx, 1.0);
-    auto eigenH0y = amrex::Vector<amrex::Real>(Ny, 1.0);
-    auto eigenH0z = amrex::Vector<amrex::Real>(Nz, 1.0);
-
-    if (hodgeScheme == HodgeScheme::FDHodge)
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
     {
-        switch (hodgeDegree)
+        int const n = compDom.box().length(dir);
+        amrex::Vector<amrex::Real> along;
+        amrex::Vector<amrex::Real> across;
+        if (hodgeScheme == HodgeScheme::FDHodge)
         {
-            case 2:
-                for (int iter = 0; iter < Nx; iter++)
-                {
-                    eigenH0x[iter] = dx.product() / (dx[xDir] * dx[xDir]);
-                }
-                for (int iter = 0; iter < Ny; iter++)
-                {
-                    eigenH0y[iter] = dx.product() / (dx[yDir] * dx[yDir]);
-                }
-                for (int iter = 0; iter < Nz; iter++)
-                {
-                    eigenH0z[iter] = dx.product() / (dx[zDir] * dx[zDir]);
-                }
-                break;
-            case 4:
-                for (int iter = 0; iter < Nx; iter++)
-                {
-                    eigenH0x[iter] = (13.0 - std::cos(2 * M_PI * iter / Nx)) * dx.product() /
-                                     (12 * dx[xDir] * dx[xDir]);
-                }
-                for (int iter = 0; iter < Ny; iter++)
-                {
-                    eigenH0y[iter] = (13.0 - std::cos(2 * M_PI * iter / Ny)) * dx.product() /
-                                     (12 * dx[yDir] * dx[yDir]);
-                }
-                for (int iter = 0; iter < Nz; iter++)
-                {
-                    eigenH0z[iter] = (13.0 - std::cos(2 * M_PI * iter / Nz)) * dx.product() /
-                                     (12 * dx[zDir] * dx[zDir]);
-                }
-                break;
-            case 6:
-                for (int iter = 0; iter < Nx; iter++)
-                {
-                    eigenH0x[iter] = (1067.0 - 116.0 * std::cos(2 * M_PI * iter / Nx) +
-                                      9.0 * std::cos(4 * M_PI * iter / Nx)) *
-                                     dx.product() / (960 * dx[xDir] * dx[xDir]);
-                }
-                for (int iter = 0; iter < Ny; iter++)
-                {
-                    eigenH0y[iter] = (1067.0 - 116.0 * std::cos(2 * M_PI * iter / Ny) +
-                                      9.0 * std::cos(4 * M_PI * iter / Ny)) *
-                                     dx.product() / (960 * dx[yDir] * dx[yDir]);
-                }
-                for (int iter = 0; iter < Nz; iter++)
-                {
-                    eigenH0z[iter] = (1067.0 - 116.0 * std::cos(2 * M_PI * iter / Nz) +
-                                      9.0 * std::cos(4 * M_PI * iter / Nz)) *
-                                     dx.product() / (960 * dx[zDir] * dx[zDir]);
-                }
-                break;
-            default:
-                GEMPIC_ERROR("Degree not implemented for three dimensional Hodge in FFT");
-                break;
+            hodge_eigenvalues<HodgeScheme::FDHodge>(hodgeDegree, n, along, across);
         }
-    }
-    else if (hodgeScheme == HodgeScheme::GDECHodge)
-    {
-        switch (hodgeDegree)
+        else if (hodgeScheme == HodgeScheme::GDECHodge)
         {
-            case 2:
-                for (int iter = 0; iter < Nx; iter++)
-                {
-                    eigenH0x[iter] = dx.product() / (dx[xDir] * dx[xDir]);
-                }
-                for (int iter = 0; iter < Ny; iter++)
-                {
-                    eigenH0y[iter] = dx.product() / (dx[yDir] * dx[yDir]);
-                }
-                for (int iter = 0; iter < Nz; iter++)
-                {
-                    eigenH0z[iter] = dx.product() / (dx[zDir] * dx[zDir]);
-                }
-                break;
-            case 4:
-                for (int iter = 0; iter < Nx; iter++)
-                {
-                    eigenH0x[iter] = (378.0 - 2.0 * 2.0 * std::cos(2.0 * M_PI * iter / Nx)
-
-                                      - 2.0 * 7.0 * std::cos(4.0 * M_PI * iter / Nx)) *
-                                     dx.product() / (360.0 * dx[xDir] * dx[xDir]);
-                }
-                for (int iter = 0; iter < Ny; iter++)
-                {
-                    eigenH0y[iter] = (378.0 - 2.0 * 2.0 * std::cos(2.0 * M_PI * iter / Ny)
-
-                                      - 2.0 * 7.0 * std::cos(4.0 * M_PI * iter / Ny)) *
-                                     dx.product() / (360.0 * dx[yDir] * dx[yDir]);
-                }
-                for (int iter = 0; iter < Nz; iter++)
-                {
-                    eigenH0z[iter] = (378.0 - 2.0 * 2.0 * std::cos(2.0 * M_PI * iter / Nz)
-
-                                      - 2.0 * 7.0 * std::cos(4.0 * M_PI * iter / Nz)) *
-                                     dx.product() / (360.0 * dx[zDir] * dx[zDir]);
-                }
-                break;
-            case 6:
-                for (int iter = 0; iter < Nx; iter++)
-                {
-                    eigenH0x[iter] =
-                        (99307.0 / 90720.0 - 9691.0 * std::cos(2.0 * M_PI * iter / Nx) / 226800.0
-
-                         - 4003.0 * std::cos(4.0 * M_PI * iter / Nx) / 56700.0
-
-                         + 4547.0 * std::cos(6.0 * M_PI * iter / Nx) / 226800.0
-
-                         - 89.0 * std::cos(8.0 * M_PI * iter / Nx) / 64800.0) *
-                        dx.product() / (dx[xDir] * dx[xDir]);
-                }
-                for (int iter = 0; iter < Ny; iter++)
-                {
-                    eigenH0y[iter] =
-                        (99307.0 / 90720.0 - 9691.0 * std::cos(2.0 * M_PI * iter / Ny) / 226800.0
-
-                         - 4003.0 * std::cos(4.0 * M_PI * iter / Ny) / 56700.0
-
-                         + 4547.0 * std::cos(6.0 * M_PI * iter / Ny) / 226800.0
-
-                         - 89.0 * std::cos(8.0 * M_PI * iter / Ny) / 64800.0) *
-                        dx.product() / (dx[yDir] * dx[yDir]);
-                }
-                for (int iter = 0; iter < Nz; iter++)
-                {
-                    eigenH0z[iter] =
-                        (99307.0 / 90720.0 - 9691.0 * std::cos(2.0 * M_PI * iter / Nx) / 226800.0
-
-                         - 4003.0 * std::cos(4.0 * M_PI * iter / Nz) / 56700.0
-
-                         + 4547.0 * std::cos(6.0 * M_PI * iter / Nz) / 226800.0
-
-                         - 89.0 * std::cos(8.0 * M_PI * iter / Nz) / 64800.0) *
-                        dx.product() / (dx[zDir] * dx[zDir]);
-                }
-                break;
-            default:
-                AMREX_ASSERT("Degree not implemented for three dimensional Hodge in FFT");
-                break;
+            hodge_eigenvalues<HodgeScheme::GDECHodge>(hodgeDegree, n, along, across);
         }
+        else
+        {
+            GEMPIC_ERROR("Hodge scheme not implemented for FFT Poisson solver");
+        }
+
+        // eigenvalues of the 1D Laplacian -D G, times Hodge eigenvalues and scaling
+        for (int iter = 0; iter < n; iter++)
+        {
+            along[iter] *=
+                (2 - 2 * std::cos(2 * M_PI * iter / n)) * dx.product() / (dx[dir] * dx[dir]);
+        }
+
+        // Copy eigenvalues to GPU
+        m_eigenvaluesAlongGpu[dir].resize(n);
+        m_eigenvaluesAcrossGpu[dir].resize(n);
+        amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, along.begin(), along.end(),
+                              m_eigenvaluesAlongGpu[dir].begin());
+        amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, across.begin(), across.end(),
+                              m_eigenvaluesAcrossGpu[dir].begin());
     }
-
-    // calculate eigenvalues of the lhs matrix
-    auto eigenvalues0x = amrex::Vector<amrex::Real>(Nx, 1.0);
-    auto eigenvalues0y = amrex::Vector<amrex::Real>(Ny, 1.0);
-    auto eigenvalues0z = amrex::Vector<amrex::Real>(Nz, 1.0);
-
-    for (int iter = 0; iter < Nx; iter++)
-    {
-        eigenvalues0x[iter] = (2 - 2 * std::cos(2 * M_PI * iter / Nx)) * eigenH0x[iter];
-    }
-    for (int iter = 0; iter < Ny; iter++)
-    {
-        eigenvalues0y[iter] = (2 - 2 * std::cos(2 * M_PI * iter / Ny)) * eigenH0y[iter];
-    }
-    for (int iter = 0; iter < Nz; iter++)
-    {
-        eigenvalues0z[iter] = (2 - 2 * std::cos(2 * M_PI * iter / Nz)) * eigenH0z[iter];
-    }
-
-    // Handle the gpu parallel for for gpu running
-    m_eigenvalues0xGpu.resize(Nx);
-    m_eigenvalues0yGpu.resize(Ny);
-    m_eigenvalues0zGpu.resize(Nz);
-
-    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0x.begin(), eigenvalues0x.end(),
-                          m_eigenvalues0xGpu.begin());
-    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0y.begin(), eigenvalues0y.end(),
-                          m_eigenvalues0yGpu.begin());
-    amrex::Gpu::copyAsync(amrex::Gpu::hostToDevice, eigenvalues0z.begin(), eigenvalues0z.end(),
-                          m_eigenvalues0zGpu.begin());
-
-    m_eigenvalues0x = m_eigenvalues0xGpu.dataPtr();
-    m_eigenvalues0y = m_eigenvalues0yGpu.dataPtr();
-    m_eigenvalues0z = m_eigenvalues0zGpu.dataPtr();
+    amrex::Gpu::streamSynchronize();
 }
 
 void PoissonFFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
@@ -269,26 +172,32 @@ void PoissonFFTSolver::solve (DeRhamField<Grid::primal, Space::node>& phi,
         }
 
         // local variables necessary for CUDA
-        AMREX_D_TERM(amrex::Real* eigenvalues0x = m_eigenvalues0x;
-                     , amrex::Real* eigenvalues0y = m_eigenvalues0y;
-                     , amrex::Real* eigenvalues0z = m_eigenvalues0z;)
+        // acrossX is only needed from 2D on (in 1D the eigenvalue is just alongX)
+        AMREX_D_TERM(amrex::Real const* alongX = m_eigenvaluesAlongGpu[xDir].dataPtr();
+                     , amrex::Real const* acrossX = m_eigenvaluesAcrossGpu[xDir].dataPtr();
+                     amrex::Real const* alongY = m_eigenvaluesAlongGpu[yDir].dataPtr();
+                     amrex::Real const* acrossY = m_eigenvaluesAcrossGpu[yDir].dataPtr();
+                     , amrex::Real const* alongZ = m_eigenvaluesAlongGpu[zDir].dataPtr();
+                     amrex::Real const* acrossZ = m_eigenvaluesAcrossGpu[zDir].dataPtr();)
         int cellNum = m_compDom.box().length3d().product();
 
-        m_r2c->forwardThenBackward(m_rhoFft, m_phiFft,
-                                   [=] AMREX_GPU_DEVICE(int i, int j, int k, auto& sp)
-                                   {
-                                       GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
-                                       auto eigenvalueSum{GEMPIC_D_ADD(
-                                           eigenvalues0x[i], eigenvalues0y[j], eigenvalues0z[k])};
-                                       if (eigenvalueSum == 0)
-                                       {
-                                           sp = 0;
-                                       }
-                                       else
-                                       {
-                                           sp /= eigenvalueSum * cellNum;
-                                       }
-                                   });
+        m_r2c->forwardThenBackward(
+            m_rhoFft, m_phiFft,
+            [=] AMREX_GPU_DEVICE(int i, int j, int k, auto& sp)
+            {
+                GEMPIC_D_EXCL(UNUSED(j);, UNUSED(k);, )
+                auto eigenvalueSum{GEMPIC_D_ADD(GEMPIC_D_MULT(alongX[i], acrossY[j], acrossZ[k]),
+                                                GEMPIC_D_MULT(acrossX[i], alongY[j], acrossZ[k]),
+                                                GEMPIC_D_MULT(acrossX[i], acrossY[j], alongZ[k]))};
+                if (eigenvalueSum == 0)
+                {
+                    sp = 0;
+                }
+                else
+                {
+                    sp /= eigenvalueSum * cellNum;
+                }
+            });
 
         // Iterate over cell-centered m_phiFft boxes to avoid accessing the periodic boundary
         // node that lies outside the cell-centered valid region; OverrideSync handles it below.
