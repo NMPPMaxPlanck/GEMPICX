@@ -9,3 +9,4 @@ For Developers
    ../latex/ContributingToDoc
    ../latex/CodeEditorVSCode
    ../latex/MachineInstructions
+   ../latex/Profiling
