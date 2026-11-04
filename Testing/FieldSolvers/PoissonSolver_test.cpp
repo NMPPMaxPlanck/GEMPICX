@@ -189,6 +189,63 @@ TYPED_TEST(PoissonSolverFFTTypedTest, AnalyticalLowTolerance)
 #endif
 } //namespace
 
+namespace
+{
+/**
+ * Gauss's law div(D) = rho must hold to machine precision after an FFT Poisson solve, for a rho
+ * exciting all Fourier modes (mixed modes test the non-separable tensor-product Hodge)
+ */
+class PoissonFFTGaussLawTest : public testing::TestWithParam<std::tuple<HodgeScheme, int>>
+{
+};
+
+TEST_P(PoissonFFTGaussLawTest, RandomRho)
+{
+    auto const [hodgeScheme, hodgeDegree] = GetParam();
+    Io::Parameters parameters{};
+    parameters.set("nGhostExtra", 0);
+    // Even and odd cell numbers with different cell sizes per direction
+    ComputationalDomain infra{
+        Gempic::Test::Utils::get_compdom(amrex::IntVect{AMREX_D_DECL(12, 7, 10)})};
+    auto deRham = std::make_shared<FDDeRhamComplex>(infra, hodgeDegree, 3, hodgeScheme);
+
+    DeRhamField<Grid::dual, Space::cell> rho(deRham);
+    int cpuSeed{5}; // chosen by dice roll. Guaranteed to be random.
+    int gpuSeed{5}; // chosen by a different dice roll. Twice as random.
+    amrex::ResetRandomSeed(cpuSeed, gpuSeed);
+    amrex::FillRandom(rho.m_data, 0, 1);
+    rho.m_data.OverrideSync(infra.m_geom.periodicity());
+    rho -= compute_rho_average(rho);
+    DeRhamField<Grid::primal, Space::node> phi(deRham);
+    DeRhamField<Grid::primal, Space::edge> E(deRham);
+    DeRhamField<Grid::dual, Space::face> D(deRham);
+    DeRhamField<Grid::dual, Space::cell> divD(deRham);
+
+    auto poisson{Gempic::FieldSolvers::Impl::make_specific_poisson_solver(deRham, infra, "FFT")};
+    poisson->solve(phi, rho);
+    a_times_grad(E, phi, -1);
+    hodge(D, E, deRham->scaling_eto_d());
+    div(divD, D);
+
+    divD -= rho;
+    amrex::Real const rhoNorm = rho.m_data.norm2(0, infra.m_geom.periodicity());
+    EXPECT_LT(divD.m_data.norm2(0, infra.m_geom.periodicity()), 1e-12 * rhoNorm);
+}
+
+INSTANTIATE_TEST_SUITE_P(PoissonFFT,
+                         PoissonFFTGaussLawTest,
+                         testing::Combine(testing::Values(HodgeScheme::FDHodge,
+                                                          HodgeScheme::GDECHodge),
+                                          testing::Values(2, 4, 6)),
+                         [] (testing::TestParamInfo<std::tuple<HodgeScheme, int>> const& info)
+                         {
+                             return std::string (std::get<0>(info.param) == HodgeScheme::FDHodge
+                                                    ? "FDHodge"
+                                                    : "GDECHodge") +
+                                    "Degree" + std::to_string(std::get<1>(info.param));
+                         });
+} // namespace
+
 enum class Operator
 {
     poisson,
