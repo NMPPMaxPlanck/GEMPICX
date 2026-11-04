@@ -1,0 +1,14 @@
+\documentclass{article}
+\usepackage{hyperref}
+
+\begin{document}
+
+\section{Profiling}
+GEMPICX annotates regions which should be profiled with \verb|Kokkos::Profiling::ScopedRegion|, e.g.,
+\begin{verbatim}
+Kokkos::Profiling::ScopedRegion region("Gempic::function_to_be_profiled()");
+\end{verbatim}
+These regions can be timed with any tool from \href{https://github.com/kokkos/kokkos-tools}{Kokkos Tools}, which should be built and configured following the corresponding \href{https://github.com/kokkos/kokkos-tools/wiki}{wiki}.
+A good starting point is the Simple Kernel Timer; see \href{https://github.com/kokkos/kokkos-tools/wiki/SimpleKernelTimer}{its documentation} for how to build, use and read its output.
+
+\end{document}
