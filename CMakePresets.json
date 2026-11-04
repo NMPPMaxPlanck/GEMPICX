@@ -12,7 +12,8 @@
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_HIP_ARCHITECTURES": "gfx942"
+                "CMAKE_HIP_ARCHITECTURES": "gfx942",
+                "Kokkos_ARCH_AMD_GFX942_APU": "ON"
             },
             "condition": {
                 "type": "anyOf",
