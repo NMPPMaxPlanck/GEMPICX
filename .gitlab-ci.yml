@@ -223,6 +223,7 @@ build-test_cuda_1D:
   artifacts:
     paths:
       - build.err
+    expire_in: 1 day
 
 build-test_clang_cpu_3D:
   extends:
@@ -377,9 +378,9 @@ pages:
     - configure_build "--preset documentation" 1
     - mv build/sphinx/ public/
   needs: []
+  pages: true
   artifacts:
-    paths:
-      - public
+    expire_in: 1 day
 
 cleanup-macos:
   tags: [macos]
