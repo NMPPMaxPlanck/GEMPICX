@@ -112,7 +112,7 @@ To help enforce the formatting and naming conventions we use two clang extra too
     The formatting should be done with clang-format and clang-tidy version 14-18.
 \end{warning}
 \begin{tip}
-    It's highly recommended to run the sanitize script \emph{after} configuring compilation for 3D and \emph{after} staging your changes.
+    It's highly recommended to run the sanitize script \emph{after} configuring compilation for 3D on CPU (clang-tidy does not work with the compile commands of a CUDA or HIP build) and \emph{after} staging your changes.
 \end{tip}
 
 \subsection*{Frequently Asked Questions: Automatic Linting and Formatting}
