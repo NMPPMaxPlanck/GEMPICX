@@ -23,7 +23,7 @@
 namespace Gempic::FieldSolvers
 {
 template <unsigned int vdim, unsigned int ndata>
-void check_energies (
+void check_energies_qn (
     Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::edge>& H,
     std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vdim, ndata>>>& particles,
@@ -37,43 +37,45 @@ void check_energies (
                                          B.m_data[dir].nComp(), 0, 0);
     }
 
-    amrex::GpuArray<amrex::Real, 1> ke{0.0};
-    auto* kePtr = ke.data();
+    amrex::Real ke{0.0};
 
     for (auto& particleSpecies : particles)
     {
         amrex::Real mass = particleSpecies->get_mass();
 
+        auto const ii = particleSpecies->get_data_indices();
         for (auto& pti : *particleSpecies)
         {
             long const np = pti.numParticles();
-            auto* const velx = pti.GetStructOfArrays().GetRealData(0).data();
-            auto* const vely = pti.GetStructOfArrays().GetRealData(1).data();
-            auto* const velz = pti.GetStructOfArrays().GetRealData(2).data();
-            auto* const weight = pti.GetStructOfArrays().GetRealData(vdim).data();
+            auto* const weight = pti.GetStructOfArrays().GetRealData(ii.m_iweight).data();
+            auto* const velx = pti.GetStructOfArrays().GetRealData(ii.m_ivelx).data();
+            auto* const vely = pti.GetStructOfArrays().GetRealData(ii.m_ively).data();
+            auto* const velz = pti.GetStructOfArrays().GetRealData(ii.m_ivelz).data();
 
-            Kokkos::parallel_for(
-                "QuasineutralDebug::check_energies", np, KOKKOS_LAMBDA(long const pp) {
+            amrex::Real keSpecies = 0.0;
+
+            Kokkos::parallel_reduce(
+                "QuasineutralDebug::check_energies", np,
+                KOKKOS_LAMBDA(long const pp, amrex::Real& localKe) {
                     amrex::GpuArray<amrex::Real, vdim> vel{velx[pp], vely[pp], velz[pp]};
 
-                    *kePtr +=
+                    localKe +=
                         weight[pp] * 0.5 * mass *
                         (vel[xDir] * vel[xDir] + vel[yDir] * vel[yDir] + vel[zDir] * vel[zDir]);
-                });
+                },
+                keSpecies);
+
+            ke += keSpecies;
         }
     }
 
-    amrex::Array<amrex::Real, 1> keCpu;
-    amrex::Gpu::copy(amrex::Gpu::deviceToHost, ke.begin(), ke.end(), keCpu.begin());
-    amrex::ParallelDescriptor::ReduceRealSum({keCpu[0]},
-                                             amrex::ParallelDescriptor::IOProcessorNumber());
+    amrex::ParallelDescriptor::ReduceRealSum({ke}, amrex::ParallelDescriptor::IOProcessorNumber());
 
-    amrex::Print() << "(KE, ME):(" << keCpu[0] << ", " << me << ")  TE: " << (keCpu[0] + me)
-                   << std::endl;
+    amrex::Print() << "(KE, ME):(" << ke << ", " << me << ")  TE: " << (ke + me) << std::endl;
 }
 
 template <unsigned int vdim, unsigned int ndata, int degx, int degy, int degz>
-void check_e_related_norms (
+void check_e_related_norms_qn (
     Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rhoIdeal,
@@ -128,14 +130,15 @@ void check_e_related_norms (
                    << (Utils::gempic_norm(rhoError.m_data, mInfra, 1) / den) * 100.0 << "\n";
 }
 
-void check_b_calculation(Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
-                         Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& bOld,
-                         Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
-                         std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
-                         amrex::Real dt,
-                         ComputationalDomain& mInfra);
+void check_b_calculation_qn(
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& bOld,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
+    amrex::Real dt,
+    ComputationalDomain& mInfra);
 
-void check_b_related_norms(
+void check_b_related_norms_qn(
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& divJ,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& A,
@@ -147,10 +150,11 @@ void check_b_related_norms(
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jMinusCurlH,
     ComputationalDomain& mInfra);
 
-void check_j_change_norms(Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jOld,
-                          Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jNew,
-                          std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
-                          ComputationalDomain& mInfra);
+void check_j_change_norms_qn(
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jOld,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& jNew,
+    std::shared_ptr<Gempic::Forms::FDDeRhamComplex> drc,
+    ComputationalDomain& mInfra);
 } //namespace Gempic::FieldSolvers
   // Functions made for debugging end
 #endif

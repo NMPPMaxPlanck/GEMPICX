@@ -85,7 +85,6 @@ public:
         Kokkos::Profiling::ScopedRegion region(
             "Gempic::Io::ReducedDiagnostics::ReducedDiagnostics()");
         m_isFirstType = (indexNum == 0);
-        // BackwardCompatibility();
         std::filesystem::path fileNamePathIn{fileName};
 
         Parameters ppRdName("ReducedDiagnostics." + m_rdName);
@@ -135,21 +134,13 @@ public:
 
         if (amrex::ParallelDescriptor::IOProcessor() && m_isFirstType)
         {
-            // create folder
-            // if (!UtilCreateDirectory(m_path, 0755))
-            //{ CreateDirectoryFailed(m_path); }
-
             // replace / create output file
-            if (m_isNotRestart) // not a restart
+            if (m_isNotRestart)
             {
                 std::ofstream ofs{m_path, std::ios::trunc};
                 ofs.close();
             }
         }
-        /*
-                // read separator
-                pp_rd_name.query("separator", m_sep);
-        */
     }
     // end constructor
 

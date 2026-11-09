@@ -19,10 +19,18 @@
 #include "GEMPIC_Interpolation.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
+#include "GEMPIC_ParticleUtils.H" // DeltaF method
 #include "GEMPIC_SplineClass.H"
 
 namespace Gempic::ParticleMeshCoupling
 {
+
+enum class ElectricFieldUse
+{
+    IncludeElectricField,
+    ExcludeElectricField,
+};
+
 namespace Impl
 {
 /**
@@ -1792,6 +1800,8 @@ void deposit_particle_density (
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
+    particleDensity.m_data.setVal(0.0);
+
     for (auto const& particleSpecies : particles)
     {
         amrex::Real charge = particleSpecies->get_charge();
@@ -1828,11 +1838,16 @@ void deposit_particle_density (
 template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
 void deposit_individual_particle_density (
     std::vector<Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>>& rhoVec,
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
     std::vector<Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>>& rhoMassVec,
     std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
     ComputationalDomain const& compDom,
     bool doSync = true)
 {
+    Kokkos::Profiling::ScopedRegion region("deposit_individual_particle_density()");
+
+    rho.m_data.setVal(0.0);
+
     int index = 0;
     for (auto& particleSpecies : particles)
     {
@@ -1875,6 +1890,7 @@ void deposit_individual_particle_density (
             rhoVec[index].post_particle_loop_sync();
             rhoMassVec[index].post_particle_loop_sync();
         }
+        rho += rhoVec[index];
 
         index++;
     }
@@ -1924,6 +1940,148 @@ void deposit_current_density (
                                                            ptd.rdata(ii.m_ivelz)[pp]};
                     deposit_twoform(jA, spline, vel, charge * ptd.rdata(ii.m_iweight)[pp]);
                 });
+        }
+    }
+
+    if (doSync)
+    {
+        J.post_particle_loop_sync();
+    }
+}
+
+template <int degX,
+          int degY,
+          int degZ,
+          ElectricFieldUse inclusion,
+          unsigned int vDim,
+          unsigned int nData>
+void deposit_current_density_drift_kinetic (
+    Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>> const& particles,
+    ComputationalDomain const& compDom,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& E,
+    Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
+    int bdir,
+    bool doSync = true)
+{
+    Kokkos::Profiling::ScopedRegion region("deposit_current_density_drift_kinetic");
+
+    for (unsigned int comp = 0; comp < vDim; ++comp)
+    {
+        J.m_data[comp].setVal(0.0);
+    }
+    for (auto& particleSpecies : particles)
+    {
+        amrex::Real charge = particleSpecies->get_charge();
+
+        if (particleSpecies->get_name() == "electrons")
+        {
+            amrex::Real b[vDim] = {0.0};
+            b[bdir] = 1.0;
+
+            for (auto& pti : *particleSpecies)
+            {
+                long const np = pti.numParticles();
+                auto const ptd = pti.GetParticleTile().getParticleTileData();
+                auto const ii = particleSpecies->get_data_indices();
+
+                amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> eA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> bA;
+                amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
+
+                for (unsigned int cc = 0; cc < vDim; cc++)
+                {
+                    eA[cc] = (E.m_data[cc])[pti].array();
+                    bA[cc] = (B.m_data[cc])[pti].array();
+                    jA[cc] = (J.m_data[cc])[pti].array();
+                }
+
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
+
+                amrex::ParallelFor(
+                    np,
+                    [=, eA = eA] AMREX_GPU_DEVICE(long pp)
+                    {
+                        auto const weight = ptd.rdata(ii.m_iweight)[pp];
+                        amrex::Real weightEff = weight;
+
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                        AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                     positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                     positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+
+                        SplineBase<degX, degY, degZ> spline(positionParticle, plo,
+                                                            compDom.inv_cell_size_array());
+
+                        amrex::GpuArray<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                               ptd.rdata(ii.m_ively)[pp],
+                                                               ptd.rdata(ii.m_ivelz)[pp]};
+
+                        amrex::GpuArray<amrex::Real, vDim> ep;
+
+                        if constexpr (inclusion == ElectricFieldUse::ExcludeElectricField)
+                        {
+                            ep = amrex::GpuArray<amrex::Real, vDim>{0.0, 0.0, 0.0};
+                            UNUSED(eA);
+                        }
+                        else
+                        {
+                            ep = spline.template eval_spline_field<Forms::Field::PrimalOneForm>(eA);
+                        }
+
+                        amrex::GpuArray<amrex::Real, vDim> bp =
+                            spline.template eval_spline_field<Forms::Field::PrimalTwoForm>(bA);
+
+                        amrex::GpuArray<amrex::Real, vDim> velGC;
+
+                        velGC[0] = (vel[bdir] * bp[0] + ep[1] * b[2] - ep[2] * b[1]) / bp[bdir];
+                        velGC[1] = (vel[bdir] * bp[1] + ep[2] * b[0] - ep[0] * b[2]) / bp[bdir];
+                        velGC[2] = (vel[bdir] * bp[2] + ep[0] * b[1] - ep[1] * b[0]) / bp[bdir];
+
+                        deposit_twoform(jA, spline, velGC, charge * weightEff);
+                    });
+            }
+        }
+        else
+        { // "ions"
+
+            for (auto& pti : *particleSpecies)
+            {
+                long const np = pti.numParticles();
+                auto const ptd = pti.GetParticleTile().getParticleTileData();
+                auto const ii = particleSpecies->get_data_indices();
+
+                amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jA;
+
+                for (unsigned int cc = 0; cc < vDim; cc++)
+                {
+                    jA[cc] = (J.m_data[cc])[pti].array();
+                }
+
+                amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> plo{compDom.geometry().ProbLoArray()};
+
+                amrex::ParallelFor(
+                    np,
+                    [=] AMREX_GPU_DEVICE(long pp)
+                    {
+                        auto const weight = ptd.rdata(ii.m_iweight)[pp];
+                        amrex::Real weightEff = weight;
+
+                        amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
+                        AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                                     positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
+                                     positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+
+                        amrex::GpuArray<amrex::Real, vDim> vel{ptd.rdata(ii.m_ivelx)[pp],
+                                                               ptd.rdata(ii.m_ively)[pp],
+                                                               ptd.rdata(ii.m_ivelz)[pp]};
+
+                        SplineBase<degX, degY, degZ> spline(positionParticle, plo,
+                                                            compDom.inv_cell_size_array());
+
+                        deposit_twoform(jA, spline, vel, charge * weightEff);
+                    });
+            }
         }
     }
 
@@ -1997,6 +2155,7 @@ void deposit_rho_weighted_electric_field (
 
 template <int degX, int degY, int degZ, unsigned int vDim, unsigned int nData>
 void deposit_rho_j_jcrossb_deldots (
+    std::vector<Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>>& rhoVec,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
     Gempic::Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
     Gempic::Forms::DeRhamField<Forms::Grid::primal, Forms::Space::face>& B,
@@ -2007,6 +2166,10 @@ void deposit_rho_j_jcrossb_deldots (
     bool doSync = true)
 {
     Kokkos::Profiling::ScopedRegion region("deposit_rho_j_jcrossb_deldots()");
+    for (int i = 0; i < particles.size(); i++)
+    {
+        rhoVec[i].m_data.setVal(0.0);
+    }
     rho.m_data.setVal(0.0);
     for (int comp = 0; comp < static_cast<int>(vDim); ++comp)
     {
@@ -2014,6 +2177,8 @@ void deposit_rho_j_jcrossb_deldots (
         jcrossB.m_data[comp].setVal(0.0);
         delDotS.m_data[comp].setVal(0.0);
     }
+
+    int index = 0;
     for (auto& particleSpecies : particles)
     {
         amrex::Real charge = particleSpecies->get_charge();
@@ -2032,7 +2197,7 @@ void deposit_rho_j_jcrossb_deldots (
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> jcrossbA;
             amrex::GpuArray<amrex::Array4<amrex::Real>, vDim> deldotsA;
 
-            rhoA = rho.m_data[pti].array();
+            rhoA = rhoVec[index].m_data[pti].array();
             for (int cc = 0; cc < static_cast<int>(vDim); cc++)
             {
                 jA[cc] = (J.m_data[cc])[pti].array();
@@ -2074,14 +2239,23 @@ void deposit_rho_j_jcrossb_deldots (
                                      charge * ptd.rdata(ii.m_iweight)[pp]);
                 });
         }
+        index++;
     }
 
     if (doSync)
     {
-        rho.post_particle_loop_sync();
+        for (int i = 0; i < particles.size(); i++)
+        {
+            rhoVec[i].post_particle_loop_sync();
+        }
         J.post_particle_loop_sync();
         jcrossB.post_particle_loop_sync();
         delDotS.post_particle_loop_sync();
+    }
+
+    for (int i = 0; i < particles.size(); i++)
+    {
+        rho += rhoVec[i];
     }
 }
 

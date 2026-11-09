@@ -94,7 +94,7 @@ template <typename DataStruct>
 void aos2soa_fab (amrex::MultiFab& soaMFA, amrex::FabArray<amrex::BaseFab<DataStruct>>& aosMFA)
 {
     constexpr unsigned int size = get_array_size<DataStruct>::s_myValue;
-    BL_ASSERT(soaMFA.nComp() == aosMFA.nComp() * size);
+    AMREX_ASSERT(soaMFA.nComp() == aosMFA.nComp() * size);
     for (amrex::MFIter mfi(aosMFA); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx =
@@ -123,16 +123,16 @@ void aos2soa_fab (amrex::Array<amrex::MultiFab, nDim>& soaMFA,
 {
     // using signed int because `nComp` always returns an `int`
     constexpr int size = static_cast<int>(get_array_size<DataStruct>::s_myValue);
-    BL_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
+    AMREX_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
     if constexpr (nDim > 1)
     {
-        BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
-        BL_ASSERT(aosMFA[yDir].nComp() == aosMFA[xDir].nComp());
+        AMREX_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
+        AMREX_ASSERT(aosMFA[yDir].nComp() == aosMFA[xDir].nComp());
     }
     if constexpr (nDim > 1)
     {
-        BL_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
-        BL_ASSERT(aosMFA[zDir].nComp() == aosMFA[yDir].nComp());
+        AMREX_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
+        AMREX_ASSERT(aosMFA[zDir].nComp() == aosMFA[yDir].nComp());
     }
 
     for (std::size_t iDir = 0; iDir < nDim; ++iDir)
@@ -168,7 +168,7 @@ template <typename DataStruct>
 void soa2aos_fab (amrex::FabArray<amrex::BaseFab<DataStruct>>& aosMFA, amrex::MultiFab& soaMFA)
 {
     constexpr unsigned int size = get_array_size<DataStruct>::s_myValue;
-    BL_ASSERT(soaMFA.nComp() == aosMFA.nComp() * size);
+    AMREX_ASSERT(soaMFA.nComp() == aosMFA.nComp() * size);
     for (amrex::MFIter mfi(aosMFA); mfi.isValid(); ++mfi)
     {
         amrex::Box const& bx =
@@ -201,18 +201,18 @@ void soa2aos_fab (amrex::Array<amrex::FabArray<amrex::BaseFab<DataStruct>>, nDim
 {
     // using signed int because `nComp` always returns an `int`
     constexpr int size = get_array_size<DataStruct>::s_myValue;
-    BL_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
+    AMREX_ASSERT(soaMFA[xDir].nComp() == aosMFA[xDir].nComp() * size);
     if constexpr (nDim > 1)
     {
-        BL_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
-        BL_ASSERT(soaMFA[yDir].nComp() == soaMFA[xDir].nComp());
-        BL_ASSERT(aosMFA[yDir].nComp() == aosMFA[xDir].nComp());
+        AMREX_ASSERT(soaMFA[yDir].nComp() == aosMFA[yDir].nComp() * size);
+        AMREX_ASSERT(soaMFA[yDir].nComp() == soaMFA[xDir].nComp());
+        AMREX_ASSERT(aosMFA[yDir].nComp() == aosMFA[xDir].nComp());
     }
     if constexpr (nDim > 2)
     {
-        BL_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
-        BL_ASSERT(soaMFA[zDir].nComp() == soaMFA[yDir].nComp());
-        BL_ASSERT(aosMFA[zDir].nComp() == aosMFA[yDir].nComp());
+        AMREX_ASSERT(soaMFA[zDir].nComp() == aosMFA[zDir].nComp() * size);
+        AMREX_ASSERT(soaMFA[zDir].nComp() == soaMFA[yDir].nComp());
+        AMREX_ASSERT(aosMFA[zDir].nComp() == aosMFA[yDir].nComp());
     }
     for (std::size_t iDir = 0; iDir < nDim; ++iDir)
     {

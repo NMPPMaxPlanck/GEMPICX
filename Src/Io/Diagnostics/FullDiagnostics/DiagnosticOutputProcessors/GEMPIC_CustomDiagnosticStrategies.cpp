@@ -201,7 +201,7 @@ HighResSubcellOutputProcessor::HighResSubcellOutputProcessor(Io::AnyFieldPtr con
 amrex::BoxArray HighResSubcellOutputProcessor::get_box_array (amrex::IndexType& t)
 {
     amrex::IndexType tNew{t};
-    tNew.clear(); // higher resolution cell-centered plotter;
+    tNew.clear(); // higher resolution cell-centered plotter
     amrex::BoxArray bx = convert(this->m_compDom.m_grid, tNew);
     return bx;
 };

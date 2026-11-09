@@ -2372,7 +2372,7 @@ inline void hodge_dk (DstFormType& formOut,
                                                  formy(i - 1, j + 1, k) + formy(i, j + 1, k)) +
                                             matrixX(i, j, k, zDir) * 0.25 *
                                                 (formz(i - 1, j, k) + formz(i, j, k) +
-                                                 formz(i - 1, j, k) + formz(i, j, k + 1));
+                                                 formz(i - 1, j, k + 1) + formz(i, j, k + 1));
                     });
     }
     // Update y component assume corresponding multifab has only 1 component

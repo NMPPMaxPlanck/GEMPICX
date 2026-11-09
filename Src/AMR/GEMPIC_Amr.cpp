@@ -93,7 +93,7 @@ MLFiniteDifferenceDeRhamSpaces::MLFiniteDifferenceDeRhamSpaces(
     }
 }
 
-// TODO: Make creation of LevelInterface objects optional since they are not needed for all fields
+/// @todo: Make creation of LevelInterface objects optional since they are not needed for all fields
 
 MLPrimalZeroForm MLFiniteDifferenceDeRhamSpaces::create_primal_zero_form (
     std::string const& label,

@@ -11,6 +11,7 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Particle.H"
+#include "GEMPIC_Sampler.H"
 #include "TestUtils/GEMPIC_AmrexTestEnv.H"
 #include "TestUtils/GEMPIC_TestUtils.H"
 
@@ -284,4 +285,48 @@ TEST(ParticleIOTest, SolverCheckpoint)
             }
         }
     }
+}
+
+void add_parameters ()
+{
+    Gempic::Io::Parameters parameters{};
+    Gempic::Io::Parameters compDomParams{"ComputationalDomain"};
+    amrex::Vector<amrex::Real> domainLo{AMREX_D_DECL(0.0, 0.0, 0.0)};
+    amrex::Vector<amrex::Real> k{AMREX_D_DECL(1, 1, 1)};
+    amrex::Vector<int> const nCell{AMREX_D_DECL(10, 11, 12)};
+    amrex::Vector<int> const maxGridSize{AMREX_D_DECL(5, 11, 12)};
+    amrex::Vector<int> const isPeriodic{AMREX_D_DECL(1, 1, 1)};
+
+    compDomParams.set("domainLo", domainLo);
+    compDomParams.set("k", k);
+    compDomParams.set("nCell", nCell);
+    compDomParams.set("maxGridSize", maxGridSize);
+    compDomParams.set("isPeriodic", isPeriodic);
+}
+
+template <typename T>
+void print_mfi (T& particleSpecies)
+{
+    int rank{amrex::ParallelContext::MyProcAll()};
+    std::cout << rank << ": entering print_mfi " << '\n';
+    for (amrex::MFIter mfi = particleSpecies->MakeMFIter(0); mfi.isValid(); ++mfi)
+    {
+        std::cout << rank << ": std::cout inside print_mfi, index: " << mfi.index() << '\n';
+        amrex::AllPrint() << rank << ": AllPrint inside print_mfi, index: " << mfi.index() << '\n';
+    }
+}
+
+TEST(SamplerTest, DomainCloning)
+{
+    constexpr unsigned int vdim{3};
+    int numParticles1{};
+    int numParticles2{};
+
+    Io::Parameters parameters{};
+    add_parameters();
+    ComputationalDomain infra;
+    auto particleSpecies = std::make_shared<ParticleSpecies<vdim>>("whatever", infra);
+    print_mfi(particleSpecies);
+    numParticles1 = particleSpecies->TotalNumberOfParticles();
+    EXPECT_EQ(numParticles1, numParticles2);
 }

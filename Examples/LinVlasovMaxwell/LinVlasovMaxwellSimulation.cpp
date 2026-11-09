@@ -6,6 +6,8 @@
 #include <iostream>
 #include <random>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
@@ -299,7 +301,7 @@ int main (int argc, char* argv[])
                         }
                         particleSpecies->Redistribute();
                     }
-                } // bl_profile TimeLoop::particle_loop1
+                } // profile TimeLoop::particle_loop1
 
                 J.post_particle_loop_sync();
                 D -= J;
@@ -366,7 +368,7 @@ int main (int argc, char* argv[])
                         }
                         // no redistribute since particle positions do not change
                     }
-                } // bl_profile TimeLoop::particle_loop2
+                } // profile TimeLoop::particle_loop2
 
                 //He,field
                 operatorHamilton.apply_h_e_field(B, E, deRham, D, 0.5 * dt);

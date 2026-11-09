@@ -46,8 +46,8 @@ TEST(ParticleAddTest, AddAndWriteParticles)
                                                                infra.geometry().ProbLength(yDir),
                                                                infra.geometry().ProbLength(zDir))};
     amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
-    // FIXME: write p0 and pL to a file such that they can subsequently
-    //        be read in Python
+    /// @todo: write p0 and pL to a file such that they can subsequently
+    ///        be read in Python
     //std::cout << "p0 x = " << p0[xDir]
     //          << ", y = "  << p0[yDir]
     //          << ", z = "  << p0[zDir]

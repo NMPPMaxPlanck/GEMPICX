@@ -2,7 +2,7 @@
 Sim.Type = "VlasovMaxwell"
 
 # Grid parameters
-ComputationalDomain.nCell = 64 8 8
+ComputationalDomain.nCell = 32 8 8
 ComputationalDomain.maxGridSize = 32 8 8
 ComputationalDomain.isPeriodic = 1 1 1 # 1 -> periodic, 0 -> else
 
@@ -39,8 +39,10 @@ Particle.ions.G0.vWeight = 1.0
 k = .1 1 1
 
 # Simulation parameters
-TimeLoop.nSteps = 40000
+TimeLoop.nSteps = 1
 TimeLoop.dt = 0.05
+TimeLoop.chargeMatrixType = "field_qbym"
+TimeLoop.printChecks = 0
 
 # Initial conditions
 ICs.Bmean = 0.0 1.0 0.0
@@ -68,13 +70,10 @@ ReducedDiagnostics.MagEnergy.types = MagFieldEnergy
 #ReducedDiagnostics.GaussError.types = GaussError
 ReducedDiagnostics.Part.types = Particle
 
-hypre.hypre_solver = GMRES # BoomerAMG(default) GMRES COGMRES LGMRES FlexGMRES BiCGSTAB PCG Hybrid
-hypre.hypre_preconditioner = euclid # none(default: hypre.hypre_solver=BoomerAMG will only work with hypre.hypre_preconditioner=none) BoomerAMG euclid
+div_grad_phi.hypre_solver = GMRES # BoomerAMG(default) GMRES COGMRES LGMRES FlexGMRES BiCGSTAB PCG Hybrid
+div_grad_phi.hypre_preconditioner = BoomerAMG # none(default: hypre.hypre_solver=BoomerAMG will only work with hypre.hypre_preconditioner=none) BoomerAMG euclid
+div_grad_phi.num_krylov = 50 # integer. Default:50
+div_grad_phi.max_iterations = 200 # 10000 # integer. Default:200
 
-hypre.num_krylov = 50 # integer. Default:50
-hypre.max_iterations = 10000 # integer. Default:200
-
-hypre.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
-hypre.logging = 0 # integer. Default:0. >1(latest residual available)
-hypre.euclid_level = 4
-hypre.euclid_use_block_jacobi = 1
+div_grad_phi.verbose = 0 # integer. Default:0. 1(print setup info) 2(print solve info) 3(print setup+solve info)
+div_grad_phi.logging = 0 # integer. Default:0. >1(latest residual available)

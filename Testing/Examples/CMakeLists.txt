@@ -6,7 +6,7 @@ function(get_runtest_particle_args INPUT_FILE OUT_VAR)
   list(POP_BACK SPECIES_LINES SPECIES_LINE)
   string(REGEX REPLACE "^[^=]*=([^#]*).*$" "\\1" SPECIES "${SPECIES_LINE}")
   separate_arguments(SPECIES UNIX_COMMAND "${SPECIES}")
-  list(TRANSFORM SPECIES REPLACE "^.+$" "Particle.\\0.nPartPerCell=1" OUTPUT_VARIABLE ARGS)
+  list(TRANSFORM SPECIES REPLACE "^.+$" "Particle.\\0.nPartPerCell=2" OUTPUT_VARIABLE ARGS)
   set(${OUT_VAR} ${ARGS} PARENT_SCOPE)
 endfunction()
 

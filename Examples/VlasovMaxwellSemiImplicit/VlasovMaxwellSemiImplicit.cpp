@@ -93,7 +93,6 @@ int main (int argc, char* argv[])
 
         auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(
             fieldRegistry, "E", deRham, funcE);
-        //DeRhamField<Grid::primal, Space::edge> eFiltered(deRham);
         DeRhamField<Grid::primal, Space::edge> e1(deRham);
         DeRhamField<Grid::primal, Space::edge> e2(deRham);
         auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(
@@ -114,7 +113,6 @@ int main (int argc, char* argv[])
             fieldRegistry, "H", deRham, funcB);
         auto J = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
                                                                                    "J", deRham);
-        //DeRhamField<Grid::dual, Space::face> jFiltered(deRham); // Filtered J for diagnostics
         auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
                                                                                      "rho", deRham);
         DeRhamField<Grid::dual, Space::cell> rhoFiltered(deRham); // Filtered rho for diagnostics

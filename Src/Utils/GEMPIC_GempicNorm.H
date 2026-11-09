@@ -5,8 +5,6 @@
 #ifndef GEMPIC_NORM_H_
 #define GEMPIC_NORM_H_
 
-#include <assert.h>
-
 #include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <AMReX.H>
@@ -30,8 +28,8 @@ inline amrex::Real gempic_norm (amrex::MultiFab const& multiF,
                                 int p)
 {
     Kokkos::Profiling::ScopedRegion region("Gempic::Utils::gempic_norm()");
-    // TODOrefine
-    assert(p <= 2);
+    /// @todo: refine
+    AMREX_ASSERT(p <= 2);
     amrex::Real result = 0.0;
     if (p == 0)
     {

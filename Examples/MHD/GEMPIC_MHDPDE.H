@@ -766,7 +766,7 @@ void MHD<nVarPde, polyrecDegreeFv, ParamsClass, PdeTagType>::single_time_step ()
     // Fill boundary before computing the reconstruction
     m_disc.m_fieldsTmpEx->m_q.m_data.FillBoundary(
         m_disc.m_compDom.m_geom.periodicity()); // this will update the mpi/patch ghost cells
-    /*************************************************************************************************************/
+    /**********************************************************************************************/
     // LOOP OVER BARYCENTERS
     // from Q build reconstructed left/right face data
     // assume Q ghost cells are correctly filled??? NO. DO communications only before using ghost

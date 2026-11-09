@@ -35,6 +35,7 @@ if(AMReX_HYPRE)
     SOURCE_DIR ${PROJECT_SOURCE_DIR}/third_party/hypre-src
     GIT_REPOSITORY https://github.com/hypre-space/hypre
     GIT_TAG v2.32.0
+    ALLOW_DIRTY ${USE_DIRTY_HYPRE_REPO}
     SOURCE_SUBDIR src # hypre doesn't follow standard cmake conventions
     OVERRIDE_FIND_PACKAGE
   )

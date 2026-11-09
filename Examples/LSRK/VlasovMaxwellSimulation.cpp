@@ -6,6 +6,8 @@
 #include <iostream>
 #include <random>
 
+#include <Kokkos_Profiling_ScopedRegion.hpp>
+
 #include <AMReX.H>
 #include <AMReX_Particles.H>
 #include <AMReX_PlotFileUtil.H>
@@ -97,7 +99,7 @@ int main (int argc, char* argv[])
     {
         amrex::Warning("Warning: Failed to get the current git state. Is this a git repo?");
     }
-    //
+
     // Tell the parameters class to print output
     Io::Parameters::set_print_output();
 
@@ -109,7 +111,7 @@ int main (int argc, char* argv[])
     constexpr int degy{3};
     constexpr int degz{3};
     constexpr int maxSplineDegree{std::max(std::max(degx, degy), degz)};
-    //
+
     constexpr int hodgeDegree{2};
 
     {
@@ -134,7 +136,6 @@ int main (int argc, char* argv[])
             amrex::Print() << "****************************\n";
             amrex::Print() << "* FullyKinetic simulation  *\n";
             amrex::Print() << "****************************\n";
-            // paramsSim.get_or_set("Te", te);
         }
         else if (simType == "DriftKinetic")
         {

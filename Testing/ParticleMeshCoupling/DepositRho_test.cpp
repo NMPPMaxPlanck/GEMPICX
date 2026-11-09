@@ -67,8 +67,6 @@ class DepositRhoTest : public testing::Test
 protected:
     // Degree of splines in each direction
     static int const s_degX{1};
-    // static const int degY{AMREX_D_PICK(0, 1, 1)};
-    // static const int degZ{AMREX_D_PICK(0, 0, 1)};
     static int const s_degY{1};
     static int const s_degZ{1};
 

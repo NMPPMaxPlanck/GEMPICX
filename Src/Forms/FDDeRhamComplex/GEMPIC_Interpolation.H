@@ -234,7 +234,6 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_lagrange_der (int con
  *
  * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
  */
-// NOLINTBEGIN(readability-magic-numbers)
 
 template <int intDegree>
 AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
@@ -278,7 +277,6 @@ AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_edge_arbitrary_order 
  *
  * @return \f$e_{polyIndex} (y)\f$ the histopolating polynomial evaluated at xi
  */
-// NOLINTBEGIN(readability-magic-numbers)
 
 template <int intDegree>
 AMREX_GPU_HOST_DEVICE GEMPIC_FORCE_INLINE amrex::Real eval_edge_arbitrary_order (
@@ -492,6 +490,7 @@ AMREX_GPU_HOST_DEVICE amrex::Real eval_edge (int const polyIndex,
 
     return val;
 }
+// NOLINTEND(readability-magic-numbers)
 
 template <int nNodes, OneTwoFormC SrcFormType, Direction dir, Direction coordinate>
 AMREX_GPU_DEVICE inline amrex::Real choose_eval (int const polyIndex,
@@ -1311,7 +1310,6 @@ void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + ncomp,
                                       "Insufficient space in destination multifab");
     amrex::Copy(mfDst, srcForm.multi_fab(), 0, dstComp, ncomp, 0);
-    // mf_dst.ParallelCopy( *m_mf_src, 0, dstComp, m_mf_src->nComp() );
 }
 
 /**
@@ -1330,7 +1328,6 @@ void rawdata_field_to_multifabs (amrex::MultiFab& mfDst,
     GEMPIC_ALWAYS_ASSERT_WITH_MESSAGE(mfDst.nComp() >= dstComp + ncomp,
                                       "Insufficient space in destination multifab");
     amrex::Copy(mfDst, srcForm.multi_fab(idir), 0, dstComp, ncomp, 0);
-    // mf_dst.ParallelCopy( *m_mf_src, 0, dstComp, m_mf_src->nComp() );
 }
 
 template <typename SrcFormType>

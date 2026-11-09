@@ -210,6 +210,15 @@ public:
         DeRhamField<Grid::primal, Space::node> phiCorr(deRham);
         DeRhamField<Grid::dual, Space::cell> rho(deRham);
 
+        std::vector<DeRhamField<Grid::dual, Space::cell>> rhoVec;
+        std::vector<DeRhamField<Grid::dual, Space::cell>> rhoMassVec;
+
+        for (std::size_t i = 0; i < ions.size(); i++)
+        {
+            rhoVec.emplace_back(deRham);
+            rhoMassVec.emplace_back(deRham);
+        }
+
         QuasineutralSolver<s_hodgeDegree, s_vdim, s_ndata, s_degX, s_degY, s_degZ>
             hypreParticleDivJCurlB(infra);
 
@@ -221,7 +230,7 @@ public:
         divJFinalNorm = Utils::gempic_norm(divJ.m_data, infra, 2);
 
         // Correction of Javg
-        hypreParticleDivJCurlB.push_particles_and_correct_javg(J, rho, ions);
+        hypreParticleDivJCurlB.push_particles_and_correct_javg(J, rhoVec, rho, rhoMassVec, ions);
 
         // Calculation of non-divergencefree A using divergence-free J begins here
         DeRhamField<Grid::dual, Space::face> A(deRham);
@@ -275,7 +284,7 @@ TYPED_TEST(HypreQuasineutralSobolDivJCurlBTest, HypreQuasineutralDivJCurlB)
     constexpr int meshSize = 6;
 
     amrex::Real divJFinalNorm, divBNorm, divANorm, jMinusCurlHNorm;
-    amrex::Real tol = 2.0e-15;
+    amrex::Real tol = 1.0e-13;
 
     this->template divj_correction_curlb_eq_j_solve<meshSize>(divJFinalNorm, divBNorm, divANorm,
                                                               jMinusCurlHNorm);

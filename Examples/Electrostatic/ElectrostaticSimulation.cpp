@@ -142,7 +142,6 @@ int main (int argc, char* argv[])
             }
             else if (simType == "VlasovPoisson")
             {
-                //poisson->solve_amrex(rhoFiltered, phi);
                 poisson->solve(phi, rhoFiltered);
                 grad(E, phi);
                 E *= -1.0;

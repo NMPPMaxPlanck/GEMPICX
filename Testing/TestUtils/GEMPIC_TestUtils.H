@@ -166,6 +166,61 @@ ComputationalDomain get_compdom(amrex::Real const domainLoIn,
 void init_multilevel_domain(amrex::Vector<amrex::Geometry>& geom,
                             amrex::Vector<amrex::BoxArray>& ba,
                             amrex::Vector<amrex::DistributionMapping>& dm);
+
+template <int n, int percelldir, unsigned int vDim, unsigned int nData>
+void hypre_dk_add_particles (
+    std::vector<std::shared_ptr<Gempic::Particle::ParticleSpecies<vDim, nData>>>& ions,
+    Gempic::ComputationalDomain const& infra,
+    amrex::GpuArray<amrex::Real, vDim> const& velocity = {})
+{
+    constexpr int percell{GEMPIC_D_MULT(percelldir, percelldir, percelldir)};
+    constexpr int numCells{GEMPIC_D_MULT(n, n, n)};
+    constexpr int numParticles{percell * numCells};
+
+    amrex::Vector<amrex::Real> oss[percell];
+
+    // Any value of 'off' in [0,1] works for deg 1,2,3
+    amrex::Real off(0.5);
+
+    GEMPIC_D_LOOP_BEGIN(for (int i = 0; i < percelldir; i++), for (int j = 0; j < percelldir; j++),
+                        for (int k = 0; k < percelldir; k++))
+        oss[AMREX_D_TERM(i, +j * percelldir, +k * percelldir * percelldir)] = {
+            AMREX_D_DECL((i + off) / percelldir, (j + off) / percelldir, (k + off) / percelldir)};
+    GEMPIC_D_LOOP_END
+
+    amrex::Array<amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>, numParticles> positions;
+    amrex::Array<amrex::GpuArray<amrex::Real, vDim>, numParticles> velocities;
+    amrex::Array<amrex::Real, numParticles> weights;
+
+    int i{0}, j{0}, k{0};
+
+    amrex::GpuArray<amrex::Real, 3> dx{GEMPIC_D_PAD_ONE(infra.geometry().CellSize(xDir),
+                                                        infra.geometry().CellSize(yDir),
+                                                        infra.geometry().CellSize(zDir))};
+
+    GEMPIC_D_LOOP_BEGIN(for (i = 0; i < n; i++), for (j = 0; j < n; j++), for (k = 0; k < n; k++))
+
+        for (int p = 0; p < percell; p++)
+        {
+            amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> loc = {
+                AMREX_D_DECL(infra.geometry().ProbLo(xDir) + (i + oss[p][0]) * dx[xDir],
+                             infra.geometry().ProbLo(yDir) + (j + oss[p][1]) * dx[yDir],
+                             infra.geometry().ProbLo(zDir) + (k + oss[p][2]) * dx[zDir])};
+
+            int const idx = p * numCells + i + j * n + k * n * n;
+            positions[idx] = {AMREX_D_DECL(loc[xDir], loc[yDir], loc[zDir])};
+            velocities[idx] = velocity;
+            weights[idx] = (1.0 / percell) * infra.cell_volume();
+        }
+    GEMPIC_D_LOOP_END
+
+    for (auto& species : ions)
+    {
+        add_single_particles(species.get(), infra, weights, positions, velocities);
+        species->Redistribute();
+    }
+}
+
 } // namespace Gempic::Test::Utils
 
 /** @brief Helper macro for the @ref Gempic::Test::Utils::check_field function */

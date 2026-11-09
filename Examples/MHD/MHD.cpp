@@ -24,7 +24,7 @@
 #include "GEMPIC_MultiFullDiagnostics.H"
 #include "GEMPIC_MultiReducedDiagnostics.H"
 #include "GEMPIC_Parameters.H"
-#include "GEMPIC_Particle.H" // necessary only for the output... (the plotters depends still on the particles)
+#include "GEMPIC_Particle.H" // necessary only for the output... (plotters depend on the particles)
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_RungeKutta.H"
 
@@ -72,7 +72,6 @@ int main_new_mhdpde ()
     // compute initial norms and dt
     myMHDscheme.print_now();
     int nMaxSteps{myMHDscheme.m_nmaxSteps};
-    //bool break_loop{false};
 
     amrex::Print() << "Starting time loop 00" << std::endl;
     for (int tStep = 0; tStep < nMaxSteps; tStep++)
@@ -99,12 +98,6 @@ int main_new_mhdpde ()
         {
             amrex::Print() << "    --- time loop 02" << std::endl;
         }
-        /*myMHDscheme.mhd.update_Qold_Q(myMHDscheme.mhd.m_disc, myMHDscheme.mhd.m_disc.m_compDom,
-                                      myMHDscheme.mhd.m_disc.m_iopar);
-        myMHDscheme.mhd.single_time_step(myMHDscheme.mhd.m_disc,
-        myMHDscheme.mhd.m_disc.m_compDom,myMHDscheme.mhd.m_disc.m_iopar);
-        myMHDscheme.mhd.update_Qnew(myMHDscheme.mhd.m_disc, myMHDscheme.mhd.m_disc.m_compDom,
-                                    myMHDscheme.mhd.m_disc.m_iopar);*/
 
         myMHDscheme.finalize_new_timestep(); // mhd.m_disc.m_time += mhd.m_disc.m_dt;
         if (Gempic::Utils::Verbosity::level() > 1)

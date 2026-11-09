@@ -15,12 +15,12 @@ namespace Gempic::FieldSolvers
 using namespace Forms;
 using namespace Particle;
 
-void check_b_calculation (DeRhamField<Grid::primal, Space::edge>& E,
-                          DeRhamField<Grid::primal, Space::face>& bOld,
-                          DeRhamField<Grid::primal, Space::face>& B,
-                          std::shared_ptr<FDDeRhamComplex> drc,
-                          amrex::Real dt,
-                          ComputationalDomain& mInfra)
+void check_b_calculation_qn (DeRhamField<Grid::primal, Space::edge>& E,
+                             DeRhamField<Grid::primal, Space::face>& bOld,
+                             DeRhamField<Grid::primal, Space::face>& B,
+                             std::shared_ptr<FDDeRhamComplex> drc,
+                             amrex::Real dt,
+                             ComputationalDomain& mInfra)
 {
     add_dt_curl(bOld, E, -dt);
 
@@ -40,16 +40,16 @@ void check_b_calculation (DeRhamField<Grid::primal, Space::edge>& E,
                           100.0;
 }
 
-void check_b_related_norms (DeRhamField<Grid::dual, Space::face>& J,
-                            DeRhamField<Grid::dual, Space::cell>& divJ,
-                            DeRhamField<Grid::dual, Space::face>& A,
-                            DeRhamField<Grid::dual, Space::cell>& divA,
-                            DeRhamField<Grid::primal, Space::face>& B,
-                            DeRhamField<Grid::primal, Space::cell>& divB,
-                            DeRhamField<Grid::dual, Space::edge>& H,
-                            DeRhamField<Grid::dual, Space::face>& curlH,
-                            DeRhamField<Grid::dual, Space::face>& jMinusCurlH,
-                            ComputationalDomain& mInfra)
+void check_b_related_norms_qn (DeRhamField<Grid::dual, Space::face>& J,
+                               DeRhamField<Grid::dual, Space::cell>& divJ,
+                               DeRhamField<Grid::dual, Space::face>& A,
+                               DeRhamField<Grid::dual, Space::cell>& divA,
+                               DeRhamField<Grid::primal, Space::face>& B,
+                               DeRhamField<Grid::primal, Space::cell>& divB,
+                               DeRhamField<Grid::dual, Space::edge>& H,
+                               DeRhamField<Grid::dual, Space::face>& curlH,
+                               DeRhamField<Grid::dual, Space::face>& jMinusCurlH,
+                               ComputationalDomain& mInfra)
 {
     amrex::Print() << "\nError checks for B-related computations:";
 
@@ -71,10 +71,10 @@ void check_b_related_norms (DeRhamField<Grid::dual, Space::face>& J,
                    << "\n";
 }
 
-void check_j_change_norms (DeRhamField<Grid::dual, Space::face>& jOld,
-                           DeRhamField<Grid::dual, Space::face>& jNew,
-                           std::shared_ptr<FDDeRhamComplex> drc,
-                           ComputationalDomain& mInfra)
+void check_j_change_norms_qn (DeRhamField<Grid::dual, Space::face>& jOld,
+                              DeRhamField<Grid::dual, Space::face>& jNew,
+                              std::shared_ptr<FDDeRhamComplex> drc,
+                              ComputationalDomain& mInfra)
 {
     DeRhamField<Grid::dual, Space::face> dJ(drc);
     linear_combination(dJ, 1.0, jOld, -1.0, jNew);

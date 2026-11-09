@@ -101,8 +101,8 @@ void set_shared_param (parmParseType& sharedParam, amrex::Vector<T> const& value
  * @param sharedParam Shared parameter to be set
  * @param value Values of the parameter
  */
-template <typename T>
-void set_shared_param (parmParseType& sharedParam, std::array<T, AMREX_SPACEDIM> const& value)
+template <typename T, std::size_t length>
+void set_shared_param (parmParseType& sharedParam, std::array<T, length> const& value)
 {
     Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::set_shared_param(std::array)");
     parmParseArrayType tmp;
@@ -111,7 +111,7 @@ void set_shared_param (parmParseType& sharedParam, std::array<T, AMREX_SPACEDIM>
 #else
     auto* tmpIt{tmp.begin()};
 #endif
-    for (size_t i{0}; i < AMREX_SPACEDIM; ++i)
+    for (size_t i{0}; i < length; ++i)
     {
         *tmpIt = value[i];
         ++tmpIt;
@@ -175,12 +175,12 @@ void get_shared_param (amrex::Vector<T>& variable, parmParseType const& sharedPa
  * @param variable array to be set
  * @param sharedParam Shared parameter to load
  */
-template <typename T>
-void get_shared_param (std::array<T, AMREX_SPACEDIM>& variable, parmParseType const& sharedParam)
+template <typename T, std::size_t length>
+void get_shared_param (std::array<T, length>& variable, parmParseType const& sharedParam)
 {
     Kokkos::Profiling::ScopedRegion region("Gempic::Io::Impl::get_shared_param(std::array)");
     auto tmp = std::get<parmParseArrayType>(sharedParam);
-    for (size_t i{0}; i < AMREX_SPACEDIM; i++)
+    for (size_t i{0}; i < length; i++)
     {
         variable[i] = std::get<T>(tmp[i]);
     }
@@ -407,7 +407,7 @@ public:
     void get (std::string const& variableName, T& variable)
     {
         Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::get()");
-        using namespace Impl; // Necessary to access operator<<() nicely;
+        using namespace Impl; // Necessary to access operator<<() nicely
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -468,7 +468,7 @@ public:
     void set (std::string const& variableName, T const& variable)
     {
         Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::set()");
-        using namespace Impl; // Necessary to access operator<<() nicely;
+        using namespace Impl; // Necessary to access operator<<() nicely
         // Check if variable is a shared parameter (contains is c++20).
         auto search{s_sharedParams.find(variableName)};
         if (search != s_sharedParams.end())
@@ -804,7 +804,7 @@ private:
     void print_shared_parameter (std::ofstream& ofs, std::string const& variableName, T& variable)
     {
         Kokkos::Profiling::ScopedRegion region("Gempic::Io::Parameters::print_shared_parameter()");
-        using namespace Impl; // Necessary to access operator<<() nicely;
+        using namespace Impl; // Necessary to access operator<<() nicely
         if (s_sharedParams.at(variableName).get()->m_isSet)
         {
             ofs << variableName << " " << convertToParam(variable) << " # "

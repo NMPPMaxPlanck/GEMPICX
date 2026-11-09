@@ -60,33 +60,32 @@ int main (int argc, char* argv[])
                                                         HodgeScheme::FDHodge);
         Gempic::Io::FieldRegistry fieldRegistry;
         // Field declarations (labels removed from constructors)
-        auto E = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::edge>>(fieldRegistry,
-                                                                                     "E", deRham);
-        auto D = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::face>>(fieldRegistry,
-                                                                                   "D", deRham);
-        amrex::Real c1 = -1.0, c2 = 1.0;
+        auto E = Gempic::Io::registered_form<DeRhamField<Forms::Grid::primal, Forms::Space::edge>>(
+            fieldRegistry, "E", deRham);
+        auto D = Gempic::Io::registered_form<DeRhamField<Forms::Grid::dual, Forms::Space::face>>(
+            fieldRegistry, "D", deRham);
 
-        auto B = Gempic::Io::registered_form<DeRhamField<Grid::primal, Space::face>>(fieldRegistry,
-                                                                                     "B", deRham);
-        DeRhamField<Grid::primal, Space::face> bOld(deRham);
-        DeRhamField<Grid::primal, Space::cell> divB(deRham);
-        auto H = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::edge>>(fieldRegistry,
-                                                                                   "H", deRham);
-        DeRhamField<Grid::dual, Space::face> curlH(deRham);
-        DeRhamField<Grid::dual, Space::face> jMinusCurlH(deRham);
+        auto B = Gempic::Io::registered_form<DeRhamField<Forms::Grid::primal, Forms::Space::face>>(
+            fieldRegistry, "B", deRham);
+        DeRhamField<Forms::Grid::primal, Forms::Space::face> bOld(deRham);
+        DeRhamField<Forms::Grid::primal, Forms::Space::cell> divB(deRham);
+        auto H = Gempic::Io::registered_form<DeRhamField<Forms::Grid::dual, Forms::Space::edge>>(
+            fieldRegistry, "H", deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> curlH(deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> jMinusCurlH(deRham);
 
-        DeRhamField<Grid::dual, Space::face> A(deRham);
-        DeRhamField<Grid::dual, Space::cell> divA(deRham);
-        DeRhamField<Grid::primal, Space::edge> aPrimal(deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> A(deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::cell> divA(deRham);
+        DeRhamField<Forms::Grid::primal, Forms::Space::edge> aPrimal(deRham);
 
-        DeRhamField<Grid::dual, Space::face> jcrossB(
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> jcrossB(
             deRham); // This is really sum(species) ((q/m) J x B)
-        DeRhamField<Grid::dual, Space::face> delDotS(
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> delDotS(
             deRham); // This is really sum(species) ((q/m) Del.S)
-        DeRhamField<Grid::dual, Space::face> rhs(deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> rhs(deRham);
 
-        auto rho = Gempic::Io::registered_form<DeRhamField<Grid::dual, Space::cell>>(fieldRegistry,
-                                                                                     "rho", deRham);
+        auto rho = Gempic::Io::registered_form<DeRhamField<Forms::Grid::dual, Forms::Space::cell>>(
+            fieldRegistry, "rho", deRham);
 
         Io::Parameters iCparams("ICs");
 
@@ -100,21 +99,39 @@ int main (int argc, char* argv[])
         bmean[zDir] *= dx[xDir] * dx[yDir];
 
         auto [parserIdealRho, funcIdealRho] = Utils::parse_function("idealRho");
-        DeRhamField<Grid::dual, Space::cell> rhoIdeal(deRham, funcIdealRho);
+        DeRhamField<Forms::Grid::dual, Forms::Space::cell> rhoIdeal(deRham, funcIdealRho);
         Gempic::Io::register_form(fieldRegistry, "rho_ideal", rhoIdeal);
 
-        DeRhamField<Grid::dual, Space::face> J(deRham);
-        DeRhamField<Grid::dual, Space::face> jOld(deRham);
-        DeRhamField<Grid::dual, Space::cell> divJ(deRham);
-        DeRhamField<Grid::primal, Space::node> phiCorr(deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> J(deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::face> jOld(deRham);
+        DeRhamField<Forms::Grid::dual, Forms::Space::cell> divJ(deRham);
+        DeRhamField<Forms::Grid::primal, Forms::Space::node> phiCorr(deRham);
 
-        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>> particles;
-        init_particles(particles, infra);
+        std::vector<std::shared_ptr<ParticleSpecies<vdim, ndata>>> partGr;
+        init_particles(partGr, infra);
+
+        std::vector<DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoVec;
+        std::vector<DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoMassVec;
+
+        for (int i = 0; i < partGr.size(); i++)
+        {
+            rhoVec.emplace_back(deRham);
+            rhoMassVec.emplace_back(deRham);
+        }
+
+        for (int i = 0; i < partGr.size(); i++)
+        {
+            std::string name = "rho_" + std::to_string(i);
+            Gempic::Io::register_form(fieldRegistry, name, rhoVec[i]);
+            name = "rhoMass_" + std::to_string(i);
+            Gempic::Io::register_form(fieldRegistry, name, rhoMassVec[i]);
+        } // Separate loop to avoid registry pointing to changed memory location due to vector
+          // reallocation
 
         // Initializing filter
         std::unique_ptr<Filter::Filter> biFilter = Filter::make_filter(infra);
 
-        QuasineutralSolver<hodgeDegree, vdim, ndata, degx, degy, degz> hypreQNLinearSystem(infra);
+        QuasineutralSolver<hodgeDegree, vdim, ndata, degx, degy, degz> qn(infra);
 
         { //"Time Loop" scope
             Io::Parameters params("TimeLoop");
@@ -122,9 +139,13 @@ int main (int argc, char* argv[])
             params.get("dt", dt);
             int nSteps;
             params.get("nSteps", nSteps);
+            std::string chargeMatrixType{"particle"};
+            params.get("chargeMatrixType", chargeMatrixType);
+            bool printChecks{false};
+            params.get_or_set("printChecks", printChecks);
 
             auto diagnostics =
-                Io::make_diagnostics<degx, degy, degz>(infra, deRham, fieldRegistry, particles);
+                Io::make_diagnostics<degx, degy, degz>(infra, deRham, fieldRegistry, partGr);
 
             amrex::Real simTime{0.0};
             diagnostics.compute_and_write_to_file(0, simTime);
@@ -134,62 +155,75 @@ int main (int argc, char* argv[])
             for (int tStep = 0; tStep < nSteps; tStep++)
             {
                 // Correction of divJ, Javg
-                deposit_current_density<degx, degy, degz, vdim, ndata>(J, particles, infra);
+                qn.push_particles_and_correct_div_j(J, phiCorr, partGr, dt);
+                if (printChecks) check_j_change_norms_qn(jOld, J, deRham, infra);
                 copy(jOld, J);
-                hypreQNLinearSystem.push_particles_and_correct_div_j(J, phiCorr, particles, dt);
-                check_j_change_norms(jOld, J, deRham, infra);
-                copy(jOld, J);
-                hypreQNLinearSystem.push_particles_and_correct_javg(J, rho, particles);
-                check_j_change_norms(jOld, J, deRham, infra);
+                qn.push_particles_and_correct_javg(J, rhoVec, rho, rhoMassVec, partGr);
+                if (printChecks) check_j_change_norms_qn(jOld, J, deRham, infra);
                 amrex::Print() << "\n";
 
                 amrex::Print() << "Obtain B(" << tStep << ") -> ";
                 // Calculate B and add Bmean
-                hypreQNLinearSystem.solve_negative_poisson_equation(J, A);
+                qn.solve_negative_poisson_equation(J, A);
                 hodge(aPrimal, A, deRham->scaling_dto_e());
                 copy(bOld, B);
                 curl(B, aPrimal);
                 B += bmean;
-                if (tStep != 0) check_b_calculation(E, bOld, B, deRham, dt, infra);
+                if (tStep != 0)
+                {
+                    if (printChecks) check_b_calculation_qn(E, bOld, B, deRham, dt, infra);
+                }
                 hodge(H, B, deRham->scaling_bto_h());
 
                 // B-related error checks
-                check_b_related_norms(J, divJ, A, divA, B, divB, H, curlH, jMinusCurlH, infra);
-                check_energies(B, H, particles, infra);
+                if (printChecks)
+                {
+                    check_b_related_norms_qn(J, divJ, A, divA, B, divB, H, curlH, jMinusCurlH,
+                                             infra);
+                }
+                if (printChecks) check_energies_qn(B, H, partGr, infra);
 
                 // Deposit JxB, Del.S using X, V
                 amrex::Print() << "Deposit JxB,Del.S(" << tStep << ") -> ";
                 deposit_rho_j_jcrossb_deldots<degx, degy, degz, vdim, ndata>(
-                    rho, J, B, jcrossB, delDotS, particles, infra);
+                    rhoVec, rho, J, B, jcrossB, delDotS, partGr, infra);
 
                 // Obtain E(0), using B(0) and V(0), X(0)
                 amrex::Print() << "Obtain E(" << tStep << ") from QN eqn -> ";
-                linear_combination(rhs, c1, jcrossB, c2, delDotS);
+                linear_combination(rhs, -1.0, jcrossB, 1.0, delDotS);
+                rhs.post_particle_loop_sync();
 
-                hypreQNLinearSystem.solve_curlcurl_plus_particle_charge_e(rhs, E, particles);
+                if (chargeMatrixType == "particle")
+                {
+                    qn.solve_curlcurl_plus_particle_charge_e(rhs, E, partGr);
+                }
+                else if (chargeMatrixType == "field_qbym")
+                {
+                    qn.solve_curlcurl_plus_qbym_field_charge_e(rhs, E, partGr, rhoVec);
+                }
 
                 hodge(D, E, deRham->scaling_eto_d());
 
                 // E-related error checks
-                check_e_related_norms<vdim, ndata, degx, degy, degz>(E, rho, rhoIdeal, deRham, rhs,
-                                                                     particles, infra);
+                if (printChecks)
+                {
+                    check_e_related_norms_qn<vdim, ndata, degx, degy, degz>(
+                        E, rho, rhoIdeal, deRham, rhs, partGr, infra);
+                }
 
                 amrex::Print() << "Obtain V(" << tStep << " + 1/2) and X(" << tStep + 1 << ") -> ";
                 // Update V using E and B and X using V
-                hypreQNLinearSystem.update_particle_positions_and_velocities(
-                    E, B, particles, dt, RotatePushOrder::PushvThenRotatev);
+                qn.update_particle_positions_and_velocities(E, B, partGr, dt,
+                                                            RotatePushOrder::PushvThenRotatev);
 
                 amrex::Print() << "Obtain V(" << tStep + 1 << ") -> ";
                 // Update V using E and B
-                hypreQNLinearSystem.update_particle_positions_and_velocities(
-                    E, B, particles, dt, RotatePushOrder::RotatevThenPushv);
+                qn.update_particle_positions_and_velocities(E, B, partGr, dt,
+                                                            RotatePushOrder::RotatevThenPushv);
 
                 amrex::Print() << "Done." << std::endl;
-
                 simTime = dt * (tStep + 1);
                 diagnostics.compute_and_write_to_file(tStep + 1, simTime);
-
-                amrex::Print() << "finished time-step: " << tStep << std::endl;
             }
 
             amrex::Print() << "\nFINISHED TIME LOOP.\n";
