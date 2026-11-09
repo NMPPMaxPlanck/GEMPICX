@@ -390,10 +390,9 @@ public:
                 "GEMPIC::RungeKutta::lsrk_stage_push_particle_deposit_j_fully_kinetic()", np,
                 KOKKOS_LAMBDA(long const pp) {
                     // Read out particle data
-                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> R;
-                    AMREX_D_EXPR(R[xDir] = ptd.rdata(ii.m_iposx)[pp],
-                                 R[yDir] = ptd.rdata(ii.m_iposy)[pp],
-                                 R[zDir] = ptd.rdata(ii.m_iposz)[pp]);
+                    amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> R{
+                        AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp], ptd.rdata(ii.m_iposy)[pp],
+                                     ptd.rdata(ii.m_iposz)[pp])};
                     amrex::GpuArray<amrex::Real, 3> V{ptd.rdata(ii.m_ivelx)[pp],
                                                       ptd.rdata(ii.m_ively)[pp],
                                                       ptd.rdata(ii.m_ivelz)[pp]};
@@ -417,13 +416,13 @@ public:
                                                       dt, coeffsAStageIndex, coeffsBStageIndex);
 
                     // Update particle data
-                    AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = R[xDir],
+                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp] = R[xDir],
                                  ptd.rdata(ii.m_iposy)[pp] = R[yDir],
                                  ptd.rdata(ii.m_iposz)[pp] = R[zDir]);
                     ptd.rdata(ii.m_ivelx)[pp] = V[0];
                     ptd.rdata(ii.m_ively)[pp] = V[1];
                     ptd.rdata(ii.m_ivelz)[pp] = V[2];
-                    AMREX_D_EXPR(ptd.rdata(ii.m_is2X)[pp] = s2R[0],
+                    AMREX_D_DECL(ptd.rdata(ii.m_is2X)[pp] = s2R[0],
                                  ptd.rdata(ii.m_is2Y)[pp] = s2R[1],
                                  ptd.rdata(ii.m_is2Z)[pp] = s2R[2]);
                     ptd.rdata(ii.m_is2Vx)[pp] = s2V[0];
@@ -505,15 +504,15 @@ public:
                                                  coeffsAStageIndex, coeffsBStageIndex);
 
                     // Update particle data
-                    AMREX_D_EXPR(ptd.rdata(ii.m_iposx)[pp] = R[xDir],
+                    AMREX_D_DECL(ptd.rdata(ii.m_iposx)[pp] = R[xDir],
                                  ptd.rdata(ii.m_iposy)[pp] = R[yDir],
                                  ptd.rdata(ii.m_iposz)[pp] = R[zDir]);
                     ptd.rdata(ii.m_ivelx)[pp] = V[0];
                     ptd.rdata(ii.m_ively)[pp] = V[1];
                     ptd.rdata(ii.m_ivelz)[pp] = V[2];
-                    AMREX_D_EXPR(ptd.rdata(ii.m_is2X)[pp] = s2R[0],
-                                 ptd.rdata(ii.m_is2Y)[pp] = s2R[1],
-                                 ptd.rdata(ii.m_is2Z)[pp] = s2R[2]);
+                    AMREX_D_DECL(ptd.rdata(ii.m_is2X)[pp] = s2R[xDir],
+                                 ptd.rdata(ii.m_is2Y)[pp] = s2R[yDir],
+                                 ptd.rdata(ii.m_is2Z)[pp] = s2R[zDir]);
                     ptd.rdata(ii.m_is2Vx)[pp] = s2V[0];
                     ptd.rdata(ii.m_is2Vy)[pp] = s2V[1];
                     ptd.rdata(ii.m_is2Vz)[pp] = s2V[2];
@@ -575,7 +574,6 @@ struct ExplicitEulerRkButcherTableau : RkButcherTableau<1>
  */
 struct RK2ButcherTableau : RkButcherTableau<2>
 {
-    //amrex::GpuArray<amrex::GpuArray<amrex::Real, 2>, 2> a = {{{{0.0, 0.0}}, {{0.5, 0.0}}}};
     amrex::GpuArray<amrex::GpuArray<amrex::Real, 2>, 2> m_a = {{{{0.0, 0.0}}, {{0.5, 0.0}}}};
     amrex::GpuArray<amrex::Real, 2> m_b = {0.0, 1.0};
     amrex::GpuArray<amrex::Real, 2> m_c = {0.0, 0.5};
@@ -915,7 +913,6 @@ void ExplicitRK<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real cons
             amrex::Real const coeff = m_rkTableau.m_a[s][r] * dt;
             m_solutionTmpExplicit->mult_and_add(coeff, m_timeDerivativeStages[r]);
         }
-        //amrex::Real rkTime{time};
         amrex::Real timeE{time + m_rkTableau.m_c[s] * dt};
         one_step_solve_dqdt_explicit(timeE); // this will use m_solutionTmpExplicit as initial state
                                              // to
@@ -1059,7 +1056,7 @@ void ImexRk<FieldsHandler, userRkTag, DRC>::integrate_step (amrex::Real const ti
                                                            amrex::Real const dt)
 {
     Kokkos::Profiling::ScopedRegion region("GEMPIC::RungeKutta::ImexRk::integrate_step()");
-    // use  the multi components to cast the multi-stage vectors;
+    // use  the multi components to cast the multi-stage vectors
     if (Gempic::Utils::Verbosity::level() > 0)
     {
         amrex::Print() << "time = " << time << ",  dt = " << dt << std::endl;

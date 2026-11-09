@@ -13,6 +13,10 @@ if(AMReX_HYPRE)
        HypreQuasineutralFullQNMatrix_test.cpp
        HypreQuasineutralAPoisson_test.cpp
        HypreQuasineutralDivGradPhiMatrix_test.cpp
-       HypreQuasineutralSobolDivJCurlB_test.cpp)
+       HypreQuasineutralSobolDivJCurlB_test.cpp
+       HypreDKQNECalc_test.cpp
+       HypreDKQNEperpCalc_test.cpp
+       HypreDKQNEparCalc_test.cpp
+       HypreDKQNFaradayCrankNicolson_test.cpp)
 endif()
 target_sources(GtestTests PRIVATE ${TMP_TEST_SOURCES})

@@ -161,8 +161,7 @@ protected:
     FDDeRhamComplexEvalFormTest() : m_infra{Gempic::Test::Utils::get_compdom(0.0, 1.0, 10, 10, 0)}
     {
         // Not checking particles
-        int const nGhostExtra{1}; //{-s_maxSplineDegree};
-
+        int const nGhostExtra{1};
         m_parameters.set("nGhostExtra", nGhostExtra);
     }
 };

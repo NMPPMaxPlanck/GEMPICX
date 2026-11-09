@@ -679,6 +679,8 @@ struct DeRhamField<grid, space12> : DeRhamFormBase<to_sequence<grid>(), to_form<
     amrex::Real get_scaling(Direction idir) const;
 
     void post_particle_loop_sync();
+    void post_particle_loop_sync_nowait();
+    void post_particle_loop_sync_finish();
     void operator*=(amrex::Real dt);
     void operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space12>&);
@@ -727,6 +729,8 @@ struct DeRhamField<grid, space03> : DeRhamFormBase<to_sequence<grid>(), to_form<
     amrex::Real get_scaling() const;
 
     void post_particle_loop_sync();
+    void post_particle_loop_sync_nowait();
+    void post_particle_loop_sync_finish();
     void operator*=(amrex::Real dt);
     void operator*=(amrex::ParserExecutor<AMREX_SPACEDIM + 1> func);
     void operator+=(DeRhamField<grid, space03>&);
@@ -1390,6 +1394,45 @@ inline void DeRhamField<grid, space>::post_particle_loop_sync()
 }
 
 template <Grid grid, Space space>
+    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
+inline void DeRhamField<grid, space>::post_particle_loop_sync_nowait()
+{
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::post_particle_loop_sync()");
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        m_data[comp].SumBoundary_nowait(0, m_data[comp].nComp(), m_deRham->get_n_ghost(),
+                                        amrex::IntVect::Zero, m_deRham->get_periodicity());
+        // IMPORTANT: SumBoundary does not guarantee the same order of summation for overlapping
+        // degrees of freedom on all contributing boxes. The resulting differences in J are on the
+        // order of machine precision but can accumulate in the electric field D. OverrideSync
+        // ensures that the fields are consistent on all boxes. For the same reason, a fill_boundary
+        // is used instead of directly filling ghost cells in SumBoundary.
+        m_data[comp].OverrideSync_nowait(m_deRham->get_periodicity());
+    }
+    fill_boundary_nowait();
+}
+
+template <Grid grid, Space space>
+    requires(is_one_or_two_form<space>()) // Ensures that space is a one- or two-form
+inline void DeRhamField<grid, space>::post_particle_loop_sync_finish()
+{
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isOneOrTwoForm>::post_particle_loop_sync()");
+    for (int comp = 0; comp < 3; ++comp)
+    {
+        m_data[comp].SumBoundary_finish();
+        // IMPORTANT: SumBoundary does not guarantee the same order of summation for overlapping
+        // degrees of freedom on all contributing boxes. The resulting differences in J are on the
+        // order of machine precision but can accumulate in the electric field D. OverrideSync
+        // ensures that the fields are consistent on all boxes. For the same reason, a fill_boundary
+        // is used instead of directly filling ghost cells in SumBoundary.
+        m_data[comp].OverrideSync_finish();
+    }
+    fill_boundary_finish();
+}
+
+template <Grid grid, Space space>
     requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
 inline void DeRhamField<grid, space>::post_particle_loop_sync()
 {
@@ -1400,6 +1443,31 @@ inline void DeRhamField<grid, space>::post_particle_loop_sync()
     // See comment on OverrideSync in function for OneOrTwoForm above
     m_data.OverrideSync(m_deRham->get_periodicity());
     fill_boundary();
+}
+
+template <Grid grid, Space space>
+    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
+inline void DeRhamField<grid, space>::post_particle_loop_sync_nowait()
+{
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
+    m_data.SumBoundary_nowait(0, m_data.nComp(), m_deRham->get_n_ghost(), amrex::IntVect::Zero,
+                              m_deRham->get_periodicity());
+    // See comment on OverrideSync in function for OneOrTwoForm above
+    m_data.OverrideSync_nowait(m_deRham->get_periodicity());
+    fill_boundary_nowait();
+}
+
+template <Grid grid, Space space>
+    requires(is_zero_or_three_form<space>()) // Ensures that space is a zero- or three-form
+inline void DeRhamField<grid, space>::post_particle_loop_sync_finish()
+{
+    Kokkos::Profiling::ScopedRegion region(
+        "Gempic::Forms::DeRhamField<isZeroOrThreeForm>::post_particle_loop_sync()");
+    m_data.SumBoundary_finish();
+    // See comment on OverrideSync in function for OneOrTwoForm above
+    m_data.OverrideSync_finish();
+    fill_boundary_finish();
 }
 
 // FillBoundary of DeRhamFields following the same logic as above

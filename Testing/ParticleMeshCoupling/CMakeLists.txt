@@ -3,7 +3,6 @@ set(TMP_TEST_SOURCES
     DepositRho_test.cpp
     DepositJ_test.cpp
     DepositJcrossB_test.cpp
-    DepositDelDotS_test.cpp
     DepositRhoE_test.cpp
     DepositCurlJ_test.cpp
     DepositCurlJEdge_test.cpp

@@ -40,6 +40,7 @@ option(GEMPIC_BUILD_DOCUMENTATION "Add the documentation to the build" OFF)
 option(USE_DIRTY_AMREX_REPO "Allow building from dirty AMReX git repositories" OFF)
 option(USE_DIRTY_LAPACK_REPO "Allow building from dirty Lapack git repositories" OFF)
 option(USE_DIRTY_HDF5_REPO "Allow building from dirty HDF5 git repositories" OFF)
+option(USE_DIRTY_HYPRE_REPO "Allow building from dirty HYPRE git repositories" OFF)
 option(GEMPIC_DEBUG_MESSAGES "Turns on GEMPIC-specific debug messages" OFF)
 
 option(GEMPIC_USE_HDF5 "Enable HDF5 support" ON) 

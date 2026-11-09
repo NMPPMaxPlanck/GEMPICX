@@ -2,13 +2,12 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
-#include <_hypre_IJ_mv.h>
-#include <_hypre_sstruct_mv.h>
 
 #include <AMReX_HypreSolver.H>
 
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_HypreUtils.H"
 #include "GEMPIC_PoissonSolver.H"
 
 namespace Gempic::FieldSolvers
@@ -30,7 +29,7 @@ private:
     std::unique_ptr<amrex::HypreSolver<s_maxStencilSize>> m_hypreSolver;
 
     ComputationalDomain m_compDom;
-    amrex::Real m_relTol, m_absTol;
+    amrex::Real m_relTol, m_absTol, m_accTol;
     amrex::Real m_maxiter{1000};
     amrex::Real m_cellVolume;
 
@@ -39,8 +38,13 @@ public:
                        std::shared_ptr<Gempic::Forms::DeRhamComplex> drc,
                        amrex::Real relTol = 1.e-10,
                        amrex::Real absTol = 1.e-12,
+                       amrex::Real accTol = 1.e-9,
                        int verbose = 0) :
-        m_compDom{compDom}, m_relTol{relTol}, m_absTol{absTol}, m_cellVolume{compDom.cell_volume()}
+        m_compDom{compDom},
+        m_relTol{relTol},
+        m_absTol{absTol},
+        m_accTol{accTol},
+        m_cellVolume{compDom.cell_volume()}
     {
         verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
 
@@ -180,6 +184,7 @@ public:
                              amrex::Vector<amrex::MultiFab const*>{&(rho.m_data)}, m_relTol,
                              m_absTol, m_maxiter);
 
+        Gempic::Utils::check_solver_convergence(m_hypreSolver, m_maxiter, m_accTol);
         phi *= 1.0 / m_cellVolume;
 
         phi.fill_boundary();

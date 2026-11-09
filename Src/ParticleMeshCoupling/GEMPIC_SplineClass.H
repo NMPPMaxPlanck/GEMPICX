@@ -300,6 +300,35 @@ public:
         }
     }
 
+    template <Forms::Field form>
+    AMREX_GPU_HOST_DEVICE amrex::Real eval_spline_field (
+        amrex::Array4<amrex::Real> const fieldArray) const
+    {
+        static_assert(form == Forms::Field::PrimalZeroForm || form == Forms::Field::DualThreeForm,
+                      "Attempting smoothing of incorrect field type.");
+
+        amrex::Real field = 0.0;
+        constexpr Forms::Field dualFormType =
+            form == Forms::Field::PrimalZeroForm ? form : Forms::complement_form<form>();
+
+        GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
+        GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii <= degX; ++ii), for (int jj = 0; jj <= degY; ++jj),
+                            for (int kk = 0; kk <= degZ; ++kk))
+            amrex::Dim3 const cellIndex =
+                (amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
+                                             this->m_firstIndex[Direction::yDir] + jj,
+                                             this->m_firstIndex[Direction::zDir] + kk)})
+                    .dim3();
+
+            // Ensure that we only access existing elements of cellSplineVals
+            amrex::Real const sCoeff = eval_b_spline<dualFormType>(ii, jj, kk);
+            field += sCoeff * (fieldArray)(cellIndex.x, cellIndex.y, cellIndex.z, 0);
+
+        GEMPIC_D_LOOP_END
+
+        return field;
+    }
+
     /**
      * @brief Compute the value of the spline-smoothed field at a particle position, from its l-form
      * coefficients
@@ -434,6 +463,16 @@ public:
     }
 
     template <unsigned int nWtsSum>
+    AMREX_GPU_HOST_DEVICE void eval_e_field_spline_weights_all_directions (
+        amrex::GpuArray<amrex::Real, nWtsSum>& eWts,
+        amrex::GpuArray<amrex::IntVect, nWtsSum>& eCells) const
+    {
+        eval_e_field_spline_weights<xDir>(eWts, eCells);
+        eval_e_field_spline_weights<yDir>(eWts, eCells);
+        eval_e_field_spline_weights<zDir>(eWts, eCells);
+    }
+
+    template <Direction ndir, unsigned int nWtsSum>
     AMREX_GPU_HOST_DEVICE void eval_e_field_spline_weights (
         amrex::GpuArray<amrex::Real, nWtsSum>& eWts,
         amrex::GpuArray<amrex::IntVect, nWtsSum>& eCells) const
@@ -455,32 +494,22 @@ public:
 
         GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
 
-        // Weights for E at particle location
-        for (int ndir = 0; ndir < 3; ++ndir)
-        {
-            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ[xDir][ndir]; ++ii),
-                                for (int jj = 0; jj < nWtsXYZ[yDir][ndir]; ++jj),
-                                for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
-                amrex::Real const sCoeff =
-                    ((ndir == 0)
-                         ? eval_b_spline<Forms::complement_form<Forms::Field::PrimalOneForm>(),
-                                         Direction::xDir>(ii, jj, kk)
-                         : ((ndir == 1) ? eval_b_spline<
-                                              Forms::complement_form<Forms::Field::PrimalOneForm>(),
-                                              Direction::yDir>(ii, jj, kk)
-                                        : eval_b_spline<
-                                              Forms::complement_form<Forms::Field::PrimalOneForm>(),
-                                              Direction::zDir>(ii, jj, kk)));
+        GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ[xDir][ndir]; ++ii),
+                            for (int jj = 0; jj < nWtsXYZ[yDir][ndir]; ++jj),
+                            for (int kk = 0; kk < nWtsXYZ[zDir][ndir]; ++kk))
 
-                eWts[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
-                     jj * nWtsXYZ[xDir][ndir] + ii] = sCoeff;
-                eCells[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
-                       jj * nWtsXYZ[xDir][ndir] + ii] =
-                    amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
-                                                this->m_firstIndex[Direction::yDir] + jj,
-                                                this->m_firstIndex[Direction::zDir] + kk)};
-            GEMPIC_D_LOOP_END
-        }
+            amrex::Real const sCoeff =
+                eval_b_spline<Forms::complement_form<Forms::Field::PrimalOneForm>(), ndir>(ii, jj,
+                                                                                           kk);
+
+            eWts[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
+                 jj * nWtsXYZ[xDir][ndir] + ii] = sCoeff;
+            eCells[nWtsStart[ndir] + kk * nWtsXYZ[yDir][ndir] * nWtsXYZ[xDir][ndir] +
+                   jj * nWtsXYZ[xDir][ndir] + ii] =
+                amrex::IntVect{AMREX_D_DECL(this->m_firstIndex[Direction::xDir] + ii,
+                                            this->m_firstIndex[Direction::yDir] + jj,
+                                            this->m_firstIndex[Direction::zDir] + kk)};
+        GEMPIC_D_LOOP_END
     }
 
     template <unsigned int nWtsSum>

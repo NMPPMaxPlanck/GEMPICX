@@ -86,7 +86,6 @@ TYPED_TEST(MatchGDECweightedMassMatrixTest, WeigthedMassV0Test)
         for (int iCell = -this->s_nShift - 1, cellIdx = 0; iCell <= this->s_nShift;
              ++iCell, ++cellIdx)
         {
-            //amrex::Real val{0.0};
             for (int g = 0; g < this->s_nQuadraturePoints; ++g)
             {
                 this->m_hstencil0[a] += this->m_wMassV0Stencil[a][cellIdx][g];
@@ -113,7 +112,6 @@ TYPED_TEST(MatchGDECweightedMassMatrixTest, WeigthedMassV1Test)
         this->m_hstencil1[a] = 0;
         for (int iCell = -this->s_nShift, cellIdx = 0; iCell <= this->s_nShift; ++iCell, ++cellIdx)
         {
-            //amrex::Real val{0.0};
             for (int g = 0; g < this->s_nQuadraturePoints; ++g)
             {
                 this->m_hstencil1[a] += this->m_wMassV1Stencil[a][cellIdx][g];

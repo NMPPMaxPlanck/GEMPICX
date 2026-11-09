@@ -21,10 +21,6 @@ using namespace Gempic;
 using namespace Forms;
 using namespace FieldSolvers;
 
-//using ::testing::_;
-//using ::testing::Exactly;
-//using ::testing::Mock;
-
 /**
  * @brief Tests the Poisson solver for an analytical rho of 1.0 + cos(x)
  *

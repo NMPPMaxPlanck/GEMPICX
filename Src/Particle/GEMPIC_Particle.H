@@ -217,7 +217,6 @@ public:
         particles.id(oldNumParticles) =
             amrex::SoAParticle<AMREX_SPACEDIM + vDim + nData, 0>::NextID();
         particles.cpu(oldNumParticles) = amrex::ParallelDescriptor::MyProc();
-        //auto ptd = particles.getParticleTileData();
 
         // add new position
         for (int cc = 0; cc < AMREX_SPACEDIM; cc++)

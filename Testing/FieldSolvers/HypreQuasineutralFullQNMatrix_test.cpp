@@ -52,6 +52,8 @@ public:
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcRHS;
     amrex::Array<amrex::Parser, 3> m_parserRHS;
 
+    Io::Parameters m_parameters;
+
     HypreQuasineutralFullQNMatrixTest()
     {
         std::string const analyticalRho = "4";
@@ -79,13 +81,30 @@ public:
             m_funcRHS[i] = m_parserRHS[i].compile<s_nVar>();
         }
 
-        Io::Parameters parameters;
         // Particle parameters (data read by particle_groups constructor)
         amrex::Real charge{-sqrt(2.5)};
-        parameters.set("Particle.species0.charge", charge);
+        m_parameters.set("Particle.species0.charge", charge);
 
         amrex::Real mass{2.5};
-        parameters.set("Particle.species0.mass", mass);
+        m_parameters.set("Particle.species0.mass", mass);
+
+        std::string solver{"GMRES"};
+        m_parameters.set("hypre.hypre_solver", solver);
+
+        std::string prec{"BoomerAMG"};
+        m_parameters.set("hypre.hypre_preconditioner", prec);
+
+        int numkry{200};
+        m_parameters.set("hypre.num_krylov", numkry);
+
+        int maxitr{1000};
+        m_parameters.set("hypre.max_iterations", maxitr);
+
+        int euclidlevel{1};
+        m_parameters.set("hypre.euclid_level", euclidlevel);
+
+        int jacobi{0};
+        m_parameters.set("hypre.euclid_use_block_jacobi", jacobi);
     }
 
     template <int n>
@@ -93,7 +112,6 @@ public:
     {
         // For studies other than convergence, this should be in SetUpTestSuite under Grid
         // parameters
-        Gempic::Io::Parameters parameters{};
         amrex::IntVect const nCell{AMREX_D_DECL(n, n, n)};
         // Initialize computational_domain
         auto infra = Gempic::Test::Utils::get_compdom(nCell);

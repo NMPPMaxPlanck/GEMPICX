@@ -26,26 +26,32 @@ class GempicAmrCore : public amrex::AmrCore
 {
 public:
     GempicAmrCore(Io::Parameters& params);
-    ~GempicAmrCore() override {};
+    ~GempicAmrCore() override {}
 
-    void MakeNewLevelFromCoarse(int /*lev*/,
-                                amrex::Real /*time*/,
-                                amrex::BoxArray const& /*ba*/,
-                                amrex::DistributionMapping const& /*dm*/) override {};
+    void MakeNewLevelFromCoarse (int /*lev*/,
+                                 amrex::Real /*time*/,
+                                 amrex::BoxArray const& /*ba*/,
+                                 amrex::DistributionMapping const& /*dm*/) override
+    {
+    }
 
-    void RemakeLevel(int /*lev*/,
-                     amrex::Real /*time*/,
-                     amrex::BoxArray const& /*ba*/,
-                     amrex::DistributionMapping const& /*dm*/) override {};
+    void RemakeLevel (int /*lev*/,
+                      amrex::Real /*time*/,
+                      amrex::BoxArray const& /*ba*/,
+                      amrex::DistributionMapping const& /*dm*/) override
+    {
+    }
 
-    void ClearLevel(int /*lev*/) override {};
+    void ClearLevel (int /*lev*/) override {}
 
     // Make a new level from scratch using provided BoxArray and DistributionMapping.
     // Only used during initialization.
-    void MakeNewLevelFromScratch(int /*lev*/,
-                                 amrex::Real /*time*/,
-                                 amrex::BoxArray const& /*ba*/,
-                                 amrex::DistributionMapping const& /*dm*/) override {};
+    void MakeNewLevelFromScratch (int /*lev*/,
+                                  amrex::Real /*time*/,
+                                  amrex::BoxArray const& /*ba*/,
+                                  amrex::DistributionMapping const& /*dm*/) override
+    {
+    }
 
     // Tag all cells for refinement
     void ErrorEst(int lev, amrex::TagBoxArray& tags, amrex::Real time, int ngrow) override;

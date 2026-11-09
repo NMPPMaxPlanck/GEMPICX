@@ -176,7 +176,6 @@ TEST_F(RungeKuttaTest, OneKineticParticle)
         analysisVelocity[i][1] = -cos(i * h);
         analysisVelocity[i][2] = V[2];
     }
-    // constexpr int stages = 5;
     RungeKutta rkSolver(m_infra, m_deRham);
     int const stages = rkSolver.get_stages();
 
@@ -216,7 +215,6 @@ TEST_F(RungeKuttaTest, KineticParticleSpecies)
 #if AMREX_SPACEDIM != 3
     GTEST_SKIP();
 #else
-    // const int stages = 5;
     RungeKutta rkSolver(m_infra, m_deRham);
     int const stages = rkSolver.get_stages();
 
@@ -300,7 +298,6 @@ TEST_F(RungeKuttaTest, DriftKineticParticleSpecies)
 #if AMREX_SPACEDIM != 3
     GTEST_SKIP();
 #else
-    // const int stages = 5;
     RungeKutta rkSolver(m_infra, m_deRham);
     int const stages = rkSolver.get_stages();
 

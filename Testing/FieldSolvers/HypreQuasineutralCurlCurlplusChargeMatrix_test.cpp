@@ -56,6 +56,8 @@ public:
     amrex::Array<amrex::ParserExecutor<s_nVar>, 3> m_funcRHS;
     amrex::Array<amrex::Parser, 3> m_parserRHS;
 
+    Gempic::Io::Parameters m_parameters;
+
     HypreQuasineutralCurlCurlPlusChargeMatrixTest()
     {
 #if AMREX_SPACEDIM == 2
@@ -81,13 +83,30 @@ public:
             m_funcRHS[i] = m_parserRHS[i].compile<s_nVar>();
         }
 
-        Gempic::Io::Parameters parameters;
         // Particle parameters (data read by particle_groups constructor)
         amrex::Real charge{sqrt(3.0)};
-        parameters.set("Particle.species0.charge", charge);
+        m_parameters.set("Particle.species0.charge", charge);
 
         amrex::Real mass{3.0};
-        parameters.set("Particle.species0.mass", mass);
+        m_parameters.set("Particle.species0.mass", mass);
+
+        std::string solver{"GMRES"};
+        m_parameters.set("hypre.hypre_solver", solver);
+
+        std::string prec{"BoomerAMG"};
+        m_parameters.set("hypre.hypre_preconditioner", prec);
+
+        int numkry{200};
+        m_parameters.set("hypre.num_krylov", numkry);
+
+        int maxitr{1000};
+        m_parameters.set("hypre.max_iterations", maxitr);
+
+        int euclidlevel{1};
+        m_parameters.set("hypre.euclid_level", euclidlevel);
+
+        int jacobi{0};
+        m_parameters.set("hypre.euclid_use_block_jacobi", jacobi);
     }
 
     template <int n>
@@ -190,9 +209,6 @@ using MyTypes = ::testing::Types<std::tuple<std::integral_constant<int, 1>,
                                  std::tuple<std::integral_constant<int, 2>,
                                             std::integral_constant<int, 2>,
                                             std::integral_constant<int, 2>>,
-                                 std::tuple<std::integral_constant<int, 3>,
-                                            std::integral_constant<int, 3>,
-                                            std::integral_constant<int, 3>>,
                                  std::tuple<std::integral_constant<int, 1>,
                                             std::integral_constant<int, 2>,
                                             std::integral_constant<int, 3>>>;

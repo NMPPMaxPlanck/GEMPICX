@@ -5,6 +5,7 @@ list(APPEND GEMPICX_HEADER_DIRECTORIES
      "Src/FieldSolvers"
      "Src/FieldSolvers/Poisson"
      "Src/FieldSolvers/Quasineutral"
+     "Src/FieldSolvers/DKQuasineutral"
      "Src/FieldSolvers/VlasovMaxwellSemiImplicit"
      "Src/Filter"
      "Src/Forms"

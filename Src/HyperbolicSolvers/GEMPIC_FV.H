@@ -708,7 +708,6 @@ public:
     squareMatrix<s_wenoHistNDof> m_wenoOiMatrixC;
     squareMatrix<s_wenoIntNDof> m_wenoOiMatrix2C;
 
-    //auto m_nodesGLeg_table = MakeNodesTable<polyrecDegreeFv + 2>{};
     MakeNodesTable<polyrecDegreeFv + 1> m_nodesGLegTable;
     MakeNodesTable<polyrecDegreeFv + 1> m_weightsGLegTable;
 
@@ -833,7 +832,7 @@ public:
                 amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoHistNDof - 1, amrex::Order::C>
                     whLoc;
                 int jSL = s_wenoStencilShift +
-                          get_weno_left(s); // weno_left assumes the central cell being the zeroth;
+                          get_weno_left(s); // weno_left assumes the central cell to be the zeroth
                 for (int i = 0; i < s_wenoHistNDof; i++)
                 {
                     amrex::Real whSum = 0;
@@ -897,7 +896,7 @@ public:
             wenoOi[s] = 0.0;
             amrex::Array1D<amrex::Real, 0, s_wenoHistNDof - 1> whLoc;
             int jSL = s_wenoStencilShift +
-                      get_weno_left(s); // weno_left assumes the central cell being the zeroth;
+                      get_weno_left(s); // weno_left assumes the central cell to be the zeroth
             for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 amrex::Real whSum = 0;
@@ -976,8 +975,8 @@ public:
             wenoOi[s] = 0.0;
             amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoIntNDof - 1, amrex::Order::C> whLoc;
             int jSL = s_wenoStencilShift +
-                      get_weno_left(s); // weno_left assumes the central index being the zeroth,
-                                        // which is placed at the weno_stencil_shift2-th position;
+                      get_weno_left(s); // weno_left assumes the central index to be the zeroth,
+                                        // which is placed at the weno_stencil_shift2-th position
             for (int iVar = 0; iVar < nVarFv; iVar++)
             {
                 for (int i = 0; i < s_wenoIntNDof; i++)
@@ -988,8 +987,8 @@ public:
                         int jloc = j + jSL;
                         whSum += wenOint2LocalGLintIn(s, i, j) * inputVector(iVar, jloc);
                     }
-                    whRec(s, iVar, i) = whSum; //wh_loc(i, iVar);
-                    whLoc(iVar, i) = whSum;    //wh_loc(i, iVar);
+                    whRec(s, iVar, i) = whSum;
+                    whLoc(iVar, i) = whSum;
                 }
             }
             for (int iVar = 0; iVar < nVarFv; iVar++)
@@ -1045,8 +1044,8 @@ public:
             wenoOi[s] = 0.0;
             amrex::Array1D<amrex::Real, 0, s_wenoIntNDof - 1> whLoc;
             int jSL = s_wenoStencilShift +
-                      get_weno_left(s); // weno_left assumes the central index being the zeroth,
-                                        // which is placed at the weno_stencil_shift2-th position;
+                      get_weno_left(s); // weno_left assumes the central index to be the zeroth,
+                                        // which is placed at the weno_stencil_shift2-th position
 
             for (int i = 0; i < s_wenoIntNDof; i++)
             {
@@ -1606,9 +1605,8 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
     }
 
     // now compute the conversion matrix histo to interpolating degrees of freedom
-    // the histopolating dof are intended as cell-integral values over a local stencil;
-    // the interpolating dof are intended as interpolating values on the local (in-cell) quadrature
-    // points;
+    // the histopolating dof are cell-integral values over a local stencil
+    // the interpolating dof are interpolating values on the local (in-cell) quadrature points
     // mass matrix (evaluated in the cell) and its inverse
     mlocHist = std::vector<std::vector<amrex::Real>>(
         polyrecDegreeFv + 1, std::vector<amrex::Real>(polyrecDegreeFv + 1, 0.0));
@@ -1825,7 +1823,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::FVreconstruction()
                 mlocVec[n],
                 iMKlocPowInt[n]); //this account of the quadrature weights of the integral!
             iMKlocPow2 = Gempic::matmul(iMKlocPowIntT[n], temp);
-            //
+
             std::vector<std::vector<amrex::Real>> atmp(s_wenoIntNDof,
                                                        std::vector<amrex::Real>(s_wenoIntNDof));
             atmp = Gempic::matmul(iMKlocPow2, wenOint2LocalGLintLoc);
@@ -2039,7 +2037,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
             amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoHistNDof - 1, amrex::Order::C>
                 whLoc;
             int jSL = s_wenoStencilShift +
-                      get_weno_left(s); // weno_left assumes the central cell being the zeroth;
+                      get_weno_left(s); // weno_left assumes the central cell to be the zeroth
             for (int i = 0; i < s_wenoHistNDof; i++)
             {
                 amrex::Real whSum = 0;
@@ -2102,7 +2100,7 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_reconstruction_1d(
         wenoOi[s] = 0.0;
         amrex::Array1D<amrex::Real, 0, s_wenoHistNDof - 1> whLoc;
         int jSL = s_wenoStencilShift +
-                  get_weno_left(s); // weno_left assumes the central cell being the zeroth;
+                  get_weno_left(s); // weno_left assumes the central cell to be the zeroth
         for (int i = 0; i < s_wenoHistNDof; i++)
         {
             amrex::Real whSum = 0;
@@ -2173,8 +2171,8 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
         wenoOi[s] = 0.0;
         amrex::Array2D<amrex::Real, 0, nVarFv - 1, 0, s_wenoIntNDof - 1, amrex::Order::C> whLoc;
         int jSL = s_wenoStencilShift +
-                  get_weno_left(s); // weno_left assumes the central index being the zeroth, which
-                                    // is placed at the weno_stencil_shift2-th position;
+                  get_weno_left(s); // weno_left assumes the central index to be the zeroth, which
+                                    // is placed at the weno_stencil_shift2-th position
         for (int iVar = 0; iVar < nVarFv; iVar++)
         {
             for (int i = 0; i < s_wenoIntNDof; i++)
@@ -2240,8 +2238,8 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::weno_node2cell_reconstruction_1d(
         wenoOi[s] = 0.0;
         amrex::Array1D<amrex::Real, 0, s_wenoIntNDof - 1> whLoc;
         int jSL = s_wenoStencilShift +
-                  get_weno_left(s); // weno_left assumes the central index being the zeroth, which
-                                    // is placed at the weno_stencil_shift2-th position;
+                  get_weno_left(s); // weno_left assumes the central index to be the zeroth, which
+                                    // is placed at the weno_stencil_shift2-th position
 
         for (int i = 0; i < s_wenoIntNDof; i++)
         {
@@ -2406,11 +2404,6 @@ constexpr auto FVreconstruction<nVarFv, polyrecDegreeFv>::make_table(
 {
     return std::array{&LegendreWrapper<degrees>::call...};
 }
-
-// if you get "undefined symbol" this could be required
-//// Declare the static constexpr dispatch table (outside class, in source file)
-//template <int nVarFv, int polyrecDegreeFv>
-//constexpr int FVreconstruction<nVarFv, polyrecDegreeFv>::maxDegree;
 
 template <int nVarFv, int polyrecDegreeFv>
 void FVreconstruction<nVarFv, polyrecDegreeFv>::legendre_interpolating_vec (
@@ -3333,13 +3326,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v3_to_x_face_reconstruct
                 amrex::Real qrLoc{0.0};
                 for (int iDofx = 0; iDofx < v3_n_dof_x(); ++iDofx)
                 {
-                    qrLoc +=
-                        m_phiN1[iDofx] * whwenoxyz3d(iDofz, iDofy, iDofx,
-                                                     iVar); // whWeno1d(iVar, n);  //note: this is
-                                                            // the LEFT state of the i+1/2 face;
-                    qlLoc += m_phiN0[iDofx] * whwenoxyz3d(iDofz, iDofy, iDofx,
-                                                          iVar); //note: this is the RIGHT
-                                                                 //state of the i-1/2 face;
+                    // this is the LEFT state of the i+1/2 face
+                    qrLoc += m_phiN1[iDofx] * whwenoxyz3d(iDofz, iDofy, iDofx, iVar);
+                    // this is the RIGHT state of the i-1/2 face
+                    qlLoc += m_phiN0[iDofx] * whwenoxyz3d(iDofz, iDofy, iDofx, iVar);
                 }
                 qRx(i, j, k, iVar)[iDof2DLoc] = qlLoc;
                 qLx(i + 1, j, k, iVar)[iDof2DLoc] = qrLoc;
@@ -3373,13 +3363,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v3_to_y_face_reconstruct
                 amrex::Real qrLoc{0.0};
                 for (int iDofy = 0; iDofy < v3_n_dof_y(); ++iDofy)
                 {
-                    qrLoc +=
-                        m_phiN1[iDofy] * whwenoxyz3d(iDofz, iDofy, iDofx,
-                                                     iVar); // whWeno1d(iVar, n);  //note: this is
-                                                            // the LEFT state of the i+1/2 face;
-                    qlLoc += m_phiN0[iDofy] *
-                             whwenoxyz3d(iDofz, iDofy, iDofx,
-                                         iVar); //note: this is the RIGHT state of the i-1/2 face;
+                    // this is the LEFT state of the i+1/2 face
+                    qrLoc += m_phiN1[iDofy] * whwenoxyz3d(iDofz, iDofy, iDofx, iVar);
+                    // this is the RIGHT state of the i-1/2 face
+                    qlLoc += m_phiN0[iDofy] * whwenoxyz3d(iDofz, iDofy, iDofx, iVar);
                 }
                 qRy(i, j, k, iVar)[iDof2DLoc] = qlLoc;
                 qLy(i, j + 1, k, iVar)[iDof2DLoc] = qrLoc;
@@ -3413,13 +3400,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v3_to_z_face_reconstruct
                 amrex::Real qrLoc{0.0};
                 for (int iDofz = 0; iDofz < v3_n_dof_z(); ++iDofz)
                 {
-                    qrLoc +=
-                        m_phiN1[iDofz] * whwenoxyz3d(iDofz, iDofy, iDofx,
-                                                     iVar); // whWeno1d(iVar, n);  //note: this is
-                                                            // the LEFT state of the i+1/2 face;
-                    qlLoc += m_phiN0[iDofz] *
-                             whwenoxyz3d(iDofz, iDofy, iDofx,
-                                         iVar); //note: this is the RIGHT state of the i-1/2 face;
+                    // this is the LEFT state of the i+1/2 face
+                    qrLoc += m_phiN1[iDofz] * whwenoxyz3d(iDofz, iDofy, iDofx, iVar);
+                    // this is the RIGHT state of the i-1/2 face
+                    qlLoc += m_phiN0[iDofz] * whwenoxyz3d(iDofz, iDofy, iDofx, iVar);
                 }
                 qRz(i, j, k, iVar)[iDof2DLoc] = qlLoc;
                 qLz(i, j, k + 1, iVar)[iDof2DLoc] = qrLoc;
@@ -3451,13 +3435,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v2x_to_x_face_reconstruc
             amrex::Real qrLoc{0.0};
             for (int iDofx = 0; iDofx < v2x_n_dof_x(); ++iDofx)
             {
-                qrLoc +=
-                    m_phiM1[iDofx] * v2xWenoxyz3d(iDofz, iDofy,
-                                                  iDofx); // whWeno1d(iVar, n);  //note: this is
-                                                          // the LEFT state of the i+1/2 face;
-                qlLoc += m_phiM0[iDofx] * v2xWenoxyz3d(iDofz, iDofy,
-                                                       iDofx); //note: this is the RIGHT
-                                                               //state of the i-1/2 face;
+                // this is the LEFT state of the i+1/2 face
+                qrLoc += m_phiM1[iDofx] * v2xWenoxyz3d(iDofz, iDofy, iDofx);
+                // this is the RIGHT state of the i-1/2 face
+                qlLoc += m_phiM0[iDofx] * v2xWenoxyz3d(iDofz, iDofy, iDofx);
             }
             qRx(i, j, k, nidx)[iDof2DLoc] = qlLoc;
             qLx(i + 1, j, k, nidx)[iDof2DLoc] = qrLoc;
@@ -3489,13 +3470,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v2y_to_y_face_reconstruc
             amrex::Real qrLoc{0.0};
             for (int iDofy = 0; iDofy < v2y_n_dof_y(); ++iDofy)
             {
-                qrLoc +=
-                    m_phiM1[iDofy] * v2yWenoxyz3d(iDofz, iDofy,
-                                                  iDofx); // whWeno1d(iVar, n);  //note: this is
-                                                          // the LEFT state of the i+1/2 face;
-                qlLoc += m_phiM0[iDofy] *
-                         v2yWenoxyz3d(iDofz, iDofy,
-                                      iDofx); //note: this is the RIGHT state of the i-1/2 face;
+                // this is the LEFT state of the i+1/2 face
+                qrLoc += m_phiM1[iDofy] * v2yWenoxyz3d(iDofz, iDofy, iDofx);
+                // this is the RIGHT state of the i-1/2 face
+                qlLoc += m_phiM0[iDofy] * v2yWenoxyz3d(iDofz, iDofy, iDofx);
             }
             qRy(i, j, k, nidx)[iDof2DLoc] = qlLoc;
             qLy(i, j + 1, k, nidx)[iDof2DLoc] = qrLoc;
@@ -3526,13 +3504,10 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v2z_to_z_face_reconstruc
             amrex::Real qrLoc{0.0};
             for (int iDofz = 0; iDofz < v2z_n_dof_z(); ++iDofz)
             {
-                qrLoc +=
-                    m_phiM1[iDofz] * v2zWenoxyz3d(iDofz, iDofy,
-                                                  iDofx); // whWeno1d(iVar, n);  //note: this is
-                                                          // the LEFT state of the i+1/2 face;
-                qlLoc += m_phiM0[iDofz] *
-                         v2zWenoxyz3d(iDofz, iDofy,
-                                      iDofx); //note: this is the RIGHT state of the i-1/2 face;
+                // this is the LEFT state of the i+1/2 face
+                qrLoc += m_phiM1[iDofz] * v2zWenoxyz3d(iDofz, iDofy, iDofx);
+                // this is the RIGHT state of the i-1/2 face
+                qlLoc += m_phiM0[iDofz] * v2zWenoxyz3d(iDofz, iDofy, iDofx);
             }
             qRz(i, j, k, nidx)[iDof2DLoc] = qlLoc;
             qLz(i, j, k + 1, nidx)[iDof2DLoc] = qrLoc;
@@ -3541,5 +3516,4 @@ FVreconstruction<nVarFv, polyrecDegreeFv>::compute_weno_v2z_to_z_face_reconstruc
 }
 
 } //namespace Gempic
-
 #endif

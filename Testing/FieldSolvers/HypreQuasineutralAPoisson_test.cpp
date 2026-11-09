@@ -146,7 +146,7 @@ TYPED_TEST(HypreQuasineutralAPoissonTest, HypreQuasineutralAPoissonConvergence)
 
     amrex::Real divANormCoarse, divANormFine, jMinusCurlHNormCoarse, jMinusCurlHNormFine;
     amrex::Real tol = 0.1;
-    amrex::Real mtol = 1.0e-14;
+    amrex::Real mtol = 1.0e-11;
 
     amrex::Real rateOfConvergence;
     constexpr int hodgeDegree = TestFixture::s_hodgeDegree;

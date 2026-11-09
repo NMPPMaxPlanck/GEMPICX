@@ -13,6 +13,7 @@
 #include <_hypre_sstruct_mv.h>
 #include <map>
 
+#include <Kokkos_Profiling_ProfileSection.hpp>
 #include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <AMReX.H>
@@ -22,6 +23,8 @@
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_HypreUtils.H"
+#include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
 #include "GEMPIC_QuasineutralDebug.H"
@@ -40,8 +43,8 @@ class QuasineutralSolver
 {
 private:
     ComputationalDomain m_infra;
-    amrex::Real m_relTol, m_absTol{1.e-15};
-    amrex::Real m_maxiter{1000};
+    amrex::Real m_relTol, m_absTol{1.e-15}, m_accTol{1.e-10};
+    int m_maxiter{1000};
     int m_verbose;
 
     // Stencil offsets and bandwidths for the 'rho' matrix
@@ -160,6 +163,21 @@ private:
          {{0, s_nJcrosscurlCoeffs[zDir][xDir],
            s_nJcrosscurlCoeffs[zDir][xDir] + s_nJcrosscurlCoeffs[zDir][yDir]}}}};
 
+    static constexpr std::array<std::array<int, 3>, 3> s_nWtsXyZ1f = {
+        {{{degx, (degx + 1), (degx + 1)}},   // number of 1-form x,y,z-field weights in X-direction
+         {{(degy + 1), degy, (degy + 1)}},   // number of 1-form x,y,z-field weights in Y-direction
+         {{(degz + 1), (degz + 1), degz}}}}; // number of 1-form x,y,z-field weights in Z-direction
+
+    static constexpr std::array<int, 3> s_nWts1f = {
+        // number of 1-form x-field weights
+        GEMPIC_D_MULT(s_nWtsXyZ1f[xDir][xDir], s_nWtsXyZ1f[yDir][xDir], s_nWtsXyZ1f[zDir][xDir]),
+        // number of 1-form y-field weights
+        GEMPIC_D_MULT(s_nWtsXyZ1f[xDir][yDir], s_nWtsXyZ1f[yDir][yDir], s_nWtsXyZ1f[zDir][yDir]),
+        // number of 1-form z-field weights
+        GEMPIC_D_MULT(s_nWtsXyZ1f[xDir][zDir], s_nWtsXyZ1f[yDir][zDir], s_nWtsXyZ1f[zDir][zDir])};
+    static constexpr std::array<int, 3> s_nWts1fStart = {0, s_nWts1f[xDir],
+                                                         (s_nWts1f[xDir] + s_nWts1f[yDir])};
+
     // Stencil offsets, bandwidths and number of coefficients for the 'div grad Phi' matrix
     // divgradphi dependency offsets on phi(primal node) in x,y,z-directions (bracket)
     static constexpr std::array<int, 3> s_divgradphiOff{degx, degy, degz};
@@ -173,10 +191,14 @@ private:
         GEMPIC_D_MULT(s_divgradphiBw[xDir], s_divgradphiBw[yDir], s_divgradphiBw[zDir]);
 
 public:
-    QuasineutralSolver(ComputationalDomain infr, amrex::Real tol = 1.e-15, int verbose = 0) :
-        m_infra{infr}, m_relTol{tol}
+    QuasineutralSolver(ComputationalDomain infr,
+                       amrex::Real relTol = 1.e-12,
+                       amrex::Real accTol = 1.e-9,
+                       int verbose = 0) :
+        m_infra{infr}, m_relTol{relTol}, m_accTol{accTol}
     {
         m_verbose = std::max(verbose, Gempic::Utils::Verbosity::level());
+        static_assert(vdim == 3, "vdim should be 3");
     }
 
     // Generic function to build and solve linear systems with HYPRE
@@ -189,8 +211,20 @@ public:
         Forms::DeRhamField<grid, space>& x,
         Forms::DeRhamField<Forms::oppositeGrid<grid>, Forms::oppositeSpace<space>>& rhs,
         Tmarker&& marker,
-        Tfiller&& filler) const
+        Tfiller&& filler,
+        std::string const& hypreOptions = "hypre") const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::create_and_use_hypre_solver()");
+        Gempic::Io::Parameters hypreParams{hypreOptions};
+        int verbose{m_verbose};
+        if (hypreParams.exists("verbose")) hypreParams.get("verbose", verbose);
+        int maxIter{m_maxiter};
+        if (hypreParams.exists("max_iterations")) hypreParams.get("max_iterations", maxIter);
+        if (verbose > 1)
+        {
+            amrex::Print() << "Setting up Hypre solver '" << hypreOptions << "'... " << std::flush;
+        }
         amrex::Vector<amrex::IndexType> idxTypeVector;
         amrex::Vector<amrex::MultiFab*> xPointerVector;
         amrex::Vector<amrex::MultiFab const*> rhsPointerVector;
@@ -207,36 +241,31 @@ public:
             xPointerVector = {&(x.m_data)};
             rhsPointerVector = {&(rhs.m_data)};
         }
+        Kokkos::Profiling::ProfilingSection p1(
+            "GEMPIC::QuasineutralSolver::CreateHypre::create_and_use_hypre_solver()");
+        p1.start();
         amrex::HypreSolver<maxStencilSize> hypreSolver(
             idxTypeVector, rhs.m_deRham->get_n_ghost(), m_infra.geometry(), m_infra.m_grid,
             m_infra.m_distriMap, std::forward<Tmarker> (marker), std::forward<Tfiller>(filler),
-            m_verbose);
+            verbose, hypreOptions);
+        p1.stop();
 
-        hypreSolver.solve(xPointerVector, rhsPointerVector, m_relTol, m_absTol, m_maxiter);
+        if (verbose > 1)
+        {
+            amrex::Print() << "Setup succesful. Commencing solve ... " << std::flush;
+        }
+        Kokkos::Profiling::ProfilingSection p2(
+            "GEMPIC::QuasineutralSolver::SolveHypre::create_and_use_hypre_solver()");
+        p2.start();
+        hypreSolver.solve(xPointerVector, rhsPointerVector, m_relTol, m_absTol, maxIter);
+        Gempic::Utils::check_solver_convergence(hypreSolver, maxIter, m_accTol);
+        p2.stop();
+        if (verbose > 1)
+        {
+            amrex::Print() << "Solve succesful.\n";
+        }
 
         x.fill_boundary();
-    }
-
-    // Function needed for building all HYPRE matrices
-    void assign_or_add_col (int gdtmp,
-                            int& icol,
-                            HYPRE_Int& ncols,
-                            HYPRE_Int* cols,
-                            HYPRE_Real* mat,
-                            std::map<int, int>& mapColsGeneral) const
-    {
-        if (mapColsGeneral.find(gdtmp) != mapColsGeneral.end()) // element exists already
-        {
-            icol = mapColsGeneral[gdtmp];
-        }
-        else // element does not exist, and is newly added
-        {
-            icol = ncols++;
-            cols[icol] = gdtmp;
-            mapColsGeneral.insert(std::make_pair(cols[icol], icol));
-            mat[icol] = 0.0; // matrix element is initialized to 0, and then incremented by filler
-                             // functions
-        }
     }
 
     // Function needed for adding diagonal dominance to singular matrices for testing
@@ -266,7 +295,7 @@ public:
                 int icol, gdtmp;
                 gdtmp = gid[ndir](i, j, k);
 
-                assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
 
                 mat[icol] += 0.5 *
                              (rhoarrs[boxno](i, j, k) +
@@ -285,6 +314,8 @@ public:
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::solve_curlcurl_plus_field_charge_e()");
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
         auto const& rhoarrs = (rho.m_data).arrays();
@@ -329,8 +360,12 @@ public:
 
         constexpr int maxStencilSize = 6 * AMREX_SPACEDIM - 5;
 
+        Kokkos::Profiling::ProfilingSection p3(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_curlcurl_plus_field_charge_e()");
+        p3.start();
         create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
-            x, b, marker, filler);
+            x, b, marker, filler, "hypre");
+        p3.stop();
     }
 
     void filler_curlcurl_matrix (int /*boxno*/,
@@ -355,20 +390,20 @@ public:
                     int icol;
                     int gdtmp;
                     gdtmp = gid[2](i, j, k);
-                    assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                    Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                     mat[icol] += 2.0 * (fac[0] + fac[1]) * edgetoface[2];
 
                     gdtmp = gid[2]((i - 1), j, k);
-                    assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                    Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                     mat[icol] += -fac[0] * edgetoface[2];
                     gdtmp = gid[2]((i + 1), j, k);
-                    assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                    Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                     mat[icol] += -fac[0] * edgetoface[2];
                     gdtmp = gid[2](i, (j - 1), k);
-                    assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                    Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                     mat[icol] += -fac[1] * edgetoface[2];
                     gdtmp = gid[2](i, (j + 1), k);
-                    assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                    Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                     mat[icol] += -fac[1] * edgetoface[2];
                 }
                 else
@@ -394,37 +429,37 @@ public:
                     }
 
                     gdtmp = gid[n[0]](i, j, k);
-                    assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                    Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                     mat[icol] += temp * edgetoface[n[0]];
 
                     for (int dir = 1; dir < AMREX_SPACEDIM; dir++)
                     {
                         gdtmp = gid[n[0]]((i - in[dir]), (j - jn[dir]), (k - kn[dir]));
-                        assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                        Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                         mat[icol] += -fac[n[dir]] * edgetoface[n[0]];
 
                         gdtmp = gid[n[0]]((i + in[dir]), (j + jn[dir]), (k + kn[dir]));
-                        assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                        Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                         mat[icol] += -fac[n[dir]] * edgetoface[n[0]];
                     }
 
                     for (int dir = 1; dir < AMREX_SPACEDIM; dir++)
                     {
                         gdtmp = gid[n[dir]]((i + in[0]), (j + jn[0]), (k + kn[0]));
-                        assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                        Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                         mat[icol] += fac[n[dir]] * edgetoface[n[0]];
 
                         gdtmp = gid[n[dir]]((i - in[dir]), (j - jn[dir]), (k - kn[dir]));
-                        assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                        Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                         mat[icol] += fac[n[dir]] * edgetoface[n[0]];
 
                         gdtmp = gid[n[dir]](i, j, k);
-                        assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                        Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                         mat[icol] += -fac[n[dir]] * edgetoface[n[0]];
 
                         gdtmp = gid[n[dir]]((i - in[dir] + in[0]), (j - jn[dir] + jn[0]),
                                             (k - kn[dir] + kn[0]));
-                        assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                        Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                         mat[icol] += -fac[n[dir]] * edgetoface[n[0]];
                     }
                 }
@@ -443,6 +478,8 @@ public:
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::solve_particle_charge_e()");
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
                                                                              s_nRhoCoeffs);
 
@@ -518,34 +555,28 @@ public:
 
         constexpr int maxStencilSize = *std::max_element(s_nRhoCoeffs.begin(), s_nRhoCoeffs.end());
 
+        Kokkos::Profiling::ProfilingSection p4(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_particle_charge_e()");
+        p4.start();
         create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
-            x, b, marker, filler);
+            x, b, marker, filler, "hypre");
+        p4.stop();
     }
 
     template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
-    void get_rho_e_weights_at_particle_positions_and_deposit_to_face (
+    inline void get_rho_e_weights_at_particle_positions_and_deposit_to_face (
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& eCoeffsA,
         SplineType const& spline,
         amrex::Real chargeSqrByMassWeight) const
     {
-        constexpr int nWtsXYZ1f[3][3] = {
-            {degx, (degx + 1), (degx + 1)},  // number of 1-form x,y,z-field weights in X-direction
-            {(degy + 1), degy, (degy + 1)},  // number of 1-form x,y,z-field weights in Y-direction
-            {(degz + 1), (degz + 1), degz}}; // number of 1-form x,y,z-field weights in Z-direction
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::get_rho_e_weights_at_particle_positions_and_deposit_to_"
+            "face()");
 
-        constexpr int nWts1f[3] = {
-            // number of 1-form x-field weights
-            GEMPIC_D_MULT(nWtsXYZ1f[xDir][xDir], nWtsXYZ1f[yDir][xDir], nWtsXYZ1f[zDir][xDir]),
-            // number of 1-form y-field weights
-            GEMPIC_D_MULT(nWtsXYZ1f[xDir][yDir], nWtsXYZ1f[yDir][yDir], nWtsXYZ1f[zDir][yDir]),
-            // number of 1-form z-field weights
-            GEMPIC_D_MULT(nWtsXYZ1f[xDir][zDir], nWtsXYZ1f[yDir][zDir], nWtsXYZ1f[zDir][zDir])};
-        constexpr int nWts1fStart[3] = {0, nWts1f[xDir], (nWts1f[xDir] + nWts1f[yDir])};
+        amrex::GpuArray<amrex::Real, (s_nWts1f[xDir] + s_nWts1f[yDir] + s_nWts1f[zDir])> eWts;
+        amrex::GpuArray<amrex::IntVect, (s_nWts1f[xDir] + s_nWts1f[yDir] + s_nWts1f[zDir])> eEdges;
 
-        amrex::GpuArray<amrex::Real, (nWts1f[xDir] + nWts1f[yDir] + nWts1f[zDir])> eWts;
-        amrex::GpuArray<amrex::IntVect, (nWts1f[xDir] + nWts1f[yDir] + nWts1f[zDir])> eEdges;
-
-        spline.eval_e_field_spline_weights(eWts, eEdges);
+        spline.eval_e_field_spline_weights_all_directions(eWts, eEdges);
 
         GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
 
@@ -554,9 +585,9 @@ public:
 
         for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
-            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ1f[xDir][ndir]; ++ii),
-                                for (int jj = 0; jj < nWtsXYZ1f[yDir][ndir]; ++jj),
-                                for (int kk = 0; kk < nWtsXYZ1f[zDir][ndir]; ++kk))
+            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < s_nWtsXyZ1f[xDir][ndir]; ++ii),
+                                for (int jj = 0; jj < s_nWtsXyZ1f[yDir][ndir]; ++jj),
+                                for (int kk = 0; kk < s_nWtsXyZ1f[zDir][ndir]; ++kk))
                 amrex::Real const sCoeff =
                     ((ndir == 0)
                          ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, xDir>(ii, jj,
@@ -572,10 +603,10 @@ public:
                                                  spline.m_firstIndex[yDir] + jj,
                                                  spline.m_firstIndex[zDir] + kk)};
 
-                for (int i = 0; i < nWts1f[ndir]; i++)
+                for (int i = 0; i < s_nWts1f[ndir]; i++)
                 {
                     // this index is of primal edge contributing to E-field at particle
-                    amrex::Dim3 wEdge = (eEdges[nWts1fStart[ndir] + i]).dim3();
+                    amrex::Dim3 wEdge = (eEdges[s_nWts1fStart[ndir] + i]).dim3();
 
                     AMREX_D_EXPR(iiTemp = wEdge.x - edge.x + s_rhoOffx[ndir],
                                  jjTemp = wEdge.y - edge.y + s_rhoOffy[ndir],
@@ -586,7 +617,7 @@ public:
 
                     amrex::HostDevice::Atomic::Add(
                         eCoeffsA[ndir].ptr(edge.x, edge.y, edge.z, component),
-                        sCoeff * chargeSqrByMassWeight * eWts[nWts1fStart[ndir] + i]);
+                        sCoeff * chargeSqrByMassWeight * eWts[s_nWts1fStart[ndir] + i]);
                 }
             GEMPIC_D_LOOP_END
         }
@@ -619,7 +650,7 @@ public:
 
             gdtmp = gid[ndir]((i + ii), (j + jj), (k + kk));
 
-            assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+            Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
             mat[icol] +=
                 eCoeffsArrs[ndir][boxno](i, j, k,
                                          GEMPIC_D_ADD(iiTemp, jjTemp * s_rhoBWx[ndir],
@@ -628,6 +659,53 @@ public:
     }
     // Functions relating to the particle charge matrix end
 
+    // Function relating to constant q2bym matrix
+    void filler_qbym_field_charge_matrix (
+        int boxno,
+        int i,
+        int j,
+        int k,
+        int ndir,
+        amrex::Array4<HYPRE_Int const> const* gid,
+        HYPRE_Int& ncols,
+        HYPRE_Int* cols,
+        HYPRE_Real* mat,
+        std::vector<amrex::Real> qbym,
+        std::vector<amrex::MultiArray4<amrex::Real>> const& rhoarrsVec,
+        amrex::GpuArray<HYPRE_Real, 3> const edgetoface,
+        std::map<int, int>& mapCols)
+    {
+        std::array<int, 3> nc = {0, 0, 0};
+        switch (hodgeDegree)
+        {
+            case 2:
+                for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+                {
+                    nc[dir] = (ndir == dir);
+                }
+
+                // This function contributes (<= 1) columns to ncols
+                int icol, gdtmp;
+                gdtmp = gid[ndir](i, j, k);
+
+                Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+
+                for (int index = 0; index < qbym.size(); index++)
+                {
+                    mat[icol] +=
+                        0.5 * qbym[index] *
+                        (rhoarrsVec[index][boxno](i, j, k) +
+                         rhoarrsVec[index][boxno](i + nc[xDir], j + nc[yDir], k + nc[zDir])) *
+                        (1.0 / m_infra.cell_volume()) * edgetoface[ndir];
+                }
+
+                break;
+            default:
+                AMREX_ASSERT("Hodge degree not implemented");
+                break;
+        };
+    }
+
     // Functions relating to the J cross curl matrix begin
     void solve_jcrosscurl_plus_field_charge_e (
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
@@ -635,6 +713,8 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> const& rho) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::solve_jcrosscurl_plus_field_charge_e()");
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsJcrosscurl(
             b.m_deRham, s_nJcrosscurlCoeffsTotal);
 
@@ -651,7 +731,6 @@ public:
                 auto const ptd = particleGrid.GetParticleTile().getParticleTileData();
                 auto const ii = particleSpecies->get_data_indices();
 
-                //amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> jA;
                 amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> eCoeffsAJcrosscurl;
 
                 for (int cc = 0; cc < static_cast<int>(vdim); cc++)
@@ -732,12 +811,16 @@ public:
         constexpr int maxStencilSize =
             *std::max_element(s_nJcrosscurlCoeffsTotal.begin(), s_nJcrosscurlCoeffsTotal.end());
 
+        Kokkos::Profiling::ProfilingSection p5(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_jcrosscurl_plus_field_charge_e()");
+        p5.start();
         create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
-            x, b, marker, filler);
+            x, b, marker, filler, "hypre");
+        p5.stop();
     }
 
     template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
-    void get_jcrosscurl_e_weights_at_particle_positions_and_deposit_to_face (
+    inline void get_jcrosscurl_e_weights_at_particle_positions_and_deposit_to_face (
         amrex::GpuArray<amrex::Array4<amrex::Real>, vdim> const& eCoeffsA,
         SplineType const& spline,
         amrex::GpuArray<amrex::Real, vdim> const& vel,
@@ -762,11 +845,6 @@ public:
 
         spline.eval_b_field_spline_weights(bWts, bFaces);
 
-        constexpr int nWtsXYZ1f[3][3] = {
-            {degx, (degx + 1), (degx + 1)},  // number of 1-form x,y,z-field weights in X-direction
-            {(degy + 1), degy, (degy + 1)},  // number of 1-form x,y,z-field weights in Y-direction
-            {(degz + 1), (degz + 1), degz}}; // number of 1-form x,y,z-field weights in Z-direction
-
         GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
 
         int AMREX_D_DECL(iiTemp, jjTemp, kkTemp);
@@ -774,9 +852,9 @@ public:
 
         for (int ndir = 0; ndir < static_cast<int>(vdim); ++ndir)
         {
-            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ1f[xDir][ndir]; ++ii),
-                                for (int jj = 0; jj < nWtsXYZ1f[yDir][ndir]; ++jj),
-                                for (int kk = 0; kk < nWtsXYZ1f[zDir][ndir]; ++kk))
+            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < s_nWtsXyZ1f[xDir][ndir]; ++ii),
+                                for (int jj = 0; jj < s_nWtsXyZ1f[yDir][ndir]; ++jj),
+                                for (int kk = 0; kk < s_nWtsXyZ1f[zDir][ndir]; ++kk))
                 amrex::Real const sCoeff =
                     ((ndir == 0)
                          ? (spline.template eval_b_spline<Forms::Field::DualTwoForm, xDir>(ii, jj,
@@ -921,7 +999,7 @@ public:
 
                 gdtmp = gid[ncDir]((i + ii), (j + jj), (k + kk));
 
-                assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+                Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
                 mat[icol] += eCoeffsArrs[ndir][boxno](
                     i, j, k,
                     s_nJcrosscurlCoeffsArrayStart[ndir][ncDir] +
@@ -967,7 +1045,7 @@ public:
                     "solve_curlcurl_plus_particle_charge_e()", np,
                     KOKKOS_CLASS_LAMBDA(long const pp) {
                         amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> positionParticle;
-                        AMREX_D_EXPR(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
+                        AMREX_D_DECL(positionParticle[xDir] = ptd.rdata(ii.m_iposx)[pp],
                                      positionParticle[yDir] = ptd.rdata(ii.m_iposy)[pp],
                                      positionParticle[zDir] = ptd.rdata(ii.m_iposz)[pp]);
                         Gempic::ParticleMeshCoupling::SplineBase<degx, degy, degz> spline(
@@ -1032,9 +1110,92 @@ public:
 
         constexpr int maxStencilSize =
             6 * AMREX_SPACEDIM - 5 + *std::max_element(s_nRhoCoeffs.begin(), s_nRhoCoeffs.end());
+        Kokkos::Profiling::ProfilingSection p6(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_curlcurl_plus_particle_charge_e()");
+        p6.start();
+        create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
+            x, b, marker, filler, "curlcurl_particle");
+        p6.stop();
+    }
+
+    void solve_curlcurl_plus_qbym_field_charge_e (
+        Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& b,
+        Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge>& x,
+        std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& partGr,
+        std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>>& rhoVec)
+    {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::solve_curlcurl_plus_qbym_field_charge_e()");
+
+        auto const& nddom = amrex::surroundingNodes(m_infra.box());
+
+        std::vector<amrex::MultiArray4<amrex::Real>> rhoarrsVec;
+        rhoarrsVec.resize(rhoVec.size());
+        for (int i = 0; i < partGr.size(); i++)
+        {
+            rhoarrsVec[i] = rhoVec[i].m_data.arrays();
+        }
+
+        auto const dxi = m_infra.inv_cell_size_array();
+        auto const dx = m_infra.cell_size_array();
+
+        amrex::GpuArray<HYPRE_Real, AMREX_SPACEDIM> fac{
+            AMREX_D_DECL(static_cast<HYPRE_Real>(dxi[xDir] * dxi[xDir]),
+                         static_cast<HYPRE_Real>(dxi[yDir] * dxi[yDir]),
+                         static_cast<HYPRE_Real>(dxi[zDir] * dxi[zDir]))};
+
+        amrex::GpuArray<HYPRE_Real, 3> edgetoface{
+            static_cast<HYPRE_Real>(GEMPIC_D_MULT(dxi[xDir], dx[yDir], dx[zDir])),
+            static_cast<HYPRE_Real>(GEMPIC_D_MULT(dx[xDir], dxi[yDir], dx[zDir])),
+            static_cast<HYPRE_Real>(GEMPIC_D_MULT(dx[xDir], dx[yDir], dxi[zDir]))};
+
+        // Is variable n at (i,j,k) in Box boxno (local index) valid?
+        // (i.e., not exactly on Dirichlet boundary)
+        auto marker = [=] AMREX_GPU_DEVICE(int /*boxno*/, int i, int j, int k, int /*n*/) -> bool
+        { return nddom.contains(i, j, k); };
+
+        std::vector<amrex::Real> qbym;
+        qbym.resize(partGr.size());
+
+        int index = 0;
+        for (auto& particleSpecies : partGr)
+        {
+            amrex::Real charge = particleSpecies->get_charge();
+            amrex::Real mass = particleSpecies->get_mass();
+
+            qbym[index] = charge / mass;
+            index++;
+        }
+
+        // For variable n at (i,j,k) in Box boxno (local index), fill its row in
+        // the matrix.
+        // [in ] gid : gid[n] is the id for variable n at (i,j,k)
+        // [out] ncols: # of columns in this row.
+        // [out] cols: column indices in this row.
+        // [out] mat : matrix elements in this row.
+        auto filler = [=, this] AMREX_GPU_DEVICE(int boxno, int i, int j, int k, int ndir,
+                                                 amrex::Array4<HYPRE_Int const> const* gid,
+                                                 HYPRE_Int& ncols, HYPRE_Int* cols, HYPRE_Real* mat)
+        {
+            std::map<int, int> mapCols;
+            ncols = 0; // initialize to 0 and then increment it through filler functions
+
+            // The two filler functions called below can be called in any order
+            filler_curlcurl_matrix(boxno, i, j, k, ndir, gid, ncols, cols, mat, fac, edgetoface,
+                                   mapCols);
+            filler_qbym_field_charge_matrix(boxno, i, j, k, ndir, gid, ncols, cols, mat, qbym,
+                                            rhoarrsVec, edgetoface, mapCols);
+        };
+
+        constexpr int maxStencilSize = 6 * AMREX_SPACEDIM - 5;
+
+        Kokkos::Profiling::ProfilingSection p7(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_curlcurl_plus_qbym_field_charge_e()");
+        p7.start();
 
         create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
-            x, b, marker, filler);
+            x, b, marker, filler, "curlcurl_qbym_field");
+        p7.stop();
     }
 
     void solve_curlcurl_plus_particle_charge_plus_jcrosscurl_e (
@@ -1043,6 +1204,9 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real jcrosscurlCoeff) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::solve_curlcurl_plus_particle_charge_plus_jcrosscurl_e()");
+
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsRho(b.m_deRham,
                                                                              s_nRhoCoeffs);
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face> eCoeffsJcrosscurl(
@@ -1093,7 +1257,6 @@ public:
         {
             eCoeffsRho.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
             eCoeffsJcrosscurl.m_data[ndir].SumBoundary(m_infra.geometry().periodicity());
-            //E_coeffs.m_data[ndir].FillBoundary(m_infra.geometry().periodicity());
         }
         std::array<decltype(eCoeffsRho.m_data[0].arrays()), vdim> eCoeffsArrsRho;
         std::array<decltype(eCoeffsJcrosscurl.m_data[0].arrays()), vdim> eCoeffsArrsJcrosscurl;
@@ -1147,8 +1310,13 @@ public:
             6 * AMREX_SPACEDIM - 5 + *std::max_element(s_nRhoCoeffs.begin(), s_nRhoCoeffs.end()) +
             *std::max_element(s_nJcrosscurlCoeffsTotal.begin(), s_nJcrosscurlCoeffsTotal.end());
 
+        Kokkos::Profiling::ProfilingSection p8(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_curlcurl_plus_particle_charge_plus_"
+            "jcrosscurl_e()");
+        p8.start();
         create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::edge>(
-            x, b, marker, filler);
+            x, b, marker, filler, "hypre");
+        p8.stop();
     }
     // Functions using combinations of the above matrices end
 
@@ -1218,17 +1386,26 @@ public:
 
         constexpr int maxStencilSize = 2 * AMREX_SPACEDIM + 1;
 
+        Kokkos::Profiling::ProfilingSection p11(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_negative_poisson_equation()");
+        p11.start();
         amrex::HypreSolver<maxStencilSize> hypreSolver(
             {x.m_data[xDir].boxArray().ixType(), x.m_data[yDir].boxArray().ixType(),
              x.m_data[zDir].boxArray().ixType()},
             rhs.m_deRham->get_n_ghost(), m_infra.geometry(), m_infra.m_grid, m_infra.m_distriMap,
-            marker, filler, m_verbose);
+            marker, filler, m_verbose, "negative_poisson");
+        p11.stop();
 
+        Kokkos::Profiling::ProfilingSection p12(
+            "GEMPIC::DKQuasineutralSolver::SolveHypre::solve_negative_poisson_equation()");
+        p12.start();
         hypreSolver.solve(amrex::Vector<amrex::MultiFab*>{&(x.m_data[xDir]), &(x.m_data[yDir]),
                                                           &(x.m_data[zDir])},
                           amrex::Vector<amrex::MultiFab const*>{
                               &(rhs.m_data[xDir]), &(rhs.m_data[yDir]), &(rhs.m_data[zDir])},
                           m_relTol, m_absTol, m_maxiter);
+        Gempic::Utils::check_solver_convergence(hypreSolver, m_maxiter, m_accTol);
+        p12.stop();
 
         x.fill_boundary();
 
@@ -1253,6 +1430,9 @@ public:
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rhs,
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::node>& x) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::solve_nonperiodic_poisson_equation()");
+
         auto const& nddom = amrex::surroundingNodes(m_infra.box());
 
         amrex::GpuArray<amrex::Real, 3> dxi{GEMPIC_D_PAD_ONE(m_infra.geometry().InvCellSize(xDir),
@@ -1325,8 +1505,12 @@ public:
 
         constexpr int maxStencilSize = 2 * AMREX_SPACEDIM + 1;
 
+        Kokkos::Profiling::ProfilingSection p9(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_nonperiodic_poisson_equation()");
+        p9.start();
         create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::node>(
-            x, rhs, marker, filler);
+            x, rhs, marker, filler, "hypre");
+        p9.stop();
     }
     // Function for calculating non-periodic phi ends
 
@@ -1337,7 +1521,8 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real dt) const
     {
-        Kokkos::Profiling::ScopedRegion region("push_particles_and_correct_div_j()");
+        Kokkos::Profiling::ScopedRegion region(
+            "Gempic::QuasineutralSolver::push_particles_and_correct_div_j()");
         Forms::DeRhamField<Forms::Grid::primal, Forms::Space::edge> eCorr(phi.m_deRham);
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> divJ(phi.m_deRham);
 
@@ -1362,6 +1547,9 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real const dt) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::solve_particle_div_grad_phi()");
+
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell> phiCoeffsDivGrad(
             b.m_deRham, s_ndivgradphiCoeffs);
 
@@ -1427,8 +1615,12 @@ public:
 
         constexpr int maxStencilSize = s_ndivgradphiCoeffs;
 
+        Kokkos::Profiling::ProfilingSection p10(
+            "GEMPIC::QuasineutralSolver::CreateHypre::solve_particle_div_grad_phi()");
+        p10.start();
         create_and_use_hypre_solver<maxStencilSize, Forms::Grid::primal, Forms::Space::node>(
-            x, b, marker, filler);
+            x, b, marker, filler, "div_grad_phi");
+        p10.stop();
 
         if (m_infra.geometry().isAllPeriodic())
         {
@@ -1442,29 +1634,19 @@ public:
     }
 
     template <class SplineType = ParticleMeshCoupling::SplineBase<degx, degy, degz>>
-    void get_divgrad_phi_weights_at_particle_positions_and_deposit_to_cell (
+    inline void get_divgrad_phi_weights_at_particle_positions_and_deposit_to_cell (
         amrex::Array4<amrex::Real> const& phiCoeffsA,
         SplineType const& spline,
         amrex::Real const minusdtChargeSqrByMassWeight) const
     {
-        constexpr int nWtsXYZ1f[3][3] = {
-            {degx, (degx + 1), (degx + 1)},  // number of 1-form x,y,z-field weights in X-direction
-            {(degy + 1), degy, (degy + 1)},  // number of 1-form x,y,z-field weights in Y-direction
-            {(degz + 1), (degz + 1), degz}}; // number of 1-form x,y,z-field weights in Z-direction
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::get_divgrad_phi_weights_at_particle_positions_and_deposit_"
+            "to_cell()");
 
-        constexpr int nWts1f[3] = {
-            // number of 1-form x-field weights
-            GEMPIC_D_MULT(nWtsXYZ1f[xDir][xDir], nWtsXYZ1f[yDir][xDir], nWtsXYZ1f[zDir][xDir]),
-            // number of 1-form y-field weights
-            GEMPIC_D_MULT(nWtsXYZ1f[xDir][yDir], nWtsXYZ1f[yDir][yDir], nWtsXYZ1f[zDir][yDir]),
-            // number of 1-form z-field weights
-            GEMPIC_D_MULT(nWtsXYZ1f[xDir][zDir], nWtsXYZ1f[yDir][zDir], nWtsXYZ1f[zDir][zDir])};
-        constexpr int nWts1fStart[3] = {0, nWts1f[xDir], (nWts1f[xDir] + nWts1f[yDir])};
+        amrex::GpuArray<amrex::Real, (s_nWts1f[xDir] + s_nWts1f[yDir] + s_nWts1f[zDir])> eWts;
+        amrex::GpuArray<amrex::IntVect, (s_nWts1f[xDir] + s_nWts1f[yDir] + s_nWts1f[zDir])> eEdges;
 
-        amrex::GpuArray<amrex::Real, (nWts1f[xDir] + nWts1f[yDir] + nWts1f[zDir])> eWts;
-        amrex::GpuArray<amrex::IntVect, (nWts1f[xDir] + nWts1f[yDir] + nWts1f[zDir])> eEdges;
-
-        spline.eval_e_field_spline_weights(eWts, eEdges);
+        spline.eval_e_field_spline_weights_all_directions(eWts, eEdges);
 
         GEMPIC_D_EXCL(int jj{0};, int kk{0};, )
 
@@ -1479,9 +1661,9 @@ public:
             int kn = (ndir == zDir);
 #endif
 
-            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < nWtsXYZ1f[xDir][ndir]; ++ii),
-                                for (int jj = 0; jj < nWtsXYZ1f[yDir][ndir]; ++jj),
-                                for (int kk = 0; kk < nWtsXYZ1f[zDir][ndir]; ++kk))
+            GEMPIC_D_LOOP_BEGIN(for (int ii = 0; ii < s_nWtsXyZ1f[xDir][ndir]; ++ii),
+                                for (int jj = 0; jj < s_nWtsXyZ1f[yDir][ndir]; ++jj),
+                                for (int kk = 0; kk < s_nWtsXyZ1f[zDir][ndir]; ++kk))
 
                 amrex::Real const sCoeff =
                     ((ndir == 0)
@@ -1504,10 +1686,10 @@ public:
                 wDualCell[0] = {GEMPIC_D_PAD(dualFace.x, dualFace.y, dualFace.z)};
                 wDualCell[1] = {GEMPIC_D_PAD(dualFace.x + in, dualFace.y + jn, dualFace.z + kn)};
 
-                for (int i = 0; i < nWts1f[ndir]; i++)
+                for (int i = 0; i < s_nWts1f[ndir]; i++)
                 {
                     // this index is of primal edge contributing to E-field at particle
-                    amrex::Dim3 wEdge = (eEdges[nWts1fStart[ndir] + i]).dim3();
+                    amrex::Dim3 wEdge = (eEdges[s_nWts1fStart[ndir] + i]).dim3();
 
                     // these indices are for the primal nodes corresponding to wEdge
                     amrex::Dim3 wNode[2];
@@ -1530,7 +1712,7 @@ public:
                                 phiCoeffsA.ptr(wDualCell[nc].x, wDualCell[nc].y, wDualCell[nc].z,
                                                component),
                                 sCoeff * minusdtChargeSqrByMassWeight * ((nn == nc) ? 1.0 : -1.0) *
-                                    eWts[nWts1fStart[ndir] + i]);
+                                    eWts[s_nWts1fStart[ndir] + i]);
                         }
                     }
                 }
@@ -1566,7 +1748,7 @@ public:
 
             gdtmp = gid[n]((i + ii), (j + jj), (k + kk));
 
-            assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
+            Gempic::Utils::assign_or_add_col(gdtmp, icol, ncols, cols, mat, mapCols);
             mat[icol] += phiCoeffsArrs[boxno](
                 i, j, k,
                 GEMPIC_D_ADD(iiTemp, jjTemp * s_divgradphiBw[xDir],
@@ -1580,6 +1762,8 @@ public:
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles,
         amrex::Real const dt) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::update_velocities_using_e_and_calculate_deposit_j()");
         for (int comp = 0; comp < static_cast<int>(vdim); ++comp)
         {
             J.m_data[comp].setVal(0.0);
@@ -1642,22 +1826,15 @@ public:
     // Functions for correcting average of J begin
     void push_particles_and_correct_javg (
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::face>& J,
+        std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>>& rhoVec,
         Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>& rho,
+        std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>>& rhoMassVec,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
         Kokkos::Profiling::ScopedRegion region("push_particles_and_correct_javg()");
-        std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoVec;
-        std::vector<Forms::DeRhamField<Forms::Grid::dual, Forms::Space::cell>> rhoMassVec;
 
-        for (int i = 0; i < static_cast<int>(particles.size()); i++)
-        {
-            rhoVec.emplace_back(rho.m_deRham);
-            rhoMassVec.emplace_back(rho.m_deRham);
-        }
-
-        Gempic::ParticleMeshCoupling::deposit_individual_particle_density<degx, degy, degz, vdim,
-                                                                          ndata>(
-            rhoVec, rhoMassVec, particles, m_infra);
+        Gempic::ParticleMeshCoupling::deposit_individual_particle_density<degx, degy, degz>(
+            rhoVec, rho, rhoMassVec, particles, m_infra);
 
         std::vector<amrex::GpuArray<amrex::Real, vdim>> vAvg;
         vAvg.resize(particles.size());
@@ -1722,6 +1899,8 @@ public:
         std::vector<amrex::GpuArray<amrex::Real, vdim>> const& vAvg,
         std::vector<std::shared_ptr<Particle::ParticleSpecies<vdim, ndata>>>& particles) const
     {
+        Kokkos::Profiling::ScopedRegion region("GEMPIC::QuasineutralSolver::push_back_by_v_avg()");
+
         int index = 0;
         for (auto& particleSpecies : particles)
         {
@@ -1761,6 +1940,8 @@ public:
         amrex::Real dt,
         RotatePushOrder order) const
     {
+        Kokkos::Profiling::ScopedRegion region(
+            "GEMPIC::QuasineutralSolver::update_particle_positions_and_velocities()");
         for (auto& particleSpecies : particles)
         {
             amrex::Real charge = particleSpecies->get_charge();

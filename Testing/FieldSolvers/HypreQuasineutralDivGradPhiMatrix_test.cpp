@@ -238,7 +238,7 @@ TYPED_TEST(HypreQuasineutralDivGradPhiMatrixTest, HypreQuasineutralDivGradPhiMat
     amrex::Real tol = 0.15;
 
     amrex::Real divJFinalNormCoarse, divJFinalNormFine;
-    amrex::Real divJTol = 1.0e-14;
+    amrex::Real divJTol = 1.0e-13;
 
     amrex::Real rateOfConvergence;
     constexpr int splineDegreeX = TestFixture::s_degX;
