@@ -13,13 +13,13 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
-#include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Initialize.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"

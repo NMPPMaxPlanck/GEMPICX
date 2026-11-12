@@ -11,13 +11,13 @@
 #include <AMReX_Print.H>
 #include <AMReX_Random.H>
 
-#include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_Diagnostics.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_FieldRegistry.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Initialize.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_PoissonSolver.H"
@@ -35,7 +35,7 @@ using namespace std;
 
 int main (int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
 
     constexpr int vdim{3};
     constexpr int ndata{1};
@@ -163,5 +163,5 @@ int main (int argc, char* argv[])
             }
         } // end of "time loop" scope
     }
-    amrex::Finalize();
+    Gempic::finalize();
 }

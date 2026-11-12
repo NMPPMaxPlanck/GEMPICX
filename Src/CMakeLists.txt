@@ -31,6 +31,7 @@ target_include_directories(GEMPICX PUBLIC
 target_sources(GEMPICX
                 PRIVATE
                   GEMPIC_Config.cpp
+                  GEMPIC_Initialize.cpp
                   GEMPIC_ComputationalDomain.cpp)
 
 add_subdirectory(AMR)

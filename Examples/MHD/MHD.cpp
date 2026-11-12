@@ -13,11 +13,11 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
-#include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
+#include "GEMPIC_Initialize.H"
 #include "GEMPIC_MHDPDE.H"
 #include "GEMPIC_MHDStructDefinitions.H"
 #include "GEMPIC_Mpi.H"

@@ -9,6 +9,7 @@
 #include <AMReX.H>
 #include <AMReX_ParallelDescriptor.H>
 
+#include "GEMPIC_Initialize.H"
 #include "GEMPIC_TestRealValue.H"
 #include "GEMPIC_TimeStepper.H"
 
@@ -96,7 +97,7 @@ int HarmonicSeries::finalize ()
 
 int main (int argc, char* argv[]) // generic
 {
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
     {
         /// create appropriate TimeStepper
         HarmonicSeries cc;
@@ -104,6 +105,6 @@ int main (int argc, char* argv[]) // generic
         /// execute TimeStepper
         cc.run();
     }
-    amrex::Finalize();
+    Gempic::finalize();
     return EXIT_SUCCESS;
 }
