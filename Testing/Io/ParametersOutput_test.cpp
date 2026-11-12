@@ -11,12 +11,12 @@
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_Print.H>
 
-#include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_ComputationalDomain.H"
 #include "GEMPIC_Config.H"
 #include "GEMPIC_FDDeRhamComplex.H"
 #include "GEMPIC_Fields.H"
 #include "GEMPIC_FunctionParse.H"
+#include "GEMPIC_Initialize.H"
 #include "GEMPIC_Parameters.H"
 #include "GEMPIC_Particle.H"
 #include "GEMPIC_ParticleMeshCoupling.H"
@@ -30,7 +30,8 @@ using namespace Forms;
 int main (int argc, char* argv[])
 {
     bool const buildParmParse = true;
-    amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD, overwrite_amrex_parser_defaults);
+    amrex::Initialize(argc, argv, buildParmParse, MPI_COMM_WORLD,
+                      Gempic::Impl::overwrite_amrex_parser_defaults);
     // Initialize the main parameters instance and tell it to print output
     Io::Parameters::set_print_output();
     Io::Parameters parameters{};

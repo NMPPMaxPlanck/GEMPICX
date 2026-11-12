@@ -2,6 +2,8 @@
  * Copyright (c) 2021 GEMPICX                                                                     *
  * SPDX-License-Identifier: BSD-3-Clause                                                          *
  **************************************************************************************************/
+#include <AMReX_Print.H>
+
 #include "GEMPICX.H"
 #include "GEMPIC_Verbosity.H"
 #include "GEMPIC_Version.H"
@@ -10,8 +12,7 @@ using namespace Gempicx;
 
 int main (int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv, &overwrite_amrex_parser_defaults);
-    Kokkos::initialize(argc, argv);
+    Gempic::initialize(argc, argv);
     {
         Verbosity::set_level(99);
         print_gempicx_version();
@@ -25,7 +26,6 @@ int main (int argc, char* argv[])
                        << "Kokkos version: " << gempicx_kokkos_version() << '\n'
                        << "HYPRE version: " << gempicx_hypre_version() << '\n';
     }
-    Kokkos::finalize();
-    amrex::Finalize();
+    Gempic::finalize();
     return EXIT_SUCCESS;
 }

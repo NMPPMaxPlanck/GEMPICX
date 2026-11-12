@@ -12,6 +12,8 @@
 #include <AMReX.H>
 #include <AMReX_ParmParse.H>
 
+#include "GEMPIC_Initialize.H"
+
 namespace GempicTests
 {
 
@@ -50,18 +52,13 @@ public:
                               pp.add("throw_exception", 1);
                               pp.add("signal_handling", 0);
 
-                              // Abort the simulation when we run out of GPU memory
-                              // By default, AMReX starts swapping to CPU, which makes runs very
-                              // slow. It's more useful to abort and tell the user to request more
-                              // GPUs or scale down the simulation.
-                              // https://amrex-codes.github.io/amrex/docs_html/GPU.html#inputs-parameters
-                              bool abortOnOutOfGpuMemory = true; // AMReX' default: false
-                              pp.queryAdd("abort_on_out_of_gpu_memory", abortOnOutOfGpuMemory);
-                              // Synchronizes CPU (host) memory with GPU (device) memory, which is
-                              // useful for testing
+                              Gempic::Impl::overwrite_amrex_parser_defaults();
+                              // Synchronizes CPU (host) memory with GPU (device) memory,
+                              // which is required for amrex::FunctionParser to work
                               pp.add("the_arena_is_managed", 1);
                           });
         Kokkos::initialize(m_argc, m_argv);
+        Gempic::Impl::set_amrex_external_stream();
 
         // Save managed memory flag for future use
         {
@@ -87,6 +84,7 @@ public:
 
     void TearDown () override
     {
+        Gempic::Impl::reset_amrex_external_stream();
         Kokkos::finalize();
         amrex::Finalize();
     }

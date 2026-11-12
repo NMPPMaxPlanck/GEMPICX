@@ -9,6 +9,7 @@
 #include <AMReX_Periodicity.H>
 
 #include "GEMPIC_CustomDiagnosticStrategies.H"
+#include "GEMPIC_Initialize.H"
 #include "GEMPIC_MaxwellInit.H"
 #include "GEMPIC_MaxwellPDE.H"
 #include "GEMPIC_NumTools.H"
@@ -21,7 +22,7 @@ static constexpr Gempic::TimeLoop::RungeKuttaTag imExRkTag =
 
 int main (int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv);
+    Gempic::initialize(argc, argv);
     Gempic::Utils::Verbosity::set_level(1);
     Gempic::Io::Parameters parameters{};
 
@@ -89,5 +90,5 @@ int main (int argc, char* argv[])
             }
         }
     }
-    amrex::Finalize();
+    Gempic::finalize();
 }

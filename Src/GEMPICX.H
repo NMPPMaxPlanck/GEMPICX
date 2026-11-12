@@ -5,8 +5,8 @@
 
 #include <AMReX.H>
 
-#include "GEMPIC_AmrexInit.H"
 #include "GEMPIC_Config.H"
+#include "GEMPIC_Initialize.H"
 
 // Making sure all namespaces are defined so they can be included in the gempicx namespace
 namespace Gempic
