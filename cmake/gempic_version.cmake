@@ -47,14 +47,6 @@ function(gempic_pad_list_entry)
   set(${arg_OUTPUT} "${pad_string_out}" PARENT_SCOPE)
 endfunction()
 
-function(gempic_create_and_link_cmake_constants_file)
-  set(PRECONFIG_INPUT "${PROJECT_SOURCE_DIR}/cmake/gempic_CMakeConstants.H.in")
-  configure_file(
-    "${PRECONFIG_INPUT}"
-    "${PROJECT_SOURCE_DIR}/Src/Utils/GEMPIC_CMakeConstants.H"
-  )
-endfunction()
-
 # Retrieves GEMPICX version info via git and sets internal cache variables
 # GEMPICX_GIT_VERSION, GEMPICX_PKG_VERSION, and GEMPICX_RELEASE_NUMBER
 function(gempic_get_version)

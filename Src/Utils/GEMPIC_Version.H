@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "GEMPIC_CMakeConstants.H"
+#include "GEMPIC_CMakeVersionConstants.H"
 
 namespace Gempic::Utils
 {

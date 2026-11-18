@@ -85,12 +85,21 @@ macro(gempic_install_export_targets)
       else()
         # Convert all build header paths (whose prefix is this repo) to install paths
         # Ensures #include to individual files without providing entire/relative file path
+        set(_project_generated_header_dir ${PROJECT_BINARY_DIR}/generated)
         foreach(_target_header ${${_target}_HEADER_DIRS})
-          file(RELATIVE_PATH ${_target}_header_include_path ${PROJECT_SOURCE_DIR} ${_target_header})
+          cmake_path(IS_PREFIX _project_generated_header_dir ${_target_header} _target_header_is_cmake_configured)
+          if(_target_header_is_cmake_configured)
+            cmake_path(RELATIVE_PATH _target_header
+                       BASE_DIRECTORY ${PROJECT_BINARY_DIR}
+                       OUTPUT_VARIABLE ${_target}_header_include_path)
+          else()
+            cmake_path(RELATIVE_PATH _target_header
+                       BASE_DIRECTORY ${PROJECT_SOURCE_DIR}
+                       OUTPUT_VARIABLE ${_target}_header_include_path)
+          endif()
           list(APPEND ${_target}_INCLUDE_DIRS
                       "${GEMPICX_INCLUDEDIR}/${${_target}_header_include_path}")
         endforeach()
-        
         set_property(TARGET ${_target} PROPERTY INTERFACE_INCLUDE_DIRECTORIES
                     "$<BUILD_INTERFACE:${${_target}_HEADER_DIRS}>"
                     "$<INSTALL_INTERFACE:${${_target}_INCLUDE_DIRS}>")

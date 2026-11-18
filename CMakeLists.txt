@@ -134,8 +134,6 @@ if(GEMPIC_USE_HIP)
   message(STATUS "   HIP flags               = ${CMAKE_HIP_FLAGS}")
 endif()
 
-gempic_create_and_link_cmake_constants_file()
-
 # Assign all third-party targets to folder
 include(cmake/gempic_TargetFolder.cmake)
 assign_folders_by_origin()
