@@ -79,3 +79,22 @@ function(gempic_suppress_third_party_warnings)
     target_compile_options(${arg_TARGET} PRIVATE -w)
   endif()
 endfunction()
+
+# CMake can fill header files with variables at configure time
+function(gempic_create_and_link_cmake_constants_file FILENAME)
+  cmake_path(GET FILENAME STEM LAST_ONLY FILESTEM)
+  set(INPUTFILE "${CMAKE_CURRENT_LIST_DIR}/${FILENAME}")
+  set(OUTPUTFILE_DIR "${PROJECT_BINARY_DIR}/generated")
+  file(READ ${INPUTFILE} _input)
+  set(_postface "/*
+ * This file was automagically generated from
+ * @INPUTFILE@
+ * by filling in with CMake variables at the time of configuration, using configure_file via the
+ * function @CMAKE_CURRENT_FUNCTION@ called in
+ * @CMAKE_CURRENT_LIST_FILE@
+ */
+
+")
+  file(CONFIGURE OUTPUT "${OUTPUTFILE_DIR}/${FILESTEM}" CONTENT "${_input}${_postface}" @ONLY)
+  target_include_directories(GEMPICX PUBLIC "${OUTPUTFILE_DIR}")
+endfunction()

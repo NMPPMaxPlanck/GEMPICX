@@ -5,7 +5,7 @@ if(GEMPIC_USE_HDF5)
   gempic_FetchContent_Declare(HDF5
     SOURCE_DIR     ${PROJECT_SOURCE_DIR}/third_party/hdf5-src
     GIT_REPOSITORY https://github.com/HDFGroup/hdf5.git
-    GIT_TAG        2.1.1
+    GIT_TAG        2.2.0
     ALLOW_DIRTY    ${USE_DIRTY_HDF5_REPO}
     FIND_PACKAGE_ARGS COMPONENTS C
   )

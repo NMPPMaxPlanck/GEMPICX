@@ -10,3 +10,4 @@ For Developers
    ../latex/CodeEditorVSCode
    ../latex/MachineInstructions
    ../latex/Profiling
+   CMakeConfiguredHeaderFiles

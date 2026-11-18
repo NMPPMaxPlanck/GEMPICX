@@ -89,7 +89,12 @@ find_dependency(AMReX REQUIRED)
 
 
 if(@GEMPIC_USE_HDF5@)
-  find_dependency(HDF5 REQUIRED COMPONENTS C)
+  if(@HDF5_NOT_INSTALLED@)
+    find_package(PkgConfig REQUIRED QUIET)
+    pkg_check_modules(hdf5 QUIET REQUIRED hdf5)
+  else()
+    find_dependency(HDF5 REQUIRED COMPONENTS C)
+  endif()
 endif()
 
 # Fiddle with targets
